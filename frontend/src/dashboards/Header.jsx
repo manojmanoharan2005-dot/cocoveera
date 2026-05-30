@@ -1,0 +1,222 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export const Header = ({
+  searchQuery,
+  setSearchQuery,
+  cartCount,
+  setActiveTab,
+  onNotificationClick,
+  showSearchAndFilters,
+  sortBy,
+  setSortBy,
+  onFilterClick
+}) => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to log out of Cocoveera?')) {
+      logout();
+      navigate('/');
+    }
+  };
+
+  const displayName = user?.companyName && user.companyName !== 'N/A' 
+    ? user.companyName 
+    : (user?.name || 'Partner');
+
+  const userInitials = displayName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'U';
+
+  return (
+    <header className="w-full h-[68px] bg-white/80 backdrop-blur-xl border-b border-stone-200/50 sticky top-0 z-40 px-6 flex items-center justify-between gap-4 shadow-sm shadow-stone-100/80">
+      
+      {/* Left: Brand Logo */}
+      <div
+        onClick={() => navigate('/')}
+        className="flex items-center gap-2.5 cursor-pointer select-none shrink-0 group"
+      >
+        <img
+          src="/logo.jpg"
+          alt="Cocoveera Logo"
+          className="w-10 h-10 object-contain rounded-[10px] transition-transform duration-300 group-hover:scale-105"
+        />
+        <div className="hidden sm:block">
+          <span className="font-poppins font-black text-[15px] tracking-wide block leading-none">
+            <span className="text-[#7B4F1E]">COCO</span><span className="text-[#2E7D32]">VEERA</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Center: Marketplace Search + Filter Controls */}
+      <AnimatePresence>
+        {showSearchAndFilters ? (
+          <motion.div
+            key="search-bar"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.2 }}
+            className="hidden md:flex items-center gap-2.5 flex-grow max-w-[580px] mx-auto"
+          >
+            {/* Search Input */}
+            <div className={`relative flex-grow transition-all duration-300 ${searchFocused ? 'flex-grow' : ''}`}>
+              <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search coir products, grow bags, custom mixtures..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                className="w-full bg-[#F7F9F7] border border-stone-200 rounded-[12px] py-2.5 pl-9 pr-4 text-[11.5px] font-semibold text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#2E7D32] focus:bg-white focus:shadow-[0_0_0_3px_rgba(46,125,50,0.08)] transition-all duration-200 h-10"
+              />
+            </div>
+
+            {/* Filter button */}
+            <button
+              type="button"
+              onClick={onFilterClick}
+              className="flex items-center gap-2 text-stone-700 bg-white border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] py-2 px-4 rounded-[12px] text-[11.5px] font-bold transition-all duration-200 h-10 shrink-0 shadow-sm hover:shadow-md"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Filter</span>
+            </button>
+
+            {/* Sort dropdown */}
+            <div className="relative flex items-center bg-white border border-stone-200 hover:border-stone-300 rounded-[12px] px-3.5 h-10 shrink-0 shadow-sm min-w-[140px] transition-all">
+              <span className="text-[10px] text-stone-400 font-bold mr-1.5 shrink-0">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent border-none p-0 pr-4 text-[11.5px] text-stone-900 focus:outline-none cursor-pointer appearance-none flex-grow font-bold"
+              >
+                <option>Featured</option>
+                <option>Price: Low to High</option>
+                <option>Price: High to Low</option>
+                <option>Rating</option>
+              </select>
+              <ChevronDown className="w-3 h-3 text-stone-400 absolute right-3 pointer-events-none" />
+            </div>
+          </motion.div>
+        ) : (
+          <div className="hidden md:block flex-grow" />
+        )}
+      </AnimatePresence>
+
+      {/* Right: Actions */}
+      <div className="flex items-center gap-2 shrink-0">
+
+        {/* Notifications */}
+        <button
+          onClick={onNotificationClick}
+          className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all"
+          title="Notifications"
+        >
+          <Bell className="w-4.5 h-4.5" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border-2 border-white" />
+        </button>
+
+        {/* Cart */}
+        <button
+          onClick={() => setActiveTab('Cart')}
+          className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all"
+          title="Cart"
+        >
+          <ShoppingCart className="w-4.5 h-4.5" />
+          {cartCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 bg-[#2E7D32] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+              {cartCount}
+            </span>
+          )}
+        </button>
+
+        {/* Divider */}
+        <div className="h-6 w-px bg-stone-200 mx-1" />
+
+        {/* Profile Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-2.5 pl-1 focus:outline-none group"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#43A047] text-white flex items-center justify-center font-poppins font-black text-xs shadow-md shadow-[#2E7D32]/20 transition-transform duration-300 group-hover:scale-105">
+              {userInitials}
+            </div>
+            <div className="hidden sm:block leading-none text-left">
+              <h4 className="text-[11.5px] font-extrabold text-stone-900 truncate max-w-[100px]">
+                {displayName}
+              </h4>
+            </div>
+            <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Premium Dropdown */}
+          <AnimatePresence>
+            {dropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-3 w-56 bg-white border border-stone-200/80 rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] py-2 z-50"
+                >
+                  {/* Profile summary */}
+                  <div className="px-4 py-3.5 border-b border-stone-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#43A047] text-white flex items-center justify-center font-poppins font-black text-xs shadow-sm flex-shrink-0">
+                      {userInitials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-extrabold text-stone-900 truncate">{displayName}</p>
+                      <p className="text-[9px] text-[#6B7280] font-bold mt-0.5 truncate">{user?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="py-1 px-2">
+                    <button
+                      onClick={() => { setDropdownOpen(false); setActiveTab('Profile'); }}
+                      className="w-full text-left px-3 py-2.5 text-[11.5px] text-stone-700 hover:bg-[#F0FAF0] hover:text-[#2E7D32] rounded-[12px] transition-colors flex items-center gap-2.5 font-bold"
+                    >
+                      <User className="w-3.5 h-3.5 text-stone-400" />
+                      <span>My Profile</span>
+                    </button>
+                    <button
+                      onClick={() => { setDropdownOpen(false); setActiveTab('Settings'); }}
+                      className="w-full text-left px-3 py-2.5 text-[11.5px] text-stone-700 hover:bg-[#F0FAF0] hover:text-[#2E7D32] rounded-[12px] transition-colors flex items-center gap-2.5 font-bold"
+                    >
+                      <Settings className="w-3.5 h-3.5 text-stone-400" />
+                      <span>Settings</span>
+                    </button>
+                  </div>
+                  <div className="px-2 pt-1 border-t border-stone-100">
+                    <button
+                      onClick={() => { setDropdownOpen(false); handleLogout(); }}
+                      className="w-full text-left px-3 py-2.5 text-[11.5px] text-red-500 hover:bg-red-50 rounded-[12px] transition-colors flex items-center gap-2.5 font-bold"
+                    >
+                      <LogOut className="w-3.5 h-3.5 text-red-400" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

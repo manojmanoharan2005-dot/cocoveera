@@ -1,0 +1,226 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Download, Truck, MessageSquare, MapPin, CreditCard, Package } from 'lucide-react';
+import { apiClient, useAuth } from '../../context/AuthContext';
+import { convertCurrency } from '../../utils/currencyConverter';
+
+const OrderDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [backendOrder, setBackendOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        const res = await apiClient.get(`/orders/${id}`);
+        if (res.data.success) {
+          setBackendOrder(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch order details:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrder();
+  }, [id]);
+
+  if (loading) return <div className="p-12 text-center text-stone-500 font-bold">Loading order details...</div>;
+  if (!backendOrder) return <div className="p-12 text-center text-stone-500 font-bold">Order not found</div>;
+
+  const order = {
+    id: backendOrder._id,
+    date: backendOrder.createdAt,
+    status: backendOrder.orderStatus.charAt(0).toUpperCase() + backendOrder.orderStatus.slice(1),
+    paymentStatus: backendOrder.paymentStatus.charAt(0).toUpperCase() + backendOrder.paymentStatus.slice(1),
+    container: {
+      type: backendOrder.containerCapacity || 'LCL',
+      number: backendOrder.trackingNumber || 'Pending',
+      capacity: 'N/A',
+      weight: 'N/A',
+      pallets: 'N/A'
+    },
+    products: backendOrder.items.map(item => ({
+      name: item.product?.name || 'Unknown',
+      quantity: item.quantity,
+      unit: 'Units',
+      price: item.unitPrice
+    })),
+    summary: {
+      subtotal: backendOrder.totalAmount,
+      discount: 0,
+      shipping: 0,
+      tax: 0,
+      total: backendOrder.totalAmount
+    },
+    shippingAddress: {
+      name: backendOrder.user?.name || 'User',
+      street: backendOrder.shippingAddress?.addressLine || 'N/A',
+      city: backendOrder.shippingAddress?.city || 'N/A',
+      state: '',
+      country: backendOrder.shippingAddress?.country || 'N/A',
+      zip: backendOrder.shippingAddress?.postalCode || 'N/A'
+    },
+    customerNotes: ''
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate('/account/orders')} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-extrabold text-stone-900">Order {order.id}</h1>
+          <p className="text-stone-500 font-semibold text-sm">Placed on {new Date(order.date).toLocaleString()}</p>
+        </div>
+        <div className="ml-auto flex gap-2">
+          <button onClick={() => navigate(`/account/track/${order.id}`)} className="px-4 py-2 bg-[#2E7D32] text-white font-bold text-sm rounded-xl hover:bg-[#1B5E20] transition-colors flex items-center gap-2 shadow-md shadow-[#2E7D32]/20">
+            <Truck className="w-4 h-4" /> Track Container
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Main Details */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Order Status & Actions */}
+          <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex gap-3">
+              <span className="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-lg text-xs font-black uppercase tracking-wider border border-blue-200">{order.status}</span>
+              <span className="px-3 py-1.5 bg-[#F0FAF0] text-[#2E7D32] rounded-lg text-xs font-black uppercase tracking-wider border border-[#2E7D32]/20">{order.paymentStatus}</span>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 font-bold text-sm rounded-xl hover:bg-stone-200 transition-colors">
+                <Download className="w-4 h-4" /> Invoice
+              </button>
+              <button className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 font-bold text-sm rounded-xl hover:bg-stone-200 transition-colors">
+                <MessageSquare className="w-4 h-4" /> Support
+              </button>
+            </div>
+          </div>
+
+          {/* Products List */}
+          <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
+            <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">Products ({order.products.length})</h3>
+            <div className="space-y-4">
+              {order.products.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center bg-stone-50 p-4 rounded-xl border border-stone-100">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-stone-200">
+                      <Package className="w-6 h-6 text-stone-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-stone-900">{item.name}</p>
+                      <p className="text-xs text-stone-500 font-semibold">{item.quantity} {item.unit} &bull; {convertCurrency(item.price, user?.currency).formatted} / {item.unit}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-[#2E7D32]">{convertCurrency(item.quantity * item.price, user?.currency).formatted}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Container Information */}
+          <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
+            <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">Container Logistics</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Type</p>
+                <p className="text-sm font-bold text-stone-900">{order.container.type}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Container #</p>
+                <p className="text-sm font-bold text-stone-900">{order.container.number}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Weight</p>
+                <p className="text-sm font-bold text-stone-900">{order.container.weight}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Total Pallets</p>
+                <p className="text-sm font-bold text-stone-900">{order.container.pallets}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Column - Summaries */}
+        <div className="space-y-6">
+          
+          {/* Order Summary */}
+          <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
+            <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">Payment Summary</h3>
+            <div className="space-y-3 text-sm font-semibold text-stone-600 mb-4">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span className="text-stone-900">{convertCurrency(order.summary.subtotal, user?.currency).formatted}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Shipping (FOB)</span>
+                <span className="text-stone-900">{convertCurrency(order.summary.shipping, user?.currency).formatted}</span>
+              </div>
+              <div className="flex justify-between text-emerald-600">
+                <span>Discount</span>
+                <span>-{convertCurrency(order.summary.discount, user?.currency).formatted}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tax</span>
+                <span className="text-stone-900">{convertCurrency(order.summary.tax, user?.currency).formatted}</span>
+              </div>
+            </div>
+            <div className="border-t border-stone-100 pt-3 flex justify-between items-center">
+              <span className="text-sm font-black text-stone-900 uppercase tracking-wider">Grand Total</span>
+              <span className="text-xl font-black text-[#2E7D32]">{convertCurrency(order.summary.total, user?.currency).formatted} {user?.currency?.toUpperCase() || 'INR'}</span>
+            </div>
+          </div>
+
+          {/* Shipping & Billing */}
+          <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm space-y-6">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-4 h-4 text-stone-400" />
+                <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider">Shipping Address</h3>
+              </div>
+              <address className="not-italic text-sm font-semibold text-stone-600 leading-relaxed bg-stone-50 p-3 rounded-xl border border-stone-100">
+                <span className="block text-stone-900 font-bold mb-1">{order.shippingAddress.name}</span>
+                {order.shippingAddress.street}<br/>
+                {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}<br/>
+                {order.shippingAddress.country}
+              </address>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <CreditCard className="w-4 h-4 text-stone-400" />
+                <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider">Payment Method</h3>
+              </div>
+              <div className="text-sm font-semibold text-stone-600 bg-stone-50 p-3 rounded-xl border border-stone-100">
+                Bank Wire Transfer (TT)<br/>
+                <span className="text-xs text-stone-500 mt-1 block">Ref: TR-9988221</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          {order.customerNotes && (
+            <div className="bg-[#FFF9C4]/30 rounded-2xl p-6 border border-[#FBC02D]/30 shadow-sm">
+              <h3 className="text-xs font-black text-[#F57F17] uppercase tracking-wider mb-2">Customer Notes</h3>
+              <p className="text-sm font-semibold text-stone-700 italic">"{order.customerNotes}"</p>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default OrderDetails;
