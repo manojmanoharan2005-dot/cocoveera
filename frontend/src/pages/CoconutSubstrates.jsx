@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Globe, Truck, FileCheck, Anchor, ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
+import { Globe, Truck, FileCheck, Anchor, ShieldCheck, MapPin, ArrowRight, Navigation, FileText, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import GlobalMap from '../components/GlobalMap';
+import PageHero from '../components/PageHero';
 
 const CoconutSubstrates = () => {
   const [activeRegion, setActiveRegion] = useState('americas');
@@ -45,22 +47,14 @@ const CoconutSubstrates = () => {
   };
 
   return (
-    <div className="pt-24 pb-16 bg-white min-h-screen">
-      {/* Header Banner */}
-      <section className="bg-primary text-white py-12 px-6 mb-8 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        <div className="max-w-7xl mx-auto relative z-10 space-y-2">
-          <span className="text-secondary-light font-poppins text-xs font-bold uppercase tracking-widest bg-white/10 py-1 px-3 rounded-lg">
-            SUPPLY CHAIN
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-poppins font-extrabold mt-1">
-            Global Network & Distribution
-          </h1>
-          <p className="text-stone-105 text-xs sm:text-sm max-w-lg mx-auto mt-3 leading-relaxed font-medium">
-            Exporting standardized coco peat substrates to commercial growers and seaport distribution hubs across five continents.
-          </p>
-        </div>
-      </section>
+    <div className="pb-16 bg-white min-h-screen">
+      <PageHero
+        badge="SUPPLY CHAIN"
+        title="Global Network"
+        titleAccent="& Distribution"
+        subtitle="Exporting standardized coco peat substrates to commercial growers and seaport distribution hubs across five continents."
+        breadcrumbs={[{ label: 'Global Network', path: '/substrates' }]}
+      />
 
       {/* Interactive Distribution Map */}
       <section className="max-w-7xl mx-auto px-6 mb-16">
@@ -68,79 +62,127 @@ const CoconutSubstrates = () => {
       </section>
 
       {/* 2. CONTINENT-WISE EXPORT REGISTRY */}
-      <section className="max-w-7xl mx-auto px-6 mb-16">
-        <div className="bg-accent border border-stone-200 rounded-3xl p-6 lg:p-10">
-          <div className="text-center max-w-xl mx-auto mb-8">
-            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest">
+      <section className="max-w-7xl mx-auto px-6 mb-20">
+        <div className="bg-accent/50 border border-stone-200 rounded-[2.5rem] p-6 lg:p-12 shadow-sm">
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <span className="text-primary font-poppins text-[10px] font-bold uppercase tracking-widest bg-primary/10 px-4 py-1.5 rounded-full inline-block mb-4 border border-primary/20">
               EXPORT REGISTRY
             </span>
-            <h3 className="text-xl font-poppins font-extrabold text-stone-900 mt-1">
+            <h3 className="text-2xl md:text-3xl font-poppins font-extrabold text-stone-900">
               Geographic Distribution Network
             </h3>
-            <p className="text-xs text-stone-500 mt-2 font-medium">
+            <p className="text-sm text-stone-500 mt-4 font-medium leading-relaxed">
               We coordinate container shipments and logistics document validation for the following global markets:
             </p>
           </div>
 
-          {/* Region Tabs Selector */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
+          {/* Premium Animated Tabs */}
+          <div className="flex flex-wrap justify-center gap-2 mb-10 bg-white p-2 rounded-2xl shadow-sm border border-stone-200 w-fit mx-auto relative z-20">
             {Object.keys(regionsData).map((key) => (
               <button
                 key={key}
                 onClick={() => setActiveRegion(key)}
-                className={`px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider font-poppins transition-all ${
+                className={`relative px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest font-poppins transition-colors duration-300 ${
                   activeRegion === key
-                    ? 'bg-primary text-white shadow-soft'
-                    : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+                    ? 'text-white'
+                    : 'text-stone-500 hover:text-stone-800 hover:bg-stone-50'
                 }`}
               >
-                {key === 'asiapacific' ? 'Asia-Pacific' : key === 'middleeast' ? 'Middle East' : key}
+                {activeRegion === key && (
+                  <motion.div
+                    layoutId="activeRegionTab"
+                    className="absolute inset-0 bg-primary rounded-xl shadow-md"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">
+                  {key === 'asiapacific' ? 'Asia-Pacific' : key === 'middleeast' ? 'Middle East' : key}
+                </span>
               </button>
             ))}
           </div>
 
-          {/* Selected Region details */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white p-6 rounded-2xl border border-stone-200 shadow-soft">
-            <div className="lg:col-span-7 space-y-4">
-              <span className="text-secondary font-poppins text-[10px] font-bold uppercase tracking-widest">
-                ACTIVE EXPORT ZONE
-              </span>
-              <h4 className="font-poppins font-extrabold text-stone-900 text-base">
-                {regionsData[activeRegion].title}
-              </h4>
-              
-              <div>
-                <span className="text-[10px] text-stone-400 font-bold uppercase block tracking-wider mb-2">Destinations Served</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {regionsData[activeRegion].countries.map((country, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-accent border border-stone-200 text-stone-700 text-xs px-3 py-1 rounded-md font-semibold"
-                    >
-                      {country}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* Selected Region Content Panel */}
+          <div className="relative overflow-hidden bg-white p-8 lg:p-12 rounded-[2rem] border border-stone-200 shadow-premium">
+            {/* Decorative watermark */}
+            <Globe className="absolute -right-16 -bottom-16 w-96 h-96 text-stone-50 opacity-60 pointer-events-none" strokeWidth={0.5} />
 
-            <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l border-stone-200 pt-6 lg:pt-0 lg:pl-8 space-y-4 text-xs font-semibold text-stone-705">
-              <div>
-                <span className="text-[10px] text-stone-400 font-bold uppercase block tracking-widest">Primary Seaports</span>
-                <p className="text-stone-850 mt-1 font-bold">{regionsData[activeRegion].ports}</p>
-              </div>
-              <div>
-                <span className="text-[10px] text-stone-400 font-bold uppercase block tracking-widest">Est. Sailing Time</span>
-                <div className="flex items-center gap-1.5 text-primary mt-1 font-bold">
-                  <Truck className="w-4 h-4" />
-                  <span>{regionsData[activeRegion].transit}</span>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeRegion}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start relative z-10"
+              >
+                {/* LEFT SIDE: Countries List */}
+                <div className="lg:col-span-7 space-y-8">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 border border-secondary/20">
+                      <MapPin className="w-3 h-3" /> ACTIVE EXPORT ZONE
+                    </span>
+                    <h4 className="font-poppins font-extrabold text-stone-900 text-3xl">
+                      {regionsData[activeRegion].title}
+                    </h4>
+                  </div>
+                  
+                  <div>
+                    <span className="text-[11px] text-stone-400 font-bold uppercase block tracking-widest mb-4">
+                      Destinations Served
+                    </span>
+                    <div className="flex flex-wrap gap-3">
+                      {regionsData[activeRegion].countries.map((country, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 bg-stone-50 border border-stone-200 text-stone-700 text-sm px-4 py-2 rounded-xl font-semibold transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary cursor-default shadow-sm"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-primary opacity-80" />
+                          {country}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <span className="text-[10px] text-stone-400 font-bold uppercase block tracking-widest">Import Support Docs</span>
-                <p className="text-stone-500 mt-1 font-medium leading-relaxed">{regionsData[activeRegion].docs}</p>
-              </div>
-            </div>
+
+                {/* RIGHT SIDE: Logistics Details */}
+                <div className="lg:col-span-5 bg-stone-50/80 rounded-3xl p-8 space-y-8 border border-stone-100 shadow-inner">
+                  <div>
+                    <div className="flex items-center gap-2 text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-2">
+                      <Anchor className="w-4 h-4 text-stone-300" /> Primary Seaports
+                    </div>
+                    <p className="text-stone-800 font-bold text-sm leading-relaxed">
+                      {regionsData[activeRegion].ports}
+                    </p>
+                  </div>
+                  
+                  <div className="w-full h-px bg-gradient-to-r from-stone-200 to-transparent"></div>
+
+                  <div>
+                    <div className="flex items-center gap-2 text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-2">
+                      <Navigation className="w-4 h-4 text-stone-300" /> Est. Sailing Time
+                    </div>
+                    <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-bold shadow-sm">
+                      <Truck className="w-4 h-4" />
+                      <span>{regionsData[activeRegion].transit}</span>
+                    </div>
+                  </div>
+
+                  <div className="w-full h-px bg-gradient-to-r from-stone-200 to-transparent"></div>
+
+                  <div>
+                    <div className="flex items-center gap-2 text-[10px] text-stone-400 font-bold uppercase tracking-widest mb-3">
+                      <FileText className="w-4 h-4 text-stone-300" /> Import Support Docs
+                    </div>
+                    <div className="bg-white border border-stone-200 p-5 rounded-2xl shadow-soft">
+                      <p className="text-stone-600 text-xs font-semibold leading-relaxed">
+                        {regionsData[activeRegion].docs}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </section>

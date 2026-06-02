@@ -5,9 +5,15 @@ import { motion } from 'framer-motion';
 
 export const AuthLayout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col justify-between font-sans relative overflow-hidden">
+    <div 
+      className="min-h-screen text-stone-100 flex flex-col justify-between font-sans relative overflow-hidden bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: 'url("/bg-auth.png")' }}
+    >
+      {/* Blurry dark overlay */}
+      <div className="absolute inset-0 bg-stone-950/30 backdrop-blur-sm z-0" />
+
       {/* Background decoration elements */}
-      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-primary/10 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-primary/20 blur-[150px] pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[130px] pointer-events-none" />
 
       {/* Header */}
@@ -43,16 +49,6 @@ export const AuthLayout = ({ children }) => {
         </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full max-w-7xl mx-auto px-6 py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-stone-500 font-semibold relative z-10 border-t border-stone-900">
-        <div>
-          <span>© 2026 Cocoveera. All rights reserved.</span>
-        </div>
-        <div className="flex items-center gap-2 text-primary-light/65">
-          <ShieldCheck className="w-4 h-4" />
-          <span>Secure AES-256 Encrypted Connection</span>
-        </div>
-      </footer>
     </div>
   );
 };

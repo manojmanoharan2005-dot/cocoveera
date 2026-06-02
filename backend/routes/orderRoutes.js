@@ -6,13 +6,15 @@ import {
   updateTrackingStatus,
   getOrderById,
 } from '../controllers/orderController.js';
-import { getShippingRules } from '../controllers/settingsController.js';
 import { protect, admin } from '../middleware/auth.js';
+import { getShippingRules } from '../controllers/shippingController.js';
+import { validateOrder } from '../middleware/validators.js';
+import { orderCreateLimiter } from '../middleware/limiters.js';
 
 const router = express.Router();
 
 router.route('/')
-  .post(protect, createOrder)
+  .post(protect, orderCreateLimiter, validateOrder, createOrder)
   .get(protect, admin, getAllOrders);
 
 router.route('/shipping-rules')

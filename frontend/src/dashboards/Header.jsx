@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,6 +19,7 @@ export const Header = ({
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out of Cocoveera?')) {
@@ -94,19 +95,51 @@ export const Header = ({
             </button>
 
             {/* Sort dropdown */}
-            <div className="relative flex items-center bg-white border border-stone-200 hover:border-stone-300 rounded-[12px] px-3.5 h-10 shrink-0 shadow-sm min-w-[140px] transition-all">
-              <span className="text-[10px] text-stone-400 font-bold mr-1.5 shrink-0">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent border-none p-0 pr-4 text-[11.5px] text-stone-900 focus:outline-none cursor-pointer appearance-none flex-grow font-bold"
+            <div className="relative flex items-center shrink-0">
+              <button
+                type="button"
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                className="flex items-center justify-between bg-white border border-stone-200 hover:border-[#2E7D32] hover:shadow-sm rounded-[12px] px-3.5 h-10 min-w-[150px] transition-all group"
               >
-                <option>Featured</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
-                <option>Rating</option>
-              </select>
-              <ChevronDown className="w-3 h-3 text-stone-400 absolute right-3 pointer-events-none" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-stone-400 font-bold">Sort:</span>
+                  <span className="text-[11.5px] text-stone-900 font-extrabold">{sortBy}</span>
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-stone-400 group-hover:text-[#2E7D32] transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              <AnimatePresence>
+                {sortDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setSortDropdownOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 5 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-[calc(100%+8px)] right-0 w-full min-w-[150px] bg-white border border-stone-200/80 rounded-[14px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] py-1.5 z-50 overflow-hidden"
+                    >
+                      {['Featured', 'Price: Low to High', 'Price: High to Low', 'Rating'].map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => {
+                            setSortBy(option);
+                            setSortDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-[11.5px] font-bold transition-colors flex items-center justify-between ${
+                            sortBy === option 
+                              ? 'bg-[#F0FAF0] text-[#2E7D32]' 
+                              : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+                          }`}
+                        >
+                          {option}
+                          {sortBy === option && <Check className="w-3.5 h-3.5 text-[#2E7D32]" />}
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         ) : (
@@ -117,15 +150,7 @@ export const Header = ({
       {/* Right: Actions */}
       <div className="flex items-center gap-2 shrink-0">
 
-        {/* Notifications */}
-        <button
-          onClick={onNotificationClick}
-          className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all"
-          title="Notifications"
-        >
-          <Bell className="w-4.5 h-4.5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border-2 border-white" />
-        </button>
+
 
         {/* Cart */}
         <button

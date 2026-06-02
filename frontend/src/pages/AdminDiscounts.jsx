@@ -264,7 +264,7 @@ export default function AdminDiscounts() {
             </div>
 
             {/* Form or Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
               <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <h2 className="text-lg font-bold text-gray-900">
                   {showForm ? `${editingId ? 'Edit' : 'Create'} ${TABS.find(t=>t.id===activeTab)?.label}` : `Manage ${TABS.find(t=>t.id===activeTab)?.label}`}
@@ -476,7 +476,7 @@ export default function AdminDiscounts() {
                 </form>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full whitespace-nowrap">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-100">
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Rule Details</th>

@@ -7,7 +7,12 @@ import {
   ShoppingCart,
   MapPin,
   Settings,
-  LogOut
+  LogOut,
+  FileText,
+  MessageSquare,
+  Bell,
+  HelpCircle,
+  Truck
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -19,12 +24,13 @@ export const Sidebar = ({
   onLogoutClick
 }) => {
   const menuItems = [
-    { name: 'Marketplace', label: 'Marketplace', icon: Store },
-    { name: 'My Orders', label: 'My Orders', icon: ShoppingBag },
-    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount },
-    { name: 'Cart', label: 'Cart', icon: ShoppingCart, badge: cartCount },
-    { name: 'Saved Addresses', label: 'Saved Address', icon: MapPin },
-    { name: 'Settings', label: 'Settings', icon: Settings },
+    { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
+    { name: 'My Orders', label: 'My Orders', icon: ShoppingBag, path: '/account/orders' },
+    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/account/saved' },
+    { name: 'Cart', label: 'Cart', icon: ShoppingCart, badge: cartCount, path: '/account/cart' },
+    { name: 'Saved Addresses', label: 'Saved Address', icon: MapPin, path: '/account/address' },
+    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/account/support' },
+    { name: 'Settings', label: 'Settings', icon: Settings, path: '/account/settings' },
   ];
 
   const displayName = user?.companyName && user.companyName !== 'N/A' 

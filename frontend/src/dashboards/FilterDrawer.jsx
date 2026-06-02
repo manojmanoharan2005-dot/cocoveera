@@ -14,20 +14,13 @@ export const FilterDrawer = ({
   ratingFilter,
   setRatingFilter,
   onApplyFilters,
-  onClearFilters
+  onClearFilters,
+  products = []
 }) => {
   const [localPrice, setLocalPrice] = useState(priceRange);
 
-  const collections = [
-    'All',
-    'Coir Pith Blocks',
-    'Grow Bags',
-    'Coir Discs',
-    'Erosion Control',
-    'Other Coir Products',
-    'Hobby Gardening',
-    'Custom Solutions'
-  ];
+  const uniqueCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
+  const collections = ['All', ...uniqueCategories];
 
   const handleApply = (e) => {
     e.preventDefault();
@@ -36,7 +29,7 @@ export const FilterDrawer = ({
   };
 
   const handleClear = () => {
-    setLocalPrice({ min: 0, max: 5000 });
+    setLocalPrice({ min: 0, max: 99999999 });
     onClearFilters();
     onClose();
   };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { adminProductService } from '../services/adminService';
+import { adminProductService, adminCategoryService } from '../services/adminService';
 import {
   Plus,
   Edit2,
@@ -41,15 +41,16 @@ export default function AdminProducts() {
 
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const categories = [
-    'Coir Pith Blocks',
-    'Grow Bags',
-    'Coir Discs',
-    'Erosion Control',
-    'Other Coir Products',
-    'Hobby Gardening',
-    'Custom Solutions',
-  ];
+  const [categories, setCategories] = useState([]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await adminCategoryService.getAll(1, 100);
+      setCategories(response.data.map(c => c.name));
+    } catch (err) {
+      console.error('Failed to load categories', err);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -65,6 +66,10 @@ export default function AdminProducts() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     fetchProducts();
@@ -454,8 +459,8 @@ export default function AdminProducts() {
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="w-full">
+            <div className="bg-white rounded-lg shadow overflow-x-auto">
+              <table className="w-full whitespace-nowrap">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">

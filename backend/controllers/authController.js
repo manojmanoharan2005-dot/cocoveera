@@ -1,5 +1,5 @@
 import User from '../models/User.js';
-import { sendOTPEmail, sendWelcomeEmail } from '../utils/mailer.js';
+import { sendOTPEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 
 // @desc    Register user (triggers OTP)
 // @route   POST /api/auth/register
@@ -35,7 +35,7 @@ export const register = async (req, res) => {
       otpExpires,
     });
 
-    // Send Brevo OTP Email
+    // Send OTP Email
     await sendOTPEmail(email, name, otpCode);
 
     res.status(201).json({
@@ -132,6 +132,7 @@ export const login = async (req, res) => {
       user.otpCode = otpCode;
       user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
       await user.save();
+      
       await sendOTPEmail(user.email, user.name, otpCode);
 
       return res.status(403).json({
@@ -225,7 +226,8 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    console.log(`[Brevo Mock Email] Reset Password code sent to ${email}: ${resetToken}`);
+    // Send OTP Email for Password Reset
+    await sendPasswordResetEmail(user.email, user.name, resetToken);
 
     res.status(200).json({
       success: true,
@@ -292,7 +294,7 @@ export const resendOtp = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     await user.save();
 
-    // Send Brevo OTP Email
+    // Send OTP Email
     await sendOTPEmail(user.email, user.name, otpCode);
 
     res.status(200).json({

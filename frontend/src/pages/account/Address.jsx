@@ -17,7 +17,11 @@ const Address = () => {
       try {
         const res = await apiClient.get('/users/profile');
         if (res.data.success) {
-          setAddresses(res.data.data.addresses || []);
+          const fetchedAddresses = res.data.data.addresses || [];
+          setAddresses(fetchedAddresses);
+          if (fetchedAddresses.length === 0) {
+            setIsEditing(true);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch addresses', err);
@@ -78,7 +82,11 @@ const Address = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-stone-900 mb-2">Saved Addresses</h1>
-          <p className="text-stone-500 font-semibold text-sm">Manage your shipping and billing locations.</p>
+          {addresses.length === 0 ? (
+            <p className="text-red-500 font-bold text-sm">Action Required: Please complete your profile by adding a shipping address to proceed.</p>
+          ) : (
+            <p className="text-stone-500 font-semibold text-sm">Manage your shipping and billing locations.</p>
+          )}
         </div>
         <button 
           onClick={() => setIsEditing(true)}
@@ -147,9 +155,11 @@ const Address = () => {
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-stone-100">
-              <button type="button" onClick={() => setIsEditing(false)} className="px-6 py-2.5 text-stone-500 font-bold text-sm hover:text-stone-900 transition-colors">
-                Cancel
-              </button>
+              {addresses.length > 0 && (
+                <button type="button" onClick={() => setIsEditing(false)} className="px-6 py-2.5 text-stone-500 font-bold text-sm hover:text-stone-900 transition-colors">
+                  Cancel
+                </button>
+              )}
               <button type="submit" className="px-8 py-2.5 bg-[#2E7D32] text-white font-bold text-sm rounded-xl hover:bg-[#1B5E20] transition-colors">
                 Save Address
               </button>

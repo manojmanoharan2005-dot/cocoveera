@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simple-maps';
+
+const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 
 const GlobalMap = () => {
   const [activePort, setActivePort] = useState(null);
 
+  // Approximate [longitude, latitude] coordinates
   const ports = [
-    { id: 'origin', name: 'Cocoveera Cochin Port (India)', x: 620, y: 260, isOrigin: true, type: 'Manufacturing HQ & Port' },
-    { id: 'nl', name: 'Rotterdam Port (Netherlands)', x: 490, y: 145, country: 'Europe', transit: '18 Days', volume: 'High' },
-    { id: 'la', name: 'Port of Los Angeles (USA)', x: 210, y: 170, country: 'North America', transit: '24 Days', volume: 'Very High' },
-    { id: 'jp', name: 'Port of Tokyo (Japan)', x: 780, y: 180, country: 'East Asia', transit: '12 Days', volume: 'Medium' },
-    { id: 'au', name: 'Port of Melbourne (Australia)', x: 790, y: 350, country: 'Oceania', transit: '14 Days', volume: 'High' },
-    { id: 'za', name: 'Port of Durban (South Africa)', x: 530, y: 320, country: 'Africa', transit: '16 Days', volume: 'Medium' },
+    { id: 'origin', name: 'Cocoveera Cochin Port (India)', coordinates: [76.2673, 9.9312], isOrigin: true, type: 'Manufacturing HQ & Port' },
+    { id: 'nl', name: 'Rotterdam Port (Netherlands)', coordinates: [4.4791, 51.9225], country: 'Europe', transit: '18 Days', volume: 'High' },
+    { id: 'la', name: 'Port of Los Angeles (USA)', coordinates: [-118.2437, 34.0522], country: 'North America', transit: '24 Days', volume: 'Very High' },
+    { id: 'jp', name: 'Port of Tokyo (Japan)', coordinates: [139.6917, 35.6895], country: 'East Asia', transit: '12 Days', volume: 'Medium' },
+    { id: 'au', name: 'Port of Melbourne (Australia)', coordinates: [144.9631, -37.8136], country: 'Oceania', transit: '14 Days', volume: 'High' },
+    { id: 'za', name: 'Port of Durban (South Africa)', coordinates: [31.0218, -29.8587], country: 'Africa', transit: '16 Days', volume: 'Medium' },
   ];
+
+  const origin = ports.find(p => p.isOrigin);
 
   return (
     <div className="relative bg-white rounded-3xl p-6 lg:p-10 shadow-soft border border-stone-200 overflow-hidden">
@@ -40,145 +46,109 @@ const GlobalMap = () => {
         </div>
       </div>
 
-      {/* SVG Map Canvas */}
-      <div className="relative w-full overflow-x-auto select-none">
+      {/* Real Map Canvas */}
+      <div className="relative w-full overflow-x-auto select-none bg-stone-50/30 rounded-2xl border border-stone-100">
         <div className="min-w-[800px] aspect-[800/400] relative">
-          <svg
-            viewBox="0 0 900 450"
-            className="w-full h-full text-stone-300"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1"
+          <ComposableMap
+            projection="geoMercator"
+            projectionConfig={{ scale: 120, center: [10, 15] }}
+            style={{ width: "100%", height: "100%" }}
           >
-            {/* Soft grid lines */}
-            <g strokeDasharray="3 6" stroke="rgba(47,125,50,0.06)">
-              <line x1="0" y1="75" x2="900" y2="75" />
-              <line x1="0" y1="150" x2="900" y2="150" />
-              <line x1="0" y1="225" x2="900" y2="225" />
-              <line x1="0" y1="300" x2="900" y2="300" />
-              <line x1="0" y1="375" x2="900" y2="375" />
-              
-              <line x1="150" y1="0" x2="150" y2="450" />
-              <line x1="300" y1="0" x2="300" y2="450" />
-              <line x1="450" y1="0" x2="450" y2="450" />
-              <line x1="600" y1="0" x2="600" y2="450" />
-              <line x1="750" y1="0" x2="750" y2="450" />
-            </g>
+            <Geographies geography={geoUrl}>
+              {({ geographies }) =>
+                geographies.map((geo) => (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    fill="#E8F5E9"
+                    stroke="#C8E6C9"
+                    strokeWidth={0.5}
+                    style={{
+                      default: { outline: "none" },
+                      hover: { fill: "#C8E6C9", outline: "none", transition: "all 250ms" },
+                      pressed: { outline: "none" },
+                    }}
+                  />
+                ))
+              }
+            </Geographies>
 
-            {/* Continent shapes in light grey/green */}
-            <g fill="rgba(47, 125, 50, 0.03)" stroke="rgba(47, 125, 50, 0.08)" strokeWidth="0.8">
-              {/* North America */}
-              <path d="M 80,80 L 260,90 L 270,160 L 200,210 L 160,250 L 130,220 Z" />
-              {/* South America */}
-              <path d="M 230,260 L 290,290 L 310,380 L 260,420 L 240,320 Z" />
-              {/* Europe & Africa */}
-              <path d="M 400,100 L 530,90 L 550,160 L 580,240 L 580,350 L 510,380 L 480,260 L 420,200 Z" />
-              {/* Asia */}
-              <path d="M 530,100 L 800,100 L 820,220 L 720,280 L 680,260 L 590,200 Z" />
-              {/* Australia */}
-              <path d="M 740,320 L 820,330 L 810,390 L 730,370 Z" />
-            </g>
-
-            {/* Flow Paths (Animate dash-offset for moving effect) */}
-            {ports.filter(p => !p.isOrigin).map((port) => (
-              <g key={`path-${port.id}`}>
+            {/* Connection Lines */}
+            {ports.filter(p => !p.isOrigin).map(port => (
+              <g key={`line-${port.id}`}>
                 {/* Static base line */}
-                <path
-                  d={`M 620 260 Q ${(620 + port.x) / 2} ${(260 + port.y) / 2 - 50} ${port.x} ${port.y}`}
+                <Line
+                  from={origin.coordinates}
+                  to={port.coordinates}
                   stroke="rgba(162, 107, 61, 0.15)"
-                  strokeWidth="1.5"
-                  fill="none"
+                  strokeWidth={2}
+                  strokeLinecap="round"
                 />
-                {/* Animated dash line */}
-                <path
-                  d={`M 620 260 Q ${(620 + port.x) / 2} ${(260 + port.y) / 2 - 50} ${port.x} ${port.y}`}
+                {/* Dashed animated line */}
+                <Line
+                  from={origin.coordinates}
+                  to={port.coordinates}
                   stroke="#2F7D32"
-                  strokeWidth="2"
-                  strokeDasharray="8 8"
-                  fill="none"
-                  className="animate-pulse-subtle"
+                  strokeWidth={2}
+                  strokeDasharray="6 6"
+                  strokeLinecap="round"
+                  className="animate-pulse"
                 />
               </g>
             ))}
 
-            {/* Glow / Hub Indicators */}
+            {/* Markers */}
             {ports.map((port) => (
-              <g
-                key={port.id}
-                className="cursor-pointer"
+              <Marker 
+                key={port.id} 
+                coordinates={port.coordinates}
                 onMouseEnter={() => setActivePort(port)}
                 onMouseLeave={() => setActivePort(null)}
+                className="cursor-pointer outline-none"
               >
-                {/* Ping rings */}
                 {port.isOrigin ? (
-                  <>
-                    <circle cx={port.x} cy={port.y} r="10" fill="rgba(47, 125, 50, 0.2)" />
-                    <circle cx={port.x} cy={port.y} r="18" fill="none" stroke="#2F7D32" strokeWidth="1" className="animate-ping" />
-                  </>
+                  <g>
+                    <circle r="12" fill="rgba(47, 125, 50, 0.2)" />
+                    <circle r="20" fill="none" stroke="#2F7D32" strokeWidth="1.5" className="animate-ping" />
+                    <circle r="6" fill="#2F7D32" stroke="#fff" strokeWidth="2" />
+                  </g>
                 ) : (
-                  <>
-                    <circle cx={port.x} cy={port.y} r="8" fill="rgba(162, 107, 61, 0.2)" />
-                    <circle cx={port.x} cy={port.y} r="14" fill="none" stroke="#A26B3D" strokeWidth="1" className="animate-pulse" />
-                  </>
+                  <g>
+                    <circle r="10" fill="rgba(162, 107, 61, 0.2)" />
+                    <circle r="16" fill="none" stroke="#A26B3D" strokeWidth="1" className="animate-pulse" />
+                    <circle r="5" fill="#A26B3D" stroke="#fff" strokeWidth="1.5" />
+                  </g>
                 )}
-                {/* Core dot */}
-                <circle
-                  cx={port.x}
-                  cy={port.y}
-                  r="5"
-                  fill={port.isOrigin ? '#2F7D32' : '#A26B3D'}
-                  stroke="#fff"
-                  strokeWidth="1.5"
-                />
-              </g>
+              </Marker>
             ))}
-          </svg>
+          </ComposableMap>
 
-          {/* Active port popover card absolute overlay */}
+          {/* Active port popover card */}
           {activePort && (
             <div
-              className="absolute bg-white text-stone-900 border border-stone-200 rounded-xl p-4 shadow-lg z-30 transition-opacity duration-300 pointer-events-none"
-              style={{
-                left: `${(activePort.x / 900) * 100}%`,
-                top: `${(activePort.y / 450) * 100 - 20}%`,
-                transform: 'translate(-50%, -100%)',
-              }}
+              className="absolute left-1/2 top-10 transform -translate-x-1/2 bg-white text-stone-900 border border-stone-200 rounded-xl p-4 shadow-lg z-30 transition-opacity duration-300 pointer-events-none"
             >
               <div className="font-poppins font-bold text-xs text-primary mb-0.5">
                 {activePort.name}
               </div>
               <div className="text-[10px] text-stone-500 font-semibold">
-                {activePort.isOrigin ? (
-                  <span>{activePort.type}</span>
-                ) : (
-                  <div className="space-y-0.5">
-                    <div>Continent: {activePort.country}</div>
-                    <div>Est. Transit: {activePort.transit}</div>
-                    <div>Demand: {activePort.volume}</div>
-                  </div>
-                )}
+                {activePort.type || `${activePort.country} · ${activePort.transit}`}
               </div>
+              
+              {!activePort.isOrigin && (
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-stone-100 pt-3">
+                  <div>
+                    <div className="text-[9px] text-stone-400 uppercase tracking-wider mb-0.5">Volume</div>
+                    <div className="text-xs font-bold text-stone-700">{activePort.volume}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-stone-400 uppercase tracking-wider mb-0.5">Status</div>
+                    <div className="text-xs font-bold text-green-600">Active Route</div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 border-t border-stone-100 pt-8 text-center">
-        <div>
-          <div className="text-xl font-poppins font-extrabold text-primary">60+ Countries</div>
-          <div className="text-[10px] text-stone-400 font-bold uppercase mt-1">Export Destination Reach</div>
-        </div>
-        <div>
-          <div className="text-xl font-poppins font-extrabold text-primary">4 Ports</div>
-          <div className="text-[10px] text-stone-400 font-bold uppercase mt-1">Primary Shipping Hubs</div>
-        </div>
-        <div>
-          <div className="text-xl font-poppins font-extrabold text-primary">100% Traceable</div>
-          <div className="text-[10px] text-stone-400 font-bold uppercase mt-1">Export Batch Tracking</div>
-        </div>
-        <div>
-          <div className="text-xl font-poppins font-extrabold text-primary">24/7 Logistics</div>
-          <div className="text-[10px] text-stone-400 font-bold uppercase mt-1">Clearance Support</div>
         </div>
       </div>
     </div>

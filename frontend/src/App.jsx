@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import Navbar from './components/Navbar';
@@ -20,15 +20,18 @@ import OTPForm from './components/auth/OTPForm';
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
+import AdminCategories from './pages/AdminCategories';
 import AdminOrders from './pages/AdminOrders';
 import AdminUsers from './pages/AdminUsers';
 import AdminContainers from './pages/AdminContainers';
+import AdminPayments from './pages/admin/AdminPayments';
 import AdminTesting from './pages/AdminTesting';
 import AdminReports from './pages/AdminReports';
 import AdminSettings from './pages/AdminSettings';
 import AdminCurrencyManagement from './pages/AdminCurrencyManagement';
 import AdminShippingManagement from './pages/AdminShippingManagement';
 import AdminDiscounts from './pages/AdminDiscounts';
+import ContainerViewerDemo from './pages/ContainerViewerDemo';
 
 // User Protected Route
 import UserDashboard from './dashboards/UserDashboard';
@@ -46,6 +49,11 @@ import Address from './pages/account/Address';
 import Settings from './pages/account/Settings';
 import Profile from './pages/account/Profile';
 import ProductView from './pages/account/ProductView';
+import Invoices from './pages/account/Invoices';
+import Quotes from './pages/account/Quotes';
+import Notifications from './pages/account/Notifications';
+import PaymentHistory from './pages/account/PaymentHistory';
+import HelpCenter from './pages/account/HelpCenter';
 
 // Loading screen matching the requested design
 const LoadingScreen = () => (
@@ -60,6 +68,7 @@ const LoadingScreen = () => (
 // Guard for user authenticated pages
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return <LoadingScreen />;
@@ -67,6 +76,11 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Force user to add an address before proceeding to any other protected page
+  if (user && (!user.addresses || user.addresses.length === 0) && location.pathname !== '/account/address') {
+    return <Navigate to="/account/address" state={{ requireAddress: true }} replace />;
   }
 
   return children;
@@ -108,6 +122,7 @@ function AppContent() {
         <Route path="/quality-testing" element={<QualityTesting />} />
         <Route path="/substrates" element={<CoconutSubstrates />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/containers/viewer" element={<ContainerViewerDemo />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route
@@ -144,6 +159,11 @@ function AppContent() {
         <Route path="address" element={<Address />} />
         <Route path="settings" element={<Settings />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="quotes" element={<Quotes />} />
+        <Route path="payments" element={<PaymentHistory />} />
+        <Route path="notifications" element={<Notifications />} />
+        <Route path="support" element={<HelpCenter />} />
         <Route path="product/:id" element={<ProductView />} />
         <Route path="productview/:id" element={<ProductView />} />
       </Route>
@@ -166,10 +186,26 @@ function AppContent() {
         }
       />
       <Route
+        path="/admin/categories"
+        element={
+          <AdminProtectedRoute>
+            <AdminCategories />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/orders"
         element={
           <AdminProtectedRoute>
             <AdminOrders />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/payments"
+        element={
+          <AdminProtectedRoute>
+            <AdminPayments />
           </AdminProtectedRoute>
         }
       />

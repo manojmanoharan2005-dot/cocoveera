@@ -24,6 +24,6 @@ export const convertCurrency = (amountInINR, targetCurrency) => {
   return {
     value: convertedAmount,
     symbol,
-    formatted: `${symbol}${convertedAmount.toFixed(2)}`
+    formatted: `${symbol}${Number(convertedAmount.toFixed(2)).toLocaleString('en-IN')}`
   };
 };

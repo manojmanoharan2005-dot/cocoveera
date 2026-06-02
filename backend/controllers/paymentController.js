@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import Razorpay from 'razorpay';
 import paypal from '@paypal/checkout-server-sdk';
 import Order from '../models/Order.js';
+import Payment from '../models/Payment.js';
 import Quote from '../models/Quote.js';
 import Invoice from '../models/Invoice.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
@@ -180,6 +181,22 @@ export const confirmPayment = async (req, res) => {
       order.paymentGateway = gateway || 'mock';
       await order.save();
 
+      // Create a Payment record
+      try {
+        await Payment.create({
+          order: order._id,
+          amount: order.totalAmount,
+          status: 'completed',
+          method: gateway || 'mock',
+          transactionId: paymentId || order.paymentId,
+          paymentDate: new Date(),
+          description: `Payment for order ${order._id}`,
+          user: order.user._id
+        });
+      } catch (payErr) {
+        console.error('Failed to create Payment record:', payErr);
+      }
+
       // If this order is linked to a quote, convert quote status to "converted"
       if (order.quote) {
         await Quote.findByIdAndUpdate(order.quote, { status: 'converted' });
@@ -242,6 +259,147 @@ export const confirmPayment = async (req, res) => {
       await order.save();
       return res.status(400).json({ success: false, message: 'Payment status marked as failed', data: order });
     }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get logged in user's payment history
+// @route   GET /api/payments/history
+// @access  Private
+export const getMyPayments = async (req, res) => {
+  try {
+    const Payment = (await import('../models/Payment.js')).default;
+    let payments = await Payment.find({ user: req.user._id }).sort({ createdAt: -1 });
+
+    // Fallback: if no Payment documents, derive from paid Orders
+    if (!payments || payments.length === 0) {
+      const Order = (await import('../models/Order.js')).default;
+      const orders = await Order.find({ user: req.user._id, paymentStatus: 'paid' }).sort({ updatedAt: -1 });
+      payments = orders.map(o => ({ _id: o._id, order: o._id, amount: o.totalAmount, status: 'completed', method: o.paymentGateway || 'mock', transactionId: o.paymentId || '', paymentDate: o.updatedAt, user: req.user._id }));
+    }
+
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get all payments (admin)
+// @route   GET /api/payments/admin
+// @access  Private/Admin
+export const getAllPayments = async (req, res) => {
+  try {
+    const Payment = (await import('../models/Payment.js')).default;
+    let payments = await Payment.find().populate('order', 'orderId totalAmount').populate('user', 'name email').sort({ createdAt: -1 });
+
+    if (!payments || payments.length === 0) {
+      const Order = (await import('../models/Order.js')).default;
+      const orders = await Order.find({ paymentStatus: 'paid' }).populate('user', 'name email').sort({ updatedAt: -1 });
+      payments = orders.map(o => ({ _id: o._id, order: o._id, amount: o.totalAmount, status: 'completed', method: o.paymentGateway || 'mock', transactionId: o.paymentId || '', paymentDate: o.updatedAt, user: o.user }));
+    }
+
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Request a refund for a payment/order
+// @route   POST /api/payments/refund
+// @access  Private
+export const requestRefund = async (req, res) => {
+  try {
+    const { paymentId, reason } = req.body;
+    const Payment = (await import('../models/Payment.js')).default;
+    let payment = await Payment.findById(paymentId).populate('user');
+
+    // If Payment doc not found, try interpreting paymentId as an Order id and derive/create Payment
+    if (!payment) {
+      const Order = (await import('../models/Order.js')).default;
+      const order = await Order.findById(paymentId).populate('user');
+      if (!order) return res.status(404).json({ success: false, message: 'Payment not found' });
+      if (order.user._id.toString() !== req.user._id.toString()) return res.status(403).json({ success: false, message: 'Not authorized' });
+
+      // Create a Payment document representing this order's paid transaction if not present
+      try {
+        payment = await Payment.create({
+          order: order._id,
+          amount: order.totalAmount,
+          status: 'completed',
+          method: order.paymentGateway || 'mock',
+          transactionId: order.paymentId || '',
+          paymentDate: order.updatedAt || new Date(),
+          user: order.user._id,
+        });
+      } catch (createErr) {
+        // Handle duplicate transactionId: find existing payment
+        if (createErr && createErr.code === 11000 && order.paymentId) {
+          payment = await Payment.findOne({ transactionId: order.paymentId });
+        } else {
+          throw createErr;
+        }
+      }
+    }
+
+    if (payment.user.toString() !== req.user._id.toString()) return res.status(403).json({ success: false, message: 'Not authorized' });
+
+    payment.status = 'refund_requested';
+    payment.refundReason = reason || 'No reason provided';
+    payment.refundRequestedAt = new Date();
+    await payment.save();
+
+    // Notify admin via email
+    const { sendAdminNotificationEmail } = await import('../utils/mailer.js');
+    await sendAdminNotificationEmail(process.env.SUPPORT_EMAIL || 'servicedesk@cocoveera.com', 'Cocoveera Admin', { type: 'refund_request', message: `Refund requested for payment ${payment._id}` });
+
+    res.status(200).json({ success: true, message: 'Refund requested successfully', data: payment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Approve refund (admin)
+// @route   PATCH /api/payments/refund/:id/approve
+// @access  Private/Admin
+export const approveRefund = async (req, res) => {
+  try {
+    const Payment = (await import('../models/Payment.js')).default;
+    const payment = await Payment.findById(req.params.id).populate('order');
+    if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
+
+    payment.status = 'refunded';
+    payment.refundDecisionAt = new Date();
+    payment.refundDecisionBy = req.user._id;
+    await payment.save();
+
+    // Update order refund status if applicable
+    if (payment.order) {
+      const Order = (await import('../models/Order.js')).default;
+      await Order.findByIdAndUpdate(payment.order, { refundStatus: 'refunded' });
+    }
+
+    res.status(200).json({ success: true, message: 'Refund approved', data: payment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Reject refund (admin)
+// @route   PATCH /api/payments/refund/:id/reject
+// @access  Private/Admin
+export const rejectRefund = async (req, res) => {
+  try {
+    const Payment = (await import('../models/Payment.js')).default;
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
+
+    payment.status = 'failed';
+    payment.refundDecisionAt = new Date();
+    payment.refundDecisionBy = req.user._id;
+    await payment.save();
+
+    res.status(200).json({ success: true, message: 'Refund rejected', data: payment });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { securitySanitizers } from './middleware/sanitize.js';
 
 import { connectDB } from './config/db.js';
 
@@ -11,11 +13,14 @@ import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import quoteRoutes from './routes/quoteRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
-import testingRoutes from './routes/testingRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import shippingRoutes from './routes/shippingRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import addressRoutes from './routes/addressRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 
 // Models for seeding
 import Product from './models/Product.js';
@@ -23,8 +28,40 @@ import User from './models/User.js';
 
 const app = express();
 
+// Global rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter limiter for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: { success: false, message: 'Too many auth attempts, please try again later.' }
+});
+
+app.use(limiter);
+
 // Security Middlewares
-app.use(helmet());
+// Helmet with stricter Content Security Policy
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", process.env.FRONTEND_URL || 'http://localhost:5173', 'https:'],
+        frameAncestors: ["'self'"],
+        objectSrc: ["'none'"],
+      },
+    },
+  })
+);
 app.use(cors({
   origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
   credentials: true
@@ -33,19 +70,27 @@ app.use(cors({
 
 
 // Body Parser
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
+
+// Sanitization against NoSQL injection and XSS
+securitySanitizers.forEach(mw => app.use(mw));
 
 // Routes
+// Apply auth rate limiter to auth endpoints
+app.use('/api/auth', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/testing', testingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/shipping', shippingRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Root route
 app.get('/', (req, res) => {

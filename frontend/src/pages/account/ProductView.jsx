@@ -482,11 +482,13 @@ const ProductView = () => {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  disabled={actionLoading}
-                  className="w-full bg-white border-2 border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32] font-poppins text-xs font-black py-3.5 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group"
+                  disabled={actionLoading || isOverCapacity}
+                  className={`w-full bg-white border-2 font-poppins text-xs font-black py-3.5 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group ${
+                    isOverCapacity ? 'border-stone-300 text-stone-400 opacity-50 blur-[1px] cursor-not-allowed' : 'border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]'
+                  }`}
                 >
                   {actionLoading ? 'ADDING...' : 'ADD TO CART'}
-                  <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
+                  <ShoppingBag className={`w-4 h-4 transition-transform ${isOverCapacity ? '' : 'group-hover:scale-110'}`} />
                 </button>
 
                 {!showConfigurator && (
@@ -506,11 +508,15 @@ const ProductView = () => {
                 <button
                   type="button"
                   onClick={() => showConfigurator ? handleProceedToCheckout() : setShowConfigurator(true)}
-                  disabled={actionLoading}
-                  className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md shadow-[#2E7D32]/10 flex items-center justify-center gap-2 group"
+                  disabled={actionLoading || (showConfigurator && isOverCapacity)}
+                  className={`w-full font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
+                    showConfigurator && isOverCapacity 
+                      ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
+                      : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
+                  }`}
                 >
                   {actionLoading ? 'PROCESSING...' : (showConfigurator ? 'PROCEED TO CHECKOUT' : 'BUY NOW')}
-                  <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight className={`w-4 h-4 transition-transform ${showConfigurator && isOverCapacity ? '' : 'group-hover:translate-x-0.5'}`} />
                 </button>
               </div>
               

@@ -192,7 +192,7 @@ export default function AdminCurrencyManagement() {
               </label>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full whitespace-nowrap">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Currency</th>

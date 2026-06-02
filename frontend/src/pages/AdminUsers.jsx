@@ -135,8 +135,8 @@ export default function AdminUsers() {
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="w-full">
+            <div className="bg-white rounded-lg shadow overflow-x-auto">
+              <table className="w-full whitespace-nowrap">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">

@@ -63,23 +63,22 @@ export const getWelcomeTemplate = (name) => {
   return baseTemplate({ title: 'Welcome to Cocoveera', content });
 };
 
-export const getForgotPasswordTemplate = (name, resetUrl) => {
+export const getForgotPasswordTemplate = (name, otp) => {
   const content = `
     <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #1E5B2E; margin-top: 0; font-weight: normal; margin-bottom: 20px;">Dear ${name},</h3>
-    <p style="margin-bottom: 25px;">A password reset request has been received for your Cocoveera portal account. If you initiated this request, please select the button below to establish a new password:</p>
+    <p style="margin-bottom: 25px;">A password reset request has been received for your Cocoveera portal account. If you initiated this request, please use the following 6-digit security code to establish a new password:</p>
     
-    <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 35px auto;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 35px auto; background: linear-gradient(135deg, #FCFBF9, #FAF9F6); border: 2px dashed #9E7E53; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
       <tr>
-        <td align="center" bgcolor="#1E5B2E" style="border-radius: 6px; box-shadow: 0 4px 12px rgba(30, 91, 46, 0.25);">
-          <a href="${resetUrl}" target="_blank" style="padding: 16px 36px; display: inline-block; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 15px; color: #FFFFFF; text-decoration: none; font-weight: bold; letter-spacing: 1px; border: 1px solid #1E5B2E; border-radius: 6px;">
-            Reset Password
-          </a>
+        <td style="padding: 24px 50px; text-align: center;">
+          <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9E7E53; font-weight: bold;">Password Reset Code</p>
+          <span style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 40px; font-weight: bold; letter-spacing: 10px; color: #1E5B2E; display: block; margin-top: 5px; text-shadow: 1px 1px 0px rgba(255,255,255,0.9);">${otp}</span>
         </td>
       </tr>
     </table>
     
     <div style="background-color: #FAF9F6; border-left: 3px solid #9E7E53; padding: 15px 20px; border-radius: 4px; margin-top: 30px;">
-      <p style="font-size: 13px; color: #666666; margin: 0; line-height: 1.5; font-style: italic;">This link will expire in 30 minutes. If you did not request this password reset, please disregard this email; your account security remains completely unaffected.</p>
+      <p style="font-size: 13px; color: #666666; margin: 0; line-height: 1.5; font-style: italic;">This code will expire in 10 minutes. If you did not request this password reset, please disregard this email; your account security remains completely unaffected.</p>
     </div>
   `;
   return baseTemplate({ title: 'Reset Your Password', content });

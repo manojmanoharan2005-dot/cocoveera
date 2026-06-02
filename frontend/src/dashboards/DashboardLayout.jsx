@@ -190,13 +190,12 @@ export const DashboardLayout = ({
       {/* 4. MOBILE BOTTOM NAVIGATION (Home, Marketplace, Orders, Profile) */}
       <div className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-stone-200/80 shadow-lg flex items-center justify-around z-40 lg:hidden px-4">
         {[
-          { name: 'Home', icon: Home },
           { name: 'Marketplace', icon: Store },
           { name: 'My Orders', icon: ShoppingBag },
           { name: 'Profile', icon: User }
         ].map((btn) => {
           const Icon = btn.icon;
-          const isActive = btn.name === 'Home' ? false : activeTab === btn.name;
+          const isActive = activeTab === btn.name;
           return (
             <button
               key={btn.name}

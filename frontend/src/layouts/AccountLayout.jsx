@@ -3,8 +3,9 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../dashboards/Header';
 import Sidebar from '../dashboards/Sidebar';
+import AIChatbot from '../components/AIChatbot';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Store, ShoppingBag, User, X, LogOut, Heart, MapPin, Settings } from 'lucide-react';
+import { Home, Store, ShoppingBag, User, X, LogOut, Heart, MapPin, Settings, Truck, FileText, MessageSquare, Bell, HelpCircle } from 'lucide-react';
 
 const ShoppingCart = ({ className }) => <ShoppingBag className={className} />;
 
@@ -23,10 +24,11 @@ const AccountLayout = () => {
 
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path.includes('/account/orders') || path.includes('/account/track')) return 'My Orders';
+    if (path.includes('/account/orders')) return 'My Orders';
     if (path.includes('/account/cart')) return 'Cart';
     if (path.includes('/account/saved')) return 'Wishlist';
     if (path.includes('/account/address')) return 'Saved Addresses';
+    if (path.includes('/account/support')) return 'Help & Support';
     if (path.includes('/account/settings')) return 'Settings';
     if (path.includes('/account/profile')) return 'Profile';
     if (path.includes('/account/checkout') || path.includes('/account/payment')) return '';
@@ -42,6 +44,7 @@ const AccountLayout = () => {
       case 'Cart': navigate('/account/cart'); break;
       case 'Wishlist': navigate('/account/saved'); break;
       case 'Saved Addresses': navigate('/account/address'); break;
+      case 'Help & Support': navigate('/account/support'); break;
       case 'Settings': navigate('/account/settings'); break;
       case 'Profile': navigate('/account/profile'); break;
       default: navigate('/dashboard');
@@ -59,6 +62,7 @@ const AccountLayout = () => {
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount },
     { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount },
     { name: 'Saved Addresses', label: 'Saved Addresses', icon: MapPin },
+    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle },
     { name: 'Settings', label: 'Settings', icon: Settings },
   ];
 
@@ -174,15 +178,17 @@ const AccountLayout = () => {
         )}
       </AnimatePresence>
 
+      {/* AI Chatbot Floating Widget */}
+      <AIChatbot />
+
       <div className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-stone-200/80 shadow-lg flex items-center justify-around z-40 lg:hidden px-4">
         {[
-          { name: 'Home', icon: Home },
           { name: 'Marketplace', icon: Store },
           { name: 'My Orders', icon: ShoppingBag },
           { name: 'Profile', icon: User }
         ].map((btn) => {
           const Icon = btn.icon;
-          const isActive = btn.name === 'Home' ? false : activeTab === btn.name;
+          const isActive = activeTab === btn.name;
           return (
             <button
               key={btn.name}

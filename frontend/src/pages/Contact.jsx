@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiClient } from '../context/AuthContext';
 import { Mail, Phone, MapPin, Send, Building } from 'lucide-react';
+import PageHero from '../components/PageHero';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -49,22 +50,14 @@ const Contact = () => {
   ];
 
   return (
-    <div className="pt-24 pb-16 bg-white min-h-screen">
-      {/* Banner */}
-      <section className="bg-primary text-white py-12 px-6 mb-8 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        <div className="max-w-7xl mx-auto relative z-10 space-y-2">
-          <span className="text-secondary-light font-poppins text-xs font-bold uppercase tracking-widest bg-white/10 py-1 px-3 rounded-lg">
-            GLOBAL REACH
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-poppins font-extrabold mt-1">
-            Contact Export Desk
-          </h1>
-          <p className="text-stone-105 text-xs sm:text-sm max-w-lg mx-auto mt-3 leading-relaxed font-medium">
-            Reach out to our domestic and international corporate offices for commercial quote approvals, logistic queries, or product certifications.
-          </p>
-        </div>
-      </section>
+    <div className="pb-16 bg-white min-h-screen">
+      <PageHero
+        badge="GLOBAL REACH"
+        title="Contact"
+        titleAccent="Export Desk"
+        subtitle="Reach out to our domestic and international corporate offices for commercial quote approvals, logistic queries, or product certifications."
+        breadcrumbs={[{ label: 'Contact', path: '/contact' }]}
+      />
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Side: Contact Form */}

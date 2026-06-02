@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiClient } from '../context/AuthContext';
-import { Search, FileDown, FlaskConical, ShieldCheck, ThermometerSnowflake, Ruler, Factory, Sun, CheckCircle, Info } from 'lucide-react';
+import { Search, FileDown, CheckCircle, Info, Palmtree, Settings, Box, Shield, Package, Ship } from 'lucide-react';
+import PageHero from '../components/PageHero';
 
 const QualityTesting = () => {
   const [batchCode, setBatchCode] = useState('');
@@ -31,62 +32,64 @@ const QualityTesting = () => {
   };
 
   const productionStages = [
-    { step: '01', title: 'Raw Husk Sourcing', desc: 'Aged raw husks are collected from the South India coconut belt and stored for six months to stabilize the organic fibers.' },
-    { step: '02', title: 'Washing & Buffering', desc: 'Raw coir is thoroughly washed in freshwater pools and buffered with calcium nitrate to displace sodium and potassium ions.' },
-    { step: '03', title: 'Natural Sun Drying', desc: 'Washed peat is spread across concrete drying yards, utilizing natural sunlight to reduce moisture levels below 20%.' },
-    { step: '04', title: 'Mechanical Screening', desc: 'Peat runs through rotary screeners to extract fine dust particles under 1mm, securing optimum root aeration.' },
-    { step: '05', title: 'Compaction & Packing', desc: 'Sifted peat is compressed at a 5:1 ratio into blocks or grow bags, then wrapped in UV-protected polythene.' },
-    { step: '06', title: 'Lab Verification', desc: 'Samples from each pallet are audited for EC, pH, and moisture. Only approved batches are loaded for seaport shipping.' },
+    { title: 'Raw Material Collection', desc: 'Sourcing premium coconut husks from certified sustainable plantations', icon: Palmtree, color: 'bg-green-100 text-green-700' },
+    { title: 'Processing', desc: 'Advanced machinery for fiber extraction and separation', icon: Settings, color: 'bg-blue-100 text-blue-700' },
+    { title: 'Compression', desc: 'High-pressure compression into compact blocks for easy transport', icon: Box, color: 'bg-purple-100 text-purple-700' },
+    { title: 'Quality Testing', desc: 'Comprehensive laboratory analysis ensuring premium standards', icon: Shield, color: 'bg-orange-100 text-orange-700' },
+    { title: 'Packaging', desc: 'UV-stabilized packaging for maximum product protection', icon: Package, color: 'bg-pink-100 text-pink-700' },
+    { title: 'Export', desc: 'Global shipping with optimized logistics and documentation', icon: Ship, color: 'bg-cyan-100 text-cyan-700' },
   ];
 
   return (
-    <div className="pt-24 pb-16 bg-white min-h-screen">
-      {/* Page Header */}
-      <section className="bg-primary text-white py-12 px-6 mb-8 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        <div className="max-w-7xl mx-auto relative z-10 space-y-2">
-          <span className="text-secondary-light font-poppins text-xs font-bold uppercase tracking-widest bg-white/10 py-1 px-3 rounded-lg">
-            MANUFACTURING STANDARDS
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-poppins font-extrabold mt-1">
-            Production Process & QA
-          </h1>
-          <p className="text-stone-105 text-xs sm:text-sm max-w-lg mx-auto mt-3 leading-relaxed font-medium">
-            From raw husks to certified substrates: Review our manufacturing infrastructure and verify batch analysis scores.
-          </p>
-        </div>
-      </section>
+    <div className="pb-16 bg-white min-h-screen">
+      <PageHero
+        badge="MANUFACTURING STANDARDS"
+        title="Production Process"
+        titleAccent="& QA"
+        subtitle="From raw husks to certified substrates: Review our manufacturing infrastructure and verify batch analysis scores."
+        breadcrumbs={[{ label: 'Quality Testing', path: '/quality-testing' }]}
+      />
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* LEFT COLUMN: Production Process Flow */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white p-8 rounded-3xl border border-stone-200 shadow-soft">
-            <h3 className="font-poppins font-extrabold text-stone-900 text-lg mb-2">
-              Our Six Production Stages
+          <div className="bg-white p-8 lg:p-10 rounded-3xl border border-stone-200 shadow-soft">
+            <h3 className="font-poppins font-extrabold text-stone-900 text-2xl text-center mb-10">
+              Our Streamlined Process
             </h3>
-            <p className="text-stone-500 text-xs leading-relaxed mb-8 font-medium">
-              We maintain a rigorous quality assurance flow at our Cochin and Pollachi yards to guarantee crop safety and substrate consistency.
-            </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {productionStages.map((stage, idx) => (
-                <div key={idx} className="border border-stone-200 p-5 rounded-2xl bg-accent hover:bg-white hover:shadow-soft transition-all duration-300">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-primary font-poppins font-extrabold text-lg opacity-40">{stage.step}</span>
-                    <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
-                      {idx === 0 && <Factory className="w-4 h-4" />}
-                      {idx === 1 && <FlaskConical className="w-4 h-4" />}
-                      {idx === 2 && <Sun className="w-4 h-4" />}
-                      {idx === 3 && <Ruler className="w-4 h-4" />}
-                      {idx === 4 && <Factory className="w-4 h-4" />}
-                      {idx === 5 && <ShieldCheck className="w-4 h-4" />}
+            {/* Alternating Vertical Timeline */}
+            <div className="relative max-w-2xl mx-auto py-4">
+              {/* Central vertical line for desktop */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-green-200 transform -translate-x-1/2 hidden md:block"></div>
+              {/* Left vertical line for mobile */}
+              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-green-200 md:hidden"></div>
+
+              <div className="space-y-12">
+                {productionStages.map((stage, idx) => {
+                  const Icon = stage.icon;
+                  const isEven = idx % 2 === 0;
+
+                  return (
+                    <div key={idx} className={`relative flex flex-col md:flex-row items-center ${isEven ? 'md:justify-start' : 'md:justify-end'}`}>
+                      
+                      {/* Icon */}
+                      <div className={`absolute left-6 md:left-1/2 transform -translate-x-1/2 w-14 h-14 rounded-2xl flex items-center justify-center z-10 ${stage.color} shadow-sm border-4 border-white`}>
+                        <Icon className="w-7 h-7" />
+                      </div>
+
+                      {/* Content Card */}
+                      <div className={`w-full md:w-5/12 pl-20 md:pl-0 ${isEven ? 'md:pr-16 md:text-right' : 'md:pl-16 md:text-left'}`}>
+                        <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-stone-100 transition-transform duration-300 hover:-translate-y-1">
+                          <h4 className="font-poppins font-bold text-stone-900 text-[15px] mb-2">{stage.title}</h4>
+                          <p className="text-stone-500 text-[13px] leading-relaxed font-medium">{stage.desc}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <h4 className="font-poppins font-bold text-stone-850 text-sm">{stage.title}</h4>
-                  <p className="text-stone-550 text-[11px] mt-1.5 leading-relaxed font-medium">{stage.desc}</p>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

@@ -6,17 +6,18 @@ import {
   replyToQuote,
 } from '../controllers/quoteController.js';
 import { protect, admin } from '../middleware/auth.js';
+import { validateQuote, validateIdParam } from '../middleware/validators.js';
 
 const router = express.Router();
 
 router.route('/')
-  .post(protect, submitQuoteRequest)
+  .post(protect, validateQuote, submitQuoteRequest)
   .get(protect, admin, getAllQuotes);
 
 router.route('/myquotes')
   .get(protect, getMyQuotes);
 
 router.route('/:id/reply')
-  .put(protect, admin, replyToQuote);
+  .put(protect, admin, validateIdParam, replyToQuote);
 
 export default router;

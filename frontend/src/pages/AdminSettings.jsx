@@ -168,7 +168,7 @@ export default function AdminSettings() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow overflow-x-auto">
           <div className="flex border-b border-gray-200">
             <button
               onClick={() => setActiveTab('profile')}

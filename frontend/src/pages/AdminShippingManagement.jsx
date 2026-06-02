@@ -1,419 +1,361 @@
-import React, { useState, useEffect } from 'react';
-import { adminSettingsService } from '../services/adminSettingsService';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import AdminLayout from '../layouts/AdminLayout';
-import { 
-  Truck, Plus, Save, MapPin, Package, CheckCircle, TrendingUp, AlertCircle, Edit2, Trash2, Box
-} from 'lucide-react';
-import {
-  PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid
-} from 'recharts';
+import { adminSettingsService } from '../services/adminSettingsService';
+import { CheckCircle, Globe2, MapPin, Package, Plus, Save, Settings2, ShipWheel, Trash2, Truck } from 'lucide-react';
+
+const resourceConfig = {
+  countries: {
+    title: 'Countries',
+    subtitle: 'Enable or disable markets and set billing currency.',
+    fields: [
+      { name: 'name', label: 'Country Name', type: 'text' },
+      { name: 'code', label: 'Country Code', type: 'text' },
+      { name: 'currency', label: 'Currency', type: 'text' },
+      { name: 'flag', label: 'Flag URL', type: 'text' },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
+      { name: 'isDomestic', label: 'Domestic', type: 'checkbox' },
+    ],
+    defaults: { name: '', code: '', currency: 'INR', flag: '', status: 'active', isDomestic: false },
+  },
+  states: {
+    title: 'Indian States',
+    subtitle: 'Maintain domestic delivery coverage.',
+    fields: [
+      { name: 'name', label: 'State Name', type: 'text' },
+      { name: 'code', label: 'State Code', type: 'text' },
+      { name: 'country', label: 'Country ID', type: 'text' },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
+    ],
+    defaults: { name: '', code: '', country: '', status: 'active' },
+  },
+  ports: {
+    title: 'Ports',
+    subtitle: 'Add domestic and international logistics points.',
+    fields: [
+      { name: 'name', label: 'Port Name', type: 'text' },
+      { name: 'code', label: 'Port Code', type: 'text' },
+      { name: 'country', label: 'Country ID', type: 'text' },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
+    ],
+    defaults: { name: '', code: '', country: '', status: 'active' },
+  },
+  shippingmethods: {
+    title: 'Shipping Methods',
+    subtitle: 'Domestic and international service types.',
+    fields: [
+      { name: 'name', label: 'Method Name', type: 'text' },
+      { name: 'category', label: 'Category', type: 'select', options: ['domestic', 'international', 'both'] },
+      { name: 'mode', label: 'Mode', type: 'select', options: ['road', 'rail', 'sea', 'air', 'container', 'lcl', 'ftl', 'ptl', 'other'] },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
+    ],
+    defaults: { name: '', category: 'both', mode: 'other', status: 'active' },
+  },
+  shippingrates: {
+    title: 'Shipping Rates',
+    subtitle: 'Country-wise route pricing and transit time.',
+    fields: [
+      { name: 'originCountry', label: 'Origin Country ID', type: 'text' },
+      { name: 'destinationCountry', label: 'Destination Country ID', type: 'text' },
+      { name: 'shippingMethod', label: 'Method ID', type: 'text' },
+      { name: 'shippingCost', label: 'Shipping Cost', type: 'number' },
+      { name: 'transitTimeDays', label: 'Transit Time Days', type: 'number' },
+      { name: 'minOrderQuantity', label: 'Minimum Qty', type: 'number' },
+      { name: 'maxOrderQuantity', label: 'Maximum Qty', type: 'number' },
+      { name: 'currency', label: 'Currency', type: 'text' },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
+    ],
+    defaults: { originCountry: '', destinationCountry: '', shippingMethod: '', shippingCost: 0, transitTimeDays: 0, minOrderQuantity: 0, maxOrderQuantity: 0, currency: 'INR', status: 'active' },
+  },
+  containercharges: {
+    title: 'Container Charges',
+    subtitle: 'Freight, handling, documentation and customs charges.',
+    fields: [
+      { name: 'country', label: 'Origin Country ID', type: 'text' },
+      { name: 'destinationCountry', label: 'Destination Country ID', type: 'text' },
+      { name: 'containerType', label: 'Container Type', type: 'select', options: ['20FT FCL', '40FT FCL', 'LCL'] },
+      { name: 'baseFreightCost', label: 'Base Freight Cost', type: 'number' },
+      { name: 'portHandlingCharges', label: 'Port Handling Charges', type: 'number' },
+      { name: 'documentationCharges', label: 'Documentation Charges', type: 'number' },
+      { name: 'customClearanceCharges', label: 'Custom Clearance Charges', type: 'number' },
+      { name: 'currency', label: 'Currency', type: 'text' },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
+    ],
+    defaults: { country: '', destinationCountry: '', containerType: '20FT FCL', baseFreightCost: 0, portHandlingCharges: 0, documentationCharges: 0, customClearanceCharges: 0, currency: 'USD', status: 'active' },
+  },
+  exportcharges: {
+    title: 'Export Charges',
+    subtitle: 'Documentation, certificate and customs fees.',
+    fields: [
+      { name: 'name', label: 'Charge Name', type: 'text' },
+      { name: 'feeType', label: 'Fee Type', type: 'select', options: ['export_documentation', 'certificate', 'customs_handling', 'inspection', 'other'] },
+      { name: 'country', label: 'Country ID (optional)', type: 'text' },
+      { name: 'amount', label: 'Amount', type: 'number' },
+      { name: 'currency', label: 'Currency', type: 'text' },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
+    ],
+    defaults: { name: '', feeType: 'other', country: '', amount: 0, currency: 'USD', status: 'active' },
+  },
+  shippingzones: {
+    title: 'Shipping Zones',
+    subtitle: 'Define origin-to-destination lanes and port coverage.',
+    fields: [
+      { name: 'name', label: 'Zone Name', type: 'text' },
+      { name: 'originCountry', label: 'Origin Country ID', type: 'text' },
+      { name: 'destinationCountry', label: 'Destination Country ID', type: 'text' },
+      { name: 'states', label: 'State IDs comma-separated', type: 'text' },
+      { name: 'ports', label: 'Port IDs comma-separated', type: 'text' },
+      { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive'] },
+    ],
+    defaults: { name: '', originCountry: '', destinationCountry: '', states: '', ports: '', status: 'active' },
+  },
+};
+
+const resourceOrder = ['countries', 'states', 'ports', 'shippingmethods', 'shippingrates', 'containercharges', 'exportcharges', 'shippingzones'];
 
 export default function AdminShippingManagement() {
-  const [rules, setRules] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('countries');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [analytics, setAnalytics] = useState(null);
+  const [formData, setFormData] = useState(resourceConfig.countries.defaults);
+  const latestTab = useRef(activeTab);
 
-  const [formData, setFormData] = useState({
-    country: '',
-    currency: 'INR',
-    methods: ['Standard'],
-    weightRules: {
-      upTo5kg: 0,
-      upTo20kg: 0,
-      over20kg: 0
-    },
-    freeShipping: {
-      enabled: false,
-      minAmount: 0
-    },
-    estimatedDeliveryDays: '5-7 business days',
-    isActive: true,
-  });
+  useEffect(() => {
+    latestTab.current = activeTab;
+  }, [activeTab]);
 
-  const fetchRules = async () => {
+  const activeConfig = resourceConfig[activeTab];
+
+  const renderTitle = (item, tab) => {
+    if (tab === 'shippingrates') return `${item.originCountry?.name || 'Unknown'} → ${item.destinationCountry?.name || 'Unknown'}`;
+    if (tab === 'containercharges') return `${item.country?.name || 'Unknown'} → ${item.destinationCountry?.name || 'Unknown'} (${item.containerType || 'Any'})`;
+    if (tab === 'shippingzones') return item.name || `${item.originCountry?.name || 'Unknown'} → ${item.destinationCountry?.name || 'Unknown'}`;
+    if (tab === 'exportcharges') return `${item.name} (${item.country ? item.country.name : 'Global'})`;
+    if (tab === 'ports') return `${item.name} (${item.country?.name || 'Unknown'})`;
+    return item.name || item.country?.name || item.code || item.containerType || item.feeType || 'Unnamed Record';
+  };
+
+  const renderSubtitle = (item, tab) => {
+    if (tab === 'shippingrates') return `${item.shippingMethod?.name || 'Any Method'} - ${item.currency || 'USD'} ${item.shippingCost || 0} (${item.transitTimeDays || 0} Days)`;
+    if (tab === 'containercharges') return `Base Freight: ${item.currency || 'USD'} ${item.baseFreightCost || 0}`;
+    if (tab === 'exportcharges') return `Type: ${item.feeType} - ${item.currency || 'USD'} ${item.amount || 0}`;
+    if (tab === 'shippingmethods') return `${item.category} - ${item.mode}`;
+    return item.code || item.currency || item.mode || item.containerType || item.amount || item.shippingCost || '';
+  };
+
+  const loadResource = async (resource = activeTab) => {
     setLoading(true);
     try {
-      const res = await adminSettingsService.getShippingRules();
-      setRules(res.data);
+      const res = await adminSettingsService.listShippingResource(resource);
+      if (resource === latestTab.current) {
+        setItems(res.data || []);
+      }
     } catch (err) {
-      setError('Failed to fetch shipping rules');
+      if (resource === latestTab.current) {
+        setError(err.response?.data?.message || 'Failed to load shipping data');
+      }
     } finally {
-      setLoading(false);
+      if (resource === latestTab.current) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const loadAnalytics = async () => {
+    try {
+      const res = await adminSettingsService.getShippingAnalytics();
+      setAnalytics(res.data);
+    } catch {
+      setAnalytics(null);
     }
   };
 
   useEffect(() => {
-    fetchRules();
-  }, []);
+    loadResource(activeTab);
+    loadAnalytics();
+  }, [activeTab]);
 
   useEffect(() => {
-    if (success || error) {
-      const timer = setTimeout(() => {
-        setSuccess('');
-        setError('');
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
+    if (!success && !error) return;
+    const timer = setTimeout(() => { setSuccess(''); setError(''); }, 5000);
+    return () => clearTimeout(timer);
   }, [success, error]);
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (name.startsWith('weight_')) {
-      const field = name.split('_')[1];
-      setFormData(prev => ({ ...prev, weightRules: { ...prev.weightRules, [field]: parseFloat(value) || 0 } }));
-    } else if (name === 'freeShippingEnabled') {
-      setFormData(prev => ({ ...prev, freeShipping: { ...prev.freeShipping, enabled: checked } }));
-    } else if (name === 'freeShippingMin') {
-      setFormData(prev => ({ ...prev, freeShipping: { ...prev.freeShipping, minAmount: parseFloat(value) || 0 } }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    }
+  const openCreate = () => {
+    setEditingId(null);
+    setFormData(activeConfig.defaults);
+    setFormOpen(true);
   };
 
-  const handleMethodToggle = (method) => {
-    setFormData(prev => {
-      const methods = prev.methods.includes(method)
-        ? prev.methods.filter(m => m !== method)
-        : [...prev.methods, method];
-      return { ...prev, methods };
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    try {
-      if (editingId) {
-        await adminSettingsService.updateShippingRule(editingId, formData);
-        setSuccess('Shipping rule updated successfully');
+  const openEdit = (item) => {
+    const next = { ...activeConfig.defaults };
+    activeConfig.fields.forEach((field) => {
+      if (field.type === 'checkbox') {
+        next[field.name] = Boolean(item[field.name]);
+      } else if (field.name === 'states' || field.name === 'ports') {
+        next[field.name] = Array.isArray(item[field.name]) ? item[field.name].map((value) => value?._id || value).join(',') : '';
       } else {
-        await adminSettingsService.createShippingRule(formData);
-        setSuccess('Shipping rule created successfully');
+        let val = item[field.name];
+        if (val && typeof val === 'object' && !Array.isArray(val) && val._id) {
+          val = val._id;
+        }
+        next[field.name] = val ?? next[field.name];
       }
-      setShowForm(false);
-      setEditingId(null);
-      fetchRules();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save shipping rule');
-    }
-  };
-
-  const handleEdit = (rule) => {
-    setFormData({
-      country: rule.country,
-      currency: rule.currency || 'INR',
-      methods: rule.methods || ['Standard'],
-      weightRules: rule.weightRules || { upTo5kg: 0, upTo20kg: 0, over20kg: 0 },
-      freeShipping: rule.freeShipping || { enabled: false, minAmount: 0 },
-      estimatedDeliveryDays: rule.estimatedDeliveryDays,
-      isActive: rule.isActive,
     });
-    setEditingId(rule._id);
-    setShowForm(true);
+    setEditingId(item._id);
+    setFormData(next);
+    setFormOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this shipping rule?')) {
-      try {
-        await adminSettingsService.deleteShippingRule(id);
-        setSuccess('Shipping rule deleted successfully');
-        fetchRules();
-      } catch (err) {
-        setError('Failed to delete shipping rule');
+  const saveRecord = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = { ...formData };
+      if (activeTab === 'shippingzones') {
+        payload.states = payload.states ? String(payload.states).split(',').map((value) => value.trim()).filter(Boolean) : [];
+        payload.ports = payload.ports ? String(payload.ports).split(',').map((value) => value.trim()).filter(Boolean) : [];
       }
+      if (activeTab === 'countries') payload.isDomestic = Boolean(payload.isDomestic);
+
+      const writer = editingId
+        ? adminSettingsService.updateShippingResource(activeTab, editingId, payload)
+        : adminSettingsService.createShippingResource(activeTab, payload);
+      await writer;
+      setSuccess(`${activeConfig.title.slice(0, -1)} saved successfully`);
+      setFormOpen(false);
+      setEditingId(null);
+      loadResource(activeTab);
+      loadAnalytics();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save record');
     }
   };
 
-  // Real analytics data will go here, set to empty for now
-  const deliveryData = [];
-  const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#64748b'];
-
-  const revenueData = [];
-
-  if (loading && rules.length === 0) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
-        </div>
-      </AdminLayout>
-    );
-  }
+  const removeRecord = async (id) => {
+    if (!window.confirm('Delete this record?')) return;
+    try {
+      await adminSettingsService.deleteShippingResource(activeTab, id);
+      setSuccess('Record deleted successfully');
+      loadResource(activeTab);
+      loadAnalytics();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete record');
+    }
+  };
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto pb-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900">Shipping & Logistics</h1>
-            <p className="text-gray-500 mt-1 font-medium">Manage global delivery rules, tracking, and logistics analytics.</p>
-          </div>
-          <button
-            onClick={() => {
-              setShowForm(true);
-              setEditingId(null);
-              setFormData({
-                country: '',
-                currency: 'INR',
-                methods: ['Standard'],
-                weightRules: { upTo5kg: 0, upTo20kg: 0, over20kg: 0 },
-                freeShipping: { enabled: false, minAmount: 0 },
-                estimatedDeliveryDays: '5-7 business days',
-                isActive: true,
-              });
-            }}
-            className="flex items-center space-x-2 bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-green-700 transition shadow-md shadow-green-600/20"
-          >
-            <Plus size={18} />
-            <span>Add Shipping Rule</span>
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3 shadow-sm">
-            <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
-            <p className="text-red-700 font-medium">{error}</p>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start space-x-3 shadow-sm">
-            <CheckCircle className="text-green-600 flex-shrink-0" size={20} />
-            <p className="text-green-700 font-medium">{success}</p>
-          </div>
-        )}
-
-        {/* Top KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-            <div className="p-3 bg-blue-50 rounded-xl text-blue-600"><Box size={24} /></div>
+      <div className="max-w-7xl mx-auto pb-10 space-y-6">
+        <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white p-6 md:p-8 shadow-xl">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <div>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Shipments</p>
-              <p className="text-2xl font-black text-gray-900">0</p>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.3em] text-emerald-200">
+                <ShipWheel size={14} /> Global Shipping & Export
+              </div>
+              <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight">Shipping Management Console</h1>
+              <p className="mt-2 text-sm text-slate-300 max-w-3xl">Manage countries, ports, routes, container fees, export charges, and shipping lanes from one compact dashboard.</p>
             </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-            <div className="p-3 bg-orange-50 rounded-xl text-orange-600"><Truck size={24} /></div>
-            <div>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Pending Delivery</p>
-              <p className="text-2xl font-black text-gray-900">0</p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-            <div className="p-3 bg-green-50 rounded-xl text-green-600"><CheckCircle size={24} /></div>
-            <div>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Delivered Orders</p>
-              <p className="text-2xl font-black text-gray-900">0</p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-            <div className="p-3 bg-purple-50 rounded-xl text-purple-600"><MapPin size={24} /></div>
-            <div>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Countries Served</p>
-              <p className="text-2xl font-black text-gray-900">{rules.length}</p>
-            </div>
+            <button onClick={openCreate} className="inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 px-4 py-2.5 text-sm font-black shadow-lg hover:bg-emerald-50">
+              <Plus size={16} /> Add {activeConfig.title.slice(0, -1)}
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          
-          {/* Main Table Area */}
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-              <h2 className="text-lg font-bold text-gray-900">Country Shipping Configurations</h2>
+        {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+        {success && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{success}</div>}
+
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-2">
+          {resourceOrder.map((resource) => {
+            const cfg = resourceConfig[resource];
+            return (
+              <button key={resource} onClick={() => { setActiveTab(resource); setFormOpen(false); }} className={`rounded-2xl px-3 py-3 text-left border transition ${activeTab === resource ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'}`}>
+                <div className="text-[10px] uppercase tracking-[0.28em] font-black opacity-70">{cfg.title}</div>
+                {activeTab === resource && <div className="mt-1 text-xs font-semibold opacity-90">{items.length} records</div>}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          <div className="xl:col-span-3 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
+              <div>
+                <h2 className="text-lg font-black text-slate-900">{activeConfig.title}</h2>
+                <p className="text-sm text-slate-500">{activeConfig.subtitle}</p>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-3 py-1 text-xs font-bold">{loading ? 'Loading...' : `${items.length} items`}</div>
             </div>
-            
-            {showForm ? (
-              <form onSubmit={handleSubmit} className="p-6 bg-gray-50/30">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Country / Region</label>
-                    <input
-                      type="text"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleInputChange}
-                      placeholder="e.g. USA, UK, Global"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-900"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Estimated Delivery Days</label>
-                    <input
-                      type="text"
-                      name="estimatedDeliveryDays"
-                      value={formData.estimatedDeliveryDays}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-900"
-                      required
-                    />
-                  </div>
-                </div>
 
-                <div className="mb-6 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                  <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Weight Based Rules (Base {formData.currency})</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">0 - 5 kg</label>
-                      <input
-                        type="number"
-                        name="weight_upTo5kg"
-                        value={formData.weightRules.upTo5kg}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">5 - 20 kg</label>
-                      <input
-                        type="number"
-                        name="weight_upTo20kg"
-                        value={formData.weightRules.upTo20kg}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">20kg +</label>
-                      <input
-                        type="number"
-                        name="weight_over20kg"
-                        value={formData.weightRules.over20kg}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-medium"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Free Shipping Rules</h3>
-                    <label className="flex items-center space-x-3 cursor-pointer mb-3">
-                      <input
-                        type="checkbox"
-                        name="freeShippingEnabled"
-                        checked={formData.freeShipping.enabled}
-                        onChange={handleInputChange}
-                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                      />
-                      <span className="text-sm font-bold text-gray-700">Enable Free Shipping Threshold</span>
-                    </label>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">Minimum Order Amount ({formData.currency})</label>
-                      <input
-                        type="number"
-                        name="freeShippingMin"
-                        value={formData.freeShipping.minAmount}
-                        onChange={handleInputChange}
-                        disabled={!formData.freeShipping.enabled}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-medium disabled:bg-gray-50 disabled:text-gray-400"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Supported Methods</h3>
-                    <div className="space-y-2">
-                      {['Standard', 'Express', 'Bulk Shipping'].map(method => (
-                        <label key={method} className="flex items-center space-x-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.methods.includes(method)}
-                            onChange={() => handleMethodToggle(method)}
-                            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                          />
-                          <span className="text-sm font-medium text-gray-700">{method}</span>
+            {formOpen ? (
+              <form onSubmit={saveRecord} className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activeConfig.fields.map((field) => (
+                    <div key={field.name} className={field.type === 'checkbox' ? 'md:col-span-2' : ''}>
+                      <label className="block text-xs font-black uppercase tracking-[0.24em] text-slate-500 mb-2">{field.label}</label>
+                      {field.type === 'select' ? (
+                        <select value={formData[field.name] ?? ''} onChange={(e) => setFormData((prev) => ({ ...prev, [field.name]: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500">
+                          {field.options.map((option) => <option key={option} value={option}>{option}</option>)}
+                        </select>
+                      ) : field.type === 'checkbox' ? (
+                        <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                          <input type="checkbox" checked={Boolean(formData[field.name])} onChange={(e) => setFormData((prev) => ({ ...prev, [field.name]: e.target.checked }))} className="h-4 w-4 rounded border-slate-300 text-emerald-600" />
+                          <span className="text-sm font-semibold text-slate-700">{field.label}</span>
                         </label>
-                      ))}
+                      ) : (
+                        <input type={field.type} value={formData[field.name] ?? ''} onChange={(e) => setFormData((prev) => ({ ...prev, [field.name]: field.type === 'number' ? Number(e.target.value) : e.target.value }))} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500" placeholder={field.label} />
+                      )}
                     </div>
-                  </div>
+                  ))}
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <label className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="isActive"
-                      checked={formData.isActive}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    />
-                    <span className="text-sm font-bold text-gray-900">Rule is Active</span>
-                  </label>
-                  <div className="flex space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowForm(false)}
-                      className="px-5 py-2.5 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="flex items-center space-x-2 bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-green-700 transition shadow-md"
-                    >
-                      <Save size={18} />
-                      <span>{editingId ? 'Update Rule' : 'Save Rule'}</span>
-                    </button>
-                  </div>
+                <div className="flex items-center gap-3 pt-2">
+                  <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-700">
+                    <Save size={16} /> Save
+                  </button>
+                  <button type="button" onClick={() => setFormOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
                 </div>
               </form>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Country</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Charges (0-5kg | 5-20kg | 20kg+)</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Methods</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Free Shipping</th>
-                      <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                <table className="min-w-full divide-y divide-slate-100">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Record</th>
+                      <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Status</th>
+                      <th className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {rules.map((rule) => (
-                      <tr key={rule._id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-3">
-                            <span className="font-bold text-gray-900">{rule.country}</span>
-                            {!rule.isActive && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {items.map((item) => (
+                      <tr key={item._id} className="hover:bg-slate-50/70">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-slate-900">{renderTitle(item, activeTab)}</div>
+                          <div className="text-xs text-slate-500">{renderSubtitle(item, activeTab)}</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${item.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                            <CheckCircle size={12} /> {item.status || 'active'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => openEdit(item)} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900">
+                              <Settings2 size={16} />
+                            </button>
+                            <button onClick={() => removeRecord(item._id)} className="rounded-lg border border-red-200 p-2 text-red-500 hover:bg-red-50">
+                              <Trash2 size={16} />
+                            </button>
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">{rule.estimatedDeliveryDays}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600">
-                          {rule.weightRules?.upTo5kg} / {rule.weightRules?.upTo20kg} / {rule.weightRules?.over20kg} {rule.currency}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex gap-1">
-                            {rule.methods?.map(m => (
-                              <span key={m} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase rounded">{m}</span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-700">
-                          {rule.freeShipping?.enabled ? `> ${rule.freeShipping.minAmount} ${rule.currency}` : 'Disabled'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <button onClick={() => handleEdit(rule)} className="text-blue-600 hover:text-blue-900 p-2">
-                            <Edit2 size={16} />
-                          </button>
-                          <button onClick={() => handleDelete(rule._id)} className="text-red-600 hover:text-red-900 p-2 ml-1">
-                            <Trash2 size={16} />
-                          </button>
                         </td>
                       </tr>
                     ))}
-                    {rules.length === 0 && (
+                    {!items.length && (
                       <tr>
-                        <td colSpan="5" className="px-6 py-12 text-center text-gray-500 font-medium">
-                          No shipping rules defined. Please add a rule.
-                        </td>
+                        <td colSpan="3" className="px-6 py-10 text-center text-sm text-slate-500">No records yet.</td>
                       </tr>
                     )}
                   </tbody>
@@ -422,61 +364,29 @@ export default function AdminShippingManagement() {
             )}
           </div>
 
-          {/* Analytics Modules */}
-          <div className="space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <MapPin size={18} className="text-purple-500" /> Top Delivered Countries
-              </h2>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={deliveryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {deliveryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  </PieChart>
-                </ResponsiveContainer>
+          <div className="space-y-4 xl:sticky xl:top-6 h-fit">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-900 font-black uppercase tracking-[0.22em] text-[10px]">
+                <Globe2 size={14} /> Shipping Analytics
               </div>
-              <div className="flex flex-wrap justify-center gap-4 mt-4">
-                {deliveryData.map((entry, index) => (
-                  <div key={entry.name} className="flex items-center text-xs font-bold text-gray-600">
-                    <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
-                    {entry.name}
-                  </div>
-                ))}
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="rounded-2xl bg-slate-50 p-3"><span className="text-slate-500">Domestic Orders</span><div className="text-lg font-black text-slate-900">{analytics?.domesticOrders ?? 0}</div></div>
+                <div className="rounded-2xl bg-slate-50 p-3"><span className="text-slate-500">International Orders</span><div className="text-lg font-black text-slate-900">{analytics?.internationalOrders ?? 0}</div></div>
+                <div className="rounded-2xl bg-slate-50 p-3"><span className="text-slate-500">Average Shipping Cost</span><div className="text-lg font-black text-slate-900">{analytics?.averageShippingCost ?? 0}</div></div>
+                <div className="rounded-2xl bg-slate-50 p-3"><span className="text-slate-500">Container Utilization</span><div className="text-lg font-black text-slate-900">{analytics?.containerUtilization ?? 0}%</div></div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <TrendingUp size={18} className="text-green-500" /> Shipping Revenue
-              </h2>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={revenueData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} width={40} />
-                    <RechartsTooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Bar dataKey="revenue" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-900 font-black uppercase tracking-[0.22em] text-[10px]"><Package size={14} /> Quick Setup</div>
+              <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                <li className="flex items-start gap-2"><Truck size={14} className="mt-0.5 text-emerald-600" /> Add India as domestic origin and enable states for local delivery.</li>
+                <li className="flex items-start gap-2"><MapPin size={14} className="mt-0.5 text-emerald-600" /> Add ports for export lanes and route them through shipping zones.</li>
+                <li className="flex items-start gap-2"><Settings2 size={14} className="mt-0.5 text-emerald-600" /> Configure rates, charges, and container fees to power checkout quotes.</li>
+              </ul>
             </div>
           </div>
         </div>
-
       </div>
     </AdminLayout>
   );

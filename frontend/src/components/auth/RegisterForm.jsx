@@ -60,8 +60,24 @@ export const RegisterForm = () => {
 
   const selectedCountry = watch('country');
   const passwordVal = watch('password');
+  const confirmPasswordVal = watch('confirmPassword');
   const emailVal = watch('email');
   const nameVal = watch('name');
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { score: 0, label: '', color: 'bg-stone-200', textColor: 'text-stone-500' };
+    let score = 0;
+    if (pass.length >= 6) score += 1;
+    if (pass.length >= 8) score += 1;
+    if (/[A-Z]/.test(pass)) score += 1;
+    if (/[0-9]/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+    if (score <= 2) return { score, label: 'Weak', color: 'bg-red-400', textColor: 'text-red-500' };
+    if (score <= 4) return { score, label: 'Good', color: 'bg-amber-400', textColor: 'text-amber-600' };
+    return { score, label: 'Strong', color: 'bg-[#2E7D32]', textColor: 'text-[#2E7D32]' };
+  };
+  const strength = getPasswordStrength(passwordVal);
 
   // Auto fill currency
   useEffect(() => {
@@ -228,6 +244,12 @@ export const RegisterForm = () => {
 
   return (
     <div className="bg-white border border-stone-200/85 rounded-3xl p-6 shadow-soft text-stone-900 max-w-md w-full mx-auto">
+      <div className="text-center mb-6">
+        <img src="/logo.jpg" alt="Cocoveera Logo" className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" />
+        <h2 className="text-2xl font-extrabold font-poppins text-stone-900">Register</h2>
+        <p className="text-xs text-stone-500 font-semibold mt-1">Create your account</p>
+      </div>
+
       {apiError && (
         <div className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center animate-fade-in">
           {apiError}
@@ -268,7 +290,7 @@ export const RegisterForm = () => {
         {/* Corporate Email */}
         <div>
           <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
-            CORPORATE EMAIL ADDRESS
+            EMAIL ADDRESS
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
@@ -285,7 +307,7 @@ export const RegisterForm = () => {
               className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary/60 focus:bg-white transition-all placeholder:text-stone-400 ${
                 errors.email ? 'border-red-300' : 'border-transparent'
               } ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
-              placeholder="grower@company.com"
+              placeholder="you@email.com"
             />
           </div>
           {errors.email && (
@@ -383,6 +405,14 @@ export const RegisterForm = () => {
               {errors.password.message}
             </span>
           )}
+          {passwordVal && !errors.password && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-stone-200 rounded-full overflow-hidden flex">
+                <div className={`h-full ${strength.color} transition-all duration-300`} style={{ width: `${(strength.score / 5) * 100}%` }}></div>
+              </div>
+              <span className={`text-[10px] font-extrabold uppercase tracking-wide ${strength.textColor}`}>{strength.label}</span>
+            </div>
+          )}
         </div>
 
         {/* Confirm Password */}
@@ -417,6 +447,11 @@ export const RegisterForm = () => {
           {errors.confirmPassword && (
             <span className="text-[10px] font-bold text-red-500 mt-1 block">
               {errors.confirmPassword.message}
+            </span>
+          )}
+          {passwordVal && confirmPasswordVal && passwordVal === confirmPasswordVal && !errors.confirmPassword && (
+            <span className="text-[10px] font-extrabold text-[#2E7D32] mt-1.5 flex items-center gap-1 uppercase tracking-wide">
+              <ShieldCheck className="w-3.5 h-3.5" /> Passwords match
             </span>
           )}
         </div>

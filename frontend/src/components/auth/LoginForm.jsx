@@ -84,8 +84,9 @@ export const LoginForm = () => {
   return (
     <div className="bg-white border border-stone-200/80 rounded-3xl p-8 shadow-soft text-stone-900 max-w-md w-full mx-auto">
       <div className="text-center mb-8">
+        <img src="/logo.jpg" alt="Cocoveera Logo" className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" />
         <span className="text-[#2E5E35] font-poppins text-[10px] font-bold uppercase tracking-widest">
-          Secure Partner Portal
+          Secure Portal
         </span>
         <h2 className="text-2xl font-poppins font-extrabold text-stone-900 mt-1">
           Welcome Back
@@ -104,8 +105,8 @@ export const LoginForm = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Email */}
         <div>
-          <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
-            CORPORATE EMAIL ADDRESS
+          <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
+            EMAIL ADDRESS
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
@@ -118,10 +119,10 @@ export const LoginForm = () => {
                   message: 'Please enter a valid email address',
                 },
               })}
-              className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary/60 focus:bg-white transition-all placeholder:text-stone-450 ${
+              className={`w-full bg-[#F3F6F8] border text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-400/80 ${
                 errors.email ? 'border-red-300' : 'border-transparent'
               }`}
-              placeholder="partner@company.com"
+              placeholder="you@email.com"
             />
           </div>
           {errors.email && (

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../layouts/AdminLayout';
 import { apiClient } from '../context/AuthContext';
+import { convertCurrency } from '../utils/currencyConverter';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -235,7 +236,7 @@ export default function AdminOrders() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Total Amount</p>
-                      <p className="text-gray-900 font-medium">${selectedOrder.totalAmount}</p>
+                      <p className="text-gray-900 font-medium">{convertCurrency(selectedOrder.totalAmount || 0, 'INR').formatted}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Order Date</p>
@@ -259,7 +260,7 @@ export default function AdminOrders() {
                           <p className="text-gray-900 font-medium">{item.productName}</p>
                           <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                         </div>
-                        <p className="text-gray-900 font-medium">${item.unitPrice}</p>
+                        <p className="text-gray-900 font-medium">{convertCurrency(item.unitPrice || 0, 'INR').formatted}</p>
                       </div>
                     ))}
                   </div>
@@ -352,8 +353,8 @@ export default function AdminOrders() {
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="w-full">
+            <div className="bg-white rounded-lg shadow overflow-x-auto">
+              <table className="w-full whitespace-nowrap">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
@@ -390,7 +391,7 @@ export default function AdminOrders() {
                         <p className="text-gray-600 text-xs">{order.user?.email}</p>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                        ${order.totalAmount}
+                        {convertCurrency(order.totalAmount || 0, 'INR').formatted}
                       </td>
                       <td className="px-6 py-4">
                         <span

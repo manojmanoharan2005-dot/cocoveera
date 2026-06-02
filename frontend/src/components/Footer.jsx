@@ -16,106 +16,137 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-stone-100 text-stone-600 pt-16 pb-8 border-t border-stone-200">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-        {/* Brand & Address */}
-        <div>
-          <Link to="/" className="flex items-center space-x-1 mb-6">
-            <span className="font-poppins font-extrabold text-2xl tracking-wider">
-              <span className="text-primary">COCO</span>
-              <span className="text-secondary">VEERA</span>
+    <footer className="bg-[#1a2a1a] text-stone-300 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+        
+        {/* Col 1: Brand */}
+        <div className="lg:col-span-1">
+          <Link to="/" className="flex items-center space-x-2 mb-5">
+            <img src="/logo.jpg" alt="Cocoveera" className="h-10 object-contain" />
+            <span className="font-poppins font-extrabold text-lg tracking-wider">
+              <span className="text-[#A26B3D]">COCO</span>
+              <span className="text-primary-light">VEERA</span>
             </span>
           </Link>
-          <p className="text-stone-500 text-xs leading-relaxed mb-6">
-            Global exporters of premium quality-tested coconut substrates. Powering professional horticulture and commercial greenhouse cultivation worldwide.
+          <p className="text-stone-400 text-xs leading-relaxed mb-5">
+            Premium coconut substrate manufacturer and exporter powering professional horticulture and commercial greenhouse cultivation worldwide.
           </p>
-          <div className="space-y-3.5 text-xs text-stone-700">
-            <div className="flex items-start space-x-3">
-              <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-              <span>Cocoveera Plaza, Industrial Port Zone, Cochin, India</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Phone className="w-4 h-4 text-primary flex-shrink-0" />
-              <span>+91 484 286 9900</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-              <span>export@cocoveera.com</span>
-            </div>
+          {/* Social Links */}
+          <div className="flex space-x-3">
+            {[
+              { Icon: Linkedin, href: '#' },
+              { Icon: Facebook, href: '#' },
+              { Icon: Twitter, href: '#' },
+              { Icon: Instagram, href: '#' },
+            ].map(({ Icon, href }, idx) => (
+              <a
+                key={idx}
+                href={href}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-primary flex items-center justify-center transition-all duration-300 text-stone-400 hover:text-white"
+              >
+                <Icon className="w-3.5 h-3.5" />
+              </a>
+            ))}
           </div>
         </div>
 
-        {/* Quick Links */}
+        {/* Col 2: Products */}
         <div>
-          <h4 className="text-stone-900 font-poppins font-bold text-xs uppercase tracking-wider mb-6">
-            Quick Links
-          </h4>
-          <ul className="space-y-3.5 text-xs">
-            {['Home', 'About Us', 'Quality Control', 'Testing Procedures', 'Certifications', 'Contact Sales'].map(
-              (item) => (
-                <li key={item}>
-                  <Link
-                    to={
-                      item === 'Home'
-                        ? '/'
-                        : item.includes('Testing') || item.includes('Quality')
-                        ? '/quality-testing'
-                        : item.includes('Contact')
-                        ? '/contact'
-                        : item.includes('Certifications')
-                        ? '/'
-                        : '/about'
-                    }
-                    className="hover:text-primary hover:translate-x-1 transition-all inline-block duration-200 font-medium"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              )
-            )}
-          </ul>
-        </div>
-
-        {/* Substrates / Categories */}
-        <div>
-          <h4 className="text-stone-900 font-poppins font-bold text-xs uppercase tracking-wider mb-6">
-            Substrates
-          </h4>
-          <ul className="space-y-3.5 text-xs">
+          <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-5">Products</h4>
+          <ul className="space-y-3 text-xs">
             {[
-              'Coir Pith Blocks',
-              'Grow Bags',
-              'Coir Briquettes',
-              'Coir Fiber Bales',
-              'Custom Grow Solutions',
+              { label: 'Coco Peat Blocks', path: '/products' },
+              { label: 'Grow Bags', path: '/products' },
+              { label: 'Coco Chips', path: '/products' },
+              { label: 'Coir Pith', path: '/products' },
+              { label: 'Coco Husk Chips', path: '/products' },
             ].map((item) => (
-              <li key={item}>
+              <li key={item.label}>
                 <Link
-                  to="/products"
-                  className="hover:text-primary hover:translate-x-1 transition-all inline-block duration-200 font-medium"
+                  to={item.path}
+                  className="text-stone-400 hover:text-primary-light hover:translate-x-1 transition-all inline-block duration-200"
                 >
-                  {item}
+                  {item.label}
                 </Link>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Newsletter Subscription */}
+        {/* Col 3: Support */}
         <div>
-          <h4 className="text-stone-900 font-poppins font-bold text-xs uppercase tracking-wider mb-6">
-            Newsletter
-          </h4>
-          <p className="text-stone-500 text-xs leading-relaxed mb-4">
-            Subscribe to our global substrate market updates and product release bulletins.
+          <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-5">Support</h4>
+          <ul className="space-y-3 text-xs">
+            {[
+              { label: 'About Us', path: '/about' },
+              { label: 'Quality Testing', path: '/quality-testing' },
+              { label: 'Global Network', path: '/substrates' },
+              { label: 'Notifications', path: '/account/notifications' },
+              { label: 'Authentications', path: '/login' },
+              { label: 'Privacy Policy', path: '#' },
+            ].map((item) => (
+              <li key={item.label}>
+                <Link
+                  to={item.path}
+                  className="text-stone-400 hover:text-primary-light hover:translate-x-1 transition-all inline-block duration-200"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Col 4: Contact Us */}
+        <div>
+          <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-5">Contact Us</h4>
+          <ul className="space-y-4 text-xs">
+            <li className="flex items-start gap-3">
+              <MapPin className="w-4 h-4 text-primary-light mt-0.5 flex-shrink-0" />
+              <span className="text-stone-400 leading-relaxed">
+                Cocoveera Plaza,<br />Industrial Port Zone,<br />Cochin, India
+              </span>
+            </li>
+            <li className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-primary-light flex-shrink-0" />
+              <a href="tel:+914842869900" className="text-stone-400 hover:text-primary-light transition-colors">
+                +91 484 286 9900
+              </a>
+            </li>
+            <li className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-primary-light flex-shrink-0" />
+              <a href="tel:+914842869900" className="text-stone-400 hover:text-primary-light transition-colors">
+                +91 484 286 9901
+              </a>
+            </li>
+            <li className="flex items-center gap-3">
+              <Mail className="w-4 h-4 text-primary-light flex-shrink-0" />
+              <a href="mailto:export@cocoveera.com" className="text-stone-400 hover:text-primary-light transition-colors">
+                export@cocoveera.com
+              </a>
+            </li>
+            <li className="flex items-center gap-3">
+              <Mail className="w-4 h-4 text-primary-light flex-shrink-0" />
+              <a href="mailto:info@cocoveera.com" className="text-stone-400 hover:text-primary-light transition-colors">
+                info@cocoveera.com
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {/* Col 5: Newsletter */}
+        <div>
+          <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-5">Newsletter</h4>
+          <p className="text-stone-400 text-xs leading-relaxed mb-4">
+            Subscribe to our newsletter to get updates on products and offers.
           </p>
-          <form onSubmit={handleSubscribe} className="relative mb-6">
+          <form onSubmit={handleSubscribe} className="relative mb-4">
             <input
               type="email"
-              placeholder="Enter your corporate email"
+              placeholder="Your email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white border border-stone-300 text-stone-800 rounded-lg py-2.5 pl-4 pr-12 w-full text-xs focus:outline-none focus:border-primary transition-colors placeholder-stone-400 font-semibold"
+              className="bg-white/10 border border-white/20 text-white rounded-lg py-2.5 pl-4 pr-12 w-full text-xs focus:outline-none focus:border-primary-light transition-colors placeholder-stone-500 font-medium"
               required
             />
             <button
@@ -126,32 +157,23 @@ const Footer = () => {
             </button>
           </form>
           {subscribed && (
-            <p className="text-[10px] text-primary font-bold animate-pulse mb-4">
-              Subscription request received! Thank you.
+            <p className="text-[10px] text-primary-light font-bold animate-pulse mb-3">
+              ✓ Subscribed! Thank you.
             </p>
           )}
-
-          {/* Social Links */}
-          <div className="flex space-x-3.5">
-            {[Facebook, Twitter, Instagram, Linkedin].map((Icon, idx) => (
-              <a
-                key={idx}
-                href="#"
-                className="w-8 h-8 rounded-lg bg-white border border-stone-200 hover:border-primary hover:bg-primary hover:text-white flex items-center justify-center transition-all duration-300 text-stone-500"
-              >
-                <Icon className="w-4 h-4" />
-              </a>
-            ))}
-          </div>
+          <p className="text-stone-500 text-[10px] leading-relaxed">
+            By subscribing, you agree to our privacy policy and consent to receive updates.
+          </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 border-t border-stone-200 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-stone-400 font-bold uppercase tracking-wider">
+      {/* Bottom bar */}
+      <div className="max-w-7xl mx-auto px-6 border-t border-white/10 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-stone-500 font-semibold uppercase tracking-wider gap-4">
         <p>© 2026 Cocoveera Private Limited. All rights reserved.</p>
-        <div className="flex space-x-6 mt-4 md:mt-0">
-          <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-primary transition-colors">Terms of Export</a>
-          <a href="#" className="hover:text-primary transition-colors">Sitemap</a>
+        <div className="flex space-x-6">
+          <a href="#" className="hover:text-primary-light transition-colors">Privacy Policy</a>
+          <a href="#" className="hover:text-primary-light transition-colors">Terms of Export</a>
+          <a href="#" className="hover:text-primary-light transition-colors">Sitemap</a>
         </div>
       </div>
     </footer>

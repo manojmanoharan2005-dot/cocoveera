@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Send, Check, Info, X, Layers, Droplet, Wind, Compass, Sparkles, Heart, ShoppingBag } from 'lucide-react';
+import PageHero from '../components/PageHero';
 
 const Products = () => {
   const { user } = useAuth();
@@ -37,7 +38,7 @@ const Products = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const categories = ['All', 'Grow Bags', 'Coir Pith Blocks', 'Coir Discs', 'Erosion Control', 'Other Coir Products', 'Hobby Gardening'];
+  const [categories, setCategories] = useState(['All']);
 
   const blendsData = {
     natural: {
@@ -93,6 +94,8 @@ const Products = () => {
           });
           setProducts(mapped);
           setFilteredProducts(mapped);
+          const uniqueCategories = [...new Set(mapped.map(p => p.category))].filter(Boolean);
+          setCategories(['All', ...uniqueCategories]);
         }
       } catch (err) {
         console.error(err);
@@ -217,22 +220,14 @@ const Products = () => {
   };
 
   return (
-    <div className="pt-24 pb-16 bg-white min-h-screen">
-      {/* Header Banner */}
-      <section className="bg-primary text-white py-12 px-6 mb-8 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        <div className="max-w-7xl mx-auto relative z-10 space-y-2">
-          <span className="text-secondary-light font-poppins text-xs font-bold uppercase tracking-widest bg-white/10 py-1 px-3 rounded-lg">
-            B2B CATALOG
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-poppins font-extrabold mt-1">
-            Organic Growing Media & Substrates
-          </h1>
-          <p className="text-stone-105 text-xs sm:text-sm max-w-lg mx-auto mt-3 leading-relaxed font-medium">
-            Standard-compliant raw materials sieved, washed, and compressed for bulk container freight export.
-          </p>
-        </div>
-      </section>
+    <div className="pb-16 bg-white min-h-screen">
+      <PageHero
+        badge="B2B CATALOG"
+        title="Organic Growing Media"
+        titleAccent="& Substrates"
+        subtitle="Standard-compliant raw materials sieved, washed, and compressed for bulk container freight export."
+        breadcrumbs={[{ label: 'Products', path: '/products' }]}
+      />
 
       {/* 1. SUBSTRATE BLENDS & TEXTURES PANEL */}
       <section className="max-w-7xl mx-auto px-6 mb-16">
@@ -349,11 +344,14 @@ const Products = () => {
               key={prod._id}
               className="bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-soft hover:shadow-premium transition-all duration-300 grid grid-cols-1 md:grid-cols-12"
             >
-              <div className="md:col-span-5 h-56 md:h-full relative overflow-hidden">
+              <div
+                className="md:col-span-5 relative h-64 md:h-full bg-stone-100 cursor-pointer"
+                onClick={() => navigate(`/account/product/${prod._id}`)}
+              >
                 <img
-                  src={prod.images[0] || 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?auto=format&fit=crop&w=600&q=80'}
+                  src={prod.images && prod.images.length > 0 ? prod.images[0].url : 'https://via.placeholder.com/400?text=No+Image'}
                   alt={prod.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
                 />
               </div>
 
@@ -367,7 +365,10 @@ const Products = () => {
                       Pack: {prod.packageSize}
                     </span>
                   </div>
-                  <h3 className="font-poppins font-extrabold text-stone-900 text-lg mt-3">
+                  <h3
+                    className="font-poppins font-extrabold text-stone-900 text-lg mt-3 cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => navigate(`/account/product/${prod._id}`)}
+                  >
                     {prod.name}
                   </h3>
                   <p className="text-stone-500 text-xs leading-relaxed mt-2 font-medium">
@@ -396,13 +397,8 @@ const Products = () => {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-stone-105 mt-6 pt-4 flex-wrap gap-3">
-                  <div>
-                    <span className="text-[10px] text-stone-400 font-bold block uppercase tracking-wider">
-                      BASE EXPORT PRICE
-                    </span>
-                    <span className="text-base font-poppins font-extrabold text-primary">
-                      ${prod.price} <span className="text-xs font-semibold text-stone-550">/ Ton</span>
-                    </span>
+                  <div className="flex-grow">
+                    {/* Price hidden for B2B catalog */}
                   </div>
                   
                   <div className="flex items-center space-x-2">

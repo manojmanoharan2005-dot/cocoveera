@@ -22,6 +22,7 @@ const UserDashboard = () => {
   // Product Data
   const [products, setProducts] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,6 +42,8 @@ const UserDashboard = () => {
         }
       } catch (err) {
         console.error('Failed to fetch data', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -108,6 +111,7 @@ const UserDashboard = () => {
     >
       {activeTab === 'Marketplace' && (
         <Marketplace 
+          loading={loading}
           products={products}
           wishlist={wishlist}
           onWishlistToggle={handleWishlistToggle}

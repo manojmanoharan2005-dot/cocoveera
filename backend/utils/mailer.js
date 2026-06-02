@@ -20,58 +20,65 @@ import {
 
 dotenv.config();
 
-const isMock = !process.env.BREVO_API_KEY || process.env.BREVO_API_KEY.startsWith('mock_');
+// Configure Brevo API
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
+const apiKey = defaultClient.authentications['api-key'];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
-let apiInstance = null;
-if (!isMock) {
-  const defaultClient = SibApiV3Sdk.ApiClient.instance;
-  const apiKey = defaultClient.authentications['api-key'];
-  apiKey.apiKey = process.env.BREVO_API_KEY;
-  apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-}
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-const sendEmail = async (subject, htmlContent, to, senderName = 'Cocoveera', senderEmail = process.env.SENDER_EMAIL || 'no-reply@cocoveera.com', attachment = null) => {
-  if (isMock) {
-    console.log(`[Brevo Mock Email] Sending to ${to[0].email} - Subject: ${subject}`);
+const sendEmail = async (subject, htmlContent, to, senderName = 'Cocoveera', senderEmail = 'adminteam@cocoveera.com', attachment = null) => {
+  if (!process.env.BREVO_API_KEY || process.env.BREVO_API_KEY.startsWith('mock_')) {
+    console.error(`[Brevo] API Key missing or mocked. Skipping email dispatch.`);
     return { mock: true };
   }
 
   try {
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+    
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = htmlContent;
     sendSmtpEmail.sender = { name: senderName, email: senderEmail };
-    sendSmtpEmail.to = to;
+    sendSmtpEmail.to = to.map(t => ({ email: t.email, name: t.name || t.email }));
     
     if (attachment) {
-      sendSmtpEmail.attachment = [attachment];
+      sendSmtpEmail.attachment = [
+        {
+          name: attachment.name,
+          content: attachment.content // Ensure this is base64
+        }
+      ];
     }
 
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log(`Email successfully sent to ${to[0].email} via Brevo`);
+    const info = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(`Email successfully sent to ${to[0].email} via Brevo from ${senderEmail} (MessageId: ${info.messageId})`);
+    return info;
   } catch (error) {
-    console.error(`Error sending email via Brevo: ${error.message}`);
+    console.error(`Error sending email via Brevo API: ${error.message}`);
+    if (error.response && error.response.text) {
+      console.error('Brevo API Error Details:', error.response.text);
+    }
   }
 };
 
-// --- AUTH EMAILS ---
+// --- AUTH EMAILS (adminteam@cocoveera.com) ---
 
 export const sendOTPEmail = async (email, name, otp) => {
   const htmlContent = getOTPTemplate(name, otp);
-  return sendEmail('Cocoveera Account Verification - OTP', htmlContent, [{ email, name }]);
+  return sendEmail('Cocoveera Account Verification - OTP', htmlContent, [{ email, name }], 'COCOVEERA Admin Team', 'adminteam@cocoveera.com');
 };
 
 export const sendWelcomeEmail = async (email, name) => {
   const htmlContent = getWelcomeTemplate(name);
-  return sendEmail('Welcome to Cocoveera - Global Growth Begins Here', htmlContent, [{ email, name }], 'Cocoveera Welcome');
+  return sendEmail('Welcome to Cocoveera - Global Growth Begins Here', htmlContent, [{ email, name }], 'COCOVEERA Admin Team', 'adminteam@cocoveera.com');
 };
 
 export const sendPasswordResetEmail = async (email, name, resetUrl) => {
   const htmlContent = getForgotPasswordTemplate(name, resetUrl);
-  return sendEmail('Cocoveera - Password Reset Request', htmlContent, [{ email, name }], 'Cocoveera Support');
+  return sendEmail('Cocoveera - Password Reset Request', htmlContent, [{ email, name }], 'COCOVEERA Admin Team', 'adminteam@cocoveera.com');
 };
 
-// --- ORDER EMAILS ---
+// --- ORDER EMAILS (servicedesk@cocoveera.com) ---
 
 export const sendOrderConfirmationEmail = async (email, name, order, invoicePdfBase64 = null) => {
   const htmlContent = getOrderConfirmationTemplate(name, order);
@@ -83,39 +90,39 @@ export const sendOrderConfirmationEmail = async (email, name, order, invoicePdfB
       type: 'application/pdf'
     };
   }
-  return sendEmail(`Order Confirmation #${order.orderId}`, htmlContent, [{ email, name }], 'Cocoveera Orders', undefined, attachment);
+  return sendEmail(`Order Confirmation #${order.orderId}`, htmlContent, [{ email, name }], 'COCOVEERA Service Desk', 'servicedesk@cocoveera.com', attachment);
 };
 
 export const sendPaymentSuccessEmail = async (email, name, transaction) => {
   const htmlContent = getPaymentSuccessTemplate(name, transaction);
-  return sendEmail(`Payment Receipt: ${transaction.transactionId}`, htmlContent, [{ email, name }], 'Cocoveera Billing');
+  return sendEmail(`Payment Receipt: ${transaction.transactionId}`, htmlContent, [{ email, name }], 'COCOVEERA Service Desk', 'servicedesk@cocoveera.com');
 };
 
 export const sendOrderProcessingEmail = async (email, name, orderId) => {
   const htmlContent = getOrderProcessingTemplate(name, orderId);
-  return sendEmail(`Order #${orderId} is Processing`, htmlContent, [{ email, name }], 'Cocoveera Orders');
+  return sendEmail(`Order #${orderId} is Processing`, htmlContent, [{ email, name }], 'COCOVEERA Service Desk', 'servicedesk@cocoveera.com');
 };
 
 export const sendShippingEmail = async (email, name, shipping) => {
   const htmlContent = getShippingTemplate(name, shipping);
-  return sendEmail(`Order #${shipping.orderId} Shipped`, htmlContent, [{ email, name }], 'Cocoveera Shipping');
+  return sendEmail(`Order #${shipping.orderId} Shipped`, htmlContent, [{ email, name }], 'COCOVEERA Service Desk', 'servicedesk@cocoveera.com');
 };
 
 export const sendDeliveredEmail = async (email, name, delivery) => {
   const htmlContent = getDeliveredTemplate(name, delivery);
-  return sendEmail(`Order Delivered: #${delivery.orderId}`, htmlContent, [{ email, name }], 'Cocoveera Shipping');
+  return sendEmail(`Order Delivered: #${delivery.orderId}`, htmlContent, [{ email, name }], 'COCOVEERA Service Desk', 'servicedesk@cocoveera.com');
 };
 
 export const sendRefundEmail = async (email, name, refund) => {
   const htmlContent = getRefundTemplate(name, refund);
-  return sendEmail(`Refund Processed: $${parseFloat(refund.amount).toFixed(2)}`, htmlContent, [{ email, name }], 'Cocoveera Billing');
+  return sendEmail(`Refund Processed: $${parseFloat(refund.amount).toFixed(2)}`, htmlContent, [{ email, name }], 'COCOVEERA Service Desk', 'servicedesk@cocoveera.com');
 };
 
-// --- BUSINESS / QUOTE EMAILS ---
+// --- BUSINESS / QUOTE EMAILS (supportdesk@cocoveera.com) ---
 
 export const sendQuoteRequestEmail = async (email, name, quoteDetails) => {
   const htmlContent = getQuoteRequestTemplate(name, quoteDetails);
-  return sendEmail(`Quote Request #${quoteDetails.referenceId}`, htmlContent, [{ email, name }], 'Cocoveera Sales');
+  return sendEmail(`Quote Request #${quoteDetails.referenceId}`, htmlContent, [{ email, name }], 'COCOVEERA Support Desk', 'supportdesk@cocoveera.com');
 };
 
 export const sendQuotePDFEmail = async (email, name, productName, priceProposed, comments, pdfBase64 = null) => {
@@ -124,11 +131,11 @@ export const sendQuotePDFEmail = async (email, name, productName, priceProposed,
   if (pdfBase64) {
     attachment = {
       content: pdfBase64,
-      name: `Quotation_${productName.replace(/\\s+/g, '_')}.pdf`,
+      name: `Quotation_${productName.replace(/\s+/g, '_')}.pdf`,
       type: 'application/pdf'
     };
   }
-  return sendEmail(`Cocoveera - Quote Proposal for ${productName}`, htmlContent, [{ email, name }], 'Cocoveera Commercial', undefined, attachment);
+  return sendEmail(`Cocoveera - Quote Proposal for ${productName}`, htmlContent, [{ email, name }], 'COCOVEERA Support Desk', 'supportdesk@cocoveera.com', attachment);
 };
 
 export const sendQuoteResponseEmail = async (email, name, productName, priceProposed, comments) => {
@@ -142,26 +149,25 @@ export const sendComparisonRecommendationEmail = async (email, name, recommendat
   if (pdfBase64) {
     attachment = {
       content: pdfBase64,
-      name: `Product_Comparison_${recommendation.recommendedProduct.replace(/\\s+/g, '_')}.pdf`,
+      name: `Product_Comparison_${recommendation.recommendedProduct.replace(/\s+/g, '_')}.pdf`,
       type: 'application/pdf'
     };
   }
-  return sendEmail('Cocoveera Product Analysis & Recommendation', htmlContent, [{ email, name }], 'Cocoveera Specialists', undefined, attachment);
+  return sendEmail('Cocoveera Product Analysis & Recommendation', htmlContent, [{ email, name }], 'COCOVEERA Support Desk', 'supportdesk@cocoveera.com', attachment);
 };
 
 export const sendHelpTicketEmail = async (email, name, ticket) => {
   const htmlContent = getHelpTicketTemplate(name, ticket);
-  return sendEmail(`Support Ticket #${ticket.ticketId} Created`, htmlContent, [{ email, name }], 'Cocoveera Support');
+  return sendEmail(`Support Ticket #${ticket.ticketId} Created`, htmlContent, [{ email, name }], 'COCOVEERA Support Desk', 'supportdesk@cocoveera.com');
 };
 
 export const sendAdminNotificationEmail = async (adminEmail, adminName, notification) => {
   const htmlContent = getAdminNotificationTemplate(adminName, notification);
-  return sendEmail(`[Admin] New ${notification.type} Alert`, htmlContent, [{ email: adminEmail, name: adminName }], 'Cocoveera System');
+  return sendEmail(`[Admin] New ${notification.type} Alert`, htmlContent, [{ email: adminEmail, name: adminName }], 'COCOVEERA Admin Team', 'adminteam@cocoveera.com');
 };
 
 export const sendMarketingCampaignEmail = async (email, name, campaign) => {
-  // Rule: Admin approval required before sending. 
-  // In a real system, this would verify a status flag. For the mailer, we assume the controller validated it.
   const htmlContent = getMarketingCampaignTemplate(name, campaign);
-  return sendEmail(campaign.subject, htmlContent, [{ email, name }], 'Cocoveera');
+  // Marketing emails can fall under Support Desk or a dedicated marketing email if added later. Defaulting to Support.
+  return sendEmail(campaign.subject, htmlContent, [{ email, name }], 'COCOVEERA Support Desk', 'supportdesk@cocoveera.com');
 };

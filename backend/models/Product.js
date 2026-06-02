@@ -19,15 +19,6 @@ const ProductSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Please add a category'],
-      enum: [
-        'Coir Pith Blocks',
-        'Grow Bags',
-        'Coir Discs',
-        'Erosion Control',
-        'Other Coir Products',
-        'Hobby Gardening',
-        'Custom Solutions',
-      ],
     },
     specifications: {
       ph: { type: String, default: '5.5 - 6.5' },

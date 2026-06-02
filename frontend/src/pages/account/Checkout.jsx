@@ -16,6 +16,8 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [shippingRules, setShippingRules] = useState([]);
   const [shippingCharge, setShippingCharge] = useState(0);
+  const [shippingQuote, setShippingQuote] = useState(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: user?.name?.split(' ')[0] || '',
@@ -26,9 +28,12 @@ const Checkout = () => {
     state: '',
     zip: '',
     country: user?.country || 'India',
+    port: '',
+    shippingMethod: '',
+    containerType: '',
   });
 
-  const isIndia = formData.country.toLowerCase() === 'india';
+  const isIndia = formData.country.trim().toLowerCase() === 'india';
 
   // Automatically adjust default payment method when country changes
   React.useEffect(() => {
@@ -70,7 +75,7 @@ const Checkout = () => {
   React.useEffect(() => {
     const fetchRules = async () => {
       try {
-        const res = await apiClient.get('/orders/shipping-rules');
+        const res = await apiClient.get('/shipping/rules');
         if (res.data.success) {
           setShippingRules(res.data.data);
         }
@@ -81,36 +86,39 @@ const Checkout = () => {
     fetchRules();
   }, []);
 
-  // Calculate shipping cost
+  // Calculate shipping cost and live quote
   React.useEffect(() => {
-    if (!shippingRules.length) return;
-    
-    // Find rule for country, or fallback to 'Global' if it exists
-    let rule = shippingRules.find(r => r.country.toLowerCase() === formData.country.toLowerCase());
-    if (!rule) {
-      rule = shippingRules.find(r => r.country.toLowerCase() === 'global');
-    }
-
-    if (rule) {
-      // Check free shipping threshold
-      if (rule.freeShipping?.enabled && subtotal >= rule.freeShipping.minAmount) {
+    const runQuote = async () => {
+      if (!shippingRules?.countries?.length) return;
+      const originCountry = shippingRules.countries.find((item) => item.code === 'IN' || item.name?.toLowerCase() === 'india');
+      const destinationCountry = shippingRules.countries.find((item) => item.name?.toLowerCase() === formData.country.toLowerCase()) || shippingRules.countries.find((item) => item.name?.toLowerCase() === 'india');
+      if (!originCountry || !destinationCountry) return;
+      try {
+        setShippingLoading(true);
+        const res = await apiClient.post('/shipping/calculate', {
+          originCountry: originCountry._id,
+          destinationCountry: destinationCountry._id,
+          shippingMethod: formData.shippingMethod || shippingRules.shippingMethods?.[0]?._id,
+          containerType: formData.containerType || undefined,
+          weightKg: totalWeightKg,
+          itemsTotal: subtotal,
+          currency: user?.currency || 'INR',
+          port: formData.port,
+        });
+        if (res.data.success) {
+          setShippingQuote(res.data.data);
+          setShippingCharge(res.data.data.shippingCost + res.data.data.containerCost + res.data.data.exportCharges + res.data.data.tax);
+        }
+      } catch (err) {
+        console.error('Quote error', err);
+        setShippingQuote(null);
         setShippingCharge(0);
-        return;
+      } finally {
+        setShippingLoading(false);
       }
-
-      // Determine tier
-      if (totalWeightKg <= 5) {
-        setShippingCharge(rule.weightRules.upTo5kg);
-      } else if (totalWeightKg <= 20) {
-        setShippingCharge(rule.weightRules.upTo20kg);
-      } else {
-        setShippingCharge(rule.weightRules.over20kg);
-      }
-    } else {
-      // No rule found - block checkout or set a high default
-      setShippingCharge(0); 
-    }
-  }, [formData.country, shippingRules, subtotal, totalWeightKg]);
+    };
+    runQuote();
+  }, [formData.country, formData.port, formData.shippingMethod, formData.containerType, shippingRules, subtotal, totalWeightKg, user?.currency]);
 
   // Dummy discount 15% for illustration as per reference
   const discount = Math.round(subtotal * 0.15);
@@ -135,6 +143,8 @@ const Checkout = () => {
     }
     setActiveStep(3);
   };
+
+  const isDomestic = formData.country.trim().toLowerCase() === 'india';
 
   const getStepWrapperStyle = (step) => {
     if (activeStep === step) {
@@ -351,6 +361,21 @@ const Checkout = () => {
                 <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                   <div className="p-5 md:p-7 pt-0 mt-2 ml-0 sm:ml-12 border-t border-stone-100">
                     <div className="space-y-5">
+                      <div className="bg-stone-50/60 rounded-2xl border border-stone-100 p-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-3">Shipping Mode</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <label className={`p-3 rounded-xl border cursor-pointer transition ${isDomestic ? 'border-[#2E7D32] bg-[#F0FAF0]' : 'border-stone-200 bg-white'}`}>
+                            <input type="radio" checked={isDomestic} onChange={() => setFormData((p) => ({ ...p, country: 'India', port: '', shippingMethod: 'road' }))} className="sr-only" />
+                            <p className="font-bold text-sm text-stone-900">Domestic India</p>
+                            <p className="text-xs text-stone-500">State, city, pincode</p>
+                          </label>
+                          <label className={`p-3 rounded-xl border cursor-pointer transition ${!isDomestic ? 'border-[#2E7D32] bg-[#F0FAF0]' : 'border-stone-200 bg-white'}`}>
+                            <input type="radio" checked={!isDomestic} onChange={() => setFormData((p) => ({ ...p, port: '', shippingMethod: 'sea' }))} className="sr-only" />
+                            <p className="font-bold text-sm text-stone-900">International Export</p>
+                            <p className="text-xs text-stone-500">Country, port, method</p>
+                          </label>
+                        </div>
+                      </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Street Address</label>
                         <input name="address" value={formData.address} onChange={handleChange} placeholder="House No, Building, Street Area" className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
@@ -362,7 +387,11 @@ const Checkout = () => {
                         </div>
                         <div className="flex-1 space-y-2">
                           <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">State</label>
-                          <input name="state" value={formData.state} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
+                          {isDomestic ? (
+                            <input name="state" value={formData.state} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
+                          ) : (
+                            <input name="state" value={formData.state} onChange={handleChange} placeholder="Province / Region" className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-5">
@@ -374,6 +403,65 @@ const Checkout = () => {
                           <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Country</label>
                           <input name="country" value={formData.country} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {!isDomestic && (
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Port</label>
+                            <input name="port" value={formData.port} onChange={handleChange} placeholder="Chennai Port, Mumbai Port..." className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Shipping Method</label>
+                          <select name="shippingMethod" value={formData.shippingMethod} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none">
+                            <option value="">Auto-select</option>
+                            {isDomestic ? (
+                              <>
+                                <option value="road">Road Transport</option>
+                                <option value="rail">Rail Cargo</option>
+                                <option value="ftl">FTL</option>
+                                <option value="ptl">PTL</option>
+                              </>
+                            ) : (
+                              <>
+                                <option value="sea">Sea Freight</option>
+                                <option value="air">Air Freight</option>
+                                <option value="lcl">LCL</option>
+                                <option value="container">Container</option>
+                              </>
+                            )}
+                          </select>
+                        </div>
+                      </div>
+                      {!isDomestic && (
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Container Type</label>
+                          <select name="containerType" value={formData.containerType} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none">
+                            <option value="">No container / auto</option>
+                            <option value="20FT FCL">20FT FCL</option>
+                            <option value="40FT FCL">40FT FCL</option>
+                            <option value="LCL">LCL</option>
+                          </select>
+                        </div>
+                      )}
+
+                      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-black uppercase tracking-widest text-stone-400">Live Shipping Quote</p>
+                          <p className="text-xs font-bold text-stone-500">{shippingLoading ? 'Updating...' : shippingQuote ? 'Ready' : 'Waiting'}</p>
+                        </div>
+                        {shippingQuote ? (
+                          <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-stone-600">
+                            <div>Shipping: <span className="font-black text-stone-900">{formatPrice(shippingQuote.shippingCost)}</span></div>
+                            <div>Container: <span className="font-black text-stone-900">{formatPrice(shippingQuote.containerCost)}</span></div>
+                            <div>Export: <span className="font-black text-stone-900">{formatPrice(shippingQuote.exportCharges)}</span></div>
+                            <div>Tax: <span className="font-black text-stone-900">{formatPrice(shippingQuote.tax)}</span></div>
+                            <div className="col-span-2">Transit: <span className="font-black text-stone-900">{shippingQuote.transitTimeDays} days</span></div>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-stone-500">Select destination details to calculate freight, export fees, and ETA.</p>
+                        )}
                       </div>
                     </div>
                     <button onClick={handleStep2Next} className="mt-8 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95">
@@ -462,14 +550,6 @@ const Checkout = () => {
                             </div>
                             <CreditCard className={`w-6 h-6 ${paymentMethod === 'razorpay' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
                           </label>
-                          <label className={`flex items-center gap-5 p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'cod' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
-                            <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 accent-[#2E7D32]" />
-                            <div className="flex-1">
-                              <p className="text-sm md:text-base font-bold text-stone-900">Cash on Delivery</p>
-                              <p className="text-xs text-stone-500 font-medium mt-1">Pay when your order is delivered to your location.</p>
-                            </div>
-                            <Banknote className={`w-6 h-6 ${paymentMethod === 'cod' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
-                          </label>
                         </>
                       ) : (
                         <>
@@ -544,8 +624,10 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Delivery Charges</span>
-                  {shippingCharge === 0 ? (
-                    <span className="text-[#2E7D32] bg-[#E8F5E9] px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wide">FREE</span>
+                  {shippingLoading ? (
+                    <span className="text-stone-400 font-bold text-[11px]">Calculating...</span>
+                  ) : shippingCharge === 0 ? (
+                    <span className="text-stone-500 font-bold text-[11px]">Pending Calculation</span>
                   ) : (
                     <span className="text-stone-900 font-bold">{formatPrice(shippingCharge)}</span>
                   )}

@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
 
 export const Marketplace = ({ 
+  loading = false,
   products, 
   wishlist, 
   onWishlistToggle, 
@@ -26,7 +27,7 @@ export const Marketplace = ({
 
   // Filters & Sorting state
   const [selectedCollection, setSelectedCollection] = useState('All');
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 5000 });
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 99999999 });
   const [stockStatus, setStockStatus] = useState('all');
   const [ratingFilter, setRatingFilter] = useState(0);
   
@@ -55,17 +56,8 @@ export const Marketplace = ({
     // 2. Collection category filter
     if (selectedCollection !== 'All') {
       result = result.filter(p => {
-        const cat = p.category?.toLowerCase() || '';
-        const col = selectedCollection.toLowerCase();
-        
-        if (col === 'organic') return cat.includes('block') || cat.includes('bag') || cat.includes('pith');
-        if (col === 'seeds') return cat.includes('seed');
-        if (col === 'pesticide') return cat.includes('pest') || cat.includes('control');
-        if (col === 'equipment') return cat.includes('equip') || cat.includes('tool') || cat.includes('geotextile');
-        if (col === 'chemical') return cat.includes('chem') || cat.includes('wash');
-        if (col === 'bio-fertilizer') return cat.includes('fertilizer') || cat.includes('nutrient');
-        
-        return cat.includes(col);
+        const cat = p.category || '';
+        return cat === selectedCollection;
       });
     }
 
@@ -121,7 +113,7 @@ export const Marketplace = ({
 
   const handleClearFilters = () => {
     setSelectedCollection('All');
-    setPriceRange({ min: 0, max: 5000 });
+    setPriceRange({ min: 0, max: 99999999 });
     setStockStatus('all');
     setRatingFilter(0);
     setSearchQuery('');
@@ -153,6 +145,7 @@ export const Marketplace = ({
         setRatingFilter={setRatingFilter}
         onApplyFilters={handleApplyPriceFilter}
         onClearFilters={handleClearFilters}
+        products={products}
       />
 
       {/* Product Area Navigation Sub-Tabs */}
@@ -186,7 +179,7 @@ export const Marketplace = ({
       </div>
 
       {/* 4. Product Catalog Grid Area */}
-      <ProductGrid loading={false}>
+      <ProductGrid loading={loading}>
         {displayedProducts.map((prod) => (
           <ProductCard
             key={prod._id}
@@ -201,19 +194,12 @@ export const Marketplace = ({
       </ProductGrid>
 
       {/* Empty State */}
-      {displayedProducts.length === 0 && (
+      {!loading && displayedProducts.length === 0 && (
         <div className="bg-white rounded-[24px] border border-stone-250 p-16 text-center space-y-4 max-w-lg mx-auto shadow-sm">
           <div className="w-16 h-16 bg-[#F7F9F7] text-stone-400 rounded-full flex items-center justify-center mx-auto border border-stone-100">
             <Info className="w-6 h-6" />
           </div>
-          <h4 className="font-poppins font-extrabold text-stone-900 text-sm">No items found matching your filters</h4>
-          <p className="text-xs text-[#6B7280] leading-relaxed font-semibold">Adjust price ranges, choose other collections, or clear filters to view the Cocoveera catalog.</p>
-          <button 
-            onClick={handleClearFilters}
-            className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-bold py-3 px-6 rounded-[12px] transition-all shadow-md shadow-[#2E7D32]/10"
-          >
-            Clear All Filters
-          </button>
+          <h4 className="font-poppins font-extrabold text-stone-900 text-sm">No products found</h4>
         </div>
       )}
 

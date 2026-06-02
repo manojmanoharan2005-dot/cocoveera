@@ -21,7 +21,7 @@ export default function ShippingSettingsTab({ setError, setSuccess }) {
     setLoading(true);
     try {
       const res = await adminSettingsService.getShippingRules();
-      setRules(res.data);
+      setRules(res.data?.shippingRates || []);
     } catch (err) {
       setError('Failed to fetch shipping rules');
     } finally {
@@ -63,12 +63,12 @@ export default function ShippingSettingsTab({ setError, setSuccess }) {
 
   const handleEdit = (rule) => {
     setFormData({
-      country: rule.country,
+      country: rule.originCountry?.name || rule.originCountry || '',
       baseCharge: rule.baseCharge,
       chargePerKg: rule.chargePerKg,
       freeShippingThreshold: rule.freeShippingThreshold || 0,
-      estimatedDeliveryDays: rule.estimatedDeliveryDays,
-      isActive: rule.isActive,
+      estimatedDeliveryDays: rule.transitTimeDays ? `${rule.transitTimeDays} days` : '5-7 business days',
+      isActive: rule.status === 'active',
     });
     setEditingId(rule._id);
     setShowForm(true);
@@ -220,15 +220,15 @@ export default function ShippingSettingsTab({ setError, setSuccess }) {
               {rules.map((rule) => (
                 <tr key={rule._id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-900">{rule.country}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">₹{rule.baseCharge}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">₹{rule.chargePerKg}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">₹{rule.shippingCost ?? rule.baseCharge ?? 0}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{rule.shippingMethod?.name || 'N/A'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">
-                    {rule.freeShippingThreshold ? `₹${rule.freeShippingThreshold}` : 'N/A'}
+                        {rule.minOrderQuantity || rule.freeShippingThreshold ? `${rule.minOrderQuantity || rule.freeShippingThreshold}` : 'N/A'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{rule.estimatedDeliveryDays}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{rule.transitTimeDays ? `${rule.transitTimeDays} days` : rule.estimatedDeliveryDays}</td>
                   <td className="px-4 py-3 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${rule.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {rule.isActive ? 'Active' : 'Inactive'}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${rule.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {rule.status === 'active' ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm flex justify-center space-x-3">
