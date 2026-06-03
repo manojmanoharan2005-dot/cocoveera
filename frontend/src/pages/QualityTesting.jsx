@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/QualityTesting.jsx
+ * Purpose: React page component representing the QualityTesting view.
+ */
 import React, { useState } from 'react';
 import { apiClient } from '../context/AuthContext';
 import { Search, FileDown, CheckCircle, Info, Palmtree, Settings, Box, Shield, Package, Ship } from 'lucide-react';

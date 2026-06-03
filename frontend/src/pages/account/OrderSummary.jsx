@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/OrderSummary.jsx
+ * Purpose: React page component representing the OrderSummary view.
+ */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, User, MapPin, Truck, ShieldCheck, ArrowLeft, Info } from 'lucide-react';

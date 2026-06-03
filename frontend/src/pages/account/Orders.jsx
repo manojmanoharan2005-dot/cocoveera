@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/Orders.jsx
+ * Purpose: React page component representing the Orders view.
+ */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Eye, Download, Truck, RotateCcw, XCircle, Package } from 'lucide-react';
@@ -28,12 +32,8 @@ const Orders = () => {
   React.useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const [resOrders, resInvoices] = await Promise.all([
-          apiClient.get('/orders/myorders'),
-          apiClient.get('/invoices/myinvoices')
-        ]);
+        const resOrders = await apiClient.get('/orders/myorders');
         if (resOrders.data.success) setOrders(resOrders.data.data);
-        if (resInvoices.data) setInvoices(resInvoices.data);
       } catch (err) {
         console.error('Failed to fetch data:', err);
       } finally {
@@ -63,7 +63,6 @@ const Orders = () => {
   };
 
   const formattedOrders = orders.map(o => {
-    const invoice = invoices.find(inv => inv.orderId?._id === o._id || inv.orderId === o._id);
     return {
       id: o._id,
       date: o.createdAt,
@@ -71,10 +70,10 @@ const Orders = () => {
       containerType: o.containerCapacity || 'LCL',
       quantity: `${o.items.reduce((sum, i) => sum + i.quantity, 0)} Units`,
       totalAmount: o.totalAmount,
-      paymentStatus: o.paymentStatus.charAt(0).toUpperCase() + o.paymentStatus.slice(1),
-      status: o.orderStatus.charAt(0).toUpperCase() + o.orderStatus.slice(1),
-      timelineIndex: getTimelineIndex(o.orderStatus),
-      invoiceId: invoice?._id || null,
+      paymentStatus: o.paymentStatus ? o.paymentStatus.charAt(0).toUpperCase() + o.paymentStatus.slice(1) : 'Pending',
+      status: o.orderStatus ? o.orderStatus.charAt(0).toUpperCase() + o.orderStatus.slice(1) : 'Pending',
+      timelineIndex: getTimelineIndex(o.orderStatus || 'pending'),
+      invoiceId: null, // Invoices removed
     };
   });
 

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/Marketplace.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FilterDrawer from './FilterDrawer';
@@ -241,7 +245,7 @@ export const Marketplace = ({
                       <img 
                         src={selectedProduct.images?.[0] || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'} 
                         alt={selectedProduct.name} 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-contain mix-blend-multiply" 
                       />
                     </div>
                     {/* Gallery Thumbs */}

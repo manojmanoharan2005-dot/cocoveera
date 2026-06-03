@@ -1,3 +1,7 @@
+/**
+ * File: backend/middleware/auth.js
+ * Purpose: Provides middleware functions for request interception and validation.
+ */
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 

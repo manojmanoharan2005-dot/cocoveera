@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/ContainerViewerDemo.jsx
+ * Purpose: React page component representing the ContainerViewerDemo view.
+ */
 import React from 'react';
 import ContainerViewer from '../components/3d/ContainerViewer';
 

@@ -1,15 +1,22 @@
+/**
+ * File: frontend/src/pages/account/Address.jsx
+ * Purpose: React page component representing the Address view.
+ */
 import React, { useState, useEffect } from 'react';
 import { Plus, MapPin, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { apiClient } from '../../context/AuthContext';
+import { apiClient, useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Address = () => {
+  const navigate = useNavigate();
   const [addresses, setAddresses] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { fetchProfile } = useAuth();
 
   const [formData, setFormData] = useState({
-    name: '', company: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false
+    name: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false
   });
 
   useEffect(() => {
@@ -47,7 +54,11 @@ const Address = () => {
       if (res.data.success) {
         setAddresses(res.data.data);
         setIsEditing(false);
-        setFormData({ name: '', company: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false });
+        setFormData({ name: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false });
+        const fetchedProfile = await fetchProfile();
+        if (fetchedProfile && fetchedProfile.addresses && fetchedProfile.addresses.length === 1) {
+          navigate('/dashboard');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -58,7 +69,10 @@ const Address = () => {
     if (window.confirm('Are you sure you want to delete this address?')) {
       try {
         const res = await apiClient.delete(`/users/addresses/${id}`);
-        if (res.data.success) setAddresses(res.data.data);
+        if (res.data.success) {
+          setAddresses(res.data.data);
+          await fetchProfile();
+        }
       } catch (err) {
         console.error(err);
       }
@@ -68,7 +82,10 @@ const Address = () => {
   const handleSetDefault = async (addr) => {
     try {
       const res = await apiClient.post('/users/addresses', { ...addr, isDefault: true });
-      if (res.data.success) setAddresses(res.data.data);
+      if (res.data.success) {
+        setAddresses(res.data.data);
+        await fetchProfile();
+      }
     } catch (err) {
       console.error(err);
     }
@@ -101,14 +118,10 @@ const Address = () => {
           <h2 className="text-xl font-black text-stone-900 mb-6">Add New Address</h2>
           
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Full Name</label>
                 <input required name="name" value={formData.name} onChange={handleChange} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Company Name</label>
-                <input name="company" value={formData.company} onChange={handleChange} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" />
               </div>
             </div>
 
@@ -183,7 +196,6 @@ const Address = () => {
               </div>
               <div>
                 <h3 className="text-sm font-extrabold text-stone-900">{addr.name}</h3>
-                {addr.company && <p className="text-xs font-bold text-stone-500 mt-0.5">{addr.company}</p>}
               </div>
             </div>
 
@@ -214,7 +226,6 @@ const Address = () => {
                       ...addr,
                       // React controlled inputs need defined values
                       name: addr.name || '',
-                      company: addr.company || '',
                       phone: addr.phone || '',
                       street: addr.street || '',
                       city: addr.city || '',

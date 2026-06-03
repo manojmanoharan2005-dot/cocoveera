@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/User.js
+ * Purpose: Defines the database schema and model for User.
+ */
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';

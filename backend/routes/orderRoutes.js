@@ -1,3 +1,7 @@
+/**
+ * File: backend/routes/orderRoutes.js
+ * Purpose: Defines the API endpoints and routing logic for order requests.
+ */
 import express from 'express';
 import {
   createOrder,

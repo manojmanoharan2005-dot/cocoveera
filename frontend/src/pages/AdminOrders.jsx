@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminOrders.jsx
+ * Purpose: React page component representing the AdminOrders view.
+ */
 import { useEffect, useState } from 'react';
 import { adminOrderService } from '../services/adminService';
 import {
@@ -18,7 +22,6 @@ import { convertCurrency } from '../utils/currencyConverter';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
-  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -50,13 +53,11 @@ export default function AdminOrders() {
     try {
       setError('');
       setLoading(true);
-      const [response, invoicesRes] = await Promise.all([
-        adminOrderService.getAll(page, 10, search, orderStatus, paymentStatus),
-        apiClient.get('/invoices')
+      const [response] = await Promise.all([
+        adminOrderService.getAll(page, 10, search, orderStatus, paymentStatus)
       ]);
       setOrders(response.data);
       setPagination(response.pagination);
-      setInvoices(invoicesRes.data);
     } catch (err) {
       setError('Failed to load orders');
       console.error(err);
@@ -92,20 +93,29 @@ export default function AdminOrders() {
     setShowModal(true);
   };
 
-  const handleDownloadInvoice = async (invoiceId) => {
+  const handleDownloadInvoice = async (orderId) => {
     try {
-      const response = await apiClient.get(`/invoices/${invoiceId}/download`, {
+      const response = await apiClient.get(`/admin/orders/${orderId}/invoice/download`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `Invoice_${invoiceId}.pdf`);
+      link.setAttribute('download', `Invoice_${orderId}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
     } catch (error) {
       alert('Failed to download invoice');
+    }
+  };
+
+  const handleResendEmail = async (orderId) => {
+    try {
+      await apiClient.post(`/admin/orders/${orderId}/invoice/email`);
+      alert('Invoice email sent successfully!');
+    } catch (error) {
+      alert('Failed to send invoice email');
     }
   };
 
@@ -269,25 +279,14 @@ export default function AdminOrders() {
                 {/* Invoice Actions */}
                 <div className="mb-6 border-t pt-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Invoice Management</h3>
-                  {(() => {
-                    const invoice = invoices.find(inv => inv.orderId?._id === selectedOrder._id || inv.orderId === selectedOrder._id);
-                    if (invoice) {
-                      return (
-                        <div className="flex gap-3">
-                          <button onClick={() => handleDownloadInvoice(invoice._id)} className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-semibold rounded-lg transition">
-                            <Download size={16} /> Download Invoice
-                          </button>
-                          <button className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition">
-                            <Mail size={16} /> Resend Email
-                          </button>
-                          <span className="flex items-center gap-2 px-4 py-2 text-green-700 text-sm font-semibold">
-                            Status: Sent
-                          </span>
-                        </div>
-                      );
-                    }
-                    return <p className="text-sm text-gray-500">No invoice generated yet.</p>;
-                  })()}
+                  <div className="flex gap-3">
+                    <button onClick={() => handleDownloadInvoice(selectedOrder._id)} className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-semibold rounded-lg transition">
+                      <Download size={16} /> Download PDF
+                    </button>
+                    <button onClick={() => handleResendEmail(selectedOrder._id)} className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition">
+                      <Mail size={16} /> Email Customer
+                    </button>
+                  </div>
                 </div>
 
                 {/* Status Update Form */}

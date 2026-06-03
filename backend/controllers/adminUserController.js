@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/adminUserController.js
+ * Purpose: Handles the business logic and request processing for adminUser operations.
+ */
 import User from '../models/User.js';
 
 // @desc    Get all users (Admin)

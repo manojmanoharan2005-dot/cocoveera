@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/Contact.jsx
+ * Purpose: React page component representing the Contact view.
+ */
 import React, { useState } from 'react';
 import { apiClient } from '../context/AuthContext';
 import { Mail, Phone, MapPin, Send, Building } from 'lucide-react';

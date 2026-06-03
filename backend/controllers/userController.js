@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/userController.js
+ * Purpose: Handles the business logic and request processing for user operations.
+ */
 import User from '../models/User.js';
 import { sendOTPEmail } from '../utils/mailer.js';
 
@@ -144,6 +148,11 @@ export const addAddress = async (req, res) => {
       }
     } else {
       user.addresses.push(req.body);
+    }
+
+    // Automatically sync phone number to main user profile if it's missing or N/A
+    if (req.body.phone && (!user.phone || user.phone === 'N/A')) {
+      user.phone = req.body.phone;
     }
     
     await user.save();

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/Products.jsx
+ * Purpose: React page component representing the Products view.
+ */
 import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -349,7 +353,7 @@ const Products = () => {
                 onClick={() => navigate(`/account/product/${prod._id}`)}
               >
                 <img
-                  src={prod.images && prod.images.length > 0 ? prod.images[0].url : 'https://via.placeholder.com/400?text=No+Image'}
+                  src={prod.images && prod.images.length > 0 ? prod.images[0] : 'https://via.placeholder.com/400?text=No+Image'}
                   alt={prod.name}
                   className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
                 />

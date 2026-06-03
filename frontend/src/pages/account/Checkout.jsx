@@ -1,6 +1,10 @@
+/**
+ * File: frontend/src/pages/account/Checkout.jsx
+ * Purpose: React page component representing the Checkout view.
+ */
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Check, Edit2, ShieldCheck, MapPin, Truck, CreditCard, Banknote, Mail, Sparkles } from 'lucide-react';
+import { Check, Edit2, ShieldCheck, MapPin, Truck, CreditCard, Banknote, Mail, Sparkles, Ship, Package, CheckCircle2, Palmtree, Circle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,20 +18,28 @@ const Checkout = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [shippingRules, setShippingRules] = useState([]);
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingQuote, setShippingQuote] = useState(null);
   const [shippingLoading, setShippingLoading] = useState(false);
   
+  const defaultAddr = user?.addresses?.find(a => a.isDefault) || user?.addresses?.[0];
+  const defaultCountry = defaultAddr?.country || user?.country || 'India';
+
+  const [shippingMode, setShippingMode] = useState(
+    defaultCountry.trim().toLowerCase() === 'india' ? 'domestic' : 'international'
+  );
+
   const [formData, setFormData] = useState({
     firstName: user?.name?.split(' ')[0] || '',
     lastName: user?.name?.split(' ')[1] || '',
-    phone: user?.phone || '',
-    address: '',
-    city: '',
-    state: '',
-    zip: '',
-    country: user?.country || 'India',
+    phone: defaultAddr?.phone || user?.phone || '',
+    address: defaultAddr?.street || '',
+    city: defaultAddr?.city || '',
+    state: defaultAddr?.state || '',
+    zip: defaultAddr?.zip || '',
+    country: defaultCountry,
     port: '',
     shippingMethod: '',
     containerType: '',
@@ -67,9 +79,23 @@ const Checkout = () => {
   }, 0);
   
   const totalWeightKg = cartItems.reduce((acc, item) => {
-    const weight = item.product?.weightKg || 5; // Fallback to 5kg if missing
+    const weight = item.product?.weight || 0;
     return acc + (weight * item.quantity);
   }, 0);
+
+  const totalVolumeCBM = cartItems.reduce((acc, item) => {
+    const volume = item.product?.volumeCBM || 0;
+    return acc + (volume * item.quantity);
+  }, 0);
+
+  let recommendedContainer = '20FT Container';
+  if (totalWeightKg > 28000 || totalVolumeCBM > 33) {
+    if (totalWeightKg <= 26000 && totalVolumeCBM <= 67) {
+       recommendedContainer = '40FT Container';
+    } else {
+       recommendedContainer = 'Multiple Containers Required';
+    }
+  }
 
   // Fetch shipping rules
   React.useEffect(() => {
@@ -128,23 +154,15 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleStep1Next = () => {
-    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.phone.trim()) {
-      alert("Please fill in all Account Details.");
-      return;
-    }
-    setActiveStep(2);
-  };
-
   const handleStep2Next = () => {
     if (!formData.address.trim() || !formData.city.trim() || !formData.state.trim() || !formData.zip.trim() || !formData.country.trim()) {
       alert("Please fill in all Delivery Address fields.");
       return;
     }
-    setActiveStep(3);
+    setActiveStep(2);
   };
 
-  const isDomestic = formData.country.trim().toLowerCase() === 'india';
+  const isDomestic = shippingMode === 'domestic';
 
   const getStepWrapperStyle = (step) => {
     if (activeStep === step) {
@@ -154,6 +172,13 @@ const Checkout = () => {
     } else {
       return "bg-transparent rounded-2xl border-none overflow-hidden opacity-50 transition-all duration-500 relative z-10 grayscale-[0.5]";
     }
+  };
+
+  const handleSuccess = () => {
+    setShowSuccessAnimation(true);
+    setTimeout(() => {
+      navigate('/account/orders');
+    }, 4000);
   };
 
   const handlePlaceOrder = async () => {
@@ -193,7 +218,7 @@ const Checkout = () => {
       // 2. Handle specific payment gateways
       if (paymentMethod === 'cod' || paymentMethod === 'wire') {
         // Simple completion for offline methods
-        navigate('/account/orders');
+        handleSuccess();
         return;
       }
 
@@ -222,7 +247,7 @@ const Checkout = () => {
                 gateway: 'razorpay',
                 status: 'success'
               });
-              navigate('/account/orders');
+              handleSuccess();
             } catch (err) {
               alert("Payment confirmation failed.");
             }
@@ -242,7 +267,7 @@ const Checkout = () => {
         rzp.open();
       } else if (paymentMethod === 'stripe' || paymentMethod === 'paypal') {
         alert(`${paymentMethod.toUpperCase()} integration is configured in backend but requires frontend checkout UI logic to be built out. Order placed as Pending.`);
-        navigate('/account/orders');
+        handleSuccess();
       }
 
     } catch (err) {
@@ -294,7 +319,95 @@ const Checkout = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] pb-24">
+    <div className="min-h-screen bg-[#FDFCFB] pb-24 relative">
+      <AnimatePresence>
+        {showSuccessAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-[#F0FAF0] flex flex-col items-center justify-center overflow-hidden"
+          >
+            <div className="relative w-72 h-72 mb-8 flex items-center justify-center">
+              {/* Sea / Ground line */}
+              <div className="absolute bottom-10 w-full h-1 bg-green-200/50 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '100%' }}
+                  transition={{ duration: 2, delay: 0.5, ease: "linear" }}
+                  className="w-full h-full bg-green-500"
+                />
+              </div>
+
+              {/* The Palm Tree */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: [0, 1, 1, 0], scale: [0.8, 1, 1, 0.8] }}
+                transition={{ duration: 2.5, times: [0, 0.2, 0.8, 1] }}
+                className="absolute bottom-10 left-1/2 -ml-8"
+              >
+                <Palmtree className="w-16 h-16 text-green-700" />
+              </motion.div>
+
+              {/* The Coconut (Drops from tree) */}
+              <motion.div
+                initial={{ y: -50, scale: 0, opacity: 0 }}
+                animate={{ 
+                  y:      [-50, -50, 20, 20],
+                  scale:  [0,   1,   1,  0],
+                  opacity:[0,   1,   1,  0]
+                }}
+                transition={{ duration: 2, times: [0, 0.2, 0.6, 1] }}
+                className="absolute top-1/2 left-1/2 -ml-3 -mt-8 z-10"
+              >
+                <div className="w-6 h-6 bg-[#6D4C41] rounded-full border-2 border-[#5D4037] shadow-inner" />
+              </motion.div>
+
+              {/* The Box (Packs the coconut) */}
+              <motion.div
+                initial={{ y: 20, scale: 0, opacity: 0 }}
+                animate={{ 
+                  y:       [20, 20, 20, 20, 20],
+                  scale:   [0,  0,  1.2, 1, 0],
+                  opacity: [0,  0,  1,   1, 0]
+                }}
+                transition={{ duration: 2.5, times: [0, 0.48, 0.55, 0.8, 1] }}
+                className="absolute top-1/2 left-1/2 -ml-6 -mt-6 z-20"
+              >
+                <Package className="w-12 h-12 text-stone-700 bg-orange-100 rounded-lg p-2 shadow-xl border-2 border-orange-200" />
+              </motion.div>
+
+              {/* The Ship (Takes the box away) */}
+              <motion.div
+                initial={{ x: -250, opacity: 0 }}
+                animate={{ 
+                  x:       [-250, -250, 0, 250],
+                  opacity: [0,    1,    1, 1]
+                }}
+                transition={{ duration: 3.5, times: [0, 0.4, 0.6, 1], ease: "easeInOut" }}
+                className="absolute bottom-10 left-1/2 -ml-8 z-30"
+              >
+                <Ship className="w-16 h-16 text-[#2E7D32]" />
+              </motion.div>
+
+              {/* Success Check */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 2.8, type: "spring", stiffness: 200, damping: 15 }}
+                className="absolute inset-0 flex items-center justify-center z-40"
+              >
+                <div className="bg-white rounded-full p-4 shadow-2xl">
+                  <CheckCircle2 className="w-20 h-20 text-[#2E7D32]" />
+                </div>
+              </motion.div>
+            </div>
+            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.8 }} className="text-3xl font-black text-stone-900 mb-2">Order Placed Successfully!</motion.h2>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3 }} className="text-stone-500 font-bold">Your cargo is being prepared for shipping...</motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-6xl mx-auto py-10 px-4 md:px-8">
         
         {/* Header Title */}
@@ -310,12 +423,12 @@ const Checkout = () => {
             {/* Timeline Line */}
             <div className="absolute left-[36px] top-[50px] bottom-[50px] w-[2px] bg-stone-200 z-0 hidden sm:block rounded-full"></div>
           
-          {/* STEP 1: Account Details */}
+          {/* STEP 1: Delivery Address */}
           <div className={getStepWrapperStyle(1)}>
             <StepHeader 
               step={1} 
-              title="Account Details" 
-              summary={`${user?.name} | ${user?.phone || user?.email}`} 
+              title="Delivery Address" 
+              summary={`${formData.firstName} ${formData.lastName}, ${formData.city}`} 
               isCompleted={activeStep > 1} 
               isActive={activeStep === 1} 
             />
@@ -323,54 +436,17 @@ const Checkout = () => {
               {activeStep === 1 && (
                 <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                   <div className="p-5 md:p-7 pt-0 mt-2 ml-0 sm:ml-12 border-t border-stone-100">
-                    <p className="text-sm font-medium text-stone-500 mb-6">You are securely logged in as <span className="font-bold text-stone-900">{user?.email}</span></p>
-                    <div className="flex flex-col sm:flex-row gap-5">
-                      <div className="flex-1 space-y-2">
-                        <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">First Name</label>
-                        <input name="firstName" value={formData.firstName} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Last Name</label>
-                        <input name="lastName" value={formData.lastName} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
-                      </div>
-                    </div>
-                    <div className="mt-5 space-y-2">
-                      <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Phone Number</label>
-                      <input name="phone" value={formData.phone} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
-                    </div>
-                    <button onClick={handleStep1Next} className="mt-8 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95">
-                      Continue to Delivery
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* STEP 2: Delivery Address */}
-          <div className={getStepWrapperStyle(2)}>
-            <StepHeader 
-              step={2} 
-              title="Delivery Address" 
-              summary={`${formData.firstName} ${formData.lastName}, ${formData.city}`} 
-              isCompleted={activeStep > 2} 
-              isActive={activeStep === 2} 
-            />
-            <AnimatePresence>
-              {activeStep === 2 && (
-                <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
-                  <div className="p-5 md:p-7 pt-0 mt-2 ml-0 sm:ml-12 border-t border-stone-100">
                     <div className="space-y-5">
                       <div className="bg-stone-50/60 rounded-2xl border border-stone-100 p-4">
                         <p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-3">Shipping Mode</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <label className={`p-3 rounded-xl border cursor-pointer transition ${isDomestic ? 'border-[#2E7D32] bg-[#F0FAF0]' : 'border-stone-200 bg-white'}`}>
-                            <input type="radio" checked={isDomestic} onChange={() => setFormData((p) => ({ ...p, country: 'India', port: '', shippingMethod: 'road' }))} className="sr-only" />
+                          <label className={`p-3 rounded-xl border cursor-pointer transition ${shippingMode === 'domestic' ? 'border-[#2E7D32] bg-[#F0FAF0]' : 'border-stone-200 bg-white'}`}>
+                            <input type="radio" checked={shippingMode === 'domestic'} onChange={() => { setShippingMode('domestic'); setFormData((p) => ({ ...p, country: 'India', port: '', shippingMethod: 'road' })); }} className="sr-only" />
                             <p className="font-bold text-sm text-stone-900">Domestic India</p>
                             <p className="text-xs text-stone-500">State, city, pincode</p>
                           </label>
-                          <label className={`p-3 rounded-xl border cursor-pointer transition ${!isDomestic ? 'border-[#2E7D32] bg-[#F0FAF0]' : 'border-stone-200 bg-white'}`}>
-                            <input type="radio" checked={!isDomestic} onChange={() => setFormData((p) => ({ ...p, port: '', shippingMethod: 'sea' }))} className="sr-only" />
+                          <label className={`p-3 rounded-xl border cursor-pointer transition ${shippingMode === 'international' ? 'border-[#2E7D32] bg-[#F0FAF0]' : 'border-stone-200 bg-white'}`}>
+                            <input type="radio" checked={shippingMode === 'international'} onChange={() => { setShippingMode('international'); setFormData((p) => ({ ...p, port: '', shippingMethod: 'sea' })); }} className="sr-only" />
                             <p className="font-bold text-sm text-stone-900">International Export</p>
                             <p className="text-xs text-stone-500">Country, port, method</p>
                           </label>
@@ -416,21 +492,9 @@ const Checkout = () => {
                           <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Shipping Method</label>
                           <select name="shippingMethod" value={formData.shippingMethod} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none">
                             <option value="">Auto-select</option>
-                            {isDomestic ? (
-                              <>
-                                <option value="road">Road Transport</option>
-                                <option value="rail">Rail Cargo</option>
-                                <option value="ftl">FTL</option>
-                                <option value="ptl">PTL</option>
-                              </>
-                            ) : (
-                              <>
-                                <option value="sea">Sea Freight</option>
-                                <option value="air">Air Freight</option>
-                                <option value="lcl">LCL</option>
-                                <option value="container">Container</option>
-                              </>
-                            )}
+                            {shippingRules?.shippingMethods?.filter(m => (shippingMode === 'domestic' ? m.category === 'domestic' : m.category === 'international')).map(m => (
+                                <option key={m._id} value={m._id}>{m.name}</option>
+                            ))}
                           </select>
                         </div>
                       </div>
@@ -473,17 +537,17 @@ const Checkout = () => {
             </AnimatePresence>
           </div>
 
-          {/* STEP 3: Order Summary */}
-          <div className={getStepWrapperStyle(3)}>
+          {/* STEP 2: Order Summary */}
+          <div className={getStepWrapperStyle(2)}>
             <StepHeader 
-              step={3} 
+              step={2} 
               title="Order Summary" 
               summary={`${cartItems.length} items`} 
-              isCompleted={activeStep > 3} 
-              isActive={activeStep === 3} 
+              isCompleted={activeStep > 2} 
+              isActive={activeStep === 2} 
             />
             <AnimatePresence>
-              {activeStep === 3 && (
+              {activeStep === 2 && (
                 <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                   <div className="p-5 md:p-7 pt-0 mt-2 ml-0 sm:ml-12 border-t border-stone-100">
                     {cartItems.length === 0 ? (
@@ -492,7 +556,7 @@ const Checkout = () => {
                       <div className="space-y-4">
                         {cartItems.map((item, idx) => (
                           <div key={idx} className="flex gap-5 p-4 rounded-xl hover:bg-stone-50/80 transition-colors border border-transparent hover:border-stone-100">
-                            <img src={item.product?.images?.[0] || 'https://via.placeholder.com/80'} alt={item.product?.name} className="w-24 h-24 object-cover rounded-xl shadow-sm" />
+                            <img src={item.product?.images?.[0] || 'https://images.unsplash.com/photo-1592424006909-5a1ff1461ff4?auto=format&fit=crop&q=80&w=200'} alt={item.product?.name} className="w-24 h-24 object-cover rounded-xl shadow-sm" />
                             <div className="flex-1 flex flex-col justify-center">
                               <h3 className="text-base font-extrabold text-stone-900 line-clamp-1">{item.product?.name || 'Unknown Product'}</h3>
                               <p className="text-xs text-stone-500 font-medium mt-1">Quantity: <span className="font-bold text-stone-900">{item.quantity}</span></p>
@@ -515,7 +579,7 @@ const Checkout = () => {
                       </div>
                     )}
                     <button 
-                      onClick={() => setActiveStep(4)} 
+                      onClick={() => setActiveStep(3)} 
                       disabled={cartItems.length === 0}
                       className="mt-8 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95 disabled:opacity-50"
                     >
@@ -527,16 +591,16 @@ const Checkout = () => {
             </AnimatePresence>
           </div>
 
-          {/* STEP 4: Payment Method */}
-          <div className={getStepWrapperStyle(4)}>
+          {/* STEP 3: Payment Method */}
+          <div className={getStepWrapperStyle(3)}>
             <StepHeader 
-              step={4} 
+              step={3} 
               title="Payment Method" 
               isCompleted={false} 
-              isActive={activeStep === 4} 
+              isActive={activeStep === 3} 
             />
             <AnimatePresence>
-              {activeStep === 4 && (
+              {activeStep === 3 && (
                 <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                   <div className="p-5 md:p-7 pt-0 mt-2 ml-0 sm:ml-12 border-t border-stone-100">
                     <div className="space-y-4">
@@ -549,6 +613,14 @@ const Checkout = () => {
                               <p className="text-xs text-stone-500 font-medium mt-1">UPI, Cards, Netbanking securely via Razorpay.</p>
                             </div>
                             <CreditCard className={`w-6 h-6 ${paymentMethod === 'razorpay' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
+                          </label>
+                          <label className={`flex items-center gap-5 p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'cod' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
+                            <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 accent-[#2E7D32]" />
+                            <div className="flex-1">
+                              <p className="text-sm md:text-base font-bold text-stone-900">Cash on Delivery (COD)</p>
+                              <p className="text-xs text-stone-500 font-medium mt-1">Pay with cash upon delivery of your order.</p>
+                            </div>
+                            <Banknote className={`w-6 h-6 ${paymentMethod === 'cod' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
                           </label>
                         </>
                       ) : (
@@ -619,6 +691,18 @@ const Checkout = () => {
                   <span className="text-stone-900 font-bold">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between items-center">
+                  <span>Estimated Weight</span>
+                  <span className="text-stone-900 font-bold">{totalWeightKg.toLocaleString()} KG</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Estimated Volume</span>
+                  <span className="text-stone-900 font-bold">{totalVolumeCBM.toFixed(2)} CBM</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Recommendation</span>
+                  <span className="text-[#2E7D32] font-bold">{recommendedContainer}</span>
+                </div>
+                <div className="flex justify-between items-center">
                   <span>Total Discount</span>
                   <span className="text-[#2E7D32] font-bold">- {formatPrice(discount)}</span>
                 </div>
@@ -643,7 +727,7 @@ const Checkout = () => {
                 </div>
               </div>
 
-              {activeStep === 4 ? (
+              {activeStep === 3 ? (
                 <button 
                   onClick={handlePlaceOrder}
                   disabled={isProcessing}

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/admin/ShippingSettingsTab.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import { useState, useEffect } from 'react';
 import { adminSettingsService } from '../../services/adminSettingsService';
 import { Plus, Trash2, Save, Edit2 } from 'lucide-react';

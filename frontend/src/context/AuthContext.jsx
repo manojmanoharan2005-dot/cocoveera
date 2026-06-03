@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/context/AuthContext.jsx
+ * Purpose: Provides global state management context using React Context API.
+ */
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 

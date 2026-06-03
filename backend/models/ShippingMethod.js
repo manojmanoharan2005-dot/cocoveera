@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/ShippingMethod.js
+ * Purpose: Defines the database schema and model for ShippingMethod.
+ */
 import mongoose from 'mongoose';
 
 const ShippingMethodSchema = new mongoose.Schema(

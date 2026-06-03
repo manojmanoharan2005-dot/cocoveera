@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/ProductView.jsx
+ * Purpose: React page component representing the ProductView view.
+ */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 

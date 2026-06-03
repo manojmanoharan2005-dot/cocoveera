@@ -1,10 +1,13 @@
+/**
+ * File: backend/controllers/paymentController.js
+ * Purpose: Handles the business logic and request processing for payment operations.
+ */
 import Stripe from 'stripe';
 import Razorpay from 'razorpay';
 import paypal from '@paypal/checkout-server-sdk';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import Quote from '../models/Quote.js';
-import Invoice from '../models/Invoice.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
 import { sendOrderConfirmationWithInvoice } from '../utils/EmailService.js';
 
@@ -221,17 +224,6 @@ export const confirmPayment = async (req, res) => {
         };
 
         const pdfBuffer = await generateInvoicePDF(invoiceData);
-
-        const newInvoice = await Invoice.create({
-          invoiceNumber,
-          orderId: order._id,
-          userId: order.user._id,
-          customerName: order.user.name,
-          customerEmail: order.user.email,
-          invoicePdfUrl: 'sent_via_email', // Mocked URL since we email it directly
-          totalAmount: order.totalAmount,
-          paymentStatus: 'paid'
-        });
 
         // Send Email
         const orderSummary = {

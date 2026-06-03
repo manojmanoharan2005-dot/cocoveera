@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/3d/ContainerViewer.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html, useGLTF, Environment, Center, useProgress } from '@react-three/drei';

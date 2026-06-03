@@ -1,3 +1,7 @@
+/**
+ * File: backend/routes/productRoutes.js
+ * Purpose: Defines the API endpoints and routing logic for product requests.
+ */
 import express from 'express';
 import multer from 'multer';
 import {

@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/contactController.js
+ * Purpose: Handles the business logic and request processing for contact operations.
+ */
 // @desc    Submit a contact inquiry form
 // @route   POST /api/contact
 // @access  Public

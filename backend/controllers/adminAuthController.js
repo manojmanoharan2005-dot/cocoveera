@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/adminAuthController.js
+ * Purpose: Handles the business logic and request processing for adminAuth operations.
+ */
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';

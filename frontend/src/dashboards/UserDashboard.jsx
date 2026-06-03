@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/UserDashboard.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/ProfileHeader.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, ShoppingCart, User } from 'lucide-react';

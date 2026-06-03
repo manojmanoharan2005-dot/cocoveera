@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/auth/RegisterForm.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -210,7 +214,7 @@ export const RegisterForm = () => {
         localStorage.removeItem('cocoveera_register_cache');
         setSuccessMsg('Verification successful. Welcome to Cocoveera!');
         setTimeout(() => {
-          navigate(res.user.role === 'admin' ? '/admin' : '/dashboard');
+          navigate(res.user.role === 'admin' ? '/admin' : '/account/address');
         }, 1500);
       }
     } catch (err) {

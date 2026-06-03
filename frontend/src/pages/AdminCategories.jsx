@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminCategories.jsx
+ * Purpose: React page component representing the AdminCategories view.
+ */
 import { useEffect, useState } from 'react';
 import { adminCategoryService } from '../services/adminService';
 import { Search, Loader, AlertCircle, Plus, Edit2, Trash2 } from 'lucide-react';

@@ -1,3 +1,7 @@
+/**
+ * File: backend/config/cloudinary.js
+ * Purpose: Configuration settings and initialization for external services or databases.
+ */
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 dotenv.config();

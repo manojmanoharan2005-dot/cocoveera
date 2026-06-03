@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/ShippingZone.js
+ * Purpose: Defines the database schema and model for ShippingZone.
+ */
 import mongoose from 'mongoose';
 
 const ShippingZoneSchema = new mongoose.Schema(

@@ -6,8 +6,6 @@ import ShippingZone from '../models/ShippingZone.js';
 import ShippingRate from '../models/ShippingRate.js';
 import ContainerCharge from '../models/ContainerCharge.js';
 import ExportCharge from '../models/ExportCharge.js';
-import ShippingOrder from '../models/ShippingOrder.js';
-import TrackingEvent from '../models/TrackingEvent.js';
 import Order from '../models/Order.js';
 
 const exchangeRatesToINR = {
@@ -32,8 +30,6 @@ const resourceMap = {
   shippingrates: ShippingRate,
   containercharges: ContainerCharge,
   exportcharges: ExportCharge,
-  shippingorders: ShippingOrder,
-  trackingevents: TrackingEvent,
 };
 
 const populateMap = {
@@ -43,8 +39,6 @@ const populateMap = {
   shippingrates: ['originCountry destinationCountry shippingMethod', 'originCountry destinationCountry shippingMethod'],
   containercharges: ['country destinationCountry', 'country destinationCountry'],
   exportcharges: ['country', 'country'],
-  shippingorders: ['order user originCountry destinationCountry shippingMethod', 'order user originCountry destinationCountry shippingMethod'],
-  trackingevents: ['shippingOrder', 'shippingOrder'],
 };
 
 const getModel = (resource) => resourceMap[String(resource || '').toLowerCase()];

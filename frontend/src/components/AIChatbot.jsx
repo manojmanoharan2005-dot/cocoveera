@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/AIChatbot.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles } from 'lucide-react';

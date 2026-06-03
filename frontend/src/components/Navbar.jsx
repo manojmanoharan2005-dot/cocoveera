@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/Navbar.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

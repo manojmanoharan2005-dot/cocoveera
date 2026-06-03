@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminCurrencyManagement.jsx
+ * Purpose: React page component representing the AdminCurrencyManagement view.
+ */
 import React, { useState, useEffect } from 'react';
 import { adminSettingsService } from '../services/adminSettingsService';
 import AdminLayout from '../layouts/AdminLayout';

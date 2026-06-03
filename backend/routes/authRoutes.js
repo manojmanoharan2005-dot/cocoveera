@@ -1,3 +1,7 @@
+/**
+ * File: backend/routes/authRoutes.js
+ * Purpose: Defines the API endpoints and routing logic for auth requests.
+ */
 import express from 'express';
 import {
   register,

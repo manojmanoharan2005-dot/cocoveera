@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/Certifications.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React from 'react';
 import { Award, ShieldCheck, CheckCircle2, Leaf, Globe } from 'lucide-react';
 

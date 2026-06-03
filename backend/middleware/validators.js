@@ -1,3 +1,7 @@
+/**
+ * File: backend/middleware/validators.js
+ * Purpose: Provides middleware functions for request interception and validation.
+ */
 import { body, validationResult } from 'express-validator';
 
 export const validateRegistration = [
@@ -32,9 +36,9 @@ export const validateRefundRequest = [
 ];
 
 export const validateOrder = [
-  body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
-  body('total').isFloat({ gt: 0 }).withMessage('Total must be a positive number'),
-  body('shippingAddress').optional().isMongoId().withMessage('Invalid shipping address id'),
+  body('items').optional().isArray().withMessage('Items must be an array'),
+  body('shippingAddress').optional().isObject().withMessage('Invalid shipping address object'),
+  body('paymentGateway').optional().isString().withMessage('Payment gateway must be a string'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });

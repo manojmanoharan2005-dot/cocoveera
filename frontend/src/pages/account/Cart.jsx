@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/Cart.jsx
+ * Purpose: React page component representing the Cart view.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Heart, ArrowRight, Package, ArrowLeft, AlertCircle } from 'lucide-react';
@@ -22,7 +26,8 @@ const Cart = () => {
             name: c.product?.name || 'Unknown Product',
             price: c.product?.price || 0,
             quantity: c.quantity,
-            palletsPerUnit: 1, // Currently 1 unit = 1 pallet in B2B context
+            weight: c.product?.weight || 0,
+            volume: c.product?.volumeCBM || 0,
             image: c.product?.images?.[0] || 'https://images.unsplash.com/photo-1592424006909-5a1ff1461ff4?auto=format&fit=crop&q=80&w=200'
           })).filter(i => i.id !== 'unknown'));
         }
@@ -35,16 +40,27 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  // Capacity config
-  const CONTAINER_CAPACITY = {
-    '20FT': 10,
-    '40FT': 22
-  };
+  const estimatedWeight = cartItems.reduce((acc, item) => acc + (item.quantity * item.weight), 0);
+  const estimatedVolume = cartItems.reduce((acc, item) => acc + (item.quantity * item.volume), 0);
 
-  const currentCapacity = CONTAINER_CAPACITY[containerType];
-  const usedPallets = cartItems.reduce((acc, item) => acc + (item.quantity * item.palletsPerUnit), 0);
-  const capacityPercentage = Math.min((usedPallets / currentCapacity) * 100, 100);
-  const isOverCapacity = usedPallets > currentCapacity;
+  let recommendedContainer = '20FT Container';
+  let maxWeight = 28000;
+  let maxVolume = 33;
+
+  if (estimatedWeight > 28000 || estimatedVolume > 33) {
+    if (estimatedWeight <= 26000 && estimatedVolume <= 67) {
+       recommendedContainer = '40FT Container';
+       maxWeight = 26000;
+       maxVolume = 67;
+    } else {
+       recommendedContainer = 'Multiple Containers Required';
+    }
+  }
+
+  const weightUtilization = (estimatedWeight / maxWeight) * 100;
+  const volumeUtilization = (estimatedVolume / maxVolume) * 100;
+  const capacityPercentage = Math.min(Math.max(weightUtilization, volumeUtilization), 100);
+  const isOverCapacity = recommendedContainer === 'Multiple Containers Required';
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
@@ -110,9 +126,9 @@ const Cart = () => {
         </button>
       </div>
 
-      <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
-        <div className="space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           {cartItems.map(item => (
             <div key={item.id} className="bg-white p-4 rounded-2xl border border-stone-200 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm relative overflow-hidden group">
               <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-xl bg-stone-100" />
@@ -154,6 +170,68 @@ const Cart = () => {
         </div>
 
 
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-[24px] border border-stone-200 p-6 sticky top-24 shadow-sm">
+            <h2 className="text-xl font-extrabold text-stone-900 mb-6">Logistics Summary</h2>
+
+            <div className="space-y-4 mb-6">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-stone-500 font-semibold">Total Quantity</span>
+                <span className="text-stone-900 font-black">{cartItems.reduce((a, c) => a + c.quantity, 0)} Units</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-stone-500 font-semibold">Estimated Weight</span>
+                <span className="text-stone-900 font-black">{estimatedWeight.toLocaleString()} KG</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-stone-500 font-semibold">Estimated Volume</span>
+                <span className="text-stone-900 font-black">{estimatedVolume.toFixed(2)} CBM</span>
+              </div>
+            </div>
+
+            <div className={`p-4 rounded-xl mb-6 ${isOverCapacity ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'}`}>
+              <div className="flex items-start gap-3">
+                <Package className={`w-5 h-5 mt-0.5 ${isOverCapacity ? 'text-orange-500' : 'text-green-600'}`} />
+                <div>
+                  <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${isOverCapacity ? 'text-orange-600' : 'text-green-700'}`}>
+                    Recommended Container
+                  </p>
+                  <p className={`text-base font-black ${isOverCapacity ? 'text-orange-700' : 'text-green-800'}`}>
+                    {recommendedContainer}
+                  </p>
+                </div>
+              </div>
+              {!isOverCapacity && (
+                <div className="mt-4">
+                  <div className="flex justify-between text-xs font-bold mb-1">
+                    <span className="text-green-700">Utilization</span>
+                    <span className="text-green-700">{capacityPercentage.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-2 bg-green-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500 rounded-full transition-all duration-500"
+                      style={{ width: `${capacityPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-stone-200 mb-8">
+              <div className="flex justify-between items-center">
+                <span className="text-stone-900 font-bold">Subtotal</span>
+                <span className="text-2xl font-black text-stone-900">{convertCurrency(subtotal, user?.currency).formatted}</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => navigate('/checkout')}
+              className="w-full py-4 bg-[#2E7D32] text-white font-black rounded-xl hover:bg-[#1B5E20] transition-colors flex justify-center items-center gap-2"
+            >
+              Proceed to Checkout <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

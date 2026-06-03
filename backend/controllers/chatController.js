@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/chatController.js
+ * Purpose: Handles the business logic and request processing for chat operations.
+ */
 import { GoogleGenAI } from '@google/genai';
 import Order from '../models/Order.js';
 

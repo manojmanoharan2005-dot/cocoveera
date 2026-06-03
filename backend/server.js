@@ -14,12 +14,10 @@ import productRoutes from './routes/productRoutes.js';
 import quoteRoutes from './routes/quoteRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import refundRoutes from './routes/refundRoutes.js';
 import shippingRoutes from './routes/shippingRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
-import addressRoutes from './routes/addressRoutes.js';
-import notificationRoutes from './routes/notificationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import invoiceRoutes from './routes/invoiceRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 
 // Models for seeding
@@ -84,12 +82,10 @@ app.use('/api/products', productRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/refunds', refundRoutes);
 app.use('/api/shipping', shippingRoutes);
 app.use('/api/contact', contactRoutes);
-app.use('/api/addresses', addressRoutes);
-app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/invoices', invoiceRoutes);
 app.use('/api/chat', chatRoutes);
 
 // Root route

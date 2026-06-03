@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/ProfileCard.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React from 'react';
 
 export const ProfileCard = ({ user, setActiveTab }) => {

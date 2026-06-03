@@ -1,6 +1,12 @@
+/**
+ * File: backend/controllers/orderController.js
+ * Purpose: Handles the business logic and request processing for order operations.
+ */
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Quote from '../models/Quote.js';
+import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
+import { sendOrderConfirmationWithInvoice, sendShipmentUpdate } from '../utils/EmailService.js';
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -11,6 +17,8 @@ export const createOrder = async (req, res) => {
   try {
     let orderItems = [];
     let totalAmount = 0;
+    let totalWeight = 0;
+    let totalVolume = 0;
 
     // Case 1: Order is converted from an approved quote
     if (quoteId) {
@@ -31,6 +39,8 @@ export const createOrder = async (req, res) => {
         },
       ];
       totalAmount = (quote.pricingProposed || quote.product.price) * quote.quantity;
+      totalWeight = (quote.product.weight || 0) * quote.quantity;
+      totalVolume = (quote.product.volumeCBM || 0) * quote.quantity;
     } 
     // Case 2: Order is created directly from catalog
     else if (items && items.length > 0) {
@@ -46,9 +56,25 @@ export const createOrder = async (req, res) => {
           unitPrice: product.price,
         });
         totalAmount += product.price * item.quantity;
+        totalWeight += (product.weight || 0) * item.quantity;
+        totalVolume += (product.volumeCBM || 0) * item.quantity;
       }
     } else {
       return res.status(400).json({ success: false, message: 'No items or quote provided for order' });
+    }
+
+    let recommendedContainer = '20FT Container';
+    const MAX_20FT_WEIGHT = 28000;
+    const MAX_20FT_VOL = 33;
+    const MAX_40FT_WEIGHT = 26000;
+    const MAX_40FT_VOL = 67;
+
+    if (totalWeight > MAX_20FT_WEIGHT || totalVolume > MAX_20FT_VOL) {
+      if (totalWeight <= MAX_40FT_WEIGHT && totalVolume <= MAX_40FT_VOL) {
+        recommendedContainer = '40FT Container';
+      } else {
+        recommendedContainer = 'Multiple Containers Required';
+      }
     }
 
     const order = await Order.create({
@@ -59,10 +85,53 @@ export const createOrder = async (req, res) => {
       shippingCharge: Number(shippingCharge),
       shippingAddress,
       paymentGateway: paymentGateway || 'mock',
+      totalWeight,
+      totalVolume,
+      recommendedContainer,
     });
+
+    // Populate for email
+    const populatedOrder = await Order.findById(order._id).populate('user', 'name email phone').populate('items.product', 'name');
+
+    if (paymentGateway === 'cod' || paymentGateway === 'wire') {
+      try {
+        const invoiceData = {
+          invoiceNumber: 'INV-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+          customerName: populatedOrder.user.name,
+          customerEmail: populatedOrder.user.email,
+          customerPhone: populatedOrder.user.phone,
+          shippingAddress: populatedOrder.shippingAddress,
+          paymentStatus: 'pending',
+          paymentMethod: paymentGateway.toUpperCase(),
+          totalAmount: populatedOrder.totalAmount,
+          items: populatedOrder.items.map(item => ({
+            productName: item.productName || (item.product && item.product.name) || 'Product',
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal: item.unitPrice * item.quantity
+          })),
+          status: order.paymentStatus === 'paid' ? 'PAID' : 'UNPAID'
+        };
+
+        const pdfBuffer = await generateInvoicePDF(invoiceData);
+
+        const orderSummary = {
+          customerName: populatedOrder.user.name,
+          orderDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          totalAmount: populatedOrder.totalAmount,
+          paymentStatus: 'pending',
+          shippingAddress: populatedOrder.shippingAddress,
+          items: invoiceData.items
+        };
+        await sendOrderConfirmationWithInvoice(populatedOrder.user.email, order._id.toString(), orderSummary, pdfBuffer);
+      } catch (err) {
+        console.error('Invoice generation or email failed for COD/Wire:', err);
+      }
+    }
 
     res.status(201).json({ success: true, data: order });
   } catch (error) {
+    import('fs').then(fs => fs.appendFileSync('order_error.log', new Date().toISOString() + ': ' + error.message + '\n' + error.stack + '\n'));
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -103,13 +172,21 @@ export const updateTrackingStatus = async (req, res) => {
   const { trackingStatus } = req.body;
 
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate('user', 'name email');
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
     order.trackingStatus = trackingStatus || order.trackingStatus;
     await order.save();
+
+    try {
+      if (trackingStatus) {
+        await sendShipmentUpdate(order.user.email, order._id, `Your order status has been updated to: ${trackingStatus}`);
+      }
+    } catch (err) {
+      console.error('Failed to send shipment update email:', err);
+    }
 
     res.status(200).json({ success: true, message: `Tracking status updated to ${order.trackingStatus}`, data: order });
   } catch (error) {

@@ -1,3 +1,7 @@
+/**
+ * File: backend/utils/mailer.js
+ * Purpose: Utility helper functions used across the backend.
+ */
 import SibApiV3Sdk from 'sib-api-v3-sdk';
 import dotenv from 'dotenv';
 import {

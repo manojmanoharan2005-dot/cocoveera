@@ -1,3 +1,7 @@
+/**
+ * File: backend/utils/emailTemplates/orderTemplates.js
+ * Purpose: Utility helper functions used across the backend.
+ */
 import { baseTemplate } from './baseTemplate.js';
 
 const getSealHTML = (text, dateStr) => {

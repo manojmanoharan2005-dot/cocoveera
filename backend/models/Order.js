@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/Order.js
+ * Purpose: Defines the database schema and model for Order.
+ */
 import mongoose from 'mongoose';
 
 const OrderSchema = new mongoose.Schema(
@@ -45,7 +49,7 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentGateway: {
       type: String,
-      enum: ['stripe', 'razorpay', 'paypal', 'mock'],
+      enum: ['stripe', 'razorpay', 'paypal', 'mock', 'cod', 'wire'],
       required: true,
     },
     paymentId: {
@@ -57,14 +61,35 @@ const OrderSchema = new mongoose.Schema(
       enum: ['pending', 'confirmed', 'production', 'packed', 'loaded', 'shipped', 'delivered', 'cancelled'],
       default: 'pending',
     },
-    container: {
+    refunds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Refund',
+      }
+    ],
+    refundedAmount: {
+      type: Number,
+      default: 0,
+    },
+    totalWeight: {
+      type: Number,
+      default: 0,
+    },
+    totalVolume: {
+      type: Number,
+      default: 0,
+    },
+    recommendedContainer: {
+      type: String,
+      default: null,
+    },
+    assignedContainer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Container',
       default: null,
     },
-    containerCapacity: {
+    containerStatus: {
       type: String,
-      enum: ['20FT', '40FT'],
       default: null,
     },
     shippingAddress: {

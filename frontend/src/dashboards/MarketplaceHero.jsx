@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/MarketplaceHero.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React from 'react';
 
 export const MarketplaceHero = () => {

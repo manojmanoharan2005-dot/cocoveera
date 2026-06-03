@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/auth/LoginForm.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/layouts/AccountLayout.jsx
+ * Purpose: Source code file for the Cocoveera project.
+ */
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

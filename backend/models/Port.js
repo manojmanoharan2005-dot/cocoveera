@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/Port.js
+ * Purpose: Defines the database schema and model for Port.
+ */
 import mongoose from 'mongoose';
 
 const PortSchema = new mongoose.Schema(

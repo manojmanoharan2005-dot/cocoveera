@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/PaymentHistory.jsx
+ * Purpose: React page component representing the PaymentHistory view.
+ */
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../context/AuthContext';
 

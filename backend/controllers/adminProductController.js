@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/adminProductController.js
+ * Purpose: Handles the business logic and request processing for adminProduct operations.
+ */
 import Product from '../models/Product.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 

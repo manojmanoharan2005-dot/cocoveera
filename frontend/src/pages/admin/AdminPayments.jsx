@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/admin/AdminPayments.jsx
+ * Purpose: React page component representing the AdminPayments view.
+ */
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../context/AuthContext';
 

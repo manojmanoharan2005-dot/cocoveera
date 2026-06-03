@@ -1,3 +1,7 @@
+/**
+ * File: backend/utils/emailTemplates/authTemplates.js
+ * Purpose: Utility helper functions used across the backend.
+ */
 import { baseTemplate } from './baseTemplate.js';
 
 export const getOTPTemplate = (name, otp) => {

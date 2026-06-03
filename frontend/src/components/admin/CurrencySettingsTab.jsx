@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/admin/CurrencySettingsTab.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import { useState, useEffect } from 'react';
 import { adminSettingsService } from '../../services/adminSettingsService';
 import { RefreshCw, Save, DollarSign } from 'lucide-react';

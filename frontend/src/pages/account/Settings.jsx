@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/Settings.jsx
+ * Purpose: React page component representing the Settings view.
+ */
 import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../../context/AuthContext';
 import { User, Mail, Phone, MapPin, Building2, Lock, Save, Loader2 } from 'lucide-react';

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/GlobalMap.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simple-maps';

@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/adminContainerController.js
+ * Purpose: Handles the business logic and request processing for adminContainer operations.
+ */
 import Container from '../models/Container.js';
 import Order from '../models/Order.js';
 
@@ -18,7 +22,6 @@ export const getAdminContainers = async (req, res) => {
     const total = await Container.countDocuments(query);
     const containers = await Container.find(query)
       .populate('orders')
-      .populate('products.product')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -44,8 +47,7 @@ export const getAdminContainers = async (req, res) => {
 export const getAdminContainer = async (req, res) => {
   try {
     const container = await Container.findById(req.params.id)
-      .populate('orders')
-      .populate('products.product');
+      .populate('orders');
 
     if (!container) {
       return res.status(404).json({ success: false, message: 'Container not found' });
@@ -62,23 +64,25 @@ export const getAdminContainer = async (req, res) => {
 // @access  Private/Admin
 export const createAdminContainer = async (req, res) => {
   try {
-    const { containerNumber, containerType, destination } = req.body;
+    const { containerNumber, containerType, maxWeight, maxVolume } = req.body;
 
-    if (!containerNumber || !containerType) {
+    if (!containerNumber || !containerType || !maxWeight || !maxVolume) {
       return res
         .status(400)
         .json({ success: false, message: 'Please provide all required fields' });
     }
 
-    const capacity = containerType === '20FT' ? 18 : 26; // MT
-
     const container = await Container.create({
       containerNumber,
       containerType,
-      capacity,
-      destination: destination || null,
-      status: 'preparing',
-      progressPercentage: 0,
+      maxWeight,
+      maxVolume,
+      currentWeight: 0,
+      currentVolume: 0,
+      remainingWeight: maxWeight,
+      remainingVolume: maxVolume,
+      utilizationPercentage: 0,
+      status: 'Available',
     });
 
     res.status(201).json({ success: true, data: container });
@@ -92,9 +96,9 @@ export const createAdminContainer = async (req, res) => {
 // @access  Private/Admin
 export const updateContainerStatus = async (req, res) => {
   try {
-    const { status, location, notes, eta } = req.body;
+    const { status } = req.body;
 
-    const validStatuses = ['preparing', 'loaded', 'at_port', 'exported', 'delivered'];
+    const validStatuses = ['Available', 'Loading', 'Ready For Shipment', 'In Transit', 'Delivered', 'Archived'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid container status' });
     }
@@ -107,33 +111,12 @@ export const updateContainerStatus = async (req, res) => {
     // Update status
     container.status = status;
 
-    // Update progress based on status
-    const progressMap = {
-      preparing: 10,
-      loaded: 30,
-      at_port: 50,
-      exported: 75,
-      delivered: 100,
-    };
-    container.progressPercentage = progressMap[status] || 0;
-
-    // Add tracking history
-    container.trackingHistory.push({
-      status,
-      location: location || 'N/A',
-      date: new Date(),
-      notes: notes || '',
-    });
-
-    // Update dates
-    if (status === 'loaded') {
-      container.departureDate = new Date();
-    }
-    if (status === 'delivered') {
-      container.deliveryDate = new Date();
-    }
-    if (eta) {
-      container.eta = new Date(eta);
+    // Optional: Sync status with all assigned orders
+    if (container.orders && container.orders.length > 0) {
+      await Order.updateMany(
+        { _id: { $in: container.orders } },
+        { $set: { containerStatus: status } }
+      );
     }
 
     await container.save();
@@ -160,7 +143,7 @@ export const assignOrderToContainer = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Container not found' });
     }
 
-    const order = await Order.findById(orderId).populate('items.product');
+    const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
@@ -171,8 +154,8 @@ export const assignOrderToContainer = async (req, res) => {
     }
 
     // Update order with container info
-    order.container = container._id;
-    order.containerCapacity = container.containerType;
+    order.assignedContainer = container._id;
+    order.containerStatus = container.status;
     await order.save();
 
     await container.save();
@@ -194,9 +177,9 @@ export const getContainerStats = async (req, res) => {
   try {
     const totalContainers = await Container.countDocuments();
     const activeContainers = await Container.countDocuments({
-      status: { $in: ['preparing', 'loaded', 'at_port', 'exported'] },
+      status: { $in: ['Loading', 'Ready For Shipment', 'In Transit'] },
     });
-    const deliveredContainers = await Container.countDocuments({ status: 'delivered' });
+    const deliveredContainers = await Container.countDocuments({ status: 'Delivered' });
 
     const statusBreakdown = await Container.aggregate([
       {
@@ -241,6 +224,53 @@ export const updateContainerLogistics = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Container logistics updated successfully',
+      data: container,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update container loaded products
+// @route   PATCH /api/admin/containers/:id/products
+// @access  Private/Admin
+export const updateContainerProducts = async (req, res) => {
+  try {
+    const { loadedProducts } = req.body; // Array of objects
+
+    let container = await Container.findById(req.params.id);
+    if (!container) {
+      return res.status(404).json({ success: false, message: 'Container not found' });
+    }
+
+    container.loadedProducts = loadedProducts || [];
+
+    // Recalculate totals
+    let totalWeight = 0;
+    let totalVolume = 0;
+
+    container.loadedProducts.forEach((product) => {
+      totalWeight += Number(product.actualWeight) || 0;
+      totalVolume += Number(product.actualVolume) || 0;
+    });
+
+    container.currentWeight = totalWeight;
+    container.currentVolume = totalVolume;
+
+    container.remainingWeight = Math.max(0, container.maxWeight - totalWeight);
+    container.remainingVolume = Math.max(0, container.maxVolume - totalVolume);
+
+    const weightUtil = (totalWeight / container.maxWeight) * 100;
+    const volUtil = (totalVolume / container.maxVolume) * 100;
+    
+    // Utilization is the max of the two
+    container.utilizationPercentage = Math.min(100, Math.max(weightUtil, volUtil));
+
+    await container.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Container products updated successfully',
       data: container,
     });
   } catch (error) {

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/Footer.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Send, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';

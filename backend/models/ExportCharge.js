@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/ExportCharge.js
+ * Purpose: Defines the database schema and model for ExportCharge.
+ */
 import mongoose from 'mongoose';
 
 const ExportChargeSchema = new mongoose.Schema(

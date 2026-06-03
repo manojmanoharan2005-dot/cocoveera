@@ -129,13 +129,6 @@ export default function AdminDashboard() {
                 subtext={`${stats.users?.verifiedUsers || 0} verified`}
                 color="bg-purple-600"
               />
-              <StatCard
-                icon={Truck}
-                title="Active Containers"
-                value={stats.containers?.activeContainers || 0}
-                subtext={`${stats.containers?.deliveredContainers || 0} delivered`}
-                color="bg-orange-600"
-              />
             </div>
 
             {/* Additional Stats Row */}
@@ -206,11 +199,11 @@ export default function AdminDashboard() {
                   <p className="text-sm text-gray-600 mt-1">Block/Unblock</p>
                 </a>
                 <a
-                  href="/admin/containers"
+                  href="/admin/refunds"
                   className="p-4 border border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition text-center"
                 >
-                  <p className="font-medium text-gray-900">Track Containers</p>
-                  <p className="text-sm text-gray-600 mt-1">Update Status</p>
+                  <p className="font-medium text-gray-900">Manage Refunds</p>
+                  <p className="text-sm text-gray-600 mt-1">Approvals & Tracking</p>
                 </a>
               </div>
             </div>

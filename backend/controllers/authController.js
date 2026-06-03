@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/authController.js
+ * Purpose: Handles the business logic and request processing for auth operations.
+ */
 import User from '../models/User.js';
 import { sendOTPEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../utils/mailer.js';
 

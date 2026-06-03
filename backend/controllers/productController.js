@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/productController.js
+ * Purpose: Handles the business logic and request processing for product operations.
+ */
 import Product from '../models/Product.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 

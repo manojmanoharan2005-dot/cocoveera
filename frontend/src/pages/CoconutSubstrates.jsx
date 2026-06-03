@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/CoconutSubstrates.jsx
+ * Purpose: React page component representing the CoconutSubstrates view.
+ */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, Truck, FileCheck, Anchor, ShieldCheck, MapPin, ArrowRight, Navigation, FileText, CheckCircle2 } from 'lucide-react';

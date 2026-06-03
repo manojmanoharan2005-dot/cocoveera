@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/ProductCard.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React, { useState } from 'react';
 import { Heart, Star, ShoppingBag, ArrowRight, Zap, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,7 +56,7 @@ export const ProductCard = ({
             'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'
           }
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+          className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 ease-out group-hover:scale-108"
           style={{ transform: 'scale(1)' }}
           onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.07)'}
           onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}

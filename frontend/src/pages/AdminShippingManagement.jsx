@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminShippingManagement.jsx
+ * Purpose: React page component representing the AdminShippingManagement view.
+ */
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import AdminLayout from '../layouts/AdminLayout';
 import { adminSettingsService } from '../services/adminSettingsService';

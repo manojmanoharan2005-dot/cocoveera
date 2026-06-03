@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/3d/ContainerModel.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';

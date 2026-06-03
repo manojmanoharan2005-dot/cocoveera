@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/3d/PalletModel.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';

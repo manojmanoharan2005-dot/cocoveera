@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/SavedCart.jsx
+ * Purpose: React page component representing the SavedCart view.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2, Heart } from 'lucide-react';

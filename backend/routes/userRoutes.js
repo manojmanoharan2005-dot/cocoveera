@@ -1,3 +1,7 @@
+/**
+ * File: backend/routes/userRoutes.js
+ * Purpose: Defines the API endpoints and routing logic for user requests.
+ */
 import express from 'express';
 import {
   getUserProfile,

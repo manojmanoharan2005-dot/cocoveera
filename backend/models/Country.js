@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/Country.js
+ * Purpose: Defines the database schema and model for Country.
+ */
 import mongoose from 'mongoose';
 
 const CountrySchema = new mongoose.Schema(

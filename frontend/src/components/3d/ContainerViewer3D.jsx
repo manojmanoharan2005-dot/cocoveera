@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/3d/ContainerViewer3D.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/FilterDrawer.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, SlidersHorizontal, Check, Star } from 'lucide-react';

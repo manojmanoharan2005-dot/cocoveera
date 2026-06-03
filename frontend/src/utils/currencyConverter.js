@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/utils/currencyConverter.js
+ * Purpose: Frontend utility helper functions.
+ */
 export const CURRENCY_RATES = {
   INR: 1, // Base
   USD: 0.012, // 1 INR = 0.012 USD

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/TrackOrder.jsx
+ * Purpose: React page component representing the TrackOrder view.
+ */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Clock, Package, Anchor, Truck, MapPin } from 'lucide-react';

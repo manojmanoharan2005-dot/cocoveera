@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/Profile.jsx
+ * Purpose: React page component representing the Profile view.
+ */
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -73,15 +77,7 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#F0FAF0] text-[#2E7D32] flex items-center justify-center shrink-0 mt-0.5">
-                <Building2 className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Company Name</p>
-                <p className="text-sm font-bold text-stone-900 mt-0.5">{user.companyName || 'N/A'}</p>
-              </div>
-            </div>
+
 
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-[#F0FAF0] text-[#2E7D32] flex items-center justify-center shrink-0 mt-0.5">

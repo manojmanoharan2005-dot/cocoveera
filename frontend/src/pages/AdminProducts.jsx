@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminProducts.jsx
+ * Purpose: React page component representing the AdminProducts view.
+ */
 import { useEffect, useState } from 'react';
 import { adminProductService, adminCategoryService } from '../services/adminService';
 import {

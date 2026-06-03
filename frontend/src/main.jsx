@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/main.jsx
+ * Purpose: React DOM mounting point for the frontend application.
+ */
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'

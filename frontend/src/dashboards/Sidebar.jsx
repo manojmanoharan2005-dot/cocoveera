@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/Sidebar.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -47,7 +51,7 @@ export const Sidebar = ({
   return (
     <aside className="w-[256px] bg-white border border-stone-200/70 rounded-[28px] overflow-hidden h-fit sticky top-24 shadow-[0_8px_32px_rgba(0,0,0,0.07)] hidden lg:flex flex-col">
       {/* Brand strip */}
-      <div className="bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] px-5 py-4 flex items-center gap-3">
+      <div className="bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] px-5 py-3 flex items-center gap-3">
         <img
           src="/logo.jpg"
           alt="Cocoveera Logo"
@@ -61,7 +65,7 @@ export const Sidebar = ({
       </div>
 
       {/* Nav items */}
-      <nav className="flex flex-col px-3 py-4 gap-1">
+      <nav className="flex flex-col px-3 py-2 gap-0.5">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.name;
@@ -70,7 +74,7 @@ export const Sidebar = ({
             <button
               key={item.name}
               onClick={() => setActiveTab(item.name)}
-              className={`w-full font-poppins text-[11.5px] font-bold py-3 px-4 rounded-[14px] transition-all duration-200 flex items-center justify-between relative group ${
+              className={`w-full font-poppins text-[11.5px] font-bold py-2.5 px-4 rounded-[14px] transition-all duration-200 flex items-center justify-between relative group ${
                 isActive
                   ? 'text-white'
                   : 'text-[#4B5563] hover:bg-[#F0FAF0] hover:text-[#2E7D32]'
@@ -116,7 +120,7 @@ export const Sidebar = ({
         {/* Logout */}
         <button
           onClick={onLogoutClick}
-          className="w-full text-left font-poppins text-[11.5px] font-bold py-3 px-4 rounded-[14px] text-red-500 hover:bg-red-50 transition-all flex items-center gap-3 group"
+          className="w-full text-left font-poppins text-[11.5px] font-bold py-2.5 px-4 rounded-[14px] text-red-500 hover:bg-red-50 transition-all flex items-center gap-3 group"
         >
           <div className="w-7 h-7 rounded-[10px] bg-red-50 group-hover:bg-red-100 flex items-center justify-center transition-all">
             <LogOut className="w-3.5 h-3.5 text-red-400" />
@@ -126,7 +130,7 @@ export const Sidebar = ({
       </nav>
 
       {/* User Profile Card at bottom */}
-      <div className="mx-3 mb-4 mt-1 p-3.5 bg-[#F7F9F7] rounded-[18px] border border-stone-200/60 flex items-center gap-3">
+      <div className="mx-3 mb-3 mt-1 p-3 bg-[#F7F9F7] rounded-[18px] border border-stone-200/60 flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#43A047] text-white flex items-center justify-center font-poppins font-black text-xs shadow-md shadow-[#2E7D32]/20 flex-shrink-0">
           {userInitials}
         </div>

@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/adminCategoryController.js
+ * Purpose: Handles the business logic and request processing for adminCategory operations.
+ */
 import Category from '../models/Category.js';
 
 // @desc    Get all categories

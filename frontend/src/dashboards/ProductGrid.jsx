@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/ProductGrid.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React from 'react';
 
 export const ProductGrid = ({ loading, children }) => {

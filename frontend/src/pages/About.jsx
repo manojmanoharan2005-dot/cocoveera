@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/About.jsx
+ * Purpose: React page component representing the About view.
+ */
 import React, { useState, useRef } from 'react';
 import { Target, Lightbulb, Compass, Sun, ShieldCheck, Factory, Award, Leaf, Play, X } from 'lucide-react';
 import PageHero from '../components/PageHero';

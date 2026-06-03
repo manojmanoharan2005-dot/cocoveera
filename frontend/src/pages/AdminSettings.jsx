@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminSettings.jsx
+ * Purpose: React page component representing the AdminSettings view.
+ */
 import { useState, useEffect } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import {

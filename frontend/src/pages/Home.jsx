@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/Home.jsx
+ * Purpose: React page component representing the Home view.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -258,7 +262,7 @@ const Home = () => {
             name: p.name,
             tag: p.isFeatured ? 'FEATURED' : '', // Example tag
             desc: p.description ? (p.description.length > 110 ? p.description.substring(0, 110) + '...' : p.description) : '',
-            img: p.images && p.images.length > 0 ? p.images[0].url : 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=400&q=80',
+            img: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=400&q=80',
             link: '/products',
           }));
           setDbProducts(fetchedProducts);
@@ -307,7 +311,7 @@ const Home = () => {
           <img
             src="/hero-product.png"
             alt="Cocoveera Products"
-            className="w-full h-full object-cover object-left"
+            className="w-full h-full object-contain object-bottom md:object-cover md:object-right lg:object-left"
           />
           {/* Blend image edge into the white background */}
           <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-white via-white/80 to-transparent hidden lg:block" />
@@ -585,13 +589,13 @@ const Home = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.5 }}
-                  className="min-w-[260px] snap-start bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-soft hover:shadow-premium hover:-translate-y-1.5 transition-all duration-300 group flex-shrink-0 flex flex-col"
+                  className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-soft hover:shadow-premium hover:-translate-y-1.5 transition-all duration-300 group flex-shrink-0 flex flex-col"
                 >
                   <div className="relative h-48 overflow-hidden flex-shrink-0">
                     <img
                       src={p.img}
                       alt={p.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
                     />
                     {p.tag && (
                       <span className="absolute top-3 left-3 bg-primary text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">

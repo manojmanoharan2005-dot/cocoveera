@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminUsers.jsx
+ * Purpose: React page component representing the AdminUsers view.
+ */
 import { useEffect, useState } from 'react';
 import { adminUserService } from '../services/adminService';
 import {

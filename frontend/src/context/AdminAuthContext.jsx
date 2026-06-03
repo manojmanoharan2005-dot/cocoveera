@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/context/AdminAuthContext.jsx
+ * Purpose: Provides global state management context using React Context API.
+ */
 import { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 

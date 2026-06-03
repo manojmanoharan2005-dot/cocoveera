@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/Category.js
+ * Purpose: Defines the database schema and model for Category.
+ */
 import mongoose from 'mongoose';
 
 const CategorySchema = new mongoose.Schema(

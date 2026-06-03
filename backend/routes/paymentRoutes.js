@@ -1,3 +1,7 @@
+/**
+ * File: backend/routes/paymentRoutes.js
+ * Purpose: Defines the API endpoints and routing logic for payment requests.
+ */
 import express from 'express';
 import {
   initiatePayment,

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/OrderSuccess.jsx
+ * Purpose: React page component representing the OrderSuccess view.
+ */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Download, Truck, ArrowRight } from 'lucide-react';

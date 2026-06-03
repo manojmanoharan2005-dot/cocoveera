@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/Quotes.jsx
+ * Purpose: React page component representing the Quotes view.
+ */
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
 

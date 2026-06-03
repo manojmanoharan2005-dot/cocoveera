@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminTesting.jsx
+ * Purpose: React page component representing the AdminTesting view.
+ */
 import { useEffect, useState } from 'react';
 import { adminTestingService } from '../services/adminService';
 import {

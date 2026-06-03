@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/layouts/AuthLayout.jsx
+ * Purpose: Source code file for the Cocoveera project.
+ */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';

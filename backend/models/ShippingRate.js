@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/ShippingRate.js
+ * Purpose: Defines the database schema and model for ShippingRate.
+ */
 import mongoose from 'mongoose';
 
 const ShippingRateSchema = new mongoose.Schema(

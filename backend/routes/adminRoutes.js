@@ -1,3 +1,7 @@
+/**
+ * File: backend/routes/adminRoutes.js
+ * Purpose: Defines the API endpoints and routing logic for admin requests.
+ */
 import express from 'express';
 import multer from 'multer';
 import { protect, admin, adminRoleCheck } from '../middleware/auth.js';
@@ -34,6 +38,8 @@ import {
   updatePaymentStatus,
   assignContainer,
   generateInvoice,
+  downloadInvoice,
+  resendInvoiceEmail,
   exportOrders,
   getOrderStats,
 } from '../controllers/adminOrderController.js';
@@ -48,17 +54,6 @@ import {
   getUserStats,
   exportUsers,
 } from '../controllers/adminUserController.js';
-
-import {
-  getAdminContainers,
-  getAdminContainer,
-  createAdminContainer,
-  updateContainerStatus,
-  assignOrderToContainer,
-  getContainerStats,
-  updateContainerLogistics,
-} from '../controllers/adminContainerController.js';
-
 
 import {
   getAdminCategories,
@@ -84,7 +79,6 @@ router.post('/auth/change-password', protect, admin, adminChangePassword);
 // ==================== DASHBOARD & STATS ====================
 router.get('/dashboard/orders-stats', protect, admin, getOrderStats);
 router.get('/dashboard/users-stats', protect, admin, getUserStats);
-router.get('/dashboard/containers-stats', protect, admin, getContainerStats);
 
 // ==================== UPLOAD ROUTE ====================
 router.post('/upload', protect, admin, upload.single('image'), async (req, res) => {
@@ -120,6 +114,8 @@ router.patch('/orders/:id/status', protect, admin, updateOrderStatus);
 router.patch('/orders/:id/payment', protect, admin, updatePaymentStatus);
 router.patch('/orders/:id/container', protect, admin, assignContainer);
 router.post('/orders/:id/invoice', protect, admin, generateInvoice);
+router.get('/orders/:id/invoice/download', protect, admin, downloadInvoice);
+router.post('/orders/:id/invoice/email', protect, admin, resendInvoiceEmail);
 router.post('/orders/export', protect, admin, exportOrders);
 
 // ==================== USER ROUTES ====================
@@ -130,16 +126,6 @@ router.patch('/users/:id/unblock', protect, admin, unblockUser);
 router.patch('/users/:id', protect, admin, updateAdminUser);
 router.delete('/users/:id', protect, admin, deleteAdminUser);
 router.post('/users/export', protect, admin, exportUsers);
-
-// ==================== CONTAINER ROUTES ====================
-router.get('/containers', protect, admin, getAdminContainers);
-router.get('/containers/:id', protect, admin, getAdminContainer);
-router.post('/containers', protect, admin, createAdminContainer);
-router.patch('/containers/:id/status', protect, admin, updateContainerStatus);
-router.patch('/containers/:id/assign-order', protect, admin, assignOrderToContainer);
-router.patch('/containers/:id/logistics', protect, admin, updateContainerLogistics);
-
-
 
 // ==================== SETTINGS ROUTES ====================
 // Note: Removed testing, discount, and settings routes/controllers per cleanup

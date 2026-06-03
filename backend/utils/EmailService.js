@@ -1,3 +1,7 @@
+/**
+ * File: backend/utils/EmailService.js
+ * Purpose: Utility helper functions used across the backend.
+ */
 import SibApiV3Sdk from 'sib-api-v3-sdk';
 import dotenv from 'dotenv';
 
@@ -92,8 +96,8 @@ export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px;">${item.productName}</td>
         <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: center;">${item.quantity}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">$${item.unitPrice.toFixed(2)}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">$${(item.unitPrice * item.quantity).toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">Rs. ${item.unitPrice.toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">Rs. ${(item.unitPrice * item.quantity).toFixed(2)}</td>
       </tr>
     `).join('');
   }
@@ -160,7 +164,7 @@ export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary
           <!-- Grand Total -->
           <div style="text-align: right; margin-bottom: 40px;">
             <span style="font-size: 14px; font-weight: bold; color: #333; margin-right: 20px;">Grand Total:</span>
-            <span style="font-size: 18px; font-weight: bold; color: #2E7D32;">$${(orderSummary.totalAmount || 0).toFixed(2)}</span>
+            <span style="font-size: 18px; font-weight: bold; color: #2E7D32;">Rs. ${(orderSummary.totalAmount || 0).toFixed(2)}</span>
           </div>
           
           <!-- Confirmed Stamp -->
@@ -268,4 +272,46 @@ export const sendContactResponse = async (to, replyText) => {
     </html>
   `;
   return sendEmail({ to, subject, htmlContent, senderType: 'support' });
+};
+
+export const sendRefundNotificationEmail = async (to, refundStatus, amount, currency, orderId) => {
+  const subjects = {
+    requested: `Refund Requested - Order #${orderId}`,
+    approved: `Refund Approved - Order #${orderId}`,
+    initiated: `Refund Initiated - Order #${orderId}`,
+    processed: `Refund Completed - Order #${orderId}`,
+    failed: `Refund Failed - Order #${orderId}`,
+  };
+
+  const messages = {
+    requested: `We have received your refund request for Order #${orderId} for the amount of Rs. ${amount.toFixed(2)}. Our team is currently reviewing it.`,
+    approved: `Great news! Your refund request for Order #${orderId} for Rs. ${amount.toFixed(2)} has been approved. We will initiate the refund to your original payment method shortly.`,
+    initiated: `Your refund of Rs. ${amount.toFixed(2)} for Order #${orderId} has been successfully initiated to your original payment method. It may take 3-5 business days to reflect in your account.`,
+    processed: `Your refund of Rs. ${amount.toFixed(2)} for Order #${orderId} has been successfully processed and completed.`,
+    failed: `Unfortunately, we encountered an error while attempting to process your refund of Rs. ${amount.toFixed(2)} for Order #${orderId}. Our team has been notified and will manually review this issue.`,
+  };
+
+  const subject = subjects[refundStatus] || `Refund Update - Order #${orderId}`;
+  const message = messages[refundStatus] || `There is an update on your refund for Order #${orderId}.`;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <body style="font-family: Arial, sans-serif; background-color: #fcfcfc; padding: 20px; margin: 0; color: #333;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #2E7D32; font-family: 'Times New Roman', Times, serif; font-size: 28px; margin: 10px 0 0 0; letter-spacing: 1px;">Refund Update</h1>
+        </div>
+        <div style="border-top: 4px solid #2E7D32; max-width: 600px; margin: 0 auto;"></div>
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+          <h2 style="color: #2c3e50; font-size: 20px; margin-top: 0;">Hello,</h2>
+          <p style="color: #555; font-size: 15px; line-height: 1.6;">${message}</p>
+          <div style="margin-top: 40px; text-align: center;">
+            <p style="color: #555; font-size: 14px; margin-bottom: 5px;">Best Regards,</p>
+            <p style="margin: 0;"><strong style="color: #2E7D32;">Cocoveera Support Team</strong></p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+  return sendEmail({ to, subject, htmlContent, senderType: 'service' });
 };

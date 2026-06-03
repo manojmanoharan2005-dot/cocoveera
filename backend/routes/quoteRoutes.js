@@ -1,3 +1,7 @@
+/**
+ * File: backend/routes/quoteRoutes.js
+ * Purpose: Defines the API endpoints and routing logic for quote requests.
+ */
 import express from 'express';
 import {
   submitQuoteRequest,

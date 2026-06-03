@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/FilterPanel.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React, { useState } from 'react';
 import { Star, RefreshCw } from 'lucide-react';
 

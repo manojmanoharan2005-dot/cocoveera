@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/OrderDetails.jsx
+ * Purpose: React page component representing the OrderDetails view.
+ */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Truck, MessageSquare, MapPin, CreditCard, Package } from 'lucide-react';

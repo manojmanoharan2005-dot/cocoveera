@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/Quote.js
+ * Purpose: Defines the database schema and model for Quote.
+ */
 import mongoose from 'mongoose';
 
 const QuoteSchema = new mongoose.Schema(

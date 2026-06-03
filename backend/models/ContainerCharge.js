@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/ContainerCharge.js
+ * Purpose: Defines the database schema and model for ContainerCharge.
+ */
 import mongoose from 'mongoose';
 
 const ContainerChargeSchema = new mongoose.Schema(

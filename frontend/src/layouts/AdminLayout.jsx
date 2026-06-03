@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/layouts/AdminLayout.jsx
+ * Purpose: Source code file for the Cocoveera project.
+ */
 import { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +19,7 @@ import {
   BarChart3,
   Tag,
   Tags,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
@@ -32,8 +37,8 @@ export default function AdminLayout({ children }) {
     { name: 'Products', icon: Package, path: '/admin/products' },
     { name: 'Categories', icon: Tags, path: '/admin/categories' },
     { name: 'Orders', icon: ShoppingCart, path: '/admin/orders' },
+    { name: 'Refunds', icon: RefreshCw, path: '/admin/refunds' },
     { name: 'Users', icon: Users, path: '/admin/users' },
-    { name: 'Containers', icon: Truck, path: '/admin/containers' },
     { name: 'Reports', icon: BarChart3, path: '/admin/reports' },
     { name: 'Discounts', icon: Tag, path: '/admin/discounts' },
     { name: 'Shipping', icon: Truck, path: '/admin/shipping' },

@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminReports.jsx
+ * Purpose: React page component representing the AdminReports view.
+ */
 import { useEffect, useState } from 'react';
 import { adminOrderService, adminTestingService, adminUserService } from '../services/adminService';
 import {

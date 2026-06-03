@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/auth/OTPForm.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -93,7 +97,7 @@ export const OTPForm = () => {
       if (res.success) {
         setSuccessMsg('Account verified successfully!');
         setTimeout(() => {
-          navigate(res.user.role === 'admin' ? '/admin' : '/dashboard');
+          navigate(res.user.role === 'admin' ? '/admin' : '/account/address');
         }, 1500);
       }
     } catch (err) {

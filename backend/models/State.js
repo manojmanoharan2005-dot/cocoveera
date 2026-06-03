@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/State.js
+ * Purpose: Defines the database schema and model for State.
+ */
 import mongoose from 'mongoose';
 
 const StateSchema = new mongoose.Schema(

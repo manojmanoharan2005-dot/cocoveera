@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/HelpCenter.jsx
+ * Purpose: React page component representing the HelpCenter view.
+ */
 import React, { useState, useEffect } from 'react';
 import { HelpCircle, ChevronDown, ChevronUp, MessageSquare, Send, Search, Phone } from 'lucide-react';
 import axios from 'axios';

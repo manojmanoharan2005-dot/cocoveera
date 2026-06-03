@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/Payment.js
+ * Purpose: Defines the database schema and model for Payment.
+ */
 import mongoose from 'mongoose';
 
 const PaymentSchema = new mongoose.Schema(
@@ -46,6 +50,12 @@ const PaymentSchema = new mongoose.Schema(
     receiptUrl: {
       type: String,
     },
+    refunds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Refund',
+      }
+    ],
   },
   { timestamps: true }
 );

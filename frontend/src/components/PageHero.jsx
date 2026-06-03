@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/PageHero.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';

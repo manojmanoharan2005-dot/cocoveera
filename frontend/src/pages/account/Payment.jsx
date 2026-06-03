@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/Payment.jsx
+ * Purpose: React page component representing the Payment view.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, User, MapPin, Truck, ShieldCheck, ArrowLeft, Building2, CreditCard, Loader2 } from 'lucide-react';

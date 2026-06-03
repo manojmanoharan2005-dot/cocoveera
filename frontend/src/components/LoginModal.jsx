@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/components/LoginModal.jsx
+ * Purpose: Reusable React UI component for the frontend.
+ */
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

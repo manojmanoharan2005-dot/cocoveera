@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/AdminDiscounts.jsx
+ * Purpose: React page component representing the AdminDiscounts view.
+ */
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../layouts/AdminLayout';
 import { adminDiscountService } from '../services/adminDiscountService';

@@ -1,3 +1,7 @@
+/**
+ * File: backend/controllers/quoteController.js
+ * Purpose: Handles the business logic and request processing for quote operations.
+ */
 import Quote from '../models/Quote.js';
 import Product from '../models/Product.js';
 import { sendQuoteResponseEmail } from '../utils/mailer.js';

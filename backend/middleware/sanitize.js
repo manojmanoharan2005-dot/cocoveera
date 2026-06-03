@@ -1,3 +1,7 @@
+/**
+ * File: backend/middleware/sanitize.js
+ * Purpose: Provides middleware functions for request interception and validation.
+ */
 import mongoSanitize from 'express-mongo-sanitize';
 import xss from 'xss-clean';
 

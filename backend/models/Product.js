@@ -1,3 +1,7 @@
+/**
+ * File: backend/models/Product.js
+ * Purpose: Defines the database schema and model for Product.
+ */
 import mongoose from 'mongoose';
 
 const ProductSchema = new mongoose.Schema(
@@ -33,9 +37,30 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please specify packaging (e.g. 5kg Blocks, 650g Briquettes)'],
     },
-    weightKg: {
+    weight: {
       type: Number,
+      required: [true, 'Please specify product weight in KG'],
       default: 5,
+    },
+    length: {
+      type: Number,
+      default: 30, // cm
+    },
+    width: {
+      type: Number,
+      default: 30, // cm
+    },
+    height: {
+      type: Number,
+      default: 12, // cm
+    },
+    volumeCBM: {
+      type: Number,
+      default: 0.0108,
+    },
+    palletCount: {
+      type: Number,
+      default: 300,
     },
     price: {
       type: Number,

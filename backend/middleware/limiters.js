@@ -1,3 +1,7 @@
+/**
+ * File: backend/middleware/limiters.js
+ * Purpose: Provides middleware functions for request interception and validation.
+ */
 import rateLimit from 'express-rate-limit';
 
 export const createLimiter = ({ windowMs = 60 * 60 * 1000, max = 100, message } = {}) =>

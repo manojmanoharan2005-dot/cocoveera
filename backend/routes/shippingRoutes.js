@@ -1,3 +1,7 @@
+/**
+ * File: backend/routes/shippingRoutes.js
+ * Purpose: Defines the API endpoints and routing logic for shipping requests.
+ */
 import express from 'express';
 import { protect, admin } from '../middleware/auth.js';
 import {

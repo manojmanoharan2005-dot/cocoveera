@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/dashboards/DashboardLayout.jsx
+ * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
+ */
 import React, { useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';

@@ -1,3 +1,7 @@
+/**
+ * File: backend/config/db.js
+ * Purpose: Configuration settings and initialization for external services or databases.
+ */
 import mongoose from 'mongoose';
 
 export const connectDB = async () => {

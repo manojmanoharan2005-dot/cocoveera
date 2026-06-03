@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/services/adminService.js
+ * Purpose: Service functions to make API requests to the backend.
+ */
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -282,6 +286,15 @@ export const adminContainerService = {
     const response = await axios.patch(
       `${API_URL}/admin/containers/${id}/logistics`,
       { destination, eta },
+      { headers: getHeaders() }
+    );
+    return response.data;
+  },
+
+  updateProducts: async (id, loadedProducts) => {
+    const response = await axios.patch(
+      `${API_URL}/admin/containers/${id}/products`,
+      { loadedProducts },
       { headers: getHeaders() }
     );
     return response.data;

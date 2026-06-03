@@ -1,3 +1,7 @@
+/**
+ * File: backend/utils/emailTemplates/baseTemplate.js
+ * Purpose: Utility helper functions used across the backend.
+ */
 export const baseTemplate = ({ title, preheader, content }) => {
   const logoUrl = process.env.LOGO_URL || 'https://res.cloudinary.com/dyrfiop7d/image/upload/v1779801371/cocoveera/branding/ewo6ljdta2dklg9kvbrs.jpg';
   const frontendUrl = process.env.FRONTEND_URL || 'https://cocoveera.com';

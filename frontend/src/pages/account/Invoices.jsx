@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/Invoices.jsx
+ * Purpose: React page component representing the Invoices view.
+ */
 import React from 'react';
 import { FileText } from 'lucide-react';
 

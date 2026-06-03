@@ -1,3 +1,7 @@
+/**
+ * File: backend/utils/emailTemplates/businessTemplates.js
+ * Purpose: Utility helper functions used across the backend.
+ */
 import { baseTemplate } from './baseTemplate.js';
 
 export const getQuoteRequestTemplate = (name, quoteDetails) => {

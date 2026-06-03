@@ -1,3 +1,7 @@
+/**
+ * File: frontend/src/pages/account/Notifications.jsx
+ * Purpose: React page component representing the Notifications view.
+ */
 import React, { useEffect, useState } from 'react';
 import { Bell, Check, Trash2 } from 'lucide-react';
 import { apiClient } from '../../context/AuthContext';
