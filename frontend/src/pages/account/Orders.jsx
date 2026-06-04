@@ -1,45 +1,30 @@
-/**
- * File: frontend/src/pages/account/Orders.jsx
- * Purpose: React page component representing the Orders view.
- */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Eye, Download, Truck, RotateCcw, XCircle, Package } from 'lucide-react';
+import { Search, Eye, Download, Truck, RotateCcw, XCircle, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 
-const STATUS_FILTERS = ['All', 'Pending', 'Confirmed', 'Production', 'Packed', 'Loaded', 'Shipped', 'Delivered', 'Cancelled'];
-
-const TIMELINE_STEPS = ['Pending', 'Confirmed', 'Packed', 'Loaded', 'Shipped', 'Delivered'];
-
-const getTimelineIndex = (status) => {
-  const s = status.toLowerCase();
-  const idx = TIMELINE_STEPS.findIndex(ts => ts.toLowerCase() === s);
-  return idx >= 0 ? idx : 0; 
-};
-
 const Orders = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('All');
   const [orders, setOrders] = useState([]);
-  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchOrders = async () => {
+    try {
+      const resOrders = await apiClient.get('/orders/myorders');
+      if (resOrders.data.success) setOrders(resOrders.data.data);
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   React.useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const resOrders = await apiClient.get('/orders/myorders');
-        if (resOrders.data.success) setOrders(resOrders.data.data);
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchOrders();
   }, []);
 
@@ -62,27 +47,40 @@ const Orders = () => {
     }
   };
 
-  const formattedOrders = orders.map(o => {
-    return {
-      id: o._id,
-      date: o.createdAt,
-      products: o.items.map(i => i.product?.name || 'Unknown Product'),
-      containerType: o.containerCapacity || 'LCL',
-      quantity: `${o.items.reduce((sum, i) => sum + i.quantity, 0)} Units`,
-      totalAmount: o.totalAmount,
-      paymentStatus: o.paymentStatus ? o.paymentStatus.charAt(0).toUpperCase() + o.paymentStatus.slice(1) : 'Pending',
-      status: o.orderStatus ? o.orderStatus.charAt(0).toUpperCase() + o.orderStatus.slice(1) : 'Pending',
-      timelineIndex: getTimelineIndex(o.orderStatus || 'pending'),
-      invoiceId: null, // Invoices removed
-    };
-  });
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      const res = await apiClient.put(`/orders/${orderId}/cancel`);
+      if (res.data.success) {
+        fetchOrders();
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to cancel order');
+    }
+  };
 
-  // Filter orders
-  const filteredOrders = formattedOrders.filter(order => {
-    const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          order.products.some(p => p.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesFilter = activeFilter === 'All' || order.status === activeFilter;
-    return matchesSearch && matchesFilter;
+  const handleReorder = async (orderId) => {
+    const order = orders.find(o => o._id === orderId);
+    if (!order) return;
+    try {
+      for (const item of order.items) {
+        if (item.product && item.product._id) {
+          await apiClient.post('/users/cart', { productId: item.product._id, quantity: item.quantity, increment: true });
+        }
+      }
+      navigate('/account/cart');
+    } catch (error) {
+      alert('Failed to reorder. Please try again.');
+    }
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const search = searchQuery.toLowerCase();
+    const matchId = order._id.toLowerCase().includes(search);
+    const matchProduct = order.items.some(item => 
+      (item.product?.name || '').toLowerCase().includes(search)
+    );
+    return matchId || matchProduct;
   });
 
   if (loading) {
@@ -90,156 +88,106 @@ const Orders = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 pb-20">
       {/* Header & Controls */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-stone-900">My Orders</h1>
-          <p className="text-stone-500 font-semibold text-sm">Manage your past and active B2B shipments.</p>
+          <h1 className="text-3xl font-extrabold text-stone-900">Your Orders</h1>
         </div>
-        
-        <div className="flex w-full md:w-auto gap-3">
-          <div className="relative flex-grow md:w-64">
-            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Search by Order ID or Product..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-stone-200 rounded-xl py-2 pl-9 pr-4 text-sm font-semibold text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 transition-all"
-            />
-          </div>
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input 
+            type="text" 
+            placeholder="Search all orders..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-white border border-stone-300 rounded-lg py-2 pl-9 pr-4 text-sm font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] transition-all"
+          />
         </div>
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-6 px-6 lg:mx-0 lg:px-0">
-        {STATUS_FILTERS.map(filter => (
-          <button
-            key={filter}
-            onClick={() => setActiveFilter(filter)}
-            className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all ${
-              activeFilter === filter 
-                ? 'bg-[#2E7D32] text-white shadow-md shadow-[#2E7D32]/20' 
-                : 'bg-white text-stone-600 border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32]'
-            }`}
-          >
-            {filter}
-          </button>
-        ))}
       </div>
 
       {/* Orders List */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-[20px] p-12 text-center border border-stone-200/50 flex flex-col items-center justify-center min-h-[400px]">
+          <div className="bg-white rounded-xl p-12 text-center border border-stone-200 flex flex-col items-center justify-center min-h-[300px]">
             <Package className="w-16 h-16 text-stone-300 mb-4" />
             <h3 className="text-lg font-bold text-stone-900">No Orders Found</h3>
-            <p className="text-stone-500 font-semibold text-sm mt-1">We couldn't find any orders matching your criteria.</p>
+            <p className="text-stone-500 font-medium text-sm mt-1">We couldn't find any orders matching your criteria.</p>
             <button 
-              onClick={() => { setSearchQuery(''); setActiveFilter('All'); }}
-              className="mt-6 px-6 py-2.5 bg-[#2E7D32] text-white font-bold text-sm rounded-xl hover:bg-[#1B5E20] transition-colors"
+              onClick={() => setSearchQuery('')}
+              className="mt-6 px-6 py-2.5 bg-stone-100 text-stone-700 font-bold text-sm rounded-lg hover:bg-stone-200 transition-colors"
             >
-              Clear Filters
+              Clear Search
             </button>
           </div>
         ) : (
-          filteredOrders.map((order, idx) => (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              key={order.id} 
-              className="bg-white rounded-[20px] border border-stone-200/80 p-5 lg:p-6 shadow-sm hover:shadow-md transition-shadow"
-            >
-              {/* Card Header */}
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 border-b border-stone-100 pb-5">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-lg font-black text-stone-900">{order.id}</h3>
-                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                      order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-700' :
-                      order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {order.status}
-                    </span>
-                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                      order.paymentStatus === 'Paid' ? 'bg-[#F0FAF0] text-[#2E7D32]' : 'bg-orange-100 text-orange-700'
-                    }`}>
-                      {order.paymentStatus}
-                    </span>
-                  </div>
-                  <p className="text-stone-500 text-xs font-semibold">Ordered on {new Date(order.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                </div>
+          filteredOrders.map((order, idx) => {
+            const status = order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Pending';
+            
+            return (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                key={order._id} 
+                className="bg-white rounded-xl border border-stone-200 overflow-hidden"
+              >
 
-                <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
-                  <button onClick={() => navigate(`/account/orders/${order.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                    <Eye className="w-3.5 h-3.5" /> Details
-                  </button>
-                  <button onClick={() => navigate(`/account/track/${order.id}`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                    <Truck className="w-3.5 h-3.5" /> Track
-                  </button>
-                  {order.invoiceId && (
-                    <button onClick={() => handleDownloadInvoice(order.invoiceId)} className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                      <Download className="w-3.5 h-3.5" /> Invoice
-                    </button>
-                  )}
-                  {order.status === 'Delivered' && (
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                      <RotateCcw className="w-3.5 h-3.5" /> Reorder
-                    </button>
-                  )}
-                  {order.status === 'Pending' && (
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition-colors whitespace-nowrap">
-                      <XCircle className="w-3.5 h-3.5" /> Cancel
-                    </button>
-                  )}
-                </div>
-              </div>
 
-              {/* Card Body */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="md:col-span-2">
-                  <p className="text-xs text-stone-500 font-bold uppercase tracking-wider mb-2">Products</p>
-                  <ul className="list-disc list-inside text-sm font-semibold text-stone-800 space-y-1">
-                    {order.products.map((p, i) => <li key={i} className="truncate">{p}</li>)}
-                  </ul>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs text-stone-500 font-bold uppercase tracking-wider mb-1">Logistics</p>
-                    <p className="text-sm font-bold text-stone-900">{order.containerType} &bull; {order.quantity}</p>
+                {/* Card Body - Products List */}
+                <div className="p-4 md:p-6 space-y-6">
+                  {/* Status Banner */}
+                  <div className="flex items-center gap-2">
+                    <h3 className={`text-lg md:text-xl font-bold ${status === 'Delivered' ? 'text-[#067D62]' : status === 'Cancelled' ? 'text-red-700' : 'text-stone-900'}`}>
+                      {status === 'Delivered' ? 'Delivered' : status === 'Cancelled' ? 'Cancelled' : status}
+                    </h3>
                   </div>
-                  <div>
-                    <p className="text-xs text-stone-500 font-bold uppercase tracking-wider mb-1">Total Amount</p>
-                    <p className="text-lg font-black text-[#2E7D32]">{convertCurrency(order.totalAmount, user?.currency).formatted} {user?.currency?.toUpperCase() || 'INR'}</p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Progress Bar */}
-              {order.status !== 'Cancelled' && (
-                <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="text-xs font-bold text-stone-600 uppercase tracking-wider">Shipment Progress</p>
-                    <p className="text-xs font-black text-[#2E7D32]">{TIMELINE_STEPS[order.timelineIndex]}</p>
-                  </div>
-                  <div className="relative w-full h-2 bg-stone-200 rounded-full overflow-hidden">
-                    <div 
-                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#43A047] to-[#2E7D32] rounded-full transition-all duration-1000"
-                      style={{ width: `${(order.timelineIndex / (TIMELINE_STEPS.length - 1)) * 100}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-2 px-1">
-                    {TIMELINE_STEPS.map((step, i) => (
-                      <div key={step} className={`w-1.5 h-1.5 rounded-full ${i <= order.timelineIndex ? 'bg-[#2E7D32]' : 'bg-stone-300'}`} />
-                    ))}
-                  </div>
+                  {order.items.map((item, itemIdx) => (
+                    <div key={itemIdx} className="flex flex-col md:flex-row gap-6">
+                      {/* Product Image */}
+                      <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
+                        {item.product?.images?.[0] ? (
+                          <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover mix-blend-multiply" />
+                        ) : (
+                          <Package className="w-8 h-8 text-stone-300" />
+                        )}
+                      </div>
+                      
+                      {/* Product Details */}
+                      <div className="flex-grow flex flex-col justify-start">
+                        <h4 
+                          className="text-base font-bold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer line-clamp-2"
+                          onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}
+                        >
+                          {item.product?.name || 'Unknown Product'}
+                        </h4>
+                        <div className="text-xs text-stone-500 mt-1 mb-2">Quantity: {item.quantity}</div>
+                        
+                        <div className="mt-auto flex flex-wrap gap-2">
+                          <button onClick={() => navigate(`/account/track/${order._id}`)} className="px-3 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-semibold rounded-full border border-[#FCD200] shadow-sm transition-colors w-fit">
+                            Track package
+                          </button>
+                          
+                          {status === 'Delivered' && (
+                            <button onClick={() => handleReorder(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-800 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit flex items-center gap-1.5">
+                              <RotateCcw className="w-3.5 h-3.5" /> Buy it again
+                            </button>
+                          )}
+                          
+                          {status === 'Pending' && (
+                            <button onClick={() => handleCancelOrder(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-red-600 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit">
+                              Cancel items
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </motion.div>
-          ))
+              </motion.div>
+            );
+          })
         )}
       </div>
     </div>

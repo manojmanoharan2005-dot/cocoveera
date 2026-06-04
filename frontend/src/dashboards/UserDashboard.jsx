@@ -31,6 +31,7 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const start = Date.now();
         const [prodRes, profRes] = await Promise.all([
           apiClient.get('/products'),
           apiClient.get('/users/profile')
@@ -44,6 +45,8 @@ const UserDashboard = () => {
           setWishlist(profile.wishlist || []);
           setCartCount(profile.cart?.length || 0);
         }
+
+        // Removed artificial delay for faster loading
       } catch (err) {
         console.error('Failed to fetch data', err);
       } finally {

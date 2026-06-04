@@ -9,6 +9,7 @@ import {
   getAllOrders,
   updateTrackingStatus,
   getOrderById,
+  cancelOrder,
 } from '../controllers/orderController.js';
 import { protect, admin } from '../middleware/auth.js';
 import { getShippingRules } from '../controllers/shippingController.js';
@@ -29,6 +30,9 @@ router.route('/myorders')
 
 router.route('/:id/tracking')
   .put(protect, admin, updateTrackingStatus);
+
+router.route('/:id/cancel')
+  .put(protect, cancelOrder);
 
 router.route('/:id')
   .get(protect, getOrderById);

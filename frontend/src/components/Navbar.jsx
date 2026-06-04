@@ -42,7 +42,7 @@ const Navbar = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-sm">
+    <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/85 backdrop-blur-lg shadow-md border-b border-white/20' : 'bg-white shadow-sm'}`}>
 
       {/* ── TOP STRIP ── */}
       <div
@@ -69,7 +69,7 @@ const Navbar = () => {
       </div>
 
       {/* ── MAIN NAV ── */}
-      <nav className={`bg-white border-b border-stone-100 transition-all duration-300 ${isScrolled ? 'py-2' : 'py-3'}`}>
+      <nav className={`bg-transparent transition-all duration-500 ${isScrolled ? 'py-2' : 'py-4'}`}>
         <div className="max-w-screen-xl mx-auto px-6 flex items-center gap-8">
 
           {/* LOGO – fixed width so nav links never overlap it */}
@@ -146,18 +146,20 @@ const Navbar = () => {
             {/* Register */}
             <Link
               to="/register"
-              className="border border-primary text-primary hover:bg-primary hover:text-white font-poppins text-[11px] font-bold px-4 py-2 rounded-lg transition-all duration-200"
+              className="border border-primary text-primary hover:bg-primary hover:text-white font-poppins text-[11px] font-bold px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 hover:shadow-[0_0_15px_rgba(46,125,50,0.4)]"
             >
               Register
             </Link>
 
-            {/* Request Quote CTA */}
-            <Link
-              to="/contact"
-              className="bg-primary hover:bg-primary-dark text-white font-poppins text-[11px] font-bold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap"
+            {/* Brochure CTA */}
+            <a
+              href="/cocoveera-brochure.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-primary hover:bg-primary-dark text-white font-poppins text-[11px] font-bold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap active:scale-95 hover:shadow-[0_0_15px_rgba(46,125,50,0.5)]"
             >
-              Request Quote
-            </Link>
+              Brochure
+            </a>
           </div>
 
           {/* MOBILE TOGGLE */}
@@ -207,13 +209,15 @@ const Navbar = () => {
               >
                 Register
               </Link>
-              <Link
-                to="/contact"
+              <a
+                href="/cocoveera-brochure.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setIsOpen(false)}
                 className="w-full text-center bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-wide shadow"
               >
-                Request Quote
-              </Link>
+                Brochure
+              </a>
             </div>
           </div>
         )}

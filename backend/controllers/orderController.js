@@ -91,21 +91,33 @@ export const createOrder = async (req, res) => {
     });
 
     // Populate for email
-    const populatedOrder = await Order.findById(order._id).populate('user', 'name email phone').populate('items.product', 'name');
+    const populatedOrder = await Order.findById(order._id).populate('user', 'name email phone').populate('items.product', 'name slug');
 
     if (paymentGateway === 'cod' || paymentGateway === 'wire') {
       try {
+        const address = populatedOrder.shippingAddress || {};
         const invoiceData = {
           invoiceNumber: 'INV-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
           customerName: populatedOrder.user.name,
           customerEmail: populatedOrder.user.email,
-          customerPhone: populatedOrder.user.phone,
-          shippingAddress: populatedOrder.shippingAddress,
+          customerPhone: populatedOrder.user.phone || 'Not Provided',
+          shippingAddress: {
+            addressLine: address.addressLine || 'Address not provided',
+            city: address.city || 'City not provided',
+            state: address.state || '',
+            postalCode: address.postalCode || '',
+            country: address.country || 'India',
+          },
           paymentStatus: 'pending',
           paymentMethod: paymentGateway.toUpperCase(),
           totalAmount: populatedOrder.totalAmount,
+          containerType: populatedOrder.recommendedContainer || 'LCL',
+          estimatedWeight: populatedOrder.totalWeight || 0,
+          estimatedVolume: populatedOrder.totalVolume || 0,
+          containerUtilization: populatedOrder.totalVolume > 0 ? Math.min(Math.round((populatedOrder.totalVolume / 33) * 100), 100) : 0, // Roughly based on 20FT
           items: populatedOrder.items.map(item => ({
             productName: item.productName || (item.product && item.product.name) || 'Product',
+            sku: (item.product && item.product.slug) ? item.product.slug.toUpperCase().substring(0, 8) : 'COCO-ITEM',
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             subtotal: item.unitPrice * item.quantity
@@ -213,6 +225,33 @@ export const getOrderById = async (req, res) => {
     }
 
     res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+// @desc    Cancel order (User only if pending)
+// @route   PUT /api/orders/:id/cancel
+// @access  Private
+export const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.user.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to cancel this order' });
+    }
+
+    if (order.orderStatus !== 'pending') {
+      return res.status(400).json({ success: false, message: 'Cannot cancel an order that is already being processed' });
+    }
+
+    order.orderStatus = 'cancelled';
+    await order.save();
+
+    res.status(200).json({ success: true, message: 'Order cancelled successfully', data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

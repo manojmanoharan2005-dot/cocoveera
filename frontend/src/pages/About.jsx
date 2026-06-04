@@ -2,14 +2,12 @@
  * File: frontend/src/pages/About.jsx
  * Purpose: React page component representing the About view.
  */
-import React, { useState, useRef } from 'react';
-import { Target, Lightbulb, Compass, Sun, ShieldCheck, Factory, Award, Leaf, Play, X } from 'lucide-react';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Target, Lightbulb, Compass, Sun, ShieldCheck, Factory, Award, Leaf } from 'lucide-react';
 import PageHero from '../components/PageHero';
 
 const About = () => {
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const inlineVideoRef = useRef(null);
-
   return (
     <div className="pb-16 bg-white">
       <PageHero
@@ -60,64 +58,17 @@ const About = () => {
             </div>
           </div>
           <div className="lg:col-span-5 relative mt-8 lg:mt-0">
-            {/* Video Thumbnail Container */}
-            <div 
-              className={`group/video relative aspect-video lg:aspect-[4/3] w-full rounded-[2rem] overflow-hidden shadow-premium ${!isVideoOpen ? 'cursor-pointer' : ''} bg-black`}
-              onMouseEnter={() => {
-                if (!isVideoOpen && inlineVideoRef.current) inlineVideoRef.current.play();
-              }}
-              onMouseLeave={() => {
-                if (!isVideoOpen && inlineVideoRef.current) {
-                  inlineVideoRef.current.pause();
-                  inlineVideoRef.current.currentTime = 0;
-                }
-              }}
-              onClick={() => {
-                if (!isVideoOpen && inlineVideoRef.current) {
-                  setIsVideoOpen(true);
-                  inlineVideoRef.current.muted = false;
-                  inlineVideoRef.current.currentTime = 0;
-                  inlineVideoRef.current.play();
-                }
-              }}
-            >
-              {/* Image */}
-              <img
-                src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
-                alt="Cocoveera processing facility video"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isVideoOpen ? 'opacity-0 pointer-events-none' : 'group-hover/video:opacity-0'}`}
-              />
-              
-              {/* Inline Hover Video */}
+            {/* Video Container */}
+            <div className="relative aspect-video lg:aspect-[4/3] w-full rounded-[2rem] overflow-hidden shadow-premium bg-black">
               <video 
-                ref={inlineVideoRef}
                 src="/company-trail-video.mp4"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isVideoOpen ? 'opacity-100 z-20' : 'opacity-0 group-hover/video:opacity-100'}`}
-                muted={!isVideoOpen}
-                loop={!isVideoOpen}
-                controls={isVideoOpen}
+                poster="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
+                className="absolute inset-0 w-full h-full object-cover z-10"
+                muted
+                loop
+                autoPlay
                 playsInline
               />
-              
-              {/* Play Button */}
-              {!isVideoOpen && (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setIsVideoOpen(true);
-                      if (inlineVideoRef.current) {
-                        inlineVideoRef.current.muted = false;
-                        inlineVideoRef.current.currentTime = 0;
-                        inlineVideoRef.current.play();
-                      }
-                    }}
-                    className="w-20 h-20 bg-white/95 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center transition-all duration-300 group-hover/video:scale-125 group-hover/video:bg-primary"
-                  >
-                    <Play className="w-8 h-8 text-primary fill-primary ml-1.5 transition-colors duration-300 group-hover/video:text-white group-hover/video:fill-white" />
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Floating Badge (15+ Years) */}
@@ -136,10 +87,12 @@ const About = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-5 relative order-last lg:order-first">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-stone-200 shadow-soft">
-              <img
+              <motion.img
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
                 src="/solar-facility.png"
                 alt="Solar panels on factory roof"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover origin-center"
               />
             </div>
           </div>
@@ -255,10 +208,12 @@ const About = () => {
 
           <div className="lg:col-span-5">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-stone-200 shadow-soft">
-              <img
+              <motion.img
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 25, repeat: Infinity, ease: "linear", delay: 5 }}
                 src="/custom-formulation.png"
                 alt="Substrate mixture preview"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover origin-center"
               />
             </div>
           </div>

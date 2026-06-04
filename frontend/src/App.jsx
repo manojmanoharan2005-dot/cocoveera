@@ -2,7 +2,7 @@
  * File: frontend/src/App.jsx
  * Purpose: Main React application component defining routing structure.
  */
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
@@ -10,54 +10,54 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 // Public Pages
-import Home from './pages/Home';
-import About from './pages/About';
-import Products from './pages/Products';
-import QualityTesting from './pages/QualityTesting';
-import CoconutSubstrates from './pages/CoconutSubstrates';
-import Contact from './pages/Contact';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import AuthLayout from './layouts/AuthLayout';
-import OTPForm from './components/auth/OTPForm';
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+const Products = lazy(() => import('./pages/Products'));
+const QualityTesting = lazy(() => import('./pages/QualityTesting'));
+const CoconutSubstrates = lazy(() => import('./pages/CoconutSubstrates'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const AuthLayout = lazy(() => import('./layouts/AuthLayout'));
+const OTPForm = lazy(() => import('./components/auth/OTPForm'));
 
 // Admin Pages
-import AdminDashboard from './pages/AdminDashboard';
-import AdminProducts from './pages/AdminProducts';
-import AdminCategories from './pages/AdminCategories';
-import AdminOrders from './pages/AdminOrders';
-import AdminUsers from './pages/AdminUsers';
-import AdminPayments from './pages/admin/AdminPayments';
-import AdminRefunds from './pages/admin/AdminRefunds';
-import AdminTesting from './pages/AdminTesting';
-import AdminReports from './pages/AdminReports';
-import AdminSettings from './pages/AdminSettings';
-import AdminCurrencyManagement from './pages/AdminCurrencyManagement';
-import AdminShippingManagement from './pages/AdminShippingManagement';
-import AdminDiscounts from './pages/AdminDiscounts';
-import ContainerViewerDemo from './pages/ContainerViewerDemo';
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminProducts = lazy(() => import('./pages/AdminProducts'));
+const AdminCategories = lazy(() => import('./pages/AdminCategories'));
+const AdminOrders = lazy(() => import('./pages/AdminOrders'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers'));
+const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'));
+const AdminRefunds = lazy(() => import('./pages/admin/AdminRefunds'));
+const AdminTesting = lazy(() => import('./pages/AdminTesting'));
+const AdminReports = lazy(() => import('./pages/AdminReports'));
+const AdminSettings = lazy(() => import('./pages/AdminSettings'));
+const AdminCurrencyManagement = lazy(() => import('./pages/AdminCurrencyManagement'));
+const AdminShippingManagement = lazy(() => import('./pages/AdminShippingManagement'));
+const AdminDiscounts = lazy(() => import('./pages/AdminDiscounts'));
+const ContainerViewerDemo = lazy(() => import('./pages/ContainerViewerDemo'));
 
 // User Protected Route
-import UserDashboard from './dashboards/UserDashboard';
-import AccountLayout from './layouts/AccountLayout';
-import Orders from './pages/account/Orders';
-import OrderDetails from './pages/account/OrderDetails';
-import Cart from './pages/account/Cart';
-import Checkout from './pages/account/Checkout';
-import OrderSummary from './pages/account/OrderSummary';
-import Payment from './pages/account/Payment';
-import OrderSuccess from './pages/account/OrderSuccess';
-import TrackOrder from './pages/account/TrackOrder';
-import SavedCart from './pages/account/SavedCart';
-import Address from './pages/account/Address';
-import Settings from './pages/account/Settings';
-import Profile from './pages/account/Profile';
-import ProductView from './pages/account/ProductView';
-import Invoices from './pages/account/Invoices';
-import Quotes from './pages/account/Quotes';
-import Notifications from './pages/account/Notifications';
-import PaymentHistory from './pages/account/PaymentHistory';
-import HelpCenter from './pages/account/HelpCenter';
+const UserDashboard = lazy(() => import('./dashboards/UserDashboard'));
+const AccountLayout = lazy(() => import('./layouts/AccountLayout'));
+const Orders = lazy(() => import('./pages/account/Orders'));
+const OrderDetails = lazy(() => import('./pages/account/OrderDetails'));
+const Cart = lazy(() => import('./pages/account/Cart'));
+const Checkout = lazy(() => import('./pages/account/Checkout'));
+const OrderSummary = lazy(() => import('./pages/account/OrderSummary'));
+const Payment = lazy(() => import('./pages/account/Payment'));
+const OrderSuccess = lazy(() => import('./pages/account/OrderSuccess'));
+const TrackOrder = lazy(() => import('./pages/account/TrackOrder'));
+const SavedCart = lazy(() => import('./pages/account/SavedCart'));
+const Address = lazy(() => import('./pages/account/Address'));
+const Settings = lazy(() => import('./pages/account/Settings'));
+const Profile = lazy(() => import('./pages/account/Profile'));
+const ProductView = lazy(() => import('./pages/account/ProductView'));
+const Invoices = lazy(() => import('./pages/account/Invoices'));
+const Quotes = lazy(() => import('./pages/account/Quotes'));
+const Notifications = lazy(() => import('./pages/account/Notifications'));
+const PaymentHistory = lazy(() => import('./pages/account/PaymentHistory'));
+const HelpCenter = lazy(() => import('./pages/account/HelpCenter'));
 
 // Loading screen matching the requested design
 const LoadingScreen = () => (
@@ -79,10 +79,8 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
-
-  // No longer forcing a redirect here. Existing users can browse without an address if they wish.
 
   return children;
 };
@@ -102,182 +100,199 @@ const AdminProtectedRoute = ({ children }) => {
   return children;
 };
 
-const PublicLayout = () => (
-  <div className="flex flex-col min-h-screen">
-    <Navbar />
-    <div className="flex-grow">
-      <Outlet />
+import { motion, AnimatePresence } from 'framer-motion';
+
+const PublicLayout = () => {
+  const location = useLocation();
+  
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -15 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="flex-grow"
+        >
+          <Outlet />
+        </motion.div>
+      </AnimatePresence>
+      <Footer />
     </div>
-    <Footer />
-  </div>
-);
+  );
+};
 
 function AppContent() {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/quality-testing" element={<QualityTesting />} />
-        <Route path="/substrates" element={<CoconutSubstrates />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/containers/viewer" element={<ContainerViewerDemo />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/quality-testing" element={<QualityTesting />} />
+          <Route path="/substrates" element={<CoconutSubstrates />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/containers/viewer" element={<ContainerViewerDemo />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/verify-otp"
+            element={
+              <AuthLayout>
+                <OTPForm />
+              </AuthLayout>
+            }
+          />
+        </Route>
+
+        {/* User Protected Route */}
         <Route
-          path="/verify-otp"
+          path="/dashboard"
           element={
-            <AuthLayout>
-              <OTPForm />
-            </AuthLayout>
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
           }
         />
-      </Route>
 
-      {/* User Protected Route */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <UserDashboard />
-          </ProtectedRoute>
-        }
-      />
+        {/* Account Commerce Flow */}
+        <Route path="/account" element={<ProtectedRoute><AccountLayout /></ProtectedRoute>}>
+          <Route path="orders" element={<Orders />} />
+          <Route path="orders/:id" element={<OrderDetails />} />
+          <Route path="cart" element={<Cart />} />
+          <Route path="checkout" element={<Checkout />} />
+          <Route path="order-summary" element={<OrderSummary />} />
+          <Route path="payment" element={<Payment />} />
+          <Route path="order-success" element={<OrderSuccess />} />
+          <Route path="track/:id" element={<TrackOrder />} />
+          <Route path="saved" element={<SavedCart />} />
+          <Route path="address" element={<Address />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="invoices" element={<Invoices />} />
+          <Route path="quotes" element={<Quotes />} />
+          <Route path="payments" element={<PaymentHistory />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="support" element={<HelpCenter />} />
+          <Route path="product/:id" element={<ProductView />} />
+          <Route path="productview/:id" element={<ProductView />} />
+        </Route>
 
-      {/* Account Commerce Flow */}
-      <Route path="/account" element={<ProtectedRoute><AccountLayout /></ProtectedRoute>}>
-        <Route path="orders" element={<Orders />} />
-        <Route path="orders/:id" element={<OrderDetails />} />
-        <Route path="cart" element={<Cart />} />
-        <Route path="checkout" element={<Checkout />} />
-        <Route path="order-summary" element={<OrderSummary />} />
-        <Route path="payment" element={<Payment />} />
-        <Route path="order-success" element={<OrderSuccess />} />
-        <Route path="track/:id" element={<TrackOrder />} />
-        <Route path="saved" element={<SavedCart />} />
-        <Route path="address" element={<Address />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="invoices" element={<Invoices />} />
-        <Route path="quotes" element={<Quotes />} />
-        <Route path="payments" element={<PaymentHistory />} />
-        <Route path="notifications" element={<Notifications />} />
-        <Route path="support" element={<HelpCenter />} />
-        <Route path="product/:id" element={<ProductView />} />
-        <Route path="productview/:id" element={<ProductView />} />
-      </Route>
+        {/* Admin Routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminProtectedRoute>
+              <AdminDashboard />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/products"
+          element={
+            <AdminProtectedRoute>
+              <AdminProducts />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/categories"
+          element={
+            <AdminProtectedRoute>
+              <AdminCategories />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/orders"
+          element={
+            <AdminProtectedRoute>
+              <AdminOrders />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/payments"
+          element={
+            <AdminProtectedRoute>
+              <AdminPayments />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/refunds"
+          element={
+            <AdminProtectedRoute>
+              <AdminRefunds />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminProtectedRoute>
+              <AdminUsers />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/testing"
+          element={
+            <AdminProtectedRoute>
+              <AdminTesting />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminProtectedRoute>
+              <AdminReports />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <AdminProtectedRoute>
+              <AdminSettings />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/currency"
+          element={
+            <AdminProtectedRoute>
+              <AdminCurrencyManagement />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/shipping"
+          element={
+            <AdminProtectedRoute>
+              <AdminShippingManagement />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/discounts"
+          element={
+            <AdminProtectedRoute>
+              <AdminDiscounts />
+            </AdminProtectedRoute>
+          }
+        />
 
-      {/* Admin Routes */}
-      <Route
-        path="/admin/dashboard"
-        element={
-          <AdminProtectedRoute>
-            <AdminDashboard />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/products"
-        element={
-          <AdminProtectedRoute>
-            <AdminProducts />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/categories"
-        element={
-          <AdminProtectedRoute>
-            <AdminCategories />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/orders"
-        element={
-          <AdminProtectedRoute>
-            <AdminOrders />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/payments"
-        element={
-          <AdminProtectedRoute>
-            <AdminPayments />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/refunds"
-        element={
-          <AdminProtectedRoute>
-            <AdminRefunds />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <AdminProtectedRoute>
-            <AdminUsers />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/testing"
-        element={
-          <AdminProtectedRoute>
-            <AdminTesting />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/reports"
-        element={
-          <AdminProtectedRoute>
-            <AdminReports />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/settings"
-        element={
-          <AdminProtectedRoute>
-            <AdminSettings />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/currency"
-        element={
-          <AdminProtectedRoute>
-            <AdminCurrencyManagement />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/shipping"
-        element={
-          <AdminProtectedRoute>
-            <AdminShippingManagement />
-          </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/discounts"
-        element={
-          <AdminProtectedRoute>
-            <AdminDiscounts />
-          </AdminProtectedRoute>
-        }
-      />
-
-      {/* Catch all redirect */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Catch all redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 

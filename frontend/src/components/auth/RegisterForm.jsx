@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link as LinkIcon, Eye, EyeOff, Briefcase } from 'lucide-react';
 import { authService } from '../../services/authService';
@@ -28,6 +28,7 @@ const COUNTRIES = Object.keys(COUNTRY_CURRENCY_MAP);
 export const RegisterForm = () => {
   const { register: authRegister, verifyOtp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -213,8 +214,9 @@ export const RegisterForm = () => {
       if (res.success) {
         localStorage.removeItem('cocoveera_register_cache');
         setSuccessMsg('Verification successful. Welcome to Cocoveera!');
+        const fromPath = location.state?.from || (res.user.role === 'admin' ? '/admin' : '/account/address');
         setTimeout(() => {
-          navigate(res.user.role === 'admin' ? '/admin' : '/account/address');
+          navigate(fromPath, { replace: true });
         }, 1500);
       }
     } catch (err) {
@@ -538,10 +540,10 @@ export const RegisterForm = () => {
       </form>
 
       {!otpSent && (
-        <p className="text-center text-xs text-stone-500 mt-6 font-semibold">
+        <p className="text-center text-xs text-stone-555 mt-6 font-semibold">
           Already trading with us?{' '}
           <span
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/login', { state: location.state })}
             className="text-[#2E5E35] hover:text-[#1F4625] font-bold cursor-pointer underline decoration-dotted"
           >
             Sign In

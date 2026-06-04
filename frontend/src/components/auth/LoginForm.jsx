@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { Mail, KeyRound, Eye, EyeOff, ArrowRight } from 'lucide-react';
@@ -13,6 +13,7 @@ export const LoginForm = () => {
   const { login } = useAuth();
   const { login: adminLogin } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '';
 
@@ -68,11 +69,8 @@ export const LoginForm = () => {
           }
         }
 
-        if (redirect) {
-          navigate(`/${redirect}`);
-        } else {
-          navigate('/dashboard');
-        }
+        const fromPath = location.state?.from || (redirect ? `/${redirect}` : '/dashboard');
+        navigate(fromPath, { replace: true });
       }
     } catch (err) {
       if (err.message.includes('not verified') || err.message.toLowerCase().includes('otp')) {
@@ -203,10 +201,10 @@ export const LoginForm = () => {
         </button>
       </form>
 
-      <p className="text-center text-xs text-stone-500 mt-6 font-semibold">
+      <p className="text-center text-xs text-stone-550 mt-6 font-semibold">
         New to Cocoveera?{' '}
         <span
-          onClick={() => navigate('/register')}
+          onClick={() => navigate('/register', { state: location.state })}
           className="text-[#2E5E35] hover:text-[#1F4625] font-bold cursor-pointer underline decoration-dotted"
         >
           Register here

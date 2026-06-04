@@ -206,20 +206,33 @@ export const confirmPayment = async (req, res) => {
       }
 
       try {
+        const address = order.shippingAddress || {};
         const invoiceNumber = 'INV-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
         const invoiceData = {
           invoiceNumber,
           customerName: order.user.name,
           customerEmail: order.user.email,
-          customerPhone: order.user.phone,
-          shippingAddress: order.shippingAddress,
+          customerPhone: order.user.phone || 'Not Provided',
+          shippingAddress: {
+            addressLine: address.addressLine || 'Address not provided',
+            city: address.city || 'City not provided',
+            state: address.state || '',
+            postalCode: address.postalCode || '',
+            country: address.country || 'India',
+          },
           paymentStatus: order.paymentStatus,
           paymentMethod: order.paymentGateway,
           totalAmount: order.totalAmount,
+          containerType: order.recommendedContainer || 'LCL',
+          estimatedWeight: order.totalWeight || 0,
+          estimatedVolume: order.totalVolume || 0,
+          containerUtilization: order.totalVolume > 0 ? Math.min(Math.round((order.totalVolume / 33) * 100), 100) : 0,
           items: order.items.map(item => ({
             productName: item.productName || (item.product && item.product.name) || 'Product',
+            sku: (item.product && item.product.slug) ? item.product.slug.toUpperCase().substring(0, 8) : 'COCO-ITEM',
             unitPrice: item.unitPrice,
-            quantity: item.quantity
+            quantity: item.quantity,
+            subtotal: item.unitPrice * item.quantity
           }))
         };
 

@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowRight,
   ChevronRight,
@@ -242,14 +242,16 @@ const testimonials = [
 
 // ─── Home Component ────────────────────────────────────────────────────────────
 const Home = () => {
+  const { scrollY } = useScroll();
+  const yHeroImage = useTransform(scrollY, [0, 1000], [0, 150]);
+  const yHeroText = useTransform(scrollY, [0, 1000], [0, -100]);
+
   const [statsStarted, setStatsStarted] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [productScroll, setProductScroll] = useState(0);
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [dbProducts, setDbProducts] = useState(products); // Default to hardcoded array until load
   const statsRef = useRef(null);
   const productRef = useRef(null);
-  const inlineVideoRef = useRef(null);
 
   // Fetch products from database for the slider
   useEffect(() => {
@@ -263,7 +265,7 @@ const Home = () => {
             tag: p.isFeatured ? 'FEATURED' : '', // Example tag
             desc: p.description ? (p.description.length > 110 ? p.description.substring(0, 110) + '...' : p.description) : '',
             img: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=400&q=80',
-            link: '/products',
+            link: `/account/product/${p._id}`,
           }));
           setDbProducts(fetchedProducts);
         }
@@ -304,17 +306,19 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 1: HERO — Full-screen factory illustration background
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center bg-white overflow-hidden">
+      <section className="relative min-h-[600px] max-h-[900px] h-screen flex items-center bg-white overflow-hidden max-w-7xl mx-auto w-full">
         
         {/* ── RIGHT SIDE IMAGE (Restricted to right half so products stay on the side) ── */}
         <div className="absolute inset-y-0 right-0 w-full lg:w-[55%] z-0">
-          <img
+          <motion.img
+            style={{ y: yHeroImage }}
             src="/hero-product.png"
             alt="Cocoveera Products"
-            className="w-full h-full object-contain object-bottom md:object-cover md:object-right lg:object-left"
+            className="absolute -top-[12%] w-full h-[112%] object-contain object-bottom md:object-cover md:object-center lg:object-center"
           />
           {/* Blend image edge into the white background */}
           <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-white via-white/80 to-transparent hidden lg:block" />
+          <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-white to-transparent hidden lg:block" />
           {/* Soft bottom fade */}
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
           
@@ -323,8 +327,11 @@ const Home = () => {
         </div>
 
         {/* ── HERO CONTENT ── */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 pt-32 pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+        <motion.div style={{ y: yHeroText }} className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 pt-32 pb-20">
+          {/* Subtle glowing accent orb behind text */}
+          <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center relative z-10">
 
             {/* LEFT: Text Content */}
             <div className="flex flex-col space-y-7">
@@ -332,19 +339,22 @@ const Home = () => {
               {/* Badge */}
               <motion.div
                 initial="hidden" animate="visible" variants={fadeUp} custom={0}
-                className="inline-flex items-center gap-2 bg-primary/10 backdrop-blur-sm text-primary text-xs font-bold px-4 py-2 rounded-full self-start border border-primary/20"
+                className="inline-flex items-center gap-2 bg-white/40 backdrop-blur-md text-primary text-xs font-bold px-4 py-2 rounded-full self-start border border-primary/20 shadow-sm"
               >
-                <Leaf className="w-3.5 h-3.5 text-primary" />
+                <Leaf className="w-3.5 h-3.5 text-primary drop-shadow-[0_0_8px_rgba(46,125,50,0.5)]" />
                 PREMIUM COCONUT SUBSTRATES
               </motion.div>
 
               {/* Heading */}
               <motion.h1
                 initial="hidden" animate="visible" variants={fadeUp} custom={1}
-                className="text-5xl sm:text-6xl lg:text-7xl font-poppins font-extrabold text-stone-900 leading-[1.05]"
+                className="text-5xl sm:text-6xl lg:text-7xl font-poppins font-extrabold text-stone-900 leading-[1.05] relative"
               >
                 Engineered<br />
-                <span className="text-primary">For Global</span><br />
+                <span className="text-primary relative inline-block">
+                  For Global
+                  <span className="absolute -inset-1 bg-primary/20 blur-xl -z-10 rounded-full"></span>
+                </span><br />
                 Growers
               </motion.h1>
 
@@ -367,12 +377,14 @@ const Home = () => {
                 >
                   EXPLORE PRODUCTS <ChevronRight className="w-4 h-4" />
                 </Link>
-                <Link
-                  to="/contact"
+                <a
+                  href="/cocoveera-brochure.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 border-2 border-stone-800 hover:border-primary text-stone-800 hover:text-primary font-poppins text-sm font-bold px-7 py-3.5 rounded-xl transition-all duration-300 bg-white/50 backdrop-blur-sm"
                 >
-                  REQUEST QUOTE <ChevronRight className="w-4 h-4" />
-                </Link>
+                  VIEW BROCHURE <ChevronRight className="w-4 h-4" />
+                </a>
               </motion.div>
 
               {/* Trust Badges */}
@@ -402,7 +414,7 @@ const Home = () => {
             {/* RIGHT: Empty column to let the product background image shine through unobstructed */}
             <div className="hidden lg:block"></div>
           </div>
-        </div>
+        </motion.div>
 
         {/* ── BOTTOM SCROLL INDICATOR ── */}
         <motion.div
@@ -443,68 +455,23 @@ const Home = () => {
             transition={{ duration: 0.8 }}
             className="relative"
           >
-            <div 
-              className={`rounded-3xl overflow-hidden shadow-xl group/video relative aspect-video lg:aspect-[4/3] w-full ${!isVideoOpen ? 'cursor-pointer' : ''} bg-black`}
-              onMouseEnter={() => {
-                if (!isVideoOpen && inlineVideoRef.current) inlineVideoRef.current.play();
-              }}
-              onMouseLeave={() => {
-                if (!isVideoOpen && inlineVideoRef.current) {
-                  inlineVideoRef.current.pause();
-                  inlineVideoRef.current.currentTime = 0;
-                }
-              }}
-              onClick={() => {
-                if (!isVideoOpen && inlineVideoRef.current) {
-                  setIsVideoOpen(true);
-                  inlineVideoRef.current.muted = false;
-                  inlineVideoRef.current.currentTime = 0;
-                  inlineVideoRef.current.play();
-                }
-              }}
-            >
-              {/* Image Thumbnail (Hidden when playing full) */}
-              <img
-                src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
-                alt="Cocoveera processing facility"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isVideoOpen ? 'opacity-0 pointer-events-none' : 'group-hover/video:opacity-0'}`}
-              />
-              
-              {/* Video Element (Silent preview on hover, full audio/controls on click) */}
+            <div className="rounded-3xl overflow-hidden shadow-xl relative aspect-video lg:aspect-[4/3] w-full bg-black">
               <video 
-                ref={inlineVideoRef}
                 src="/company-trail-video.mp4"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isVideoOpen ? 'opacity-100 z-20' : 'opacity-0 group-hover/video:opacity-100'}`}
-                muted={!isVideoOpen}
-                loop={!isVideoOpen}
-                controls={isVideoOpen}
+                poster="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
+                className="absolute inset-0 w-full h-full object-cover z-10"
+                muted
+                loop
+                autoPlay
                 playsInline
               />
-              
-              {/* Play button overlay (Hidden when playing full) */}
-              {!isVideoOpen && (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setIsVideoOpen(true);
-                      if (inlineVideoRef.current) {
-                        inlineVideoRef.current.muted = false;
-                        inlineVideoRef.current.currentTime = 0;
-                        inlineVideoRef.current.play();
-                      }
-                    }}
-                    className="w-16 h-16 bg-white/95 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 group-hover/video:scale-125 group-hover/video:bg-primary"
-                  >
-                    <Play className="w-6 h-6 text-primary fill-primary ml-1 transition-colors duration-300 group-hover/video:text-white group-hover/video:fill-white" />
-                  </button>
-                </div>
-              )}
             </div>
             {/* Floating year badge */}
-            <div className="absolute -bottom-6 -right-6 bg-primary text-white rounded-2xl p-5 shadow-xl">
-              <div className="text-3xl font-poppins font-extrabold">15+</div>
-              <div className="text-xs font-bold opacity-80 mt-0.5">Years of<br />Excellence</div>
+            <div className="absolute -bottom-6 -right-6 md:-bottom-8 md:-right-8 bg-primary text-white px-7 py-6 rounded-2xl shadow-2xl border-[6px] border-accent z-20">
+              <div className="font-poppins font-extrabold text-4xl leading-none mb-1 text-center">15+</div>
+              <div className="text-[11px] font-bold leading-tight tracking-wide text-white/90 text-center">
+                Years of<br />Excellence
+              </div>
             </div>
           </motion.div>
 
@@ -589,8 +556,12 @@ const Home = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.5 }}
-                  className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-soft hover:shadow-premium hover:-translate-y-1.5 transition-all duration-300 group flex-shrink-0 flex flex-col"
+                  whileHover={{ y: -8, scale: 1.02, rotateX: 2, rotateY: -2, boxShadow: "0 0 40px rgba(46,125,50,0.25)" }}
+                  style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                  className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative"
                 >
+                  {/* Glass reflection highlight */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
                   <div className="relative h-48 overflow-hidden flex-shrink-0">
                     <img
                       src={p.img}
@@ -948,12 +919,14 @@ const Home = () => {
             </p>
           </motion.div>
           <div className="flex flex-wrap justify-center gap-4 pt-2">
-            <Link
-              to="/contact"
+            <a
+              href="/cocoveera-brochure.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-white text-primary hover:bg-stone-50 font-poppins text-sm font-bold px-7 py-3.5 rounded-xl shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             >
-              REQUEST QUOTE <ArrowRight className="w-4 h-4" />
-            </Link>
+              VIEW BROCHURE <ArrowRight className="w-4 h-4" />
+            </a>
             <Link
               to="/contact"
               className="inline-flex items-center gap-2 border-2 border-white/30 hover:border-white text-white font-poppins text-sm font-bold px-7 py-3.5 rounded-xl transition-all duration-300"

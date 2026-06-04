@@ -93,10 +93,13 @@ const OrderSchema = new mongoose.Schema(
       default: null,
     },
     shippingAddress: {
-      addressLine: String,
+      addressLine: String, // Legacy
+      street: String,
       city: String,
+      state: String,
       country: String,
-      postalCode: String,
+      postalCode: String, // Legacy
+      zipCode: String,
     },
     trackingNumber: {
       type: String,

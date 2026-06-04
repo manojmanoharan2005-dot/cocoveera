@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Check, Info, X, Layers, Droplet, Wind, Compass, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 import PageHero from '../components/PageHero';
 
@@ -336,30 +337,55 @@ const Products = () => {
 
         {/* Loading Indicator */}
         {loading && (
-          <div className="flex justify-center items-center py-16">
-            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-8">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-white/50 backdrop-blur-sm rounded-2xl border border-stone-100 overflow-hidden shadow-soft flex flex-col md:flex-row h-[350px] md:h-64">
+                <div className="md:w-5/12 h-64 md:h-full bg-stone-200/50 animate-pulse"></div>
+                <div className="md:w-7/12 p-6 lg:p-8 flex flex-col justify-between w-full">
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <div className="h-4 bg-stone-200/50 rounded w-16 animate-pulse"></div>
+                      <div className="h-4 bg-stone-200/50 rounded w-16 animate-pulse"></div>
+                    </div>
+                    <div className="h-6 bg-stone-200/50 rounded w-3/4 animate-pulse"></div>
+                    <div className="space-y-2 mt-4">
+                      <div className="h-3 bg-stone-200/50 rounded w-full animate-pulse"></div>
+                      <div className="h-3 bg-stone-200/50 rounded w-5/6 animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="h-10 bg-stone-200/50 rounded w-full mt-6 animate-pulse"></div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Catalog Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {filteredProducts.map((prod) => (
-            <div
-              key={prod._id}
-              className="bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-soft hover:shadow-premium transition-all duration-300 grid grid-cols-1 md:grid-cols-12"
-            >
+        <motion.div layout className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <AnimatePresence>
+            {filteredProducts.map((prod) => (
+              <motion.div
+                layout
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ duration: 0.3 }}
+                key={prod._id}
+                className="bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden border border-white/60 shadow-soft hover:shadow-premium hover:-translate-y-1 transition-all duration-300 grid grid-cols-1 md:grid-cols-12 group"
+              >
               <div
-                className="md:col-span-5 relative h-64 md:h-full bg-stone-100 cursor-pointer"
+                className="md:col-span-5 relative h-64 md:h-full bg-stone-100/50 cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/account/product/${prod._id}`)}
               >
+                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500 z-10 mix-blend-overlay"></div>
                 <img
                   src={prod.images && prod.images.length > 0 ? prod.images[0] : 'https://via.placeholder.com/400?text=No+Image'}
                   alt={prod.name}
-                  className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
+                  className="w-full h-full object-cover mix-blend-multiply transition-transform group-hover:scale-110 duration-700"
                 />
               </div>
 
-              <div className="md:col-span-7 p-6 lg:p-8 flex flex-col justify-between">
+              <div className="md:col-span-7 p-6 lg:p-8 flex flex-col justify-between relative z-20">
                 <div>
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] bg-secondary/15 border border-secondary/20 text-secondary font-poppins font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
@@ -421,18 +447,21 @@ const Products = () => {
                       <ShoppingBag className="w-3.5 h-3.5" />
                       <span>Add Cart</span>
                     </button>
-                    <button
-                      onClick={() => openQuoteModal(prod)}
-                      className="bg-primary hover:bg-primary-dark text-white font-poppins text-xs font-bold px-4 py-2 rounded-lg transition-colors shadow-soft"
+                    <a
+                      href="/cocoveera-brochure.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-primary hover:bg-primary-dark text-white font-poppins text-xs font-bold px-4 py-2 rounded-lg transition-colors shadow-soft flex items-center"
                     >
-                      Request Quote
-                    </button>
+                      Brochure
+                    </a>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       </section>
 
       {/* 3. APPLICATION GUIDE MATRIX */}

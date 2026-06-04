@@ -236,7 +236,7 @@ export const downloadInvoice = async (req, res) => {
       transitTime: 'Standard ETA',
       items: order.items.map(item => ({
         productName: item.product?.name || 'Product',
-        sku: item.product?._id?.toString().slice(-6) || 'SKU',
+        sku: item.product?.slug ? item.product.slug.toUpperCase().substring(0, 8) : (item.product?._id?.toString().slice(-6) || 'COCO-ITEM'),
         quantity: item.quantity,
         unitPrice: item.product?.price || 0
       })),
@@ -297,7 +297,7 @@ export const resendInvoiceEmail = async (req, res) => {
       transitTime: 'Standard ETA',
       items: order.items.map(item => ({
         productName: item.product?.name || 'Product',
-        sku: item.product?._id?.toString().slice(-6) || 'SKU',
+        sku: item.product?.slug ? item.product.slug.toUpperCase().substring(0, 8) : (item.product?._id?.toString().slice(-6) || 'COCO-ITEM'),
         quantity: item.quantity,
         unitPrice: item.product?.price || 0
       })),

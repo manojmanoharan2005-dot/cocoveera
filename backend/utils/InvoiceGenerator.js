@@ -103,8 +103,9 @@ function generateHeader(doc, logoBuffer, invoice) {
   doc.font('Helvetica').text(invoice.orderId, 440, 115, { width: 115, align: 'right' });
 
   doc.font('Helvetica-Bold').text('Status:', 360, 135);
-  const statusStr = invoice.status || 'PAID';
-  const statusColor = statusStr.toUpperCase() === 'UNPAID' ? '#D32F2F' : THEME.primary;
+  const rawStatus = invoice.status || invoice.paymentStatus || 'PAID';
+  const statusStr = rawStatus.toLowerCase() === 'paid' ? 'PAID' : 'UNPAID';
+  const statusColor = statusStr === 'UNPAID' ? '#D32F2F' : THEME.primary;
   doc.fillColor(statusColor).font('Helvetica-Bold').text(statusStr, 440, 135, { width: 115, align: 'right' });
 
   generateHr(doc, 155, THEME.primary, 2);
@@ -249,7 +250,9 @@ function generateBottomSection(doc, invoice, qrBuffer) {
   doc.text('Method:', 150, bottomY + 15).font('Helvetica').text(invoice.paymentMethod || 'Razorpay', 230, bottomY + 15);
   doc.font('Helvetica-Bold').text('Transaction Ref:', 150, bottomY + 30).font('Helvetica').text(invoice.transactionId || 'N/A', 230, bottomY + 30);
   doc.font('Helvetica-Bold').text('Paid Date:', 150, bottomY + 45).font('Helvetica').text(invoice.paymentDate || formatDate(new Date()), 230, bottomY + 45);
-  doc.font('Helvetica-Bold').text('Status:', 150, bottomY + 60).fillColor(THEME.primary).font('Helvetica-Bold').text(invoice.paymentStatus || 'COMPLETED', 230, bottomY + 60);
+  const paymentStatus = (invoice.paymentStatus || 'COMPLETED').toUpperCase();
+  const paymentStatusColor = paymentStatus === 'PENDING' || paymentStatus === 'UNPAID' ? '#D32F2F' : THEME.primary;
+  doc.font('Helvetica-Bold').text('Status:', 150, bottomY + 60).fillColor(paymentStatusColor).font('Helvetica-Bold').text(paymentStatus, 230, bottomY + 60);
 
   // Digital Signature
   doc.fillColor(THEME.textMain).fontSize(10).font('Helvetica-Bold').text('AUTHORIZED SIGNATURE', 380, bottomY, { align: 'center', width: 150 });
