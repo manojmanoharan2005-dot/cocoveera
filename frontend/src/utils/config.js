@@ -7,7 +7,7 @@
 
 const getApiUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
-  const { hostname, origin } = window.location;
+  const { hostname } = window.location;
 
   // Regex to detect local development hostnames/IPs (including LAN IPs)
   const isLocalHost = /^localhost$|^127\.\d+\.\d+\.\d+$|^192\.168\.\d+\.\d+$|^10\.\d+\.\d+\.\d+$|^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$|\.local$/i.test(hostname);
@@ -23,8 +23,8 @@ const getApiUrl = () => {
     return envUrl;
   }
 
-  // Otherwise, default to origin-based path (e.g. https://domain.com/api)
-  return `${origin}/api`;
+  // Otherwise, default to the production backend URL on Render
+  return 'https://cocoveera.onrender.com/api';
 };
 
 export const API_URL = getApiUrl();
