@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link as LinkIcon, Eye, EyeOff, Briefcase } from 'lucide-react';
+import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link as LinkIcon, Eye, EyeOff, Briefcase, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
 
 const COUNTRY_CURRENCY_MAP = {
@@ -214,7 +214,7 @@ export const RegisterForm = () => {
       if (res.success) {
         localStorage.removeItem('cocoveera_register_cache');
         setSuccessMsg('Verification successful. Welcome to Cocoveera!');
-        const fromPath = location.state?.from || (res.user.role === 'admin' ? '/admin' : '/account/address');
+        const fromPath = location.state?.from || (res.user.role === 'admin' ? '/admin' : '/dashboard');
         setTimeout(() => {
           navigate(fromPath, { replace: true });
         }, 1500);
@@ -458,6 +458,11 @@ export const RegisterForm = () => {
           {passwordVal && confirmPasswordVal && passwordVal === confirmPasswordVal && !errors.confirmPassword && (
             <span className="text-[10px] font-extrabold text-[#2E7D32] mt-1.5 flex items-center gap-1 uppercase tracking-wide">
               <ShieldCheck className="w-3.5 h-3.5" /> Passwords match
+            </span>
+          )}
+          {passwordVal && confirmPasswordVal && passwordVal !== confirmPasswordVal && (
+            <span className="text-[10px] font-extrabold text-red-500 mt-1.5 flex items-center gap-1 uppercase tracking-wide animate-fade-in">
+              <AlertCircle className="w-3.5 h-3.5" /> Passwords do not match
             </span>
           )}
         </div>

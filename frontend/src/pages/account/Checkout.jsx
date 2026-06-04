@@ -154,12 +154,41 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleStep2Next = () => {
-    if (!formData.address.trim() || !formData.city.trim() || !formData.state.trim() || !formData.zip.trim() || !formData.country.trim()) {
-      alert("Please fill in all Delivery Address fields.");
-      return;
+  const isAddressValid = () => {
+    return !!(
+      formData.address?.trim() &&
+      formData.city?.trim() &&
+      formData.state?.trim() &&
+      formData.zip?.trim() &&
+      formData.country?.trim()
+    );
+  };
+
+  const handleSetStep = (step) => {
+    if (step === 1) {
+      setActiveStep(1);
+    } else if (step === 2) {
+      if (!isAddressValid()) {
+        alert("Please fill in all Delivery Address fields.");
+        return;
+      }
+      setActiveStep(2);
+    } else if (step === 3) {
+      if (!isAddressValid()) {
+        alert("Please fill in all Delivery Address fields first.");
+        setActiveStep(1);
+        return;
+      }
+      if (cartItems.length === 0) {
+        alert("Your cart is empty.");
+        return;
+      }
+      setActiveStep(3);
     }
-    setActiveStep(2);
+  };
+
+  const handleStep2Next = () => {
+    handleSetStep(2);
   };
 
   const isDomestic = shippingMode === 'domestic';
@@ -182,6 +211,11 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+    if (!isAddressValid()) {
+      alert("Please fill in all Delivery Address fields.");
+      setActiveStep(1);
+      return;
+    }
     try {
       setIsProcessing(true);
       const items = cartItems.map(c => ({
@@ -283,7 +317,7 @@ const Checkout = () => {
   const StepHeader = ({ step, title, summary, isCompleted, isActive }) => (
     <div 
       className={`flex items-start md:items-center justify-between p-5 md:p-7 ${isCompleted ? 'cursor-pointer group' : ''}`}
-      onClick={() => isCompleted && setActiveStep(step)}
+      onClick={() => isCompleted && handleSetStep(step)}
     >
       <div className="flex items-center gap-5">
         <div className="relative">
@@ -310,7 +344,7 @@ const Checkout = () => {
       {isCompleted && !isActive && (
         <button 
           className="text-[10px] font-bold text-stone-500 bg-stone-100 group-hover:bg-[#E8F5E9] group-hover:text-[#2E7D32] px-4 py-2 rounded-full transition-colors uppercase tracking-wider hidden sm:block"
-          onClick={(e) => { e.stopPropagation(); setActiveStep(step); }}
+          onClick={(e) => { e.stopPropagation(); handleSetStep(step); }}
         >
           Modify
         </button>
@@ -579,7 +613,7 @@ const Checkout = () => {
                       </div>
                     )}
                     <button 
-                      onClick={() => setActiveStep(3)} 
+                      onClick={() => handleSetStep(3)} 
                       disabled={cartItems.length === 0}
                       className="mt-8 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95 disabled:opacity-50"
                     >
