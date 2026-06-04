@@ -11,7 +11,7 @@ export const AuthLayout = ({ children }) => {
   return (
     <div 
       className="min-h-screen text-stone-100 flex flex-col justify-between font-sans relative overflow-hidden bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: 'url("/bg-auth.png")' }}
+      style={{ backgroundImage: 'url("/bg-auth.webp")' }}
     >
       {/* Blurry dark overlay */}
       <div className="absolute inset-0 bg-stone-950/30 backdrop-blur-sm z-0" />
@@ -24,7 +24,7 @@ export const AuthLayout = ({ children }) => {
       <header className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center relative z-10">
         <Link to="/" className="flex items-center space-x-2.5 group">
           <div className="p-2 bg-stone-900 border border-stone-850 rounded-xl group-hover:border-primary/50 transition-colors">
-            <img src="/logo.jpg" alt="Logo" className="w-8 h-8 object-contain rounded-md" />
+            <img src="/logo.webp" alt="Logo" className="w-8 h-8 object-contain rounded-md" />
           </div>
           <span className="font-poppins font-extrabold text-lg tracking-wider">
             <span className="text-primary-light">COCO</span>

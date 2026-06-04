@@ -5,6 +5,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../utils/config';
+import LazyVideo from '../components/LazyVideo';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowRight,
@@ -257,7 +259,7 @@ const Home = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products`);
+        const { data } = await axios.get(`${API_URL}/products`);
         if (data && data.success && data.data && data.data.length > 0) {
           const fetchedProducts = data.data.map(p => ({
             id: p._id,
@@ -312,7 +314,7 @@ const Home = () => {
         <div className="absolute inset-y-0 right-0 w-full lg:w-[55%] z-0">
           <motion.img
             style={{ y: yHeroImage }}
-            src="/hero-product.png"
+            src="/hero-product.webp"
             alt="Cocoveera Products"
             className="absolute -top-[12%] w-full h-[112%] object-contain object-bottom md:object-cover md:object-center lg:object-center"
           />
@@ -455,17 +457,15 @@ const Home = () => {
             transition={{ duration: 0.8 }}
             className="relative"
           >
-            <div className="rounded-3xl overflow-hidden shadow-xl relative aspect-video lg:aspect-[4/3] w-full bg-black">
-              <video 
-                src="/company-trail-video.mp4"
-                poster="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
-                className="absolute inset-0 w-full h-full object-cover z-10"
-                muted
-                loop
-                autoPlay
-                playsInline
-              />
-            </div>
+            <LazyVideo 
+              src="/company-trail-video.mp4"
+              poster="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
+              className="rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3] w-full"
+              muted
+              loop
+              autoPlay
+              playsInline
+            />
             {/* Floating year badge */}
             <div className="absolute -bottom-6 -right-6 md:-bottom-8 md:-right-8 bg-primary text-white px-7 py-6 rounded-2xl shadow-2xl border-[6px] border-accent z-20">
               <div className="font-poppins font-extrabold text-4xl leading-none mb-1 text-center">15+</div>

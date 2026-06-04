@@ -24,7 +24,7 @@ export const ProfileHeader = ({
         className="flex items-center space-x-2.5 cursor-pointer select-none"
       >
         <div className="p-1.5 bg-[#2E7D32] rounded-lg">
-          <img src="/logo.jpg" alt="Logo" className="w-6 h-6 object-contain rounded-md" />
+          <img src="/logo.webp" alt="Logo" className="w-6 h-6 object-contain rounded-md" />
         </div>
         <div>
           <h3 className="font-poppins font-extrabold text-stone-900 text-sm tracking-wide leading-none">COCOVEERA</h3>

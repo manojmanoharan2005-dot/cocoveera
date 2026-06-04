@@ -26,7 +26,7 @@ const Footer = () => {
         {/* Col 1: Brand */}
         <div className="lg:col-span-1">
           <Link to="/" className="flex items-center space-x-2 mb-5">
-            <img src="/logo.jpg" alt="Cocoveera" className="h-10 object-contain" />
+            <img src="/logo.webp" alt="Cocoveera" className="h-10 object-contain" />
             <span className="font-poppins font-extrabold text-lg tracking-wider">
               <span className="text-[#A26B3D]">COCO</span>
               <span className="text-primary-light">VEERA</span>

@@ -75,7 +75,7 @@ const Navbar = () => {
           {/* LOGO – fixed width so nav links never overlap it */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <img
-              src="/logo.jpg"
+              src="/logo.webp"
               alt="Cocoveera"
               className={`object-contain transition-all duration-300 ${isScrolled ? 'h-9' : 'h-12'}`}
             />

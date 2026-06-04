@@ -53,7 +53,7 @@ export const Sidebar = ({
       {/* Brand strip */}
       <div className="bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] px-5 py-3 flex items-center gap-3">
         <img
-          src="/logo.jpg"
+          src="/logo.webp"
           alt="Cocoveera Logo"
           className="w-11 h-11 object-contain rounded-[10px] bg-white/10 p-0.5 flex-shrink-0"
         />

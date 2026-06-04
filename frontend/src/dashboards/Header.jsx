@@ -52,7 +52,7 @@ export const Header = ({
         className="flex items-center gap-2.5 cursor-pointer select-none shrink-0 group"
       >
         <img
-          src="/logo.jpg"
+          src="/logo.webp"
           alt="Cocoveera Logo"
           className="w-10 h-10 object-contain rounded-[10px] transition-transform duration-300 group-hover:scale-105"
         />

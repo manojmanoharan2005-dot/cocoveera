@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../utils/config';
 
 export default function AIChatbot() {
   const { user } = useAuth();
@@ -34,7 +35,7 @@ export default function AIChatbot() {
     setInput('');
     setIsLoading(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
       
       const userContext = {
         isLoggedIn: !!user,

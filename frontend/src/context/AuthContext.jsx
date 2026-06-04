@@ -8,8 +8,9 @@ import axios from 'axios';
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
+import { API_URL } from '../utils/config';
+
 // Create default axios instance pointing to backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const apiClient = axios.create({
   baseURL: API_URL,
 });

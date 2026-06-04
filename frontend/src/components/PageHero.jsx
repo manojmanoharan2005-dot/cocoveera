@@ -17,7 +17,7 @@ const PageHero = ({
   titleAccent,
   subtitle,
   breadcrumbs = [],
-  bgImage = '/hero-product.png',
+  bgImage = '/hero-product.webp',
 }) => {
   return (
     <section className="relative pt-24 pb-12 bg-white overflow-hidden">

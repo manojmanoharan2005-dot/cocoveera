@@ -6,6 +6,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Target, Lightbulb, Compass, Sun, ShieldCheck, Factory, Award, Leaf } from 'lucide-react';
 import PageHero from '../components/PageHero';
+import LazyVideo from '../components/LazyVideo';
 
 const About = () => {
   return (
@@ -59,17 +60,15 @@ const About = () => {
           </div>
           <div className="lg:col-span-5 relative mt-8 lg:mt-0">
             {/* Video Container */}
-            <div className="relative aspect-video lg:aspect-[4/3] w-full rounded-[2rem] overflow-hidden shadow-premium bg-black">
-              <video 
-                src="/company-trail-video.mp4"
-                poster="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
-                className="absolute inset-0 w-full h-full object-cover z-10"
-                muted
-                loop
-                autoPlay
-                playsInline
-              />
-            </div>
+            <LazyVideo 
+              src="/company-trail-video.mp4"
+              poster="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
+              className="aspect-video lg:aspect-[4/3] w-full rounded-[2rem] shadow-premium"
+              muted
+              loop
+              autoPlay
+              playsInline
+            />
 
             {/* Floating Badge (15+ Years) */}
             <div className="absolute -bottom-6 -right-6 md:-bottom-8 md:-right-8 bg-primary text-white px-7 py-6 rounded-2xl shadow-2xl border-[6px] border-white z-10">
@@ -90,7 +89,7 @@ const About = () => {
               <motion.img
                 animate={{ scale: [1, 1.08, 1] }}
                 transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                src="/solar-facility.png"
+                src="/solar-facility.webp"
                 alt="Solar panels on factory roof"
                 className="w-full h-full object-cover origin-center"
               />
@@ -211,7 +210,7 @@ const About = () => {
               <motion.img
                 animate={{ scale: [1, 1.08, 1] }}
                 transition={{ duration: 25, repeat: Infinity, ease: "linear", delay: 5 }}
-                src="/custom-formulation.png"
+                src="/custom-formulation.webp"
                 alt="Substrate mixture preview"
                 className="w-full h-full object-cover origin-center"
               />

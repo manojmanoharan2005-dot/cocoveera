@@ -60,8 +60,27 @@ app.use(
     },
   })
 );
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175'
+];
+
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    try {
+      const hostname = new URL(origin).hostname;
+      const isLocal = /^localhost$|^127\.\d+\.\d+\.\d+$|^192\.168\.\d+\.\d+$|^10\.\d+\.\d+\.\d+$|^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$|\.local$/i.test(hostname);
+      if (isLocal) {
+        return callback(null, true);
+      }
+    } catch (e) {}
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 

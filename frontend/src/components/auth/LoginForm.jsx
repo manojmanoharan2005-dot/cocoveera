@@ -86,7 +86,7 @@ export const LoginForm = () => {
   return (
     <div className="bg-white border border-stone-200/80 rounded-3xl p-8 shadow-soft text-stone-900 max-w-md w-full mx-auto">
       <div className="text-center mb-8">
-        <img src="/logo.jpg" alt="Cocoveera Logo" className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" />
+        <img src="/logo.webp" alt="Cocoveera Logo" className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" />
         <span className="text-[#2E5E35] font-poppins text-[10px] font-bold uppercase tracking-widest">
           Secure Portal
         </span>

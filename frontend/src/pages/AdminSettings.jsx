@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { API_URL } from '../utils/config';
 import {
   User,
   Settings,
@@ -27,7 +28,7 @@ export default function AdminSettings() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 
   useEffect(() => {
     if (success || error) {

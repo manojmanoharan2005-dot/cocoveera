@@ -251,7 +251,7 @@ export const RegisterForm = () => {
   return (
     <div className="bg-white border border-stone-200/85 rounded-3xl p-6 shadow-soft text-stone-900 max-w-md w-full mx-auto">
       <div className="text-center mb-6">
-        <img src="/logo.jpg" alt="Cocoveera Logo" className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" />
+        <img src="/logo.webp" alt="Cocoveera Logo" className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" />
         <h2 className="text-2xl font-extrabold font-poppins text-stone-900">Register</h2>
         <p className="text-xs text-stone-500 font-semibold mt-1">Create your account</p>
       </div>

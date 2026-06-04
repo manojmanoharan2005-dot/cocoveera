@@ -4,6 +4,7 @@
  */
 import { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import { API_URL } from '../utils/config';
 
 const AdminAuthContext = createContext();
 
@@ -12,7 +13,7 @@ export const AdminAuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 
   // Check if admin is logged in
   useEffect(() => {
