@@ -32,6 +32,7 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [reports, setReports] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -80,12 +81,13 @@ const AdminDashboard = () => {
   const fetchAdminData = async () => {
     try {
       setLoading(true);
-      const [prodRes, quoteRes, orderRes, usersRes, reportsRes] = await Promise.all([
+      const [prodRes, quoteRes, orderRes, usersRes, reportsRes, catRes] = await Promise.all([
         apiClient.get('/products'),
         apiClient.get('/quotes'),
         apiClient.get('/orders'),
         apiClient.get('/users'),
-        apiClient.get('/testing')
+        apiClient.get('/testing'),
+        apiClient.get('/categories').catch(() => ({ data: { success: true, data: [] } }))
       ]);
 
       if (prodRes.data.success) setProducts(prodRes.data.data);
@@ -93,6 +95,7 @@ const AdminDashboard = () => {
       if (orderRes.data.success) setOrders(orderRes.data.data);
       if (usersRes.data.success) setUsersList(usersRes.data.data);
       if (reportsRes.data.success) setReports(reportsRes.data.data);
+      if (catRes.data.success) setCategories(catRes.data.data);
     } catch (err) {
       console.error(err);
       setError('Failed to sync administrative dashboard data.');
@@ -375,13 +378,21 @@ const AdminDashboard = () => {
                       onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                       className="w-full border border-stone-250 rounded-lg p-2.5 text-xs focus:outline-none focus:border-primary bg-white font-medium"
                     >
-                      <option>Coir Pith Blocks</option>
-                      <option>Grow Bags</option>
-                      <option>Coir Discs</option>
-                      <option>Erosion Control</option>
-                      <option>Other Coir Products</option>
-                      <option>Hobby Gardening</option>
-                      <option>Custom Solutions</option>
+                      {categories && categories.length > 0 ? (
+                        categories.map((cat) => (
+                          <option key={cat._id} value={cat.name}>{cat.name}</option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="Coir Pith Blocks">Coir Pith Blocks</option>
+                          <option value="Grow Bags">Grow Bags</option>
+                          <option value="Coir Discs">Coir Discs</option>
+                          <option value="Erosion Control">Erosion Control</option>
+                          <option value="Other Coir Products">Other Coir Products</option>
+                          <option value="Hobby Gardening">Hobby Gardening</option>
+                          <option value="Custom Solutions">Custom Solutions</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 </div>

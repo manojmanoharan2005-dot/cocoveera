@@ -68,7 +68,7 @@ export const ProductCard = ({
         {/* Category Badge */}
         <div className="absolute top-3.5 left-3.5">
           <span className="text-[10px] bg-[#1a1f24] text-white font-poppins font-bold px-3 py-1.5 rounded-[6px]">
-            {product.category || 'Equipment'}
+            {product.category || 'Coir Product'}
           </span>
         </div>
       </div>

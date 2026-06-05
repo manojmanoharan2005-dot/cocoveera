@@ -15,17 +15,21 @@ export const FilterPanel = ({
   ratingFilter, 
   setRatingFilter,
   onApplyFilters,
-  onClearFilters 
+  onClearFilters,
+  products = []
 }) => {
-  const collections = [
-    'All',
-    'Organic',
-    'Seeds',
-    'Pesticide',
-    'Equipment',
-    'Chemical',
-    'Bio-Fertilizer'
+  const dynamicCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
+  const defaultCategories = [
+    'Coir Pith Blocks',
+    'Grow Bags',
+    'Coir Discs',
+    'Erosion Control',
+    'Other Coir Products',
+    'Hobby Gardening',
+    'Custom Solutions'
   ];
+  const uniqueCategories = dynamicCategories.length > 0 ? dynamicCategories : defaultCategories;
+  const collections = ['All', ...uniqueCategories];
 
   // Temporary local states to avoid instant refilter lag on price typing
   const [minPrice, setMinPrice] = useState(priceRange.min);
