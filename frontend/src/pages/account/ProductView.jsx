@@ -98,6 +98,7 @@ const ProductView = () => {
         quantity, 
         increment: true 
       });
+      localStorage.setItem('preferredContainer', containerType === '40FT' ? '40FT Container' : '20FT Container');
       if (res.data.success) {
         await fetchProfile();
         setAddedMessage(`Successfully added ${quantity} Container${quantity > 1 ? 's' : ''} to Cart!`);
@@ -119,6 +120,7 @@ const ProductView = () => {
         quantity, 
         increment: true 
       });
+      localStorage.setItem('preferredContainer', containerType === '40FT' ? '40FT Container' : '20FT Container');
       if (res.data.success) {
         await fetchProfile();
         navigate('/account/cart');

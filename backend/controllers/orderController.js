@@ -12,7 +12,7 @@ import { sendOrderConfirmationWithInvoice, sendShipmentUpdate } from '../utils/E
 // @route   POST /api/orders
 // @access  Private
 export const createOrder = async (req, res) => {
-  const { quoteId, items, shippingAddress, paymentGateway, shippingCharge = 0 } = req.body;
+  const { quoteId, items, shippingAddress, paymentGateway, containerType, shippingCharge = 0 } = req.body;
 
   try {
     let orderItems = [];
@@ -63,17 +63,19 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No items or quote provided for order' });
     }
 
-    let recommendedContainer = '20FT Container';
+    let recommendedContainer = containerType || '20FT Container';
     const MAX_20FT_WEIGHT = 28000;
     const MAX_20FT_VOL = 33;
     const MAX_40FT_WEIGHT = 26000;
     const MAX_40FT_VOL = 67;
 
-    if (totalWeight > MAX_20FT_WEIGHT || totalVolume > MAX_20FT_VOL) {
-      if (totalWeight <= MAX_40FT_WEIGHT && totalVolume <= MAX_40FT_VOL) {
-        recommendedContainer = '40FT Container';
-      } else {
-        recommendedContainer = 'Multiple Containers Required';
+    if (!containerType) {
+      if (totalWeight > MAX_20FT_WEIGHT || totalVolume > MAX_20FT_VOL) {
+        if (totalWeight <= MAX_40FT_WEIGHT && totalVolume <= MAX_40FT_VOL) {
+          recommendedContainer = '40FT Container';
+        } else {
+          recommendedContainer = 'Multiple Containers Required';
+        }
       }
     }
 

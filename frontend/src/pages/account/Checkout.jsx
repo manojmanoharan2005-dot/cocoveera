@@ -248,11 +248,15 @@ const Checkout = () => {
         country: formData.country
       };
 
+      // Get the container type selected by the user
+      const finalContainerType = formData.containerType || localStorage.getItem('preferredContainer') || recommendedContainer;
+
       // 1. Create the order in DB
       const orderRes = await apiClient.post('/orders', {
         items,
         shippingAddress,
         paymentGateway: paymentMethod,
+        containerType: finalContainerType,
         shippingCharge
       });
 
@@ -307,12 +311,36 @@ const Checkout = () => {
             email: user?.email,
             contact: formData.phone
           },
-          theme: { color: "#2E7D32" }
+          theme: { color: "#2E7D32" },
+          modal: {
+            ondismiss: async function() {
+              try {
+                await apiClient.post('/payments/confirm', {
+                  orderId: createdOrder._id,
+                  gateway: 'razorpay',
+                  status: 'failed'
+                });
+                navigate('/account/orders');
+              } catch (e) {
+                navigate('/account/orders');
+              }
+            }
+          }
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response){
+        rzp.on('payment.failed', async function (response){
            alert("Payment failed: " + response.error.description);
+           try {
+             await apiClient.post('/payments/confirm', {
+               orderId: createdOrder._id,
+               gateway: 'razorpay',
+               status: 'failed'
+             });
+             navigate('/account/orders');
+           } catch (e) {
+             navigate('/account/orders');
+           }
         });
         rzp.open();
       } else if (paymentMethod === 'stripe' || paymentMethod === 'paypal') {

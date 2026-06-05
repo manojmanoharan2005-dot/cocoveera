@@ -180,6 +180,7 @@ export const confirmPayment = async (req, res) => {
 
     if (status === 'success' || status === 'paid') {
       order.paymentStatus = 'paid';
+      order.orderStatus = 'confirmed';
       order.paymentId = paymentId || 'pm_' + Math.random().toString(36).substring(7);
       order.paymentGateway = gateway || 'mock';
       await order.save();
@@ -226,7 +227,11 @@ export const confirmPayment = async (req, res) => {
           containerType: order.recommendedContainer || 'LCL',
           estimatedWeight: order.totalWeight || 0,
           estimatedVolume: order.totalVolume || 0,
-          containerUtilization: order.totalVolume > 0 ? Math.min(Math.round((order.totalVolume / 33) * 100), 100) : 0,
+          containerUtilization: (() => {
+            const totalPallets = order.items.reduce((acc, item) => acc + item.quantity, 0);
+            const capacity = (order.recommendedContainer && order.recommendedContainer.includes('40')) ? 22 : 10;
+            return Math.min(Math.round((totalPallets / capacity) * 100), 100);
+          })(),
           items: order.items.map(item => ({
             productName: item.productName || (item.product && item.product.name) || 'Product',
             sku: (item.product && item.product.slug) ? item.product.slug.toUpperCase().substring(0, 8) : 'COCO-ITEM',
@@ -261,6 +266,7 @@ export const confirmPayment = async (req, res) => {
       return res.status(200).json({ success: true, message: 'Payment confirmed successfully', data: order });
     } else {
       order.paymentStatus = 'failed';
+      order.orderStatus = 'cancelled';
       await order.save();
       return res.status(400).json({ success: false, message: 'Payment status marked as failed', data: order });
     }

@@ -8,7 +8,7 @@ import { convertCurrency } from '../../utils/currencyConverter';
 
 const Orders = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, fetchProfile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +68,8 @@ const Orders = () => {
           await apiClient.post('/users/cart', { productId: item.product._id, quantity: item.quantity, increment: true });
         }
       }
-      navigate('/account/cart');
+      await fetchProfile();
+      navigate('/account/checkout');
     } catch (error) {
       alert('Failed to reorder. Please try again.');
     }
@@ -123,6 +124,10 @@ const Orders = () => {
         ) : (
           filteredOrders.map((order, idx) => {
             const status = order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Pending';
+            let displayStatus = status;
+            if (status === 'Cancelled' && order.paymentStatus === 'failed') {
+              displayStatus = 'Cancelled (Payment Failed)';
+            }
             
             return (
               <motion.div 
@@ -139,7 +144,7 @@ const Orders = () => {
                   {/* Status Banner */}
                   <div className="flex items-center gap-2">
                     <h3 className={`text-lg md:text-xl font-bold ${status === 'Delivered' ? 'text-[#067D62]' : status === 'Cancelled' ? 'text-red-700' : 'text-stone-900'}`}>
-                      {status === 'Delivered' ? 'Delivered' : status === 'Cancelled' ? 'Cancelled' : status}
+                      {displayStatus}
                     </h3>
                   </div>
 
@@ -165,13 +170,15 @@ const Orders = () => {
                         <div className="text-xs text-stone-500 mt-1 mb-2">Quantity: {item.quantity}</div>
                         
                         <div className="mt-auto flex flex-wrap gap-2">
-                          <button onClick={() => navigate(`/account/track/${order._id}`)} className="px-3 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-semibold rounded-full border border-[#FCD200] shadow-sm transition-colors w-fit">
-                            Track package
-                          </button>
+                          {status !== 'Pending' && status !== 'Cancelled' && (
+                            <button onClick={() => navigate(`/account/track/${order._id}`)} className="px-3 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-semibold rounded-full border border-[#FCD200] shadow-sm transition-colors w-fit">
+                              Track package
+                            </button>
+                          )}
                           
-                          {status === 'Delivered' && (
+                          {(status === 'Delivered' || status === 'Cancelled') && (
                             <button onClick={() => handleReorder(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-800 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit flex items-center gap-1.5">
-                              <RotateCcw className="w-3.5 h-3.5" /> Buy it again
+                              <RotateCcw className="w-3.5 h-3.5" /> {status === 'Cancelled' ? 'Reorder' : 'Buy it again'}
                             </button>
                           )}
                           
