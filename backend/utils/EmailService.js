@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
+defaultClient.basePath = 'https://api.brevo.com/v3';
 const apiKey = defaultClient.authentications['api-key'];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 

@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 import { securitySanitizers } from './middleware/sanitize.js';
 
 import { connectDB } from './config/db.js';
@@ -42,6 +43,9 @@ const authLimiter = rateLimit({
 });
 
 app.use(limiter);
+
+// Compression Middleware
+app.use(compression());
 
 // Security Middlewares
 // Helmet with stricter Content Security Policy
@@ -329,14 +333,6 @@ const seedDatabase = async () => {
         isVerified: true
       });
       console.log(`Admin account seeded: email=${adminEmail}, password=Admin@123`);
-    } else {
-      // Force update password to Admin@123 for testing/fixing purposes
-      adminExists.password = 'Admin@123';
-      adminExists.isVerified = true;
-      adminExists.isBlocked = false;
-      adminExists.role = 'admin';
-      await adminExists.save();
-      console.log(`Admin account updated: forced password to Admin@123, isVerified=true, isBlocked=false`);
     }
 
 

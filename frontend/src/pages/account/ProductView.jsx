@@ -195,7 +195,7 @@ const ProductView = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-16">
+    <div className="max-w-6xl mx-auto space-y-8 pb-28 lg:pb-16">
       
       {/* Toast Notification */}
       <AnimatePresence>
@@ -239,6 +239,26 @@ const ProductView = () => {
           
           {/* Left: Image Gallery */}
           <div className="lg:col-span-5 space-y-4">
+            {/* Desktop 3D Viewer */}
+            {showConfigurator && (
+              <div className="hidden lg:flex bg-white rounded-[24px] border border-stone-200/50 shadow-sm overflow-hidden flex-col h-[400px]">
+                <div className="p-4 border-b border-stone-100 bg-stone-50 flex justify-between items-center">
+                  <h3 className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wide">
+                    Live 3D Preview
+                  </h3>
+                  <div className="px-2 py-1 bg-white rounded-lg border border-stone-200 shadow-sm flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-stone-400 uppercase">Usage</span>
+                    <span className={`text-xs font-black ${isOverCapacity ? 'text-red-500' : 'text-[#2E7D32]'}`}>
+                      {capacityPercentage.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="relative flex-1 w-full bg-[#F7F9F7]">
+                  <ContainerViewer3D containerType={containerType} totalQuantity={totalQuantity} autoRotate={true} palletItems={palletItems} />
+                </div>
+              </div>
+            )}
+
             <div className="h-72 sm:h-96 rounded-[24px] overflow-hidden bg-[#F7F9F7] border border-stone-200/50 shadow-sm relative group">
               <img 
                 src={imagesList[activeImageIndex]} 
@@ -316,7 +336,7 @@ const ProductView = () => {
 
             {/* CONTAINER SELECTION CARD */}
             {showConfigurator && (
-              <div className="bg-white rounded-[20px] p-6 border border-stone-200/80 shadow-sm relative overflow-hidden space-y-4 mb-6">
+              <div id="container-configurator" className="bg-white rounded-[20px] p-4 sm:p-6 border border-stone-200/80 shadow-sm relative overflow-hidden space-y-4 mb-6">
                 <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2.5 font-poppins">
                   Container Selection
                 </h3>
@@ -347,7 +367,7 @@ const ProductView = () => {
               </div>
 
               {/* Adjust Pallets Control */}
-              <div className="flex items-center justify-between bg-stone-50 border border-stone-200/60 rounded-xl p-3">
+              <div className="flex items-center justify-between bg-stone-50 border border-stone-200/60 rounded-xl p-2.5 sm:p-3">
                 <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider select-none">Adjust Quantity:</span>
                 <div className="flex items-center bg-white border border-stone-250 rounded-lg p-0.5">
                   <button 
@@ -392,10 +412,15 @@ const ProductView = () => {
                 </div>
               </div>
 
+              {/* 3D Container Preview (Mobile Only) */}
+              <div className="lg:hidden relative w-full mt-4 border border-stone-200/50 rounded-2xl overflow-hidden shadow-sm">
+                <ContainerViewer3D containerType={containerType} totalQuantity={totalQuantity} autoRotate={true} palletItems={palletItems} />
+              </div>
+
               {/* Mixed Load Section */}
               <div className="mt-4 border-t border-stone-100 pt-4">
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2">Mix with other products</p>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
                   {relatedProducts.map(relProduct => {
                     const existingExtra = extraItems.find(item => item.product._id === relProduct._id);
                     const relQuantity = existingExtra ? existingExtra.quantity : 0;
@@ -455,12 +480,49 @@ const ProductView = () => {
                   </p>
                 </div>
               )}
+
+              {/* INLINE CHECKOUT ACTIONS FOR CONFIGURATOR (Desktop Only) */}
+              <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:block">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-xs font-black text-stone-900 uppercase tracking-wider">Total</span>
+                  <span className="text-xl font-poppins font-black text-[#2E7D32]">
+                    {subtotalData.formatted} {user?.currency?.toUpperCase() || 'INR'}
+                  </span>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={actionLoading || isOverCapacity}
+                    className={`flex-1 bg-white border-2 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group ${
+                      isOverCapacity ? 'border-stone-300 text-stone-400 opacity-50 blur-[1px] cursor-not-allowed' : 'border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]'
+                    }`}
+                  >
+                    {actionLoading ? 'ADDING...' : 'ADD TO CART'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleProceedToCheckout}
+                    disabled={actionLoading || isOverCapacity}
+                    className={`flex-1 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
+                      isOverCapacity 
+                        ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
+                        : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
+                    }`}
+                  >
+                    {actionLoading ? 'PROCESSING...' : 'CHECKOUT'}
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
             </div>
             )}
 
-            {/* ORDER SUMMARY CARD */}
-            <div className="bg-white rounded-[20px] p-6 border border-stone-200/80 shadow-sm relative overflow-hidden space-y-4">
-              <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2.5 font-poppins">
+            {/* ORDER SUMMARY CARD (Hidden when configurator is open) */}
+            {!showConfigurator && (
+              <div className="hidden lg:block bg-white rounded-[20px] p-6 border border-stone-200/80 shadow-sm relative overflow-hidden space-y-4">
+                <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2.5 font-poppins">
                 Order Summary
               </h3>
               
@@ -528,6 +590,7 @@ const ProductView = () => {
                 Secure SSL Encrypted Checkout
               </p>
             </div>
+            )}
 
             {/* Spec Sheet Table */}
             <div id="spec-sheet" className="space-y-3 pt-4 border-t border-stone-100">
@@ -579,64 +642,6 @@ const ProductView = () => {
 
       </div>
 
-      {/* Premium 3D Container Viewer Section */}
-      {showConfigurator && (
-        <div className="bg-white rounded-[28px] border border-stone-200/60 shadow-[0_4px_30px_rgba(0,0,0,0.02)] overflow-hidden flex flex-col">
-          <div className="p-6 sm:p-8 border-b border-stone-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-stone-50 to-white">
-           <div>
-             <h2 className="font-poppins font-black text-xl text-stone-900 uppercase tracking-wide">
-               Container Capacity Configurator
-             </h2>
-             <p className="text-stone-500 font-semibold text-xs mt-1">
-               Visualize your shipment before checkout
-             </p>
-           </div>
-           
-           <div className="flex gap-4 items-center bg-white border border-stone-200 rounded-xl p-2 shadow-sm">
-             <div className="px-3">
-               <span className="block text-[9px] text-stone-400 font-bold uppercase tracking-wider">Loaded</span>
-               <span className="block text-sm font-black text-stone-900">{totalQuantity} / {currentCapacity}</span>
-             </div>
-             <div className="w-px h-8 bg-stone-100"></div>
-             <div className="px-3">
-               <span className="block text-[9px] text-stone-400 font-bold uppercase tracking-wider">Usage</span>
-               <span className={`block text-sm font-black ${isOverCapacity ? 'text-red-500' : 'text-[#2E7D32]'}`}>
-                 {capacityPercentage.toFixed(0)}%
-               </span>
-             </div>
-           </div>
-        </div>
-        
-        <div className="relative w-full">
-          <ContainerViewer3D containerType={containerType} totalQuantity={totalQuantity} autoRotate={true} palletItems={palletItems} />
-          
-          {/* Glass Overlay UI matching request */}
-          <div className="absolute top-6 left-6 pointer-events-none">
-            <div className="bg-white/70 backdrop-blur-md border border-white/50 shadow-xl rounded-2xl p-5 w-64">
-              <h4 className="text-xs font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-200/50 pb-2">
-                Live Usage
-              </h4>
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-[10px] font-bold text-stone-500 uppercase">Pallets</span>
-                    <span className="text-sm font-black text-stone-900">{totalQuantity} / {currentCapacity}</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-stone-200/50 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isOverCapacity ? 'bg-red-500' : capacityPercentage > 80 ? 'bg-orange-500' : 'bg-[#2E7D32]'
-                      }`}
-                      style={{ width: `${capacityPercentage}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      )}
 
       {/* Detailed Description, Benefits, and Applications */}
       <div className="bg-white rounded-[28px] border border-stone-200/60 shadow-[0_4px_30px_rgba(0,0,0,0.02)] p-6 sm:p-8 md:p-10">
@@ -759,6 +764,47 @@ const ProductView = () => {
           </div>
         </div>
       )}
+
+      {/* Mobile Sticky Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-3 items-center backdrop-blur-md bg-white/95">
+        <div className="flex-1 flex flex-col justify-center">
+          <span className="text-stone-500 text-[9px] font-extrabold uppercase tracking-wider block mb-0.5">Subtotal</span>
+          <span className="text-sm font-poppins font-black text-[#2E7D32] leading-none">{subtotalData.formatted}</span>
+        </div>
+        <div className="flex gap-2 flex-[2]">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={actionLoading || isOverCapacity}
+            className="flex-1 bg-white border-2 border-[#2E7D32] text-[#2E7D32] font-poppins text-[10px] font-black py-3 rounded-xl flex items-center justify-center shadow-sm disabled:opacity-50 disabled:border-stone-300 disabled:text-stone-400"
+          >
+            <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
+            CART
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (showConfigurator) {
+                handleProceedToCheckout();
+              } else {
+                setShowConfigurator(true);
+                setTimeout(() => {
+                  const el = document.getElementById('container-configurator');
+                  if (el) {
+                    const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                  }
+                }, 100);
+              }
+            }}
+            disabled={actionLoading || (showConfigurator && isOverCapacity)}
+            className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-[10px] font-black py-3 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 disabled:bg-stone-300 disabled:shadow-none transition-colors"
+          >
+            {showConfigurator ? 'CHECKOUT' : 'BUY'}
+            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+          </button>
+        </div>
+      </div>
 
     </div>
   );

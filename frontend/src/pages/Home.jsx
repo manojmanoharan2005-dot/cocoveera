@@ -329,7 +329,7 @@ const Home = () => {
         </div>
 
         {/* ── HERO CONTENT ── */}
-        <motion.div style={{ y: yHeroText }} className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 pt-32 pb-20">
+        <motion.div style={{ y: yHeroText }} className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 pt-40 md:pt-48 pb-20">
           {/* Subtle glowing accent orb behind text */}
           <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
 

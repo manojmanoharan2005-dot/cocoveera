@@ -7,7 +7,6 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../dashboards/Header';
 import Sidebar from '../dashboards/Sidebar';
-import AIChatbot from '../components/AIChatbot';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Store, ShoppingBag, User, X, LogOut, Heart, MapPin, Settings, Truck, FileText, MessageSquare, Bell, HelpCircle } from 'lucide-react';
 
@@ -85,6 +84,7 @@ const AccountLayout = () => {
         sortBy={sortBy}
         setSortBy={setSortBy}
         onFilterClick={() => {}}
+        onMenuClick={() => setMobileMenuOpen(true)}
       />
 
       <div className="flex-grow w-full px-6 lg:px-8 py-7 flex gap-7 items-start relative">
@@ -182,38 +182,7 @@ const AccountLayout = () => {
         )}
       </AnimatePresence>
 
-      {/* AI Chatbot Floating Widget */}
-      <AIChatbot />
 
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-stone-200/80 shadow-lg flex items-center justify-around z-40 lg:hidden px-4">
-        {[
-          { name: 'Marketplace', icon: Store },
-          { name: 'My Orders', icon: ShoppingBag },
-          { name: 'Profile', icon: User }
-        ].map((btn) => {
-          const Icon = btn.icon;
-          const isActive = activeTab === btn.name;
-          return (
-            <button
-              key={btn.name}
-              onClick={() => handleMobileNav(btn.name)}
-              className={`flex flex-col items-center justify-center w-16 h-full font-poppins text-[9px] font-bold transition-all relative ${
-                isActive ? 'text-[#2E7D32]' : 'text-stone-500 hover:text-stone-850'
-              }`}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeBottomTabDot"
-                  className="w-1.5 h-1.5 bg-[#2E7D32] rounded-full absolute top-1"
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                />
-              )}
-              <Icon className="w-5 h-5 mb-0.5 mt-2" />
-              <span>{btn.name}</span>
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 };

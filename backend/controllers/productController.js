@@ -4,6 +4,7 @@
  */
 import Product from '../models/Product.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
+import { clearCache } from '../middleware/cache.js';
 
 // @desc    Get all products (with category filter)
 // @route   GET /api/products
@@ -15,7 +16,7 @@ export const getProducts = async (req, res) => {
     if (category) {
       query.category = category;
     }
-    const products = await Product.find(query);
+    const products = await Product.find(query).lean();
     res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -27,7 +28,7 @@ export const getProducts = async (req, res) => {
 // @access  Public
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).lean();
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -97,6 +98,7 @@ export const createProduct = async (req, res) => {
       applications: applications ? (Array.isArray(applications) ? applications : [applications]) : [],
     });
 
+    clearCache('/api/products');
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -171,6 +173,7 @@ export const updateProduct = async (req, res) => {
       runValidators: true,
     });
 
+    clearCache('/api/products');
     res.status(200).json({ success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -187,6 +190,7 @@ export const deleteProduct = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
     await product.deleteOne();
+    clearCache('/api/products');
     res.status(200).json({ success: true, message: 'Product removed' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User, Check } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User, Check, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,7 +17,8 @@ export const Header = ({
   showSearchAndFilters,
   sortBy,
   setSortBy,
-  onFilterClick
+  onFilterClick,
+  onMenuClick
 }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -44,13 +45,18 @@ export const Header = ({
     .slice(0, 2) || 'U';
 
   return (
-    <header className="w-full h-[68px] bg-white/80 backdrop-blur-xl border-b border-stone-200/50 sticky top-0 z-40 px-6 flex items-center justify-between gap-4 shadow-sm shadow-stone-100/80">
+    <header className="w-full min-h-[68px] bg-white/80 backdrop-blur-xl border-b border-stone-200/50 sticky top-0 z-40 px-4 md:px-6 py-3 md:py-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 shadow-sm shadow-stone-100/80">
       
-      {/* Left: Brand Logo */}
-      <div
-        onClick={() => navigate('/')}
-        className="flex items-center gap-2.5 cursor-pointer select-none shrink-0 group"
-      >
+      {/* Left: Mobile Menu & Brand Logo */}
+      <div className="flex items-center gap-2.5 select-none shrink-0 group order-1">
+        {/* Mobile Menu Toggle */}
+        <button 
+          onClick={onMenuClick}
+          className="lg:hidden p-1.5 -ml-1.5 text-stone-600 hover:bg-stone-100 hover:text-stone-900 rounded-lg transition-colors"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         <img
           src="/logo.webp"
           alt="Cocoveera Logo"
@@ -72,14 +78,14 @@ export const Header = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2 }}
-            className="hidden md:flex items-center gap-2.5 flex-grow max-w-[580px] mx-auto"
+            className="flex items-center gap-2 flex-grow w-full md:w-auto max-w-full md:max-w-[580px] order-3 md:order-2 mx-auto"
           >
             {/* Search Input */}
             <div className={`relative flex-grow transition-all duration-300 ${searchFocused ? 'flex-grow' : ''}`}>
               <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search coir products, grow bags, custom mixtures..."
+                placeholder="Search coir products, grow bags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
@@ -92,10 +98,10 @@ export const Header = ({
             <button
               type="button"
               onClick={onFilterClick}
-              className="flex items-center gap-2 text-stone-700 bg-white border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] py-2 px-4 rounded-[12px] text-[11.5px] font-bold transition-all duration-200 h-10 shrink-0 shadow-sm hover:shadow-md"
+              className="flex items-center gap-1.5 text-stone-700 bg-white border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] py-2 px-3 rounded-[12px] text-[11.5px] font-bold transition-all duration-200 h-10 shrink-0 shadow-sm hover:shadow-md"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Filter</span>
+              <span className="hidden sm:inline">Filter</span>
             </button>
 
             {/* Sort dropdown */}
@@ -103,11 +109,14 @@ export const Header = ({
               <button
                 type="button"
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                className="flex items-center justify-between bg-white border border-stone-200 hover:border-[#2E7D32] hover:shadow-sm rounded-[12px] px-3.5 h-10 min-w-[150px] transition-all group"
+                className="flex items-center justify-between bg-white border border-stone-200 hover:border-[#2E7D32] hover:shadow-sm rounded-[12px] px-2.5 sm:px-3.5 h-10 min-w-[40px] sm:min-w-[140px] transition-all group"
               >
-                <div className="flex items-center gap-1.5">
+                <div className="hidden sm:flex items-center gap-1.5">
                   <span className="text-[10px] text-stone-400 font-bold">Sort:</span>
                   <span className="text-[11.5px] text-stone-900 font-extrabold">{sortBy}</span>
+                </div>
+                <div className="sm:hidden flex items-center">
+                  <span className="text-[11px] font-bold">{sortBy.split(' ')[0]}</span>
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-stone-400 group-hover:text-[#2E7D32] transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -121,7 +130,7 @@ export const Header = ({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 5 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-[calc(100%+8px)] right-0 w-full min-w-[150px] bg-white border border-stone-200/80 rounded-[14px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] py-1.5 z-50 overflow-hidden"
+                      className="absolute top-[calc(100%+8px)] right-0 w-[160px] bg-white border border-stone-200/80 rounded-[14px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] py-1.5 z-50 overflow-hidden"
                     >
                       {['Featured', 'Price: Low to High', 'Price: High to Low', 'Rating'].map((option) => (
                         <button
@@ -147,12 +156,12 @@ export const Header = ({
             </div>
           </motion.div>
         ) : (
-          <div className="hidden md:block flex-grow" />
+          <div className="hidden md:block flex-grow order-3 md:order-2" />
         )}
       </AnimatePresence>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 order-2 md:order-3">
 
 
 

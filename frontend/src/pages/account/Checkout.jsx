@@ -164,6 +164,22 @@ const Checkout = () => {
     );
   };
 
+  const step1Ref = React.useRef(null);
+  const step2Ref = React.useRef(null);
+  const step3Ref = React.useRef(null);
+
+  React.useEffect(() => {
+    const refs = { 1: step1Ref, 2: step2Ref, 3: step3Ref };
+    if (refs[activeStep]?.current) {
+      setTimeout(() => {
+        const yOffset = -120; // Account for sticky top navbar
+        const element = refs[activeStep].current;
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }, 350); 
+    }
+  }, [activeStep]);
+
   const handleSetStep = (step) => {
     if (step === 1) {
       setActiveStep(1);
@@ -195,11 +211,11 @@ const Checkout = () => {
 
   const getStepWrapperStyle = (step) => {
     if (activeStep === step) {
-      return "bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-stone-100/50 overflow-hidden transition-all duration-500 transform relative z-10";
+      return "bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-[#2E7D32]/30 overflow-hidden transition-all duration-500 transform relative z-10";
     } else if (activeStep > step) {
-      return "bg-white/80 rounded-2xl border border-stone-100/50 overflow-hidden hover:bg-white transition-all duration-500 relative z-10 cursor-pointer";
+      return "bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden hover:bg-stone-50 transition-all duration-500 relative z-10 cursor-pointer";
     } else {
-      return "bg-transparent rounded-2xl border-none overflow-hidden opacity-50 transition-all duration-500 relative z-10 grayscale-[0.5]";
+      return "bg-white/60 rounded-2xl shadow-sm border border-stone-100 overflow-hidden opacity-70 transition-all duration-500 relative z-10";
     }
   };
 
@@ -353,7 +369,7 @@ const Checkout = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] pb-24 relative">
+    <div className="min-h-screen bg-[#FDFCFB] pb-36 relative">
       <AnimatePresence>
         {showSuccessAnimation && (
           <motion.div
@@ -436,8 +452,8 @@ const Checkout = () => {
                 </div>
               </motion.div>
             </div>
-            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.8 }} className="text-3xl font-black text-stone-900 mb-2">Order Placed Successfully!</motion.h2>
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3 }} className="text-stone-500 font-bold">Your cargo is being prepared for shipping...</motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.8 }} className="text-2xl md:text-3xl font-black text-stone-900 mb-2 text-center px-4">Order Placed Successfully!</motion.h2>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3 }} className="text-stone-500 font-bold text-center px-4 text-sm md:text-base">Your cargo is being prepared for shipping...</motion.p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -450,7 +466,7 @@ const Checkout = () => {
           <p className="text-stone-500 font-medium mt-2">Complete your premium export order</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-10 items-start">
+        <div className="flex flex-col-reverse lg:flex-row gap-10 items-start">
           
           {/* LEFT: Accordion Steps */}
           <div className="w-full lg:w-[60%] relative space-y-6">
@@ -458,7 +474,7 @@ const Checkout = () => {
             <div className="absolute left-[36px] top-[50px] bottom-[50px] w-[2px] bg-stone-200 z-0 hidden sm:block rounded-full"></div>
           
           {/* STEP 1: Delivery Address */}
-          <div className={getStepWrapperStyle(1)}>
+          <div ref={step1Ref} className={getStepWrapperStyle(1)}>
             <StepHeader 
               step={1} 
               title="Delivery Address" 
@@ -562,7 +578,7 @@ const Checkout = () => {
                         )}
                       </div>
                     </div>
-                    <button onClick={handleStep2Next} className="mt-8 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95">
+                    <button onClick={handleStep2Next} className="mt-8 hidden lg:block bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95">
                       Deliver Here
                     </button>
                   </div>
@@ -572,7 +588,7 @@ const Checkout = () => {
           </div>
 
           {/* STEP 2: Order Summary */}
-          <div className={getStepWrapperStyle(2)}>
+          <div ref={step2Ref} className={getStepWrapperStyle(2)}>
             <StepHeader 
               step={2} 
               title="Order Summary" 
@@ -601,13 +617,13 @@ const Checkout = () => {
                             </div>
                           </div>
                         ))}
-                        <div className="bg-stone-50 p-5 rounded-2xl border border-stone-100 flex items-center gap-4 mt-6">
-                          <div className="bg-white p-2.5 rounded-full shadow-sm border border-stone-100">
+                        <div className="bg-stone-50 p-4 sm:p-5 rounded-2xl border border-stone-100 flex items-center gap-3 sm:gap-4 mt-6">
+                          <div className="bg-white p-2.5 rounded-full shadow-sm border border-stone-100 shrink-0">
                             <Mail className="w-5 h-5 text-stone-400" />
                           </div>
-                          <div>
-                            <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest">Order Updates Will Be Sent To</p>
-                            <p className="text-sm font-bold text-stone-900 mt-0.5">{user?.email}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[9px] sm:text-[10px] text-stone-500 font-bold uppercase tracking-widest truncate">Order Updates Will Be Sent To</p>
+                            <p className="text-xs sm:text-sm font-bold text-stone-900 mt-0.5 truncate">{user?.email}</p>
                           </div>
                         </div>
                       </div>
@@ -615,7 +631,7 @@ const Checkout = () => {
                     <button 
                       onClick={() => handleSetStep(3)} 
                       disabled={cartItems.length === 0}
-                      className="mt-8 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95 disabled:opacity-50"
+                      className="mt-8 hidden lg:block bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95 disabled:opacity-50"
                     >
                       Continue to Payment
                     </button>
@@ -626,7 +642,7 @@ const Checkout = () => {
           </div>
 
           {/* STEP 3: Payment Method */}
-          <div className={getStepWrapperStyle(3)}>
+          <div ref={step3Ref} className={getStepWrapperStyle(3)}>
             <StepHeader 
               step={3} 
               title="Payment Method" 
@@ -640,48 +656,48 @@ const Checkout = () => {
                     <div className="space-y-4">
                       {isIndia ? (
                         <>
-                          <label className={`flex items-center gap-5 p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'razorpay' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
-                            <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 accent-[#2E7D32]" />
-                            <div className="flex-1">
-                              <p className="text-sm md:text-base font-bold text-stone-900">Pay Online (Razorpay)</p>
-                              <p className="text-xs text-stone-500 font-medium mt-1">UPI, Cards, Netbanking securely via Razorpay.</p>
+                          <label className={`flex items-center gap-3 sm:gap-5 p-4 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'razorpay' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
+                            <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-4 h-4 sm:w-5 sm:h-5 accent-[#2E7D32] shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm md:text-base font-bold text-stone-900 leading-tight">Pay Online (Razorpay)</p>
+                              <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-1 leading-snug">UPI, Cards, Netbanking securely via Razorpay.</p>
                             </div>
-                            <CreditCard className={`w-6 h-6 ${paymentMethod === 'razorpay' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
+                            <CreditCard className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${paymentMethod === 'razorpay' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
                           </label>
-                          <label className={`flex items-center gap-5 p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'cod' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
-                            <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 accent-[#2E7D32]" />
-                            <div className="flex-1">
-                              <p className="text-sm md:text-base font-bold text-stone-900">Cash on Delivery (COD)</p>
-                              <p className="text-xs text-stone-500 font-medium mt-1">Pay with cash upon delivery of your order.</p>
+                          <label className={`flex items-center gap-3 sm:gap-5 p-4 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'cod' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
+                            <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-4 h-4 sm:w-5 sm:h-5 accent-[#2E7D32] shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm md:text-base font-bold text-stone-900 leading-tight">Cash on Delivery (COD)</p>
+                              <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-1 leading-snug">Pay with cash upon delivery of your order.</p>
                             </div>
-                            <Banknote className={`w-6 h-6 ${paymentMethod === 'cod' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
+                            <Banknote className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${paymentMethod === 'cod' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
                           </label>
                         </>
                       ) : (
                         <>
-                          <label className={`flex items-center gap-5 p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'wire' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
-                            <input type="radio" name="payment" value="wire" checked={paymentMethod === 'wire'} onChange={() => setPaymentMethod('wire')} className="w-5 h-5 accent-[#2E7D32]" />
-                            <div className="flex-1">
-                              <p className="text-sm md:text-base font-bold text-stone-900">International Wire Transfer</p>
-                              <p className="text-xs text-stone-500 font-medium mt-1">Standard SWIFT bank transfer for export orders.</p>
+                          <label className={`flex items-center gap-3 sm:gap-5 p-4 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'wire' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
+                            <input type="radio" name="payment" value="wire" checked={paymentMethod === 'wire'} onChange={() => setPaymentMethod('wire')} className="w-4 h-4 sm:w-5 sm:h-5 accent-[#2E7D32] shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm md:text-base font-bold text-stone-900 leading-tight">International Wire Transfer</p>
+                              <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-1 leading-snug">Standard SWIFT bank transfer for export orders.</p>
                             </div>
-                            <Banknote className={`w-6 h-6 ${paymentMethod === 'wire' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
+                            <Banknote className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${paymentMethod === 'wire' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
                           </label>
-                          <label className={`flex items-center gap-5 p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'paypal' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
-                            <input type="radio" name="payment" value="paypal" checked={paymentMethod === 'paypal'} onChange={() => setPaymentMethod('paypal')} className="w-5 h-5 accent-[#2E7D32]" />
-                            <div className="flex-1">
-                              <p className="text-sm md:text-base font-bold text-stone-900">PayPal Express</p>
-                              <p className="text-xs text-stone-500 font-medium mt-1">Checkout securely via your PayPal account.</p>
+                          <label className={`flex items-center gap-3 sm:gap-5 p-4 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'paypal' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
+                            <input type="radio" name="payment" value="paypal" checked={paymentMethod === 'paypal'} onChange={() => setPaymentMethod('paypal')} className="w-4 h-4 sm:w-5 sm:h-5 accent-[#2E7D32] shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm md:text-base font-bold text-stone-900 leading-tight">PayPal Express</p>
+                              <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-1 leading-snug">Checkout securely via your PayPal account.</p>
                             </div>
-                            <CreditCard className={`w-6 h-6 ${paymentMethod === 'paypal' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
+                            <CreditCard className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${paymentMethod === 'paypal' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
                           </label>
-                          <label className={`flex items-center gap-5 p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'stripe' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
-                            <input type="radio" name="payment" value="stripe" checked={paymentMethod === 'stripe'} onChange={() => setPaymentMethod('stripe')} className="w-5 h-5 accent-[#2E7D32]" />
-                            <div className="flex-1">
-                              <p className="text-sm md:text-base font-bold text-stone-900">Credit / Debit Card</p>
-                              <p className="text-xs text-stone-500 font-medium mt-1">Secure card processing powered by Stripe.</p>
+                          <label className={`flex items-center gap-3 sm:gap-5 p-4 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'stripe' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
+                            <input type="radio" name="payment" value="stripe" checked={paymentMethod === 'stripe'} onChange={() => setPaymentMethod('stripe')} className="w-4 h-4 sm:w-5 sm:h-5 accent-[#2E7D32] shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm md:text-base font-bold text-stone-900 leading-tight">Credit / Debit Card</p>
+                              <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-1 leading-snug">Secure card processing powered by Stripe.</p>
                             </div>
-                            <ShieldCheck className={`w-6 h-6 ${paymentMethod === 'stripe' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
+                            <ShieldCheck className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${paymentMethod === 'stripe' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
                           </label>
                         </>
                       )}
@@ -765,12 +781,12 @@ const Checkout = () => {
                 <button 
                   onClick={handlePlaceOrder}
                   disabled={isProcessing}
-                  className="w-full bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white font-black uppercase tracking-widest text-sm py-4.5 rounded-2xl shadow-[0_8px_25px_rgb(46,125,50,0.3)] hover:shadow-[0_12px_30px_rgb(46,125,50,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center h-14"
+                  className="hidden lg:flex w-full bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white font-black uppercase tracking-widest text-sm py-4.5 rounded-2xl shadow-[0_8px_25px_rgb(46,125,50,0.3)] hover:shadow-[0_12px_30px_rgb(46,125,50,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center h-14"
                 >
                   {isProcessing ? 'Processing Securely...' : 'Complete Payment'}
                 </button>
               ) : (
-                <div className="h-14 flex items-center justify-center rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50">
+                <div className="hidden lg:flex h-14 items-center justify-center rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50">
                   <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">Complete steps to pay</p>
                 </div>
               )}
@@ -778,6 +794,45 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+      </div>
+
+      {/* Mobile Sticky Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-3 items-center backdrop-blur-md bg-white/95">
+        <div className="flex-1 flex flex-col justify-center">
+          <span className="text-stone-500 text-[9px] font-extrabold uppercase tracking-wider block mb-0.5">Total Amount</span>
+          <span className="text-sm font-poppins font-black text-[#2E7D32] leading-none">{formatPrice(total)}</span>
+        </div>
+        <div className="flex gap-2 flex-[2]">
+          {activeStep === 1 && (
+            <button
+              type="button"
+              onClick={handleStep2Next}
+              className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-[11px] font-black py-3.5 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 transition-colors uppercase tracking-widest"
+            >
+              Deliver Here
+            </button>
+          )}
+          {activeStep === 2 && (
+            <button
+              type="button"
+              onClick={() => handleSetStep(3)}
+              disabled={cartItems.length === 0}
+              className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-[11px] font-black py-3.5 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 transition-colors uppercase tracking-widest"
+            >
+              Continue
+            </button>
+          )}
+          {activeStep === 3 && (
+            <button
+              type="button"
+              onClick={handlePlaceOrder}
+              disabled={isProcessing}
+              className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-poppins text-[11px] font-black py-3.5 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 transition-colors uppercase tracking-widest"
+            >
+              {isProcessing ? 'Processing...' : 'Pay Now'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

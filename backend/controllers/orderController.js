@@ -98,23 +98,31 @@ export const createOrder = async (req, res) => {
         const address = populatedOrder.shippingAddress || {};
         const invoiceData = {
           invoiceNumber: 'INV-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+          orderId: order._id.toString().slice(-8).toUpperCase(),
           customerName: populatedOrder.user.name,
           customerEmail: populatedOrder.user.email,
-          customerPhone: populatedOrder.user.phone || 'Not Provided',
+          customerPhone: (populatedOrder.user.phone && populatedOrder.user.phone !== 'N/A' && populatedOrder.user.phone !== 'Not Provided') 
+            ? (populatedOrder.user.phone.startsWith('+') ? populatedOrder.user.phone : '+' + populatedOrder.user.phone) 
+            : 'Not Provided',
           shippingAddress: {
-            addressLine: address.addressLine || 'Address not provided',
+            street: address.street || address.addressLine || 'Address not provided',
             city: address.city || 'City not provided',
             state: address.state || '',
-            postalCode: address.postalCode || '',
+            zip: address.zipCode || address.zip || address.postalCode || '',
             country: address.country || 'India',
           },
           paymentStatus: 'pending',
           paymentMethod: paymentGateway.toUpperCase(),
+          transactionId: paymentGateway === 'cod' ? 'CASH ON DELIVERY' : (paymentGateway === 'wire' ? 'BANK WIRE' : 'N/A'),
           totalAmount: populatedOrder.totalAmount,
-          containerType: populatedOrder.recommendedContainer || 'LCL',
+          containerType: populatedOrder.recommendedContainer || '20FT Container',
           estimatedWeight: populatedOrder.totalWeight || 0,
           estimatedVolume: populatedOrder.totalVolume || 0,
-          containerUtilization: populatedOrder.totalVolume > 0 ? Math.min(Math.round((populatedOrder.totalVolume / 33) * 100), 100) : 0, // Roughly based on 20FT
+          containerUtilization: (() => {
+            const totalPallets = populatedOrder.items.reduce((acc, item) => acc + item.quantity, 0);
+            const capacity = (populatedOrder.recommendedContainer && populatedOrder.recommendedContainer.includes('40')) ? 22 : 10;
+            return Math.min(Math.round((totalPallets / capacity) * 100), 100);
+          })(),
           items: populatedOrder.items.map(item => ({
             productName: item.productName || (item.product && item.product.name) || 'Product',
             sku: (item.product && item.product.slug) ? item.product.slug.toUpperCase().substring(0, 8) : 'COCO-ITEM',

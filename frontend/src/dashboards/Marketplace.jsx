@@ -152,35 +152,7 @@ export const Marketplace = ({
         products={products}
       />
 
-      {/* Product Area Navigation Sub-Tabs */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/60 backdrop-blur-sm rounded-[18px] px-4 py-2.5 border border-stone-200/60 shadow-sm">
-        {/* Navigation tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto">
-          {marketTabs.map((tab) => {
-            const isActive = activeMarketplaceTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveMarketplaceTab(tab)}
-                className={`relative px-3.5 py-2 text-[11px] uppercase font-extrabold tracking-wider rounded-[10px] transition-all duration-200 whitespace-nowrap ${
-                  isActive
-                    ? 'bg-[#2E7D32] text-white shadow-md shadow-[#2E7D32]/20'
-                    : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
-                }`}
-              >
-                {tab}
-              </button>
-            );
-          })}
-        </div>
 
-        {/* Counter Badge */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="bg-[#2E7D32]/10 text-[#2E7D32] text-[10px] font-extrabold uppercase tracking-wider px-3 py-1.5 rounded-full">
-            {displayedProducts.length} {displayedProducts.length === 1 ? 'Product' : 'Products'}
-          </span>
-        </div>
-      </div>
 
       {/* 4. Product Catalog Grid Area */}
       <ProductGrid loading={loading}>

@@ -12,6 +12,7 @@ import {
   deleteProduct,
 } from '../controllers/productController.js';
 import { protect, admin } from '../middleware/auth.js';
+import { cacheMiddleware } from '../middleware/cache.js';
 
 const router = express.Router();
 
@@ -24,11 +25,11 @@ const upload = multer({
 });
 
 router.route('/')
-  .get(getProducts)
+  .get(cacheMiddleware(300), getProducts)
   .post(protect, admin, upload.array('images', 5), createProduct);
 
 router.route('/:id')
-  .get(getProductById)
+  .get(cacheMiddleware(300), getProductById)
   .put(protect, admin, upload.array('images', 5), updateProduct)
   .delete(protect, admin, deleteProduct);
 

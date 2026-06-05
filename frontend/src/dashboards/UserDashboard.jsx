@@ -97,6 +97,7 @@ const UserDashboard = () => {
       case 'Cart': navigate('/account/cart'); break;
       case 'Wishlist': navigate('/account/saved'); break;
       case 'Saved Addresses': navigate('/account/address'); break;
+      case 'Help & Support': navigate('/account/support'); break;
       case 'Settings': navigate('/account/settings'); break;
       default: setActiveTab(tab);
     }

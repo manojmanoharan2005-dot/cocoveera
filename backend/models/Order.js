@@ -115,4 +115,9 @@ const OrderSchema = new mongoose.Schema(
   }
 );
 
+// Indexes for fast querying
+OrderSchema.index({ user: 1 });
+OrderSchema.index({ paymentStatus: 1 });
+OrderSchema.index({ orderStatus: 1 });
+
 export default mongoose.model('Order', OrderSchema);

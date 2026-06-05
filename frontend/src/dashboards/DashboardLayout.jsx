@@ -16,7 +16,8 @@ import {
   LayoutDashboard,
   Heart,
   MapPin,
-  Settings
+  Settings,
+  HelpCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -55,6 +56,7 @@ export const DashboardLayout = ({
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount },
     { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount },
     { name: 'Saved Addresses', label: 'Saved Addresses', icon: MapPin },
+    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle },
     { name: 'Settings', label: 'Settings', icon: Settings },
   ];
 
@@ -82,6 +84,7 @@ export const DashboardLayout = ({
         sortBy={sortBy}
         setSortBy={setSortBy}
         onFilterClick={onFilterClick}
+        onMenuClick={() => setMobileMenuOpen(true)}
       />
 
       {/* 2. DYNAMIC MAIN BODY */}
@@ -191,36 +194,7 @@ export const DashboardLayout = ({
         )}
       </AnimatePresence>
 
-      {/* 4. MOBILE BOTTOM NAVIGATION (Home, Marketplace, Orders, Profile) */}
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-stone-200/80 shadow-lg flex items-center justify-around z-40 lg:hidden px-4">
-        {[
-          { name: 'Marketplace', icon: Store },
-          { name: 'My Orders', icon: ShoppingBag },
-          { name: 'Profile', icon: User }
-        ].map((btn) => {
-          const Icon = btn.icon;
-          const isActive = activeTab === btn.name;
-          return (
-            <button
-              key={btn.name}
-              onClick={() => handleMobileNav(btn.name)}
-              className={`flex flex-col items-center justify-center w-16 h-full font-poppins text-[9px] font-bold transition-all relative ${
-                isActive ? 'text-[#2E7D32]' : 'text-stone-500 hover:text-stone-850'
-              }`}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeBottomTabDot"
-                  className="w-1.5 h-1.5 bg-[#2E7D32] rounded-full absolute top-1"
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                />
-              )}
-              <Icon className="w-5 h-5 mb-0.5 mt-2" />
-              <span>{btn.name}</span>
-            </button>
-          );
-        })}
-      </div>
+
     </div>
   );
 };

@@ -8,6 +8,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link as LinkIcon, Eye, EyeOff, Briefcase, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const COUNTRY_CURRENCY_MAP = {
   'USA': 'USD',
@@ -33,6 +35,7 @@ export const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [phone, setPhone] = useState('');
   
   // Inline OTP states
   const [otpSent, setOtpSent] = useState(false);
@@ -99,6 +102,7 @@ export const RegisterForm = () => {
         const parsed = JSON.parse(cached);
         if (parsed.name) setValue('name', parsed.name);
         if (parsed.email) setValue('email', parsed.email);
+        if (parsed.phone) setPhone(parsed.phone);
         if (parsed.country) {
           setValue('country', parsed.country);
           setValue('currency', COUNTRY_CURRENCY_MAP[parsed.country] || '');
@@ -135,6 +139,7 @@ export const RegisterForm = () => {
       JSON.stringify({
         name: data.name,
         email: data.email,
+        phone,
         country: data.country,
       })
     );
@@ -143,7 +148,7 @@ export const RegisterForm = () => {
       const res = await authRegister(
         data.name,
         data.email,
-        'N/A', // phone optional
+        phone || 'N/A', // Send phone or N/A
         data.password,
         data.country,
         data.currency,
@@ -323,7 +328,24 @@ export const RegisterForm = () => {
           )}
         </div>
 
-        {/* Removed Company Name Field as requested */}
+        {/* Mobile Number */}
+        <div>
+          <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
+            MOBILE NUMBER
+          </label>
+          <PhoneInput
+            country={'us'}
+            value={phone}
+            onChange={phone => setPhone(phone)}
+            disabled={otpSent}
+            enableSearch={true}
+            searchPlaceholder="Search country or code..."
+            inputClass={`!w-full !bg-[#EEF2F6] !border-transparent !text-stone-900 !rounded-xl !h-[42px] !pl-12 !pr-4 !text-xs !font-semibold focus:!outline-none focus:!border-primary/60 focus:!bg-white transition-all ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
+            buttonClass={`!bg-[#EEF2F6] !border-transparent !rounded-l-xl !pl-2 ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
+            dropdownClass="!rounded-xl !border-stone-200/80 !shadow-soft !text-xs !font-semibold"
+            searchClass="!bg-[#EEF2F6] !border-transparent !text-xs !font-semibold !rounded-lg !mb-2"
+          />
+        </div>
 
         {/* Country & Currency Grid */}
         <div className="grid grid-cols-2 gap-4">

@@ -57,7 +57,7 @@ export const FilterDrawer = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="relative w-full max-w-md bg-white h-full shadow-[0_12px_40px_rgba(0,0,0,0.15)] flex flex-col z-10"
+            className="relative w-[85%] max-w-md bg-white h-full shadow-[0_12px_40px_rgba(0,0,0,0.15)] flex flex-col z-10"
           >
             {/* Header */}
             <div className="px-6 py-5 border-b border-stone-150 flex items-center justify-between">
