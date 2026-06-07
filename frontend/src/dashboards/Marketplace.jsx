@@ -50,11 +50,12 @@ export const Marketplace = ({
     // 1. Search Query filter
     if ((searchQuery || '').trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(p => 
-        p.name.toLowerCase().includes(q) || 
-        p.description?.toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q)
-      );
+      result = result.filter(p => {
+        const nameMatch = (p.name || '').toLowerCase().includes(q);
+        const descMatch = (p.description || '').toLowerCase().includes(q);
+        const catMatch = (p.category || '').toLowerCase().includes(q);
+        return nameMatch || descMatch || catMatch;
+      });
     }
 
     // 2. Collection category filter

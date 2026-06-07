@@ -106,8 +106,12 @@ const PublicLayout = () => {
   const location = useLocation();
   
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div 
+      className="flex flex-col min-h-screen relative bg-cover bg-center bg-fixed text-[#1A1A1A] font-sans"
+      style={{ backgroundImage: 'url("/bg-auth.webp")' }}
+    >
+      <div className="relative z-10 flex flex-col flex-grow w-full">
+        <Navbar />
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
@@ -121,6 +125,7 @@ const PublicLayout = () => {
         </motion.div>
       </AnimatePresence>
       <Footer />
+      </div>
     </div>
   );
 };

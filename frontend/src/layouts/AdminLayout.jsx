@@ -112,6 +112,7 @@ export default function AdminLayout({ children }) {
                 src={admin?.profileImage || 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'}
                 alt="Admin Avatar"
                 className="h-10 w-10 rounded-full object-cover border border-stone-200"
+
               />
             </div>
           </div>
