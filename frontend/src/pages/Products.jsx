@@ -225,16 +225,21 @@ const Products = () => {
   };
 
   return (
-    <div className="pb-16 bg-white min-h-screen">
-      <PageHero
-        badge="B2B CATALOG"
-        title="Organic Growing Media"
-        titleAccent="& Substrates"
-        subtitle="Standard-compliant raw materials sieved, washed, and compressed for bulk container freight export."
-        breadcrumbs={[{ label: 'Products', path: '/products' }]}
-      />
+    <div 
+      className="pb-16 min-h-screen relative bg-cover bg-center bg-fixed"
+      style={{ backgroundImage: 'url("/bg-auth.webp")' }}
+    >
+      {/* Removed white overlay to show background clearly */}
+      <div className="relative z-10">
+        <PageHero
+          badge="B2B CATALOG"
+          title="Organic Growing Media"
+          titleAccent="& Substrates"
+          subtitle="Standard-compliant raw materials sieved, washed, and compressed for bulk container freight export."
+          breadcrumbs={[{ label: 'Products', path: '/products' }]}
+        />
 
-      {/* 1. SUBSTRATE BLENDS & TEXTURES PANEL */}
+        {/* 1. SUBSTRATE BLENDS & TEXTURES PANEL */}
       <section className="max-w-7xl mx-auto px-6 mb-16">
         <div className="bg-accent border border-stone-200 rounded-3xl p-6 lg:p-10">
           <div className="text-center max-w-xl mx-auto mb-8">
@@ -506,6 +511,7 @@ const Products = () => {
           </table>
         </div>
       </section>
+      </div>
 
       {/* CUSTOM QUOTE DIALOG MODAL */}
       {isModalOpen && selectedProduct && (

@@ -17,6 +17,17 @@ export const getUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
+
+    const initialCartLength = user.cart.length;
+    user.cart = user.cart.filter(item => item.product != null);
+
+    const initialWishlistLength = user.wishlist.length;
+    user.wishlist = user.wishlist.filter(item => item != null);
+
+    if (user.cart.length !== initialCartLength || user.wishlist.length !== initialWishlistLength) {
+      await user.save();
+    }
+
     res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -3,6 +3,7 @@
  * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
  */
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Store,
@@ -70,16 +71,8 @@ export const Sidebar = ({
           const Icon = item.icon;
           const isActive = activeTab === item.name;
 
-          return (
-            <button
-              key={item.name}
-              onClick={() => setActiveTab(item.name)}
-              className={`w-full font-poppins text-[11.5px] font-bold py-2.5 px-4 rounded-[14px] transition-all duration-200 flex items-center justify-between relative group ${
-                isActive
-                  ? 'text-white'
-                  : 'text-[#4B5563] hover:bg-[#F0FAF0] hover:text-[#2E7D32]'
-              }`}
-            >
+          const buttonContent = (
+            <>
               {isActive && (
                 <motion.div
                   layoutId="activeSidebarBg"
@@ -110,6 +103,34 @@ export const Sidebar = ({
                   {item.badge}
                 </span>
               )}
+            </>
+          );
+
+          const className = `w-full text-left font-poppins text-[11.5px] font-bold py-2.5 px-4 rounded-[14px] transition-all duration-200 flex items-center justify-between relative group ${
+            isActive
+              ? 'text-white'
+              : 'text-[#4B5563] hover:bg-[#F0FAF0] hover:text-[#2E7D32]'
+          }`;
+
+          if (item.path) {
+            return (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={className}
+              >
+                {buttonContent}
+              </Link>
+            );
+          }
+
+          return (
+            <button
+              key={item.name}
+              onClick={() => setActiveTab(item.name)}
+              className={className}
+            >
+              {buttonContent}
             </button>
           );
         })}

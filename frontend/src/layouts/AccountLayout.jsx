@@ -3,7 +3,7 @@
  * Purpose: Source code file for the Cocoveera project.
  */
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../dashboards/Header';
 import Sidebar from '../dashboards/Sidebar';
@@ -17,6 +17,11 @@ const AccountLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Auto-close mobile drawer when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('Featured');
@@ -60,13 +65,13 @@ const AccountLayout = () => {
   };
 
   const mobileDrawerItems = [
-    { name: 'Marketplace', label: 'Marketplace', icon: Store },
-    { name: 'My Orders', label: 'My Orders', icon: ShoppingBag },
-    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount },
-    { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount },
-    { name: 'Saved Addresses', label: 'Saved Addresses', icon: MapPin },
-    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle },
-    { name: 'Settings', label: 'Settings', icon: Settings },
+    { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
+    { name: 'My Orders', label: 'My Orders', icon: ShoppingBag, path: '/account/orders' },
+    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/account/saved' },
+    { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount, path: '/account/cart' },
+    { name: 'Saved Addresses', label: 'Saved Addresses', icon: MapPin, path: '/account/address' },
+    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/account/support' },
+    { name: 'Settings', label: 'Settings', icon: Settings, path: '/account/settings' },
   ];
 
   const displayName = user?.companyName && user.companyName !== 'N/A' ? user.companyName : (user?.name || 'Partner');
@@ -128,7 +133,13 @@ const AccountLayout = () => {
                   </button>
                 </div>
 
-                <div className="flex items-center space-x-3 p-3 bg-stone-50 rounded-xl border border-stone-100">
+                <div 
+                  className="flex items-center space-x-3 p-3 bg-stone-50 rounded-xl border border-stone-100 cursor-pointer hover:bg-stone-200 transition-colors"
+                  onClick={() => {
+                    handleSetActiveTab('Profile');
+                    setMobileMenuOpen(false);
+                  }}
+                >
                   <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-bold border border-[#2E7D32]/25">
                     {userInitials}
                   </div>
@@ -141,17 +152,8 @@ const AccountLayout = () => {
                   {mobileDrawerItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.name;
-                    return (
-                      <button
-                        key={item.name}
-                        onClick={() => {
-                          handleSetActiveTab(item.name);
-                          setMobileMenuOpen(false);
-                        }}
-                        className={`w-full text-left font-poppins text-xs font-bold py-3 px-4 rounded-[16px] transition-all flex items-center justify-between ${
-                          isActive ? 'bg-[#2E7D32] text-white shadow-sm' : 'text-stone-600 hover:bg-stone-50'
-                        }`}
-                      >
+                    const buttonContent = (
+                      <>
                         <div className="flex items-center space-x-3">
                           <Icon className="w-4.5 h-4.5" />
                           <span>{item.label}</span>
@@ -161,6 +163,35 @@ const AccountLayout = () => {
                             {item.badge}
                           </span>
                         )}
+                      </>
+                    );
+
+                    const className = `w-full text-left font-poppins text-xs font-bold py-3 px-4 rounded-[16px] transition-all duration-200 active:scale-[0.98] flex items-center justify-between ${
+                      isActive ? 'bg-[#2E7D32] text-white shadow-sm' : 'text-stone-600 hover:bg-stone-50 active:bg-stone-100'
+                    }`;
+
+                    if (item.path) {
+                      return (
+                        <Link
+                          key={item.name}
+                          to={item.path}
+                          className={className}
+                        >
+                          {buttonContent}
+                        </Link>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={item.name}
+                        onClick={() => {
+                          handleSetActiveTab(item.name);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={className}
+                      >
+                        {buttonContent}
                       </button>
                     );
                   })}

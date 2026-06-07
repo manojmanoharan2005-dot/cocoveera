@@ -16,7 +16,7 @@ import quoteRoutes from './routes/quoteRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import refundRoutes from './routes/refundRoutes.js';
-import shippingRoutes from './routes/shippingRoutes.js';
+// import shippingRoutes from './routes/shippingRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
@@ -107,7 +107,7 @@ app.use('/api/quotes', quoteRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/refunds', refundRoutes);
-app.use('/api/shipping', shippingRoutes);
+// app.use('/api/shipping', shippingRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
@@ -328,11 +328,11 @@ const seedDatabase = async () => {
         name: 'Cocoveera Admin',
         email: adminEmail,
         phone: '+919876543210',
-        password: 'Admin@123',
+        password: 'Coirsystem@28',
         role: 'admin',
         isVerified: true
       });
-      console.log(`Admin account seeded: email=${adminEmail}, password=Admin@123`);
+      console.log(`Admin account seeded: email=${adminEmail}`);
     }
 
 
