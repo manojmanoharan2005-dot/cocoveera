@@ -10,43 +10,36 @@ import GlobalMap from '../components/GlobalMap';
 import PageHero from '../components/PageHero';
 
 const CoconutSubstrates = () => {
-  const [activeRegion, setActiveRegion] = useState('americas');
+  const [activeRegion, setActiveRegion] = useState('usa');
 
   const regionsData = {
-    americas: {
-      title: 'North & Central America / Caribbean',
-      countries: ['United States', 'Canada', 'Mexico', 'Costa Rica', 'Panama', 'Guatemala', 'Dominican Republic', 'Honduras', 'El Salvador', 'Jamaica', 'Trinidad & Tobago'],
-      ports: 'Los Angeles, Long Beach, Seattle, New York, Montreal, Veracruz, Puerto Limon',
-      transit: '18 - 25 Days standard sailing time',
-      docs: 'US/Canada customs bonds clearing assistance, phytosanitary import audits.'
+    india: {
+      title: 'India (Export Hub)',
+      countries: ['India'],
+      ports: 'Cochin Port',
+      transit: 'Origin Point',
+      docs: 'Export documentation, Phytosanitary certificates, Fumigation compliance.'
     },
-    europe: {
-      title: 'European Union & United Kingdom',
-      countries: ['United Kingdom', 'Netherlands', 'Germany', 'Spain', 'Italy', 'France', 'Portugal', 'Latvia', 'Ukraine'],
-      ports: 'Rotterdam, Felixstowe, Hamburg, Valencia, Genoa, Le Havre, Lisbon',
-      transit: '14 - 18 Days sailing time',
-      docs: 'EU-standards chemical conformity certificates, phytosanitary clearing certificates.'
+    japan: {
+      title: 'Japan',
+      countries: ['Japan'],
+      ports: 'Tokyo, Yokohama, Osaka',
+      transit: '18 - 20 Days sailing time',
+      docs: 'MAFF quarantine clearance compliance, Phytosanitary certificates.'
     },
-    asiapacific: {
-      title: 'Asia-Pacific & Oceania',
-      countries: ['Japan', 'South Korea', 'Australia', 'New Zealand', 'China', 'Singapore'],
-      ports: 'Tokyo, Yokohama, Busan, Melbourne, Sydney, Auckland, Shanghai',
-      transit: '10 - 15 Days sailing time',
+    australia: {
+      title: 'Australia',
+      countries: ['Australia'],
+      ports: 'Sydney (Port Botany), Melbourne, Brisbane',
+      transit: '21 - 24 Days sailing time',
       docs: 'DAFF clearance compliance for Australia, phytosanitary quarantine clearance.'
     },
-    middleeast: {
-      title: 'Middle East & Central Asia',
-      countries: ['Kuwait', 'Oman', 'Turkey', 'Israel', 'Turkmenistan', 'Kazakhstan'],
-      ports: 'Jebel Ali, Shuwaikh, Salalah, Ambarli, Haifa',
-      transit: '8 - 12 Days sailing time',
-      docs: 'Certificate of Origin from Chamber of Commerce, SASO compliance for Saudi transit.'
-    },
-    africa: {
-      title: 'African Continent',
-      countries: ['South Africa', 'Egypt', 'Morocco', 'Mauritius', 'Kenya', 'Nigeria', 'Réunion'],
-      ports: 'Durban, Port Elizabeth, Alexandria, Casablanca, Port Louis, Mombasa',
-      transit: '12 - 16 Days sailing time',
-      docs: 'SGS/Bureau Veritas inspection assistance, phytosanitary clearance certificates.'
+    usa: {
+      title: 'United States of America',
+      countries: ['United States'],
+      ports: 'Los Angeles, Long Beach, New York/New Jersey, Savannah',
+      transit: '35 - 42 Days sailing time',
+      docs: 'US customs bonds clearing assistance, phytosanitary import audits.'
     }
   };
 
@@ -100,7 +93,7 @@ const CoconutSubstrates = () => {
                   />
                 )}
                 <span className="relative z-10">
-                  {key === 'asiapacific' ? 'Asia-Pacific' : key === 'middleeast' ? 'Middle East' : key}
+                  {key === 'usa' ? 'USA' : key.charAt(0).toUpperCase() + key.slice(1)}
                 </span>
               </button>
             ))}

@@ -242,6 +242,93 @@ const testimonials = [
   },
 ];
 
+const categoryList = [
+  {
+    id: 'cat-1',
+    name: 'Coco Peat Blocks',
+    desc: 'High-quality 5kg coir pith blocks for large-scale agricultural and nursery operations.',
+    img: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Coco+Peat+Blocks'
+  },
+  {
+    id: 'cat-2',
+    name: 'Grow Bags',
+    desc: 'UV-resistant co-extruded LDPE grow bags formulated for hydroponic tomatoes, berries, and cucumbers.',
+    img: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Grow+Bags'
+  },
+  {
+    id: 'cat-3',
+    name: 'Coir Discs & Coins',
+    desc: 'Custom-compressed discs designed for quick root expansion and easy transplantation in small pots.',
+    img: 'https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Coir+Discs'
+  },
+  {
+    id: 'cat-4',
+    name: 'Coco Chips',
+    desc: 'Washed and graded coconut husk chips for excellent aeration and drainage in orchid cultivation.',
+    img: 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Coco+Chips'
+  },
+  {
+    id: 'cat-5',
+    name: 'Coco Peat Briquettes',
+    desc: 'Compact 650g briquettes perfect for hobby gardening, retail centers, and indoor plants.',
+    img: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Hobby+Gardening'
+  },
+  {
+    id: 'cat-6',
+    name: 'Erosion Control Logs',
+    desc: 'Sturdy biodegradable coir wattles for stabilizing riverbanks, slopes, and construction sites.',
+    img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Erosion+Control'
+  },
+  {
+    id: 'cat-7',
+    name: 'Coir Blankets & Nets',
+    desc: 'Woven coir netting engineered for soil containment and promoting vegetation on steep slopes.',
+    img: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Erosion+Control'
+  },
+  {
+    id: 'cat-8',
+    name: 'Coco Peat Grow Cubes',
+    desc: 'Perfectly sized growing cubes optimized for seed germination and early stage plant propagation.',
+    img: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Grow+Cubes'
+  },
+  {
+    id: 'cat-9',
+    name: 'Natural Coir Fiber',
+    desc: 'Golden-brown matured coconut fiber for industrial insulation, mattress padding, and upholstery.',
+    img: 'https://images.unsplash.com/photo-1596547609652-9cb5d8d8fc83?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Other+Coir+Products'
+  },
+  {
+    id: 'cat-10',
+    name: 'Curled Coir Ropes',
+    desc: 'Mechanically spun curled coir twine with excellent elasticity for spring mattresses and gardening.',
+    img: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Other+Coir+Products'
+  },
+  {
+    id: 'cat-11',
+    name: 'Coco Poles',
+    desc: 'Natural support poles wrapped with coir fiber, ideal for climbing plants like Monstera and Pothos.',
+    img: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Coco+Poles'
+  },
+  {
+    id: 'cat-12',
+    name: 'Coir Pots & Liners',
+    desc: '100% biodegradable planting pots and basket liners that allow roots to grow directly through the walls.',
+    img: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80',
+    link: '/products?category=Coir+Pots'
+  }
+];
+
 // ─── Home Component ────────────────────────────────────────────────────────────
 const Home = () => {
   const { scrollY } = useScroll();
@@ -251,32 +338,8 @@ const Home = () => {
   const [statsStarted, setStatsStarted] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [productScroll, setProductScroll] = useState(0);
-  const [dbProducts, setDbProducts] = useState(products); // Default to hardcoded array until load
   const statsRef = useRef(null);
   const productRef = useRef(null);
-
-  // Fetch products from database for the slider
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data } = await axios.get(`${API_URL}/products`);
-        if (data && data.success && data.data && data.data.length > 0) {
-          const fetchedProducts = data.data.map(p => ({
-            id: p._id,
-            name: p.name,
-            tag: p.isFeatured ? 'FEATURED' : '', // Example tag
-            desc: p.description ? (p.description.length > 110 ? p.description.substring(0, 110) + '...' : p.description) : '',
-            img: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=400&q=80',
-            link: `/account/product/${p._id}`,
-          }));
-          setDbProducts(fetchedProducts);
-        }
-      } catch (err) {
-        console.error('Failed to load products for home slider:', err);
-      }
-    };
-    fetchProducts();
-  }, []);
 
   // Intersection observer for stats counter
   useEffect(() => {
@@ -549,7 +612,7 @@ const Home = () => {
               className="flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory hide-scrollbar"
               style={{ scrollbarWidth: 'none' }}
             >
-              {dbProducts.map((p, i) => (
+              {categoryList.map((p, i) => (
                 <motion.div
                   key={p.id || i}
                   initial={{ opacity: 0, y: 20 }}
@@ -581,7 +644,7 @@ const Home = () => {
                       to={p.link}
                       className="inline-flex items-center gap-1 text-primary font-bold text-xs hover:gap-2 transition-all duration-200 mt-auto"
                     >
-                      VIEW PRODUCT <ArrowRight className="w-3.5 h-3.5" />
+                      VIEW CATEGORY <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </motion.div>

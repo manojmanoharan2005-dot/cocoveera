@@ -43,7 +43,7 @@ export const getAdminCategories = async (req, res) => {
 // @access  Private/Admin
 export const createAdminCategory = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, image } = req.body;
     
     // Check if category exists
     const categoryExists = await Category.findOne({ name });
@@ -51,7 +51,7 @@ export const createAdminCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Category already exists' });
     }
 
-    const category = await Category.create({ name, description });
+    const category = await Category.create({ name, description, image });
     res.status(201).json({ success: true, data: category });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -63,7 +63,7 @@ export const createAdminCategory = async (req, res) => {
 // @access  Private/Admin
 export const updateAdminCategory = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, image } = req.body;
     
     let category = await Category.findById(req.params.id);
     if (!category) {
@@ -72,6 +72,7 @@ export const updateAdminCategory = async (req, res) => {
 
     category.name = name || category.name;
     category.description = description !== undefined ? description : category.description;
+    if (image !== undefined) category.image = image;
     // Generate new slug if name changed
     if (name) {
       category.slug = name

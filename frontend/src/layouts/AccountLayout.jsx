@@ -80,7 +80,7 @@ const AccountLayout = () => {
   return (
     <div 
       className="min-h-screen text-[#1A1A1A] flex flex-col font-sans relative bg-cover bg-center bg-fixed"
-      style={{ backgroundImage: 'url("/bg-auth.webp")' }}
+      style={{ backgroundImage: 'url("/dashboard-bg.png")' }}
     >
       <div className="relative z-10 flex flex-col flex-grow w-full">
         <Header

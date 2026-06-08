@@ -20,6 +20,7 @@ import refundRoutes from './routes/refundRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 
 // Models for seeding
 import Product from './models/Product.js';
@@ -112,6 +113,7 @@ app.use('/api/refunds', refundRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Root route
 app.get('/', (req, res) => {

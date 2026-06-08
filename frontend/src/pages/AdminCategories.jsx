@@ -3,8 +3,8 @@
  * Purpose: React page component representing the AdminCategories view.
  */
 import { useEffect, useState } from 'react';
-import { adminCategoryService } from '../services/adminService';
-import { Search, Loader, AlertCircle, Plus, Edit2, Trash2 } from 'lucide-react';
+import { adminCategoryService, adminProductService } from '../services/adminService';
+import { Search, Loader, AlertCircle, Plus, Edit2, Trash2, Image as ImageIcon, X } from 'lucide-react';
 import AdminLayout from '../layouts/AdminLayout';
 
 export default function AdminCategories() {
@@ -23,7 +23,9 @@ export default function AdminCategories() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    image: '',
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -55,7 +57,7 @@ export default function AdminCategories() {
         await adminCategoryService.create(formData);
       }
 
-      setFormData({ name: '', description: '' });
+      setFormData({ name: '', description: '', image: '' });
       setSelectedCategory(null);
       setShowForm(false);
       fetchCategories();
@@ -88,7 +90,7 @@ export default function AdminCategories() {
             onClick={() => {
               setShowForm(true);
               setSelectedCategory(null);
-              setFormData({ name: '', description: '' });
+              setFormData({ name: '', description: '', image: '' });
             }}
             className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
           >
@@ -132,6 +134,59 @@ export default function AdminCategories() {
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category Image
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      {formData.image ? (
+                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
+                          <img src={formData.image} alt="Category" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                            className="absolute top-1 right-1 bg-white rounded-full p-0.5 text-red-500 hover:text-red-700 shadow"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400">
+                          <ImageIcon size={24} />
+                        </div>
+                      )}
+                      
+                      <div className="flex-1">
+                        <label className="cursor-pointer bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center space-x-2">
+                          {uploadingImage ? <Loader size={16} className="animate-spin" /> : <span>Upload Image</span>}
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*"
+                            disabled={uploadingImage}
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              setUploadingImage(true);
+                              try {
+                                const res = await adminProductService.uploadImage(file);
+                                
+                                if (res.success) {
+                                  setFormData(prev => ({ ...prev, image: res.url }));
+                                }
+                              } catch (err) {
+                                alert('Error uploading image: ' + (err.response?.data?.message || err.message));
+                              } finally {
+                                setUploadingImage(false);
+                              }
+                            }}
+                          />
+                        </label>
+                        <p className="mt-1 text-xs text-gray-500">Recommended: Square image, max 5MB</p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Category Name *
@@ -204,6 +259,9 @@ export default function AdminCategories() {
               <table className="w-full whitespace-nowrap">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 w-16">
+                      Image
+                    </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                       Name
                     </th>
@@ -221,6 +279,17 @@ export default function AdminCategories() {
                 <tbody className="divide-y divide-gray-200">
                   {categories.map((category) => (
                     <tr key={category._id} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {category.image ? (
+                          <div className="h-10 w-10 rounded-md overflow-hidden bg-gray-100 border border-gray-200">
+                            <img src={category.image} alt={category.name} className="h-full w-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="h-10 w-10 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
+                            <ImageIcon size={16} />
+                          </div>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                         {category.name}
                       </td>
@@ -237,6 +306,7 @@ export default function AdminCategories() {
                             setFormData({
                               name: category.name,
                               description: category.description || '',
+                              image: category.image || '',
                             });
                             setShowForm(true);
                           }}

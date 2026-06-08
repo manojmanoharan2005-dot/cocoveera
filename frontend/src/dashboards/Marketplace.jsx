@@ -4,10 +4,11 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import FilterDrawer from './FilterDrawer';
 import ProductGrid from './ProductGrid';
 import ProductCard from './ProductCard';
-import { X, Check, Star, Info, Droplet, Wind } from 'lucide-react';
+import { X, Check, Star, Info, Droplet, Wind, Home, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
@@ -43,6 +44,24 @@ export const Marketplace = ({
 
   // Computed state for filtered and sorted products
   const [displayedProducts, setDisplayedProducts] = useState([]);
+  
+  // Database categories to get images
+  const [dbCategories, setDbCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await axios.get(`${API_URL}/categories`);
+        if (res.data.success) {
+          setDbCategories(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      }
+    };
+    fetchCats();
+  }, []);
 
   useEffect(() => {
     let result = [...(products || [])];
@@ -134,6 +153,18 @@ export const Marketplace = ({
 
   const marketTabs = ['Featured', 'Latest', 'Best Seller', 'Trending', 'New Arrival'];
 
+  const uniqueCategories = [...new Set((products || []).map(p => p.category))].filter(Boolean);
+  
+  const categoryCards = uniqueCategories.map(cat => {
+    const catProducts = (products || []).filter(p => p.category === cat);
+    const dbCat = dbCategories.find(c => c.name === cat);
+    return {
+      name: cat,
+      count: catProducts.length,
+      image: dbCat?.image || catProducts[0]?.images?.[0] || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'
+    };
+  });
+
   return (
     <div className="space-y-8 text-stone-900 font-sans">
       {/* Filter Drawer */}
@@ -153,30 +184,95 @@ export const Marketplace = ({
         products={products}
       />
 
-
-
-      {/* 4. Product Catalog Grid Area */}
-      <ProductGrid loading={loading}>
-        {displayedProducts.map((prod) => (
-          <ProductCard
-            key={prod._id}
-            product={prod}
-            isWishlisted={wishlist.some(item => item._id === prod._id)}
-            onWishlistToggle={onWishlistToggle}
-            onAddToCart={onAddToCart}
-            onBuyNow={onBuyNow}
-            onCardClick={(p) => navigate('/account/product/' + p._id)}
-          />
-        ))}
-      </ProductGrid>
-
-      {/* Empty State */}
-      {!loading && displayedProducts.length === 0 && (
-        <div className="bg-white rounded-[24px] border border-stone-250 p-16 text-center space-y-4 max-w-lg mx-auto shadow-sm">
-          <div className="w-16 h-16 bg-[#F7F9F7] text-stone-400 rounded-full flex items-center justify-center mx-auto border border-stone-100">
-            <Info className="w-6 h-6" />
+      {/* Product Catalog Grid Area or Category Grid Area */}
+      {selectedCollection === 'All' && !searchQuery ? (
+        <div className="space-y-6">
+          <h3 className="font-poppins font-extrabold text-xl text-stone-900">Browse by Category</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {categoryCards.map((cat, idx) => (
+              <div 
+                key={idx}
+                onClick={() => setSelectedCollection(cat.name)}
+                className="group cursor-pointer bg-white rounded-[24px] border border-stone-200 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-500 flex flex-col"
+              >
+                {/* Full bleed image area */}
+                <div className="relative h-56 overflow-hidden bg-stone-100">
+                  <img 
+                    src={cat.image} 
+                    alt={cat.name} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                  />
+                  {/* Subtle dark overlay for premium feel */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500"></div>
+                  
+                  {/* Item count badge floating top-left */}
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-white/95 backdrop-blur-md text-stone-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                      {cat.count} Item{cat.count !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Text and action area */}
+                <div className="p-6 bg-white flex items-center justify-between">
+                  <div className="pr-4">
+                    <h4 className="font-poppins font-extrabold text-stone-900 text-lg group-hover:text-[#2E7D32] transition-colors line-clamp-1">{cat.name}</h4>
+                    <p className="text-sm text-stone-500 font-medium mt-0.5">Explore collection</p>
+                  </div>
+                  {/* Action button */}
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300 transform group-hover:translate-x-1 shadow-sm">
+                    <ChevronRight className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <h4 className="font-poppins font-extrabold text-stone-900 text-sm">No products found</h4>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-stone-200">
+            <div className="flex items-center gap-3 text-xl sm:text-2xl font-poppins font-extrabold">
+              <button 
+                onClick={() => setSelectedCollection('All')}
+                className="flex items-center gap-2 text-stone-800 hover:text-[#2E7D32] transition-colors"
+              >
+                <Home className="w-6 h-6 mb-0.5" />
+                <span>Marketplace</span>
+              </button>
+              <ChevronRight className="w-6 h-6 text-stone-400" />
+              <span className="text-[#2E7D32]">
+                {selectedCollection === 'All' ? 'Search Results' : `${selectedCollection} Products`}
+              </span>
+            </div>
+            
+            <span className="text-sm font-bold text-stone-700 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-stone-200">
+              {displayedProducts.length} items
+            </span>
+          </div>
+          
+          <ProductGrid loading={loading}>
+            {displayedProducts.map((prod) => (
+              <ProductCard
+                key={prod._id}
+                product={prod}
+                isWishlisted={wishlist.some(item => item._id === prod._id)}
+                onWishlistToggle={onWishlistToggle}
+                onAddToCart={onAddToCart}
+                onBuyNow={onBuyNow}
+                onCardClick={(p) => navigate('/account/product/' + p._id)}
+              />
+            ))}
+          </ProductGrid>
+
+          {/* Empty State */}
+          {!loading && displayedProducts.length === 0 && (
+            <div className="bg-white rounded-[24px] border border-stone-250 p-16 text-center space-y-4 max-w-lg mx-auto shadow-sm mt-8">
+              <div className="w-16 h-16 bg-[#F7F9F7] text-stone-400 rounded-full flex items-center justify-center mx-auto border border-stone-100">
+                <Info className="w-6 h-6" />
+              </div>
+              <h4 className="font-poppins font-extrabold text-stone-900 text-sm">No products found</h4>
+            </div>
+          )}
         </div>
       )}
 
