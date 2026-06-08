@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Check, Edit2, ShieldCheck, MapPin, Truck, CreditCard, Banknote, Mail, Sparkles, Ship, Package, CheckCircle2, Palmtree, Circle } from 'lucide-react';
+import { Check, Edit2, ShieldCheck, MapPin, Truck, CreditCard, Banknote, Mail, Sparkles, Ship, Package, CheckCircle2, Palmtree, Circle, Home } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -72,20 +72,34 @@ const Checkout = () => {
 
   const cartItems = directCheckoutItem ? [directCheckoutItem] : (user?.cart || []);
   
-  // Computations
+  const getPiecesForContainer = (cType, palletCount = 300) => {
+    if (!cType) return 10 * palletCount;
+    if (cType.includes('40FT')) return 22 * palletCount;
+    return 10 * palletCount; // default 20FT
+  };
+
+  let totalPieces = 0;
+
   const subtotal = cartItems.reduce((acc, item) => {
+    const cType = formData.containerType || item.containerType || '20FT FCL';
+    const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount);
+    totalPieces += pieces;
     const price = item.product?.price || 0;
-    return acc + (price * item.quantity);
+    return acc + (price * pieces);
   }, 0);
   
   const totalWeightKg = cartItems.reduce((acc, item) => {
+    const cType = formData.containerType || item.containerType || '20FT FCL';
+    const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount);
     const weight = item.product?.weight || 0;
-    return acc + (weight * item.quantity);
+    return acc + (weight * pieces);
   }, 0);
 
   const totalVolumeCBM = cartItems.reduce((acc, item) => {
+    const cType = formData.containerType || item.containerType || '20FT FCL';
+    const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount);
     const volume = item.product?.volumeCBM || 0;
-    return acc + (volume * item.quantity);
+    return acc + (volume * pieces);
   }, 0);
 
   let recommendedContainer = '20FT Container';
@@ -96,6 +110,10 @@ const Checkout = () => {
        recommendedContainer = 'Multiple Containers Required';
     }
   }
+
+  const totalContainerQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const isWholeContainer = Number.isInteger(totalContainerQuantity) && totalContainerQuantity >= 1;
+  const isValidOrderQuantity = isWholeContainer;
 
   // Fetch shipping rules
   React.useEffect(() => {
@@ -199,6 +217,10 @@ const Checkout = () => {
         alert("Your cart is empty.");
         return;
       }
+      if (!isValidOrderQuantity) {
+        alert("Checkout is available only for full container quantities. Please complete the remaining container capacity.");
+        return;
+      }
       setActiveStep(3);
     }
   };
@@ -232,6 +254,10 @@ const Checkout = () => {
       setActiveStep(1);
       return;
     }
+    if (!isValidOrderQuantity) {
+      alert("Checkout is available only for full container quantities. Please complete the remaining container capacity.");
+      return;
+    }
     try {
       setIsProcessing(true);
       const items = cartItems.map(c => ({
@@ -251,13 +277,25 @@ const Checkout = () => {
       // Get the container type selected by the user
       const finalContainerType = formData.containerType || localStorage.getItem('preferredContainer') || recommendedContainer;
 
+      const shippingDetails = {
+        shippingMethod: shippingMode === 'domestic' ? 'road' : 'sea',
+        portOfLoading: formData.port || 'Origin Port',
+        portOfDischarge: formData.port || 'Destination Port',
+        incoterms: shippingMode === 'domestic' ? 'DAP' : 'FOB',
+        transitTime: 'TBD',
+        containerType: finalContainerType
+      };
+
       // 1. Create the order in DB
       const orderRes = await apiClient.post('/orders', {
         items,
         shippingAddress,
         paymentGateway: paymentMethod,
         containerType: finalContainerType,
-        shippingCharge
+        shippingCharge,
+        shippingDetails,
+        discount,
+        tax: 0
       });
 
       if (!orderRes.data.success) throw new Error("Failed to create order");
@@ -417,55 +455,66 @@ const Checkout = () => {
                 />
               </div>
 
-              {/* The Palm Tree */}
+              {/* The Palm Tree (Origin) */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: [0, 1, 1, 0], scale: [0.8, 1, 1, 0.8] }}
-                transition={{ duration: 2.5, times: [0, 0.2, 0.8, 1] }}
-                className="absolute bottom-10 left-1/2 -ml-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="absolute bottom-10 left-[calc(50%-100px)] -ml-4"
               >
-                <Palmtree className="w-16 h-16 text-green-700" />
+                <Palmtree className="w-8 h-8 text-green-700" />
               </motion.div>
 
-              {/* The Coconut (Drops from tree) */}
+              {/* The House (Destination) */}
               <motion.div
-                initial={{ y: -50, scale: 0, opacity: 0 }}
-                animate={{ 
-                  y:      [-50, -50, 20, 20],
-                  scale:  [0,   1,   1,  0],
-                  opacity:[0,   1,   1,  0]
-                }}
-                transition={{ duration: 2, times: [0, 0.2, 0.6, 1] }}
-                className="absolute top-1/2 left-1/2 -ml-3 -mt-8 z-10"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+                className="absolute bottom-10 left-[calc(50%+100px)] -ml-4"
               >
-                <div className="w-6 h-6 bg-[#6D4C41] rounded-full border-2 border-[#5D4037] shadow-inner" />
+                <Home className="w-8 h-8 text-stone-700" />
               </motion.div>
 
-              {/* The Box (Packs the coconut) */}
+              {/* Package traveling */}
               <motion.div
-                initial={{ y: 20, scale: 0, opacity: 0 }}
+                initial={{ x: -100, y: -20, opacity: 0 }}
                 animate={{ 
-                  y:       [20, 20, 20, 20, 20],
-                  scale:   [0,  0,  1.2, 1, 0],
-                  opacity: [0,  0,  1,   1, 0]
+                  x: [-100, 0, 100],
+                  y: [-20, -20, -20],
+                  opacity: [0, 1, 0]
                 }}
-                transition={{ duration: 2.5, times: [0, 0.48, 0.55, 0.8, 1] }}
-                className="absolute top-1/2 left-1/2 -ml-6 -mt-6 z-20"
+                transition={{ duration: 3, times: [0, 0.5, 1], ease: "linear" }}
+                className="absolute bottom-10 left-1/2 -ml-3 z-30"
               >
-                <Package className="w-12 h-12 text-stone-700 bg-orange-100 rounded-lg p-2 shadow-xl border-2 border-orange-200" />
+                <div className="bg-orange-100 p-1 rounded border border-orange-200 shadow-sm">
+                  <Package className="w-4 h-4 text-stone-700" />
+                </div>
               </motion.div>
 
-              {/* The Ship (Takes the box away) */}
+              {/* Truck (First leg) */}
               <motion.div
-                initial={{ x: -250, opacity: 0 }}
+                initial={{ x: -100, opacity: 0 }}
                 animate={{ 
-                  x:       [-250, -250, 0, 250],
-                  opacity: [0,    1,    1, 1]
+                  x: [-100, 0, 0],
+                  opacity: [0, 1, 0]
                 }}
-                transition={{ duration: 3.5, times: [0, 0.4, 0.6, 1], ease: "easeInOut" }}
-                className="absolute bottom-10 left-1/2 -ml-8 z-30"
+                transition={{ duration: 3, times: [0, 0.45, 0.5], ease: "linear" }}
+                className="absolute bottom-10 left-1/2 -ml-6 z-20"
               >
-                <Ship className="w-16 h-16 text-[#2E7D32]" />
+                <Truck className="w-12 h-12 text-[#2E7D32]" />
+              </motion.div>
+
+              {/* Ship (Second leg) */}
+              <motion.div
+                initial={{ x: 0, opacity: 0 }}
+                animate={{ 
+                  x: [0, 0, 100],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{ duration: 3, times: [0, 0.5, 1], ease: "linear" }}
+                className="absolute bottom-10 left-1/2 -ml-6 z-20"
+              >
+                <Ship className="w-12 h-12 text-blue-600" />
               </motion.div>
 
               {/* Success Check */}
@@ -656,10 +705,21 @@ const Checkout = () => {
                         </div>
                       </div>
                     )}
+                    {!isValidOrderQuantity && cartItems.length > 0 && (
+                      <div className="mt-6 flex items-start gap-3 bg-red-50 p-4 rounded-xl border border-red-100">
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-bold text-red-700">Full Container Requirement Not Met</p>
+                          <p className="text-xs font-semibold text-red-600 mt-1">
+                            Your current total is {totalContainerQuantity.toFixed(2)} Containers. Checkout is available only for full container quantities. Please add {(1 - (totalContainerQuantity % 1)).toFixed(2)} more to complete the next full container.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     <button 
                       onClick={() => handleSetStep(3)} 
-                      disabled={cartItems.length === 0}
-                      className="mt-8 hidden lg:block bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95 disabled:opacity-50"
+                      disabled={cartItems.length === 0 || !isValidOrderQuantity}
+                      className="mt-8 hidden lg:block bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Continue to Payment
                     </button>
@@ -765,7 +825,15 @@ const Checkout = () => {
             <div className="p-6 md:p-8 space-y-5">
               <div className="space-y-4 text-sm font-semibold text-stone-500">
                 <div className="flex justify-between items-center">
-                  <span>Total Price ({cartItems.length} items)</span>
+                  <span>Total Containers</span>
+                  <span className="text-stone-900 font-bold">{totalContainerQuantity.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Total Pieces</span>
+                  <span className="text-stone-900 font-bold">{Math.round(totalPieces).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Total Price</span>
                   <span className="text-stone-900 font-bold">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -808,7 +876,7 @@ const Checkout = () => {
               {activeStep === 3 ? (
                 <button 
                   onClick={handlePlaceOrder}
-                  disabled={isProcessing}
+                  disabled={isProcessing || !isValidOrderQuantity}
                   className="hidden lg:flex w-full bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white font-black uppercase tracking-widest text-sm py-4.5 rounded-2xl shadow-[0_8px_25px_rgb(46,125,50,0.3)] hover:shadow-[0_12px_30px_rgb(46,125,50,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center h-14"
                 >
                   {isProcessing ? 'Processing Securely...' : 'Complete Payment'}
@@ -844,8 +912,8 @@ const Checkout = () => {
             <button
               type="button"
               onClick={() => handleSetStep(3)}
-              disabled={cartItems.length === 0}
-              className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-[11px] font-black py-3.5 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 transition-colors uppercase tracking-widest"
+              disabled={cartItems.length === 0 || !isValidOrderQuantity}
+              className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-[11px] font-black py-3.5 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors uppercase tracking-widest"
             >
               Continue
             </button>
@@ -854,8 +922,8 @@ const Checkout = () => {
             <button
               type="button"
               onClick={handlePlaceOrder}
-              disabled={isProcessing}
-              className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-poppins text-[11px] font-black py-3.5 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 transition-colors uppercase tracking-widest"
+              disabled={isProcessing || !isValidOrderQuantity}
+              className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-poppins text-[11px] font-black py-3.5 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors uppercase tracking-widest"
             >
               {isProcessing ? 'Processing...' : 'Pay Now'}
             </button>

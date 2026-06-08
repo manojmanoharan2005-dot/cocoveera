@@ -34,6 +34,22 @@ const OrderDetails = () => {
   if (loading) return <div className="p-12 text-center text-stone-500 font-bold">Loading order details...</div>;
   if (!backendOrder) return <div className="p-12 text-center text-stone-500 font-bold">Order not found</div>;
 
+  const handleDownloadInvoice = async () => {
+    try {
+      const res = await apiClient.get(`/orders/${id}/invoice`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Invoice-${backendOrder._id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      console.error('Failed to download invoice:', err);
+      alert('Failed to generate invoice. Please try again later.');
+    }
+  };
+
   const order = {
     id: backendOrder._id,
     date: backendOrder.createdAt,
@@ -99,7 +115,10 @@ const OrderDetails = () => {
               <span className="px-3 py-1.5 bg-[#F0FAF0] text-[#2E7D32] rounded-lg text-xs font-black uppercase tracking-wider border border-[#2E7D32]/20">{order.paymentStatus}</span>
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <button className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 font-bold text-sm rounded-xl hover:bg-stone-200 transition-colors">
+              <button 
+                onClick={handleDownloadInvoice}
+                className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 font-bold text-sm rounded-xl hover:bg-stone-200 transition-colors"
+              >
                 <Download className="w-4 h-4" /> Invoice
               </button>
               <button className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 font-bold text-sm rounded-xl hover:bg-stone-200 transition-colors">

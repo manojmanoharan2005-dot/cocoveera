@@ -230,22 +230,22 @@ export const Marketplace = ({
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-stone-200">
-            <div className="flex items-center gap-3 text-xl sm:text-2xl font-poppins font-extrabold">
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 pb-4">
+            <div className="flex items-center gap-1.5 sm:gap-3 text-lg sm:text-2xl font-poppins font-extrabold min-w-0 flex-1">
               <button 
                 onClick={() => setSelectedCollection('All')}
-                className="flex items-center gap-2 text-stone-800 hover:text-[#2E7D32] transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 text-stone-800 hover:text-[#2E7D32] transition-colors shrink-0"
               >
-                <Home className="w-6 h-6 mb-0.5" />
-                <span>Marketplace</span>
+                <Home className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5" />
+                <span className="hidden sm:inline">Marketplace</span>
               </button>
-              <ChevronRight className="w-6 h-6 text-stone-400" />
-              <span className="text-[#2E7D32]">
+              <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 text-stone-400 shrink-0" />
+              <span className="text-[#2E7D32] truncate">
                 {selectedCollection === 'All' ? 'Search Results' : `${selectedCollection} Products`}
               </span>
             </div>
             
-            <span className="text-sm font-bold text-stone-700 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-stone-200">
+            <span className="text-xs sm:text-sm font-bold text-stone-700 bg-white/90 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-sm border border-stone-200 shrink-0">
               {displayedProducts.length} items
             </span>
           </div>

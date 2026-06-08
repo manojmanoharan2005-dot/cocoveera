@@ -11,11 +11,10 @@ import { apiClient } from '../../context/AuthContext';
 const STATUS_MAP = {
   'pending': 1,
   'confirmed': 2,
-  'production': 3,
-  'packed': 4,
-  'loaded': 5,
-  'shipped': 6,
-  'delivered': 7
+  'packed': 3,
+  'loaded': 4,
+  'shipped': 5,
+  'delivered': 6
 };
 
 const TrackOrder = () => {
@@ -55,11 +54,10 @@ const TrackOrder = () => {
   ] : [
     { id: 1, label: 'Order Created', icon: Package, date: new Date(order.createdAt).toLocaleDateString(), location: 'Website' },
     { id: 2, label: 'Confirmed', icon: Check, date: currentStepId >= 2 ? 'Completed' : 'Pending', location: 'Processing Center' },
-    { id: 3, label: 'Production', icon: Package, date: currentStepId >= 3 ? 'Completed' : 'Pending', location: 'Factory, Pollachi, India' },
-    { id: 4, label: 'Packed', icon: Package, date: currentStepId >= 4 ? 'Completed' : 'Pending', location: 'Warehouse, Pollachi, India' },
-    { id: 5, label: 'Loaded', icon: Truck, date: currentStepId >= 5 ? 'Completed' : 'Pending', location: 'Chennai Port, India' },
-    { id: 6, label: 'Shipped', icon: Anchor, date: currentStepId >= 6 ? 'Completed' : 'Pending', location: 'In Transit' },
-    { id: 7, label: 'Delivered', icon: MapPin, date: currentStepId >= 7 ? 'Completed' : 'Pending', location: `${destCity}${destCountry ? `, ${destCountry}` : ''}` }
+    { id: 3, label: 'Packed', icon: Package, date: currentStepId >= 3 ? 'Completed' : 'Pending', location: 'Warehouse, Pollachi, India' },
+    { id: 4, label: 'Loaded', icon: Truck, date: currentStepId >= 4 ? 'Completed' : 'Pending', location: 'Chennai Port, India' },
+    { id: 5, label: 'Shipped', icon: Anchor, date: currentStepId >= 5 ? 'Completed' : 'Pending', location: 'In Transit' },
+    { id: 6, label: 'Delivered', icon: MapPin, date: currentStepId >= 6 ? 'Completed' : 'Pending', location: `${destCity}${destCountry ? `, ${destCountry}` : ''}` }
   ];
 
   return (

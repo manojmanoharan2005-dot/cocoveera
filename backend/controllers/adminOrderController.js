@@ -5,6 +5,7 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
+import { sendStatusUpdateEmail } from '../utils/EmailService.js';
 
 // @desc    Get all orders (Admin)
 // @route   GET /api/admin/orders
@@ -88,7 +89,6 @@ export const updateOrderStatus = async (req, res) => {
       ![
         'pending',
         'confirmed',
-        'production',
         'packed',
         'loaded',
         'shipped',
@@ -99,13 +99,22 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid order status' });
     }
 
-    let order = await Order.findById(req.params.id);
+    let order = await Order.findById(req.params.id).populate('user').populate('items.product');
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
     order.orderStatus = orderStatus;
     await order.save();
+
+    // Send email notification to user
+    try {
+      if (order.user && order.user.email) {
+        await sendStatusUpdateEmail(order.user.email, order, orderStatus);
+      }
+    } catch (emailErr) {
+      console.error('Failed to send status update email:', emailErr);
+    }
 
     res.status(200).json({
       success: true,
@@ -215,42 +224,10 @@ export const downloadInvoice = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    const { generateInvoicePDF } = await import('../utils/InvoiceGenerator.js');
+    const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
     
     // Map order data to invoiceData
-    const invoiceData = {
-      invoiceNumber: `INV-${order._id.toString().slice(-6).toUpperCase()}`,
-      orderId: order._id.toString(),
-      customerId: order.user?._id?.toString() || 'Guest',
-      currency: order.user?.currency || 'USD',
-      customerName: order.user?.name || 'Customer',
-      customerEmail: order.user?.email || '',
-      customerPhone: order.user?.phone || '',
-      shippingAddress: order.shippingAddress || {},
-      containerType: order.recommendedContainer || 'N/A',
-      containerUtilization: order.assignedContainer ? 100 : 0, 
-      estimatedWeight: order.totalWeight || 0,
-      estimatedVolume: order.totalVolume || 0,
-      shippingMethod: order.shippingAddress?.country?.toLowerCase() === 'india' ? 'Road Transport' : 'Sea Freight',
-      destinationCountry: order.shippingAddress?.country || 'Unknown',
-      transitTime: 'Standard ETA',
-      items: order.items.map(item => ({
-        productName: item.product?.name || 'Product',
-        sku: item.product?.slug ? item.product.slug.toUpperCase().substring(0, 8) : (item.product?._id?.toString().slice(-6) || 'COCO-ITEM'),
-        quantity: item.quantity,
-        unitPrice: item.product?.price || 0
-      })),
-      subtotal: order.items.reduce((acc, curr) => acc + (curr.quantity * (curr.product?.price || 0)), 0),
-      discount: 0,
-      shippingCharge: order.shippingCharge || 0,
-      tax: 0,
-      totalAmount: order.totalAmount,
-      paymentMethod: order.paymentGateway || 'Card',
-      transactionId: order.paymentId || 'N/A',
-      paymentDate: order.paidAt ? new Date(order.paidAt).toLocaleDateString() : new Date().toLocaleDateString(),
-      paymentStatus: order.paymentStatus || 'PENDING',
-      orderDate: new Date(order.createdAt).toLocaleDateString(),
-    };
+    const invoiceData = buildInvoiceDataFromOrder(order);
 
     const pdfBuffer = await generateInvoicePDF(invoiceData);
 
@@ -275,43 +252,11 @@ export const resendInvoiceEmail = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    const { generateInvoicePDF } = await import('../utils/InvoiceGenerator.js');
+    const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
     const { sendOrderConfirmationWithInvoice } = await import('../utils/EmailService.js');
     
     // Map order data to invoiceData
-    const invoiceData = {
-      invoiceNumber: `INV-${order._id.toString().slice(-6).toUpperCase()}`,
-      orderId: order._id.toString(),
-      customerId: order.user?._id?.toString() || 'Guest',
-      currency: order.user?.currency || 'USD',
-      customerName: order.user?.name || 'Customer',
-      customerEmail: order.user?.email || '',
-      customerPhone: order.user?.phone || '',
-      shippingAddress: order.shippingAddress || {},
-      containerType: order.recommendedContainer || 'N/A',
-      containerUtilization: order.assignedContainer ? 100 : 0, 
-      estimatedWeight: order.totalWeight || 0,
-      estimatedVolume: order.totalVolume || 0,
-      shippingMethod: order.shippingAddress?.country?.toLowerCase() === 'india' ? 'Road Transport' : 'Sea Freight',
-      destinationCountry: order.shippingAddress?.country || 'Unknown',
-      transitTime: 'Standard ETA',
-      items: order.items.map(item => ({
-        productName: item.product?.name || 'Product',
-        sku: item.product?.slug ? item.product.slug.toUpperCase().substring(0, 8) : (item.product?._id?.toString().slice(-6) || 'COCO-ITEM'),
-        quantity: item.quantity,
-        unitPrice: item.product?.price || 0
-      })),
-      subtotal: order.items.reduce((acc, curr) => acc + (curr.quantity * (curr.product?.price || 0)), 0),
-      discount: 0,
-      shippingCharge: order.shippingCharge || 0,
-      tax: 0,
-      totalAmount: order.totalAmount,
-      paymentMethod: order.paymentGateway || 'Card',
-      transactionId: order.paymentId || 'N/A',
-      paymentDate: order.paidAt ? new Date(order.paidAt).toLocaleDateString() : new Date().toLocaleDateString(),
-      paymentStatus: order.paymentStatus || 'PENDING',
-      orderDate: new Date(order.createdAt).toLocaleDateString(),
-    };
+    const invoiceData = buildInvoiceDataFromOrder(order);
 
     const pdfBuffer = await generateInvoicePDF(invoiceData);
 

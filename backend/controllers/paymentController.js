@@ -208,38 +208,8 @@ export const confirmPayment = async (req, res) => {
 
       try {
         const address = order.shippingAddress || {};
-        const invoiceNumber = 'INV-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-        const invoiceData = {
-          invoiceNumber,
-          customerName: order.user.name,
-          customerEmail: order.user.email,
-          customerPhone: order.user.phone || 'Not Provided',
-          shippingAddress: {
-            addressLine: address.addressLine || 'Address not provided',
-            city: address.city || 'City not provided',
-            state: address.state || '',
-            postalCode: address.postalCode || '',
-            country: address.country || 'India',
-          },
-          paymentStatus: order.paymentStatus,
-          paymentMethod: order.paymentGateway,
-          totalAmount: order.totalAmount,
-          containerType: order.recommendedContainer || 'LCL',
-          estimatedWeight: order.totalWeight || 0,
-          estimatedVolume: order.totalVolume || 0,
-          containerUtilization: (() => {
-            const totalPallets = order.items.reduce((acc, item) => acc + item.quantity, 0);
-            const capacity = (order.recommendedContainer && order.recommendedContainer.includes('40')) ? 22 : 10;
-            return Math.min(Math.round((totalPallets / capacity) * 100), 100);
-          })(),
-          items: order.items.map(item => ({
-            productName: item.productName || (item.product && item.product.name) || 'Product',
-            sku: (item.product && item.product.slug) ? item.product.slug.toUpperCase().substring(0, 8) : 'COCO-ITEM',
-            unitPrice: item.unitPrice,
-            quantity: item.quantity,
-            subtotal: item.unitPrice * item.quantity
-          }))
-        };
+        const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
+        const invoiceData = buildInvoiceDataFromOrder(order);
 
         const pdfBuffer = await generateInvoicePDF(invoiceData);
 

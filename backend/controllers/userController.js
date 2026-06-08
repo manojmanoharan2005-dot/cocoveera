@@ -195,6 +195,11 @@ export const updateCart = async (req, res) => {
     const user = await User.findById(req.user.id).populate('cart.product').populate('wishlist');
     const { productId, quantity, increment = false } = req.body;
     
+    // Ensure quantity is a multiple of 0.25
+    if (quantity !== 0 && (quantity % 0.25 !== 0)) {
+      return res.status(400).json({ success: false, message: 'Quantity must be in increments of 0.25' });
+    }
+
     const existingItem = user.cart.find(c => c.product._id.toString() === productId || c.product.toString() === productId);
     if (existingItem) {
       if (quantity <= 0 && !increment) {

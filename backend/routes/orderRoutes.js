@@ -10,6 +10,7 @@ import {
   updateTrackingStatus,
   getOrderById,
   cancelOrder,
+  downloadInvoice,
 } from '../controllers/orderController.js';
 import { protect, admin } from '../middleware/auth.js';
 import { getShippingRules } from '../controllers/shippingController.js';
@@ -33,6 +34,9 @@ router.route('/:id/tracking')
 
 router.route('/:id/cancel')
   .put(protect, cancelOrder);
+
+router.route('/:id/invoice')
+  .get(protect, downloadInvoice);
 
 router.route('/:id')
   .get(protect, getOrderById);

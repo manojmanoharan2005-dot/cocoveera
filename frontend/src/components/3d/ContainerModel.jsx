@@ -7,7 +7,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
-export const ContainerModel = ({ type = '20FT', autoRotate = true }) => {
+export const ContainerModel = ({ type = '20FT', autoRotate = true, isTransparent = true }) => {
   const group = useRef();
   
   // Dimensions
@@ -16,11 +16,12 @@ export const ContainerModel = ({ type = '20FT', autoRotate = true }) => {
   const height = 2.6;
   const wallThickness = 0.1;
 
-  // Material
   const containerMaterial = new THREE.MeshStandardMaterial({
-    color: '#1B5E20', // Premium matte green
-    roughness: 0.7,
-    metalness: 0.3,
+    color: isTransparent ? '#A5D6A7' : '#1B5E20', // Light glass tint for X-Ray, solid green for Solid View
+    transparent: isTransparent,
+    opacity: isTransparent ? 0.15 : 1.0,
+    roughness: isTransparent ? 0.1 : 0.7,
+    metalness: isTransparent ? 0.5 : 0.3,
   });
 
   const interiorMaterial = new THREE.MeshStandardMaterial({
@@ -39,19 +40,37 @@ export const ContainerModel = ({ type = '20FT', autoRotate = true }) => {
       {/* Floor */}
       <mesh receiveShadow position={[0, -height / 2, 0]}>
         <boxGeometry args={[width, wallThickness, depth]} />
-        <primitive object={floorMaterial} attach="material" />
+        <meshStandardMaterial color="#4a3b2c" roughness={0.9} />
       </mesh>
 
       {/* Ceiling */}
       <mesh castShadow receiveShadow position={[0, height / 2, 0]}>
         <boxGeometry args={[width, wallThickness, depth]} />
-        <primitive object={containerMaterial} attach="material" />
+        <meshPhysicalMaterial 
+          color={isTransparent ? '#ffffff' : '#1B5E20'}
+          transparent={isTransparent}
+          opacity={isTransparent ? 0.2 : 1.0}
+          roughness={isTransparent ? 0.05 : 0.7}
+          metalness={isTransparent ? 0.1 : 0.3}
+          transmission={isTransparent ? 0.9 : 0.0}
+          thickness={isTransparent ? 0.1 : 0}
+          clearcoat={isTransparent ? 1.0 : 0.0}
+        />
       </mesh>
 
       {/* Left Wall */}
       <mesh castShadow receiveShadow position={[-width / 2, 0, 0]}>
         <boxGeometry args={[wallThickness, height, depth]} />
-        <primitive object={containerMaterial} attach="material" />
+        <meshPhysicalMaterial 
+          color={isTransparent ? '#ffffff' : '#1B5E20'}
+          transparent={isTransparent}
+          opacity={isTransparent ? 0.2 : 1.0}
+          roughness={isTransparent ? 0.05 : 0.7}
+          metalness={isTransparent ? 0.1 : 0.3}
+          transmission={isTransparent ? 0.9 : 0.0}
+          thickness={isTransparent ? 0.1 : 0}
+          clearcoat={isTransparent ? 1.0 : 0.0}
+        />
         
         {/* Exterior Branding */}
         <Text
@@ -68,7 +87,7 @@ export const ContainerModel = ({ type = '20FT', autoRotate = true }) => {
           position={[-wallThickness / 2 - 0.01, -0.8, 0]}
           rotation={[0, -Math.PI / 2, 0]}
           fontSize={0.3}
-          color="#A5D6A7"
+          color={isTransparent ? '#ffffff' : '#A5D6A7'}
           anchorX="center"
           anchorY="middle"
         >
@@ -79,7 +98,16 @@ export const ContainerModel = ({ type = '20FT', autoRotate = true }) => {
       {/* Right Wall */}
       <mesh castShadow receiveShadow position={[width / 2, 0, 0]}>
         <boxGeometry args={[wallThickness, height, depth]} />
-        <primitive object={containerMaterial} attach="material" />
+        <meshPhysicalMaterial 
+          color={isTransparent ? '#ffffff' : '#1B5E20'}
+          transparent={isTransparent}
+          opacity={isTransparent ? 0.2 : 1.0}
+          roughness={isTransparent ? 0.05 : 0.7}
+          metalness={isTransparent ? 0.1 : 0.3}
+          transmission={isTransparent ? 0.9 : 0.0}
+          thickness={isTransparent ? 0.1 : 0}
+          clearcoat={isTransparent ? 1.0 : 0.0}
+        />
         
         {/* Exterior Branding */}
         <Text
@@ -97,18 +125,44 @@ export const ContainerModel = ({ type = '20FT', autoRotate = true }) => {
       {/* Back Wall */}
       <mesh castShadow receiveShadow position={[0, 0, -depth / 2]}>
         <boxGeometry args={[width, height, wallThickness]} />
-        <primitive object={containerMaterial} attach="material" />
+        <meshPhysicalMaterial 
+          color={isTransparent ? '#ffffff' : '#1B5E20'}
+          transparent={isTransparent}
+          opacity={isTransparent ? 0.2 : 1.0}
+          roughness={isTransparent ? 0.05 : 0.7}
+          metalness={isTransparent ? 0.1 : 0.3}
+          transmission={isTransparent ? 0.9 : 0.0}
+          thickness={isTransparent ? 0.1 : 0}
+          clearcoat={isTransparent ? 1.0 : 0.0}
+        />
       </mesh>
 
-      {/* Open Doors (angled slightly outward) */}
       {/* Open Doors (Wide open 135 degrees) */}
       <mesh castShadow receiveShadow position={[-1.624, 0, depth / 2 + 0.424]} rotation={[0, -Math.PI * 0.75, 0]}>
         <boxGeometry args={[1.2, height, wallThickness / 2]} />
-        <primitive object={containerMaterial} attach="material" />
+        <meshPhysicalMaterial 
+          color={isTransparent ? '#ffffff' : '#1B5E20'}
+          transparent={isTransparent}
+          opacity={isTransparent ? 0.2 : 1.0}
+          roughness={isTransparent ? 0.05 : 0.7}
+          metalness={isTransparent ? 0.1 : 0.3}
+          transmission={isTransparent ? 0.9 : 0.0}
+          thickness={isTransparent ? 0.1 : 0}
+          clearcoat={isTransparent ? 1.0 : 0.0}
+        />
       </mesh>
       <mesh castShadow receiveShadow position={[1.624, 0, depth / 2 + 0.424]} rotation={[0, Math.PI * 0.75, 0]}>
         <boxGeometry args={[1.2, height, wallThickness / 2]} />
-        <primitive object={containerMaterial} attach="material" />
+        <meshPhysicalMaterial 
+          color={isTransparent ? '#ffffff' : '#1B5E20'}
+          transparent={isTransparent}
+          opacity={isTransparent ? 0.2 : 1.0}
+          roughness={isTransparent ? 0.05 : 0.7}
+          metalness={isTransparent ? 0.1 : 0.3}
+          transmission={isTransparent ? 0.9 : 0.0}
+          thickness={isTransparent ? 0.1 : 0}
+          clearcoat={isTransparent ? 1.0 : 0.0}
+        />
       </mesh>
     </group>
   );

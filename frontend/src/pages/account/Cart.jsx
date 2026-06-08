@@ -40,8 +40,31 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  const estimatedWeight = cartItems.reduce((acc, item) => acc + (item.quantity * item.weight), 0);
-  const estimatedVolume = cartItems.reduce((acc, item) => acc + (item.quantity * item.volume), 0);
+  const getPiecesForContainer = (cType, palletCount = 300) => {
+    if (!cType) return 10 * palletCount;
+    if (cType.includes('40FT')) return 22 * palletCount;
+    return 10 * palletCount;
+  };
+
+  let totalPieces = 0;
+  
+  const subtotal = cartItems.reduce((acc, item) => {
+    const pieces = item.quantity * getPiecesForContainer(item.containerType || '20FT FCL', item.palletCount);
+    totalPieces += pieces;
+    return acc + (item.price * pieces);
+  }, 0);
+
+  const estimatedWeight = cartItems.reduce((acc, item) => {
+    const pieces = item.quantity * getPiecesForContainer(item.containerType || '20FT FCL', item.palletCount);
+    const weight = item.weight || 0;
+    return acc + (weight * pieces);
+  }, 0);
+
+  const estimatedVolume = cartItems.reduce((acc, item) => {
+    const pieces = item.quantity * getPiecesForContainer(item.containerType || '20FT FCL', item.palletCount);
+    const volume = item.volume || 0;
+    return acc + (volume * pieces);
+  }, 0);
 
   let recommendedContainer = '20FT Container';
   let maxWeight = 28000;
@@ -60,12 +83,16 @@ const Cart = () => {
   const weightUtilization = (estimatedWeight / maxWeight) * 100;
   const volumeUtilization = (estimatedVolume / maxVolume) * 100;
   const capacityPercentage = Math.min(Math.max(weightUtilization, volumeUtilization), 100);
-  const isOverCapacity = recommendedContainer === 'Multiple Containers Required';
+  const totalContainerQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const isWholeContainer = Number.isInteger(totalContainerQuantity) && totalContainerQuantity >= 1;
+  const capacityPercentage = isWholeContainer ? 100 : ((totalContainerQuantity % 1) * 100);
+  const remainingForNextFull = isWholeContainer ? 0 : (1 - (totalContainerQuantity % 1));
+  const isOverCapacity = false; // Container fractions mean users can order multiple containers freely
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
 
   const updateQuantity = async (id, newQty) => {
-    if (newQty < 1) return;
+    if (newQty < 0.25) return;
     setCartItems(items => items.map(i => i.id === id ? { ...i, quantity: newQty } : i));
     try {
       await apiClient.post('/users/cart', { productId: id, quantity: newQty });
@@ -135,19 +162,19 @@ const Cart = () => {
               
               <div className="flex-grow">
                 <h3 className="font-extrabold text-stone-900 text-base mb-1 pr-12">{item.name}</h3>
-                <p className="text-[#2E7D32] font-black text-sm mb-3">{convertCurrency(item.price, user?.currency).formatted} <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">/ Pallet</span></p>
+                <p className="text-[#2E7D32] font-black text-sm mb-3">{convertCurrency(item.price, user?.currency).formatted} <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">/ Piece</span></p>
                 
                 <div className="flex items-center gap-4">
                   {/* Quantity */}
                   <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg p-1">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-200 hover:text-stone-900 rounded-md transition-colors font-bold">-</button>
-                    <span className="w-10 text-center text-sm font-black text-stone-900">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-200 hover:text-stone-900 rounded-md transition-colors font-bold">+</button>
+                    <button onClick={() => updateQuantity(item.id, item.quantity - 0.25)} className="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-200 hover:text-stone-900 rounded-md transition-colors font-bold">-</button>
+                    <span className="w-10 text-center text-sm font-black text-stone-900">{item.quantity.toFixed(2)}</span>
+                    <button onClick={() => updateQuantity(item.id, item.quantity + 0.25)} className="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-200 hover:text-stone-900 rounded-md transition-colors font-bold">+</button>
                   </div>
                   
                   {/* Total line price */}
                   <div className="text-sm font-black text-stone-900">
-                    Total: {convertCurrency(item.price * item.quantity, user?.currency).formatted}
+                    Total: {convertCurrency(item.price * item.quantity * getPiecesForContainer(item.containerType || '20FT FCL', item.palletCount), user?.currency).formatted}
                   </div>
                 </div>
               </div>
@@ -176,10 +203,6 @@ const Cart = () => {
 
             <div className="space-y-4 mb-6">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-stone-500 font-semibold">Total Quantity</span>
-                <span className="text-stone-900 font-black">{cartItems.reduce((a, c) => a + c.quantity, 0)} Units</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
                 <span className="text-stone-500 font-semibold">Estimated Weight</span>
                 <span className="text-stone-900 font-black">{estimatedWeight.toLocaleString()} KG</span>
               </div>
@@ -187,34 +210,53 @@ const Cart = () => {
                 <span className="text-stone-500 font-semibold">Estimated Volume</span>
                 <span className="text-stone-900 font-black">{estimatedVolume.toFixed(2)} CBM</span>
               </div>
+                  <div className="flex justify-between items-center text-sm font-semibold text-stone-600">
+                    <span>Total Containers</span>
+                    <span className="text-stone-900 font-bold">{totalContainerQuantity.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm font-semibold text-stone-600">
+                    <span>Total Pieces</span>
+                    <span className="text-stone-900 font-bold">{Math.round(totalPieces).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm font-semibold text-stone-600">
+                    <span>Total Price</span>
+                    <span className="text-stone-900 font-bold">{convertCurrency(subtotal, user?.currency).formatted}</span>
+                  </div>
             </div>
 
-            <div className={`p-4 rounded-xl mb-6 ${isOverCapacity ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'}`}>
+            <div className={`p-4 rounded-xl mb-6 ${!isWholeContainer ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'}`}>
               <div className="flex items-start gap-3">
-                <Package className={`w-5 h-5 mt-0.5 ${isOverCapacity ? 'text-orange-500' : 'text-green-600'}`} />
+                <Package className={`w-5 h-5 mt-0.5 ${!isWholeContainer ? 'text-orange-500' : 'text-green-600'}`} />
                 <div>
-                  <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${isOverCapacity ? 'text-orange-600' : 'text-green-700'}`}>
-                    Recommended Container
+                  <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${!isWholeContainer ? 'text-orange-600' : 'text-green-700'}`}>
+                    Container Status
                   </p>
-                  <p className={`text-base font-black ${isOverCapacity ? 'text-orange-700' : 'text-green-800'}`}>
-                    {recommendedContainer}
+                  <p className={`text-base font-black ${!isWholeContainer ? 'text-orange-700' : 'text-green-800'}`}>
+                    {!isWholeContainer ? 'Full Container Required' : 'Ready for Checkout'}
                   </p>
                 </div>
               </div>
-              {!isOverCapacity && (
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs font-bold mb-1">
-                    <span className="text-green-700">Utilization</span>
-                    <span className="text-green-700">{capacityPercentage.toFixed(1)}%</span>
-                  </div>
-                  <div className="h-2 bg-green-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-green-500 rounded-full transition-all duration-500"
-                      style={{ width: `${capacityPercentage}%` }}
-                    />
-                  </div>
+              <div className="mt-4">
+                <div className="flex justify-between text-xs font-bold mb-1">
+                  <span className={!isWholeContainer ? 'text-orange-700' : 'text-green-700'}>
+                    {!isWholeContainer ? `Add ${remainingForNextFull.toFixed(2)} more to complete full container` : `Total Capacity: ${totalContainerQuantity.toFixed(2)}`}
+                  </span>
+                  <span className={!isWholeContainer ? 'text-orange-700' : 'text-green-700'}>
+                    {capacityPercentage.toFixed(0)}%
+                  </span>
                 </div>
-              )}
+                <div className={`h-2 rounded-full overflow-hidden ${!isWholeContainer ? 'bg-orange-200' : 'bg-green-200'}`}>
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${!isWholeContainer ? 'bg-orange-500' : 'bg-green-500'}`}
+                    style={{ width: `${capacityPercentage}%` }}
+                  />
+                </div>
+                {!isWholeContainer && (
+                  <p className="text-[10px] font-semibold text-orange-600 mt-3 text-center opacity-90 leading-snug">
+                    Checkout is available only for full container quantities. Please complete the remaining container capacity.
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="pt-4 border-t border-stone-200 mb-8">
@@ -226,9 +268,10 @@ const Cart = () => {
 
             <button 
               onClick={() => navigate('/checkout')}
-              className="w-full py-4 bg-[#2E7D32] text-white font-black rounded-xl hover:bg-[#1B5E20] transition-colors flex justify-center items-center gap-2"
+              disabled={!isWholeContainer}
+              className={`w-full py-4 font-black rounded-xl transition-colors flex justify-center items-center gap-2 ${!isWholeContainer ? 'bg-stone-200 text-stone-500 opacity-60 cursor-not-allowed' : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white'}`}
             >
-              Proceed to Checkout <ArrowRight className="w-5 h-5" />
+              {!isWholeContainer ? 'Full Container Required' : 'Proceed to Checkout'} <ArrowRight className="w-5 h-5" />
             </button>
           </div>
         </div>

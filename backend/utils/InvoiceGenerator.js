@@ -15,10 +15,51 @@ const THEME = {
   border: '#E5E7EB', // Border Gray
 };
 
+export const buildInvoiceDataFromOrder = (order) => {
+  const isIndia = order.shippingAddress?.country?.toLowerCase() === 'india';
+  return {
+    invoiceNumber: `INV-${order._id.toString().slice(-6).toUpperCase()}`,
+    orderId: order._id.toString(),
+    customerId: order.user?._id?.toString() || 'Guest',
+    currency: order.user?.currency || (isIndia ? 'INR' : 'USD'),
+    customerName: order.user?.name || 'Customer',
+    customerEmail: order.user?.email || '',
+    customerPhone: order.user?.phone || '',
+    shippingAddress: order.shippingAddress || {},
+    containerType: order.shippingDetails?.containerType || order.recommendedContainer || '20 ft',
+    containerUtilization: order.assignedContainer ? 100 : 0, 
+    totalContainers: Math.ceil(order.totalContainers || 1),
+    totalPieces: order.totalPieces || order.items.reduce((acc, curr) => acc + (curr.pieces || curr.quantity), 0),
+    estimatedWeight: order.totalWeight || 0,
+    estimatedVolume: order.totalVolume || 0,
+    shippingMethod: order.shippingDetails?.shippingMethod || (isIndia ? 'Road Transport' : 'Sea Freight'),
+    destinationCountry: order.shippingAddress?.country || 'Unknown',
+    transitTime: order.shippingDetails?.transitTime || 'Standard ETA',
+    items: order.items.map(item => ({
+      productName: item.product?.name || item.productName || 'Product',
+      sku: item.product?.slug ? item.product.slug.toUpperCase().substring(0, 8) : (item.product?._id?.toString().slice(-6) || 'COCO-ITEM'),
+      quantity: item.quantity,
+      unitPrice: item.unitPrice || item.price || item.product?.price || 0,
+      pieces: item.pieces || item.quantity
+    })),
+    subtotal: order.items.reduce((acc, curr) => acc + (curr.quantity * (curr.unitPrice || curr.price || curr.product?.price || 0)), 0),
+    discount: order.discount || 0,
+    shippingCharge: order.shippingCharge || 0,
+    tax: order.tax || 0,
+    totalAmount: order.totalAmount,
+    paymentMethod: order.paymentGateway || 'Card',
+    transactionId: order.paymentId || 'N/A',
+    paymentDate: order.paidAt ? new Date(order.paidAt).toLocaleDateString() : new Date().toLocaleDateString(),
+    paymentStatus: order.paymentStatus || 'PENDING',
+    orderDate: new Date(order.createdAt).toLocaleDateString(),
+    status: order.orderStatus || 'PENDING'
+  };
+};
+
 export const generateInvoicePDF = async (invoiceData) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: 'A4', margin: 40 });
+      const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
       let buffers = [];
 
       doc.on('data', buffers.push.bind(buffers));
@@ -36,36 +77,27 @@ export const generateInvoicePDF = async (invoiceData) => {
 
       // Generate QR Code
       const qrData = JSON.stringify({
-        invoiceNo: invoiceData.invoiceNumber,
-        orderId: invoiceData.orderId,
-        customerId: invoiceData.customerId,
-        verificationUrl: `https://www.cocoveera.com/verify/${invoiceData.invoiceNumber}`,
+        INV: invoiceData.invoiceNumber,
+        ORD: invoiceData.orderId,
+        Cust: invoiceData.customerName,
+        Total: `${getCurrencySymbol(invoiceData.currency)}${(invoiceData.totalAmount || 0).toFixed(2)}`
       });
       const qrBufferUrl = await QRCode.toDataURL(qrData);
-      
-      // We need to parse base64 for pdfkit
       const base64Data = qrBufferUrl.replace(/^data:image\/png;base64,/, "");
       const qrBuffer = Buffer.from(base64Data, 'base64');
 
       // --- RENDER PDF ---
-      
-      // 1. HEADER SECTION
+
+      // PAGE 1: Header, Info, Logistics
       generateHeader(doc, logoBuffer, invoiceData);
-      
-      // 2. COMPANY & CUSTOMER INFO
       generateCompanyAndCustomerInfo(doc, invoiceData);
-
-      // 3. ORDER INFO & LOGISTICS & SHIPPING
       generateOrderAndLogisticsInfo(doc, invoiceData);
+      
+      // PRODUCT TABLE (Handles pagination)
+      const finalY = generateProductTable(doc, invoiceData);
 
-      // 4. PRODUCT DETAILS TABLE
-      generateProductTable(doc, invoiceData);
-
-      // 5. PAYMENT & DIGITAL SIGNATURE & QR
-      generateBottomSection(doc, invoiceData, qrBuffer);
-
-      // 6. FOOTER
-      generateFooter(doc);
+      // SUMMARIES & BOTTOM SECTION
+      generateSummariesAndBottom(doc, invoiceData, qrBuffer, finalY);
 
       doc.end();
     } catch (error) {
@@ -104,8 +136,8 @@ function generateHeader(doc, logoBuffer, invoice) {
 
   doc.font('Helvetica-Bold').text('Status:', 360, 135);
   const rawStatus = invoice.status || invoice.paymentStatus || 'PAID';
-  const statusStr = rawStatus.toLowerCase() === 'paid' ? 'PAID' : 'UNPAID';
-  const statusColor = statusStr === 'UNPAID' ? '#D32F2F' : THEME.primary;
+  const statusStr = ['paid', 'confirmed', 'production', 'packed', 'loaded', 'shipped', 'delivered'].includes(rawStatus.toLowerCase()) ? 'PAID' : (rawStatus.toUpperCase());
+  const statusColor = (statusStr === 'PENDING' || statusStr === 'UNPAID') ? '#D32F2F' : THEME.primary;
   doc.fillColor(statusColor).font('Helvetica-Bold').text(statusStr, 440, 135, { width: 115, align: 'right' });
 
   generateHr(doc, 155, THEME.primary, 2);
@@ -127,116 +159,145 @@ function generateCompanyAndCustomerInfo(doc, invoice) {
      .text('Web: www.cocoveera.com', 40, top + 102);
 
   // Customer Info (Right)
-  doc.fillColor(THEME.primary).fontSize(11).font('Helvetica-Bold').text('BILL TO:', 300, top);
+  doc.fillColor(THEME.primary).fontSize(11).font('Helvetica-Bold').text('BILL TO / SHIP TO:', 300, top);
   doc.fillColor(THEME.textMain).fontSize(10).font('Helvetica-Bold').text(invoice.customerName, 300, top + 15);
   
-  const address = invoice.billingAddress || invoice.shippingAddress || {};
+  const address = invoice.shippingAddress || {};
   
   doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica')
      .text(invoice.customerEmail, 300, top + 30)
      .text(invoice.customerPhone || '', 300, top + 42)
      .text(address.street || address.addressLine || 'Address not provided', 300, top + 54)
-     .text(`${address.city || ''}, ${address.state || ''} ${address.postalCode || address.zip || ''}`, 300, top + 66)
+     .text(`${address.city || ''}, ${address.state || ''} ${address.postalCode || address.zipCode || ''}`, 300, top + 66)
      .text(address.country || '', 300, top + 78);
 
   generateHr(doc, top + 120, THEME.border, 1);
 }
 
 function generateOrderAndLogisticsInfo(doc, invoice) {
-  const top = 300;
+  const top = 305;
+
+  const usedCap = invoice.totalContainers || 0;
+  const isWhole = Number.isInteger(usedCap);
+  const remainingCap = isWhole ? 0 : (1 - (usedCap % 1));
+  const utilization = isWhole ? 100 : Math.round((usedCap % 1) * 100);
 
   // Box 1: Export Logistics
-  doc.rect(40, top, 240, 95).fillAndStroke(THEME.accent, THEME.border);
+  doc.rect(40, top, 240, 110).fillAndStroke(THEME.accent, THEME.border);
   doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('EXPORT LOGISTICS', 50, top + 10);
   doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
   
   doc.text('Container Type:', 50, top + 30).font('Helvetica').text(invoice.containerType || 'N/A', 140, top + 30);
-  doc.font('Helvetica-Bold').text('Utilization:', 50, top + 45).font('Helvetica').text(`${invoice.containerUtilization || 0}%`, 140, top + 45);
-  doc.font('Helvetica-Bold').text('Estimated Weight:', 50, top + 60).font('Helvetica').text(`${(invoice.estimatedWeight || 0).toLocaleString()} KG`, 140, top + 60);
-  doc.font('Helvetica-Bold').text('Estimated Volume:', 50, top + 75).font('Helvetica').text(`${(invoice.estimatedVolume || 0).toFixed(2)} CBM`, 140, top + 75);
+  doc.font('Helvetica-Bold').text('Total Containers:', 50, top + 45).font('Helvetica').text(usedCap.toFixed(2), 140, top + 45);
+  doc.font('Helvetica-Bold').text('Total Pieces:', 50, top + 60).font('Helvetica').text(Math.round(invoice.totalPieces || 0).toLocaleString(), 140, top + 60);
+  doc.font('Helvetica-Bold').text('Estimated Weight:', 50, top + 75).font('Helvetica').text(`${(invoice.estimatedWeight || 0).toLocaleString()} KG`, 140, top + 75);
+  doc.font('Helvetica-Bold').text('Estimated Volume:', 50, top + 90).font('Helvetica').text(`${(invoice.estimatedVolume || 0).toFixed(2)} CBM`, 140, top + 90);
 
   // Box 2: Shipping Information
-  doc.rect(315, top, 240, 95).fillAndStroke(THEME.accent, THEME.border);
+  doc.rect(315, top, 240, 110).fillAndStroke(THEME.accent, THEME.border);
   doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('SHIPPING INFORMATION', 325, top + 10);
   doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
   
   doc.text('Shipping Method:', 325, top + 30).font('Helvetica').text(invoice.shippingMethod || 'Sea Freight', 415, top + 30);
-  doc.font('Helvetica-Bold').text('Origin:', 325, top + 45).font('Helvetica').text('India', 415, top + 45);
-  doc.font('Helvetica-Bold').text('Destination:', 325, top + 60).font('Helvetica').text(invoice.destinationCountry || (invoice.shippingAddress ? invoice.shippingAddress.country : 'Unknown'), 415, top + 60);
-  doc.font('Helvetica-Bold').text('Transit Time:', 325, top + 75).font('Helvetica').text(invoice.transitTime || 'Standard ETA', 415, top + 75);
-
+  doc.font('Helvetica-Bold').text('Origin Port:', 325, top + 45).font('Helvetica').text(invoice.portOfLoading || 'Origin Port', 415, top + 45);
+  doc.font('Helvetica-Bold').text('Destination Port:', 325, top + 60).font('Helvetica').text(invoice.portOfDischarge || 'Destination Port', 415, top + 60);
+  doc.font('Helvetica-Bold').text('Incoterms:', 325, top + 75).font('Helvetica').text(invoice.incoterms || 'FOB', 415, top + 75);
+  doc.font('Helvetica-Bold').text('Transit Time:', 325, top + 90).font('Helvetica').text(invoice.transitTime || 'TBD', 415, top + 90);
 }
 
 function generateProductTable(doc, invoice) {
   let i;
-  const invoiceTableTop = 420;
+  let invoiceTableTop = 440;
   const curr = getCurrencySymbol(invoice.currency);
-
-  doc.rect(40, invoiceTableTop, 515, 25).fill(THEME.primary);
-  doc.fillColor(THEME.secondary).font('Helvetica-Bold').fontSize(9);
   
-  doc.text('Product Name', 50, invoiceTableTop + 8, { width: 190 });
-  doc.text('SKU', 250, invoiceTableTop + 8, { width: 70 });
-  doc.text('Qty', 330, invoiceTableTop + 8, { width: 40, align: 'right' });
-  doc.text('Unit Price', 380, invoiceTableTop + 8, { width: 80, align: 'right' });
-  doc.text('Subtotal', 470, invoiceTableTop + 8, { width: 75, align: 'right' });
+  const drawTableHeader = (y) => {
+    doc.rect(40, y, 515, 25).fill(THEME.primary);
+    doc.fillColor(THEME.secondary).font('Helvetica-Bold').fontSize(8);
+    
+    doc.text('Product Name', 50, y + 8, { width: 140 });
+    doc.text('SKU', 190, y + 8, { width: 60 });
+    doc.text('Containers', 250, y + 8, { width: 55, align: 'center' });
+    doc.text('Total Pieces', 310, y + 8, { width: 50, align: 'right' });
+    doc.text('Unit Price', 370, y + 8, { width: 70, align: 'right' });
+    doc.text('Subtotal', 450, y + 8, { width: 95, align: 'right' });
+    return y + 25;
+  };
 
-  let position = invoiceTableTop + 25;
+  let position = drawTableHeader(invoiceTableTop);
   
   for (i = 0; i < (invoice.items || []).length; i++) {
     const item = invoice.items[i];
     
-    // Background alternating color
+    if (position > 700) {
+      // Add new page and redraw header
+      generateFooter(doc);
+      doc.addPage();
+      generatePageHeader(doc, invoice);
+      position = drawTableHeader(100);
+    }
+
     if (i % 2 === 0) {
       doc.rect(40, position, 515, 30).fill(THEME.accent);
     }
     
-    doc.fillColor(THEME.textMain).font('Helvetica').fontSize(9);
+    doc.fillColor(THEME.textMain).font('Helvetica').fontSize(8);
     
-    doc.text(item.productName, 50, position + 10, { width: 190 });
-    doc.text(item.sku || 'N/A', 250, position + 10, { width: 70 });
-    doc.text(item.quantity, 330, position + 10, { width: 40, align: 'right' });
-    doc.text(`${curr}${(item.unitPrice || 0).toFixed(2)}`, 380, position + 10, { width: 80, align: 'right' });
-    doc.text(`${curr}${(item.unitPrice * item.quantity || 0).toFixed(2)}`, 470, position + 10, { width: 75, align: 'right' });
+    doc.text(item.productName, 50, position + 10, { width: 140 });
+    doc.text(item.sku || 'N/A', 190, position + 10, { width: 60 });
+    doc.text(item.quantity.toFixed(2), 250, position + 10, { width: 55, align: 'center' });
+    doc.text(Math.round(item.pieces || 0).toLocaleString(), 310, position + 10, { width: 50, align: 'right' });
+    doc.text(`${curr}${(item.unitPrice || 0).toFixed(2)}`, 370, position + 10, { width: 70, align: 'right' });
+    doc.text(`${curr}${(item.unitPrice * (item.pieces || 0)).toFixed(2)}`, 450, position + 10, { width: 95, align: 'right' });
 
     position += 30;
   }
 
   generateHr(doc, position, THEME.primary, 1);
+  return position;
+}
 
-  // ORDER SUMMARY (Bottom Right)
-  const summaryTop = position + 15;
-  const subtotal = invoice.subtotal || invoice.items.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
+function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
+  const curr = getCurrencySymbol(invoice.currency);
+  
+  // Check if we need a new page for summaries
+  if (finalY > 550) {
+    generateFooter(doc);
+    doc.addPage();
+    generatePageHeader(doc, invoice);
+    finalY = 100;
+  }
+
+  const summaryTop = finalY + 15;
+  
+  const subtotal = invoice.subtotal || invoice.items.reduce((acc, item) => acc + (item.unitPrice * (item.pieces || 0)), 0);
   const discount = invoice.discount || 0;
   const shipping = invoice.shippingCharge || 0;
   const tax = invoice.tax || 0;
   const total = invoice.totalAmount || (subtotal - discount + shipping + tax);
+  // Right Column: Grand Total Summary
+  doc.font('Helvetica-Bold').fontSize(9).fillColor(THEME.textMain);
+  doc.text('Items Total:', 350, summaryTop + 20, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}${subtotal.toFixed(2)}`, 460, summaryTop + 20, { width: 85, align: 'right' });
 
-  doc.font('Helvetica-Bold').fontSize(9);
-  
-  doc.text('Items Total:', 350, summaryTop, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${subtotal.toFixed(2)}`, 460, summaryTop, { width: 85, align: 'right' });
+  doc.font('Helvetica-Bold').text('Discount:', 350, summaryTop + 35, { width: 100, align: 'right' })
+     .font('Helvetica').fillColor(THEME.primary).text(`${curr}${discount.toFixed(2)}`, 460, summaryTop + 35, { width: 85, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Product Discount:', 350, summaryTop + 15, { width: 100, align: 'right' })
-     .font('Helvetica').fillColor(THEME.primary).text(`- ${curr}${discount.toFixed(2)}`, 460, summaryTop + 15, { width: 85, align: 'right' });
+  doc.fillColor(THEME.textMain).font('Helvetica-Bold').text('Delivery Charges:', 350, summaryTop + 50, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}${shipping.toFixed(2)}`, 460, summaryTop + 50, { width: 85, align: 'right' });
+     
+  doc.font('Helvetica-Bold').text('Handling Charges:', 350, summaryTop + 65, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}0.00`, 460, summaryTop + 65, { width: 85, align: 'right' });
 
-  doc.fillColor(THEME.textMain).font('Helvetica-Bold').text('Shipping Charges:', 350, summaryTop + 30, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${shipping.toFixed(2)}`, 460, summaryTop + 30, { width: 85, align: 'right' });
+  doc.font('Helvetica-Bold').text('Tax / GST:', 350, summaryTop + 80, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}${tax.toFixed(2)}`, 460, summaryTop + 80, { width: 85, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Tax / GST:', 350, summaryTop + 45, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${tax.toFixed(2)}`, 460, summaryTop + 45, { width: 85, align: 'right' });
+  generateHr(doc, summaryTop + 90, THEME.border, 1);
 
-  generateHr(doc, summaryTop + 65, THEME.border, 1);
+  doc.fillColor(THEME.primary).font('Helvetica-Bold').fontSize(14)
+     .text('GRAND TOTAL:', 300, summaryTop + 105, { width: 150, align: 'right' })
+     .text(`${curr}${total.toFixed(2)}`, 460, summaryTop + 105, { width: 85, align: 'right' });
 
-  doc.fillColor(THEME.primary).font('Helvetica-Bold').fontSize(12)
-     .text('GRAND TOTAL:', 300, summaryTop + 75, { width: 150, align: 'right' })
-     .text(`${curr}${total.toFixed(2)}`, 460, summaryTop + 75, { width: 85, align: 'right' });
-}
-
-function generateBottomSection(doc, invoice, qrBuffer) {
-  // We place this roughly at y=600 depending on items
-  // Assuming a static layout for simplicity or checking current y
-  const bottomY = Math.max(doc.y + 40, 600);
+  const bottomY = Math.max(summaryTop + 140, 650);
 
   // QR Code
   doc.image(qrBuffer, 40, bottomY, { width: 70 });
@@ -247,10 +308,10 @@ function generateBottomSection(doc, invoice, qrBuffer) {
   // Payment Info
   doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('PAYMENT INFORMATION', 150, bottomY);
   doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
-  doc.text('Method:', 150, bottomY + 15).font('Helvetica').text(invoice.paymentMethod || 'Razorpay', 230, bottomY + 15);
+  doc.text('Method:', 150, bottomY + 15).font('Helvetica').text(invoice.paymentMethod || 'Not specified', 230, bottomY + 15);
   doc.font('Helvetica-Bold').text('Transaction Ref:', 150, bottomY + 30).font('Helvetica').text(invoice.transactionId || 'N/A', 230, bottomY + 30);
   doc.font('Helvetica-Bold').text('Paid Date:', 150, bottomY + 45).font('Helvetica').text(invoice.paymentDate || formatDate(new Date()), 230, bottomY + 45);
-  const paymentStatus = (invoice.paymentStatus || 'COMPLETED').toUpperCase();
+  const paymentStatus = (invoice.paymentStatus || 'PENDING').toUpperCase();
   const paymentStatusColor = paymentStatus === 'PENDING' || paymentStatus === 'UNPAID' ? '#D32F2F' : THEME.primary;
   doc.font('Helvetica-Bold').text('Status:', 150, bottomY + 60).fillColor(paymentStatusColor).font('Helvetica-Bold').text(paymentStatus, 230, bottomY + 60);
 
@@ -265,18 +326,26 @@ function generateBottomSection(doc, invoice, qrBuffer) {
   doc.fillColor(THEME.textLight).fontSize(7).font('Helvetica')
      .text('Company Seal', 380, bottomY + 55, { align: 'center', width: 150 })
      .text('Generated By Cocoveera ERP System', 380, bottomY + 65, { align: 'center', width: 150 });
+     
+  generateFooter(doc);
+}
+
+function generatePageHeader(doc, invoice) {
+  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('COCOVEERA - Invoice Continuation', 40, 40);
+  doc.fillColor(THEME.textMain).fontSize(8).text(`Invoice Number: ${invoice.invoiceNumber}`, 40, 55);
+  generateHr(doc, 70, THEME.border, 1);
 }
 
 function generateFooter(doc) {
   const footerY = 750;
   generateHr(doc, footerY, THEME.primary, 2);
   
-  doc.fillColor(THEME.primary).fontSize(12).font('Helvetica-Bold')
+  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold')
      .text('Thank You For Choosing Cocoveera', 40, footerY + 10, { align: 'center', width: 515 });
 
-  doc.fillColor(THEME.textLight).fontSize(8).font('Helvetica')
+  doc.fillColor(THEME.textLight).fontSize(7).font('Helvetica')
      .text('Verification: team@cocoveera.com | Support: servicedesk@cocoveera.com', 40, footerY + 25, { align: 'center', width: 515 })
-     .text('Website: www.cocoveera.com', 40, footerY + 37, { align: 'center', width: 515 });
+     .text('Website: www.cocoveera.com', 40, footerY + 35, { align: 'center', width: 515 });
 }
 
 function generateHr(doc, y, color, width) {
@@ -284,18 +353,18 @@ function generateHr(doc, y, color, width) {
 }
 
 function getCurrencySymbol(currencyStr) {
-  const curr = (currencyStr || 'INR').toUpperCase();
+  const curr = (currencyStr || 'USD').toUpperCase();
   const map = {
-    'INR': 'Rs. ',
+    'INR': '₹',
     'USD': '$',
     'EUR': '€',
     'GBP': '£',
-    'AED': 'د.إ',
+    'AED': 'AED ',
     'AUD': 'A$',
     'CAD': 'C$',
     'SGD': 'S$'
   };
-  return map[curr] || '$';
+  return map[curr] || `${curr} `;
 }
 
 function formatDate(date) {

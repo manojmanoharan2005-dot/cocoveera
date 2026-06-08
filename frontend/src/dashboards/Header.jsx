@@ -98,10 +98,10 @@ export const Header = ({
             <button
               type="button"
               onClick={onFilterClick}
-              className="flex items-center gap-1.5 text-stone-700 bg-white border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] py-2 px-3 rounded-[12px] text-[11.5px] font-bold transition-all duration-200 h-10 shrink-0 shadow-sm hover:shadow-md"
+              className="flex items-center gap-1.5 text-stone-700 bg-white border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] py-2 px-2.5 sm:px-3 rounded-[12px] text-[11.5px] font-bold transition-all duration-200 h-10 shrink-0 shadow-sm hover:shadow-md"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Filter</span>
+              <span>Filter</span>
             </button>
 
             {/* Sort dropdown */}

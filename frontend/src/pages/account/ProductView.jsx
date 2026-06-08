@@ -7,7 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
   Droplet, Wind, ShieldCheck, FileText, ChevronRight,
-  Plus, Minus, Info, AlertCircle, Sparkles
+  Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
@@ -23,7 +23,7 @@ const ProductView = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0.25);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -179,17 +179,29 @@ const ProductView = () => {
   const discount = 20;
 
   // Container & subtotal calculations
-  const CONTAINER_CAPACITY = {
-    '20FT': 10,
-    '40FT': 22
-  };
-  const currentCapacity = CONTAINER_CAPACITY[containerType];
   const totalQuantity = quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0);
-  const capacityPercentage = Math.min((totalQuantity / currentCapacity) * 100, 100);
-  const isOverCapacity = totalQuantity > currentCapacity;
+  const isWholeContainer = Number.isInteger(totalQuantity) && totalQuantity >= 1;
+  const capacityPercentage = isWholeContainer ? 100 : ((totalQuantity % 1) * 100);
+  const remainingForNextFull = isWholeContainer ? 0 : (1 - (totalQuantity % 1));
+  const isOverCapacity = false; // No longer applicable as they can order multiple containers
   const palletItems = [{ product, quantity }, ...extraItems];
 
-  const subtotalValue = product.price * quantity;
+  const getPiecesForContainer = (cType, palletCount = 300) => {
+    if (!cType) return 10 * palletCount;
+    if (cType.includes('40FT')) return 22 * palletCount;
+    return 10 * palletCount;
+  };
+
+  const mainPieces = quantity * getPiecesForContainer(containerType, product?.palletCount);
+  let totalPieces = mainPieces;
+
+  const extraSubtotal = extraItems.reduce((acc, item) => {
+    const extraPieces = item.quantity * getPiecesForContainer(containerType, item.product?.palletCount);
+    totalPieces += extraPieces;
+    return acc + (item.product?.price * extraPieces);
+  }, 0);
+
+  const subtotalValue = (product.price * mainPieces) + extraSubtotal;
   const subtotalData = convertCurrency(subtotalValue, user?.currency || 'INR');
 
   const imagesList = product.images?.length > 0 ? product.images : [
@@ -338,81 +350,118 @@ const ProductView = () => {
 
             {/* CONTAINER SELECTION CARD */}
             {showConfigurator && (
-              <div id="container-configurator" className="bg-white rounded-[20px] p-4 sm:p-6 border border-stone-200/80 shadow-sm relative overflow-hidden space-y-4 mb-6">
-                <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2.5 font-poppins">
-                  Container Selection
-                </h3>
+              <div id="container-configurator" className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden space-y-6 mb-6">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                  <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
+                    <Package className="w-4 h-4 text-[#2E7D32]" />
+                    Container Configuration
+                  </h3>
+                  <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
+                    Step 1
+                  </div>
+                </div>
               
-              <div className="flex gap-2">
-                <button 
-                  type="button"
-                  onClick={() => setContainerType('20FT')}
-                  className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all border ${
-                    containerType === '20FT' 
-                      ? 'bg-[#2E7D32] text-white border-[#2E7D32] shadow-md shadow-[#2E7D32]/10' 
-                      : 'bg-white text-stone-600 border-stone-250 hover:border-[#2E7D32] hover:text-[#2E7D32]'
-                  }`}
-                >
-                  20FT FCL
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setContainerType('40FT')}
-                  className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all border ${
-                    containerType === '40FT' 
-                      ? 'bg-[#2E7D32] text-white border-[#2E7D32] shadow-md shadow-[#2E7D32]/10' 
-                      : 'bg-white text-stone-600 border-stone-250 hover:border-[#2E7D32] hover:text-[#2E7D32]'
-                  }`}
-                >
-                  40FT FCL
-                </button>
-              </div>
-
-              {/* Adjust Pallets Control */}
-              <div className="flex items-center justify-between bg-stone-50 border border-stone-200/60 rounded-xl p-2.5 sm:p-3">
-                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider select-none">Adjust Quantity:</span>
-                <div className="flex items-center bg-white border border-stone-250 rounded-lg p-0.5">
-                  <button 
-                    type="button"
-                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-100 hover:text-stone-900 rounded-md transition-colors font-bold"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="w-10 text-center text-xs font-poppins font-black text-stone-900 select-none">
-                    {quantity}
-                  </span>
-                  <button 
-                    type="button"
-                    onClick={() => setQuantity(q => q + 1)}
-                    className="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-100 hover:text-stone-900 rounded-md transition-colors font-bold"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Capacity usage bar */}
-              <div>
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1.5">Capacity Usage</p>
-                <div className="flex justify-between items-baseline mb-2">
-                  <p className="text-lg font-black text-stone-900 font-poppins">
-                    {totalQuantity} <span className="text-xs text-stone-400 font-bold">/ {currentCapacity} Pallets</span>
-                  </p>
-                  <p className="text-base font-black text-[#2E7D32]">
-                    {capacityPercentage.toFixed(0)}%
-                  </p>
+                {/* Container Type Selection */}
+                <div className="space-y-2.5">
+                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Select Size</span>
+                  <div className="flex gap-3">
+                    <button 
+                      type="button"
+                      onClick={() => setContainerType('20FT')}
+                      className={`relative flex-1 py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
+                        containerType === '20FT' 
+                          ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
+                          : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
+                      }`}
+                    >
+                      {containerType === '20FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
+                      <span className={`block text-sm font-black uppercase tracking-wider transition-colors ${containerType === '20FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>20FT FCL</span>
+                      <span className="block text-[10px] font-semibold text-stone-500 mt-0.5">Standard Capacity</span>
+                    </button>
+                    
+                    <button 
+                      type="button"
+                      onClick={() => setContainerType('40FT')}
+                      className={`relative flex-1 py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
+                        containerType === '40FT' 
+                          ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
+                          : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
+                      }`}
+                    >
+                      {containerType === '40FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
+                      <span className={`block text-sm font-black uppercase tracking-wider transition-colors ${containerType === '40FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>40FT FCL</span>
+                      <span className="block text-[10px] font-semibold text-stone-500 mt-0.5">High Volume</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      isOverCapacity ? 'bg-red-500' : 'bg-gradient-to-r from-[#43A047] to-[#2E7D32]'
-                    }`}
-                    style={{ width: `${capacityPercentage}%` }}
-                  />
+                {/* Adjust Quantity Control */}
+                <div className="space-y-2.5">
+                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Fractional Quantity</span>
+                  <div className="flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-2 shadow-sm">
+                    <button 
+                      type="button"
+                      onClick={() => setQuantity(q => Math.max(0.25, q - 0.25))}
+                      className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 active:scale-95"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </button>
+                    
+                    <div className="flex flex-col items-center justify-center px-4">
+                      <span className="text-2xl font-poppins font-black text-stone-900 tracking-tight leading-none">
+                        {quantity.toFixed(2)}
+                      </span>
+                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mt-1">Containers</span>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={() => setQuantity(q => q + 0.25)}
+                      className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] rounded-xl transition-all duration-200 active:scale-95"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+
+                {/* Capacity Usage / Minimum Requirement Status */}
+                <div className={`p-4 rounded-2xl border-2 transition-colors duration-500 ${!isWholeContainer ? 'bg-orange-50/50 border-orange-100' : 'bg-green-50/50 border-green-100'}`}>
+                  <div className="flex justify-between items-end mb-3">
+                    <div>
+                      <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1.5 ${!isWholeContainer ? 'text-orange-600' : 'text-[#2E7D32]'}`}>
+                        {!isWholeContainer ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                        {!isWholeContainer ? 'Full Container Required' : 'Requirement Met'}
+                      </p>
+                      <p className="text-sm font-black text-stone-900 font-poppins">
+                        Current Total: {totalQuantity.toFixed(2)} <span className="text-xs text-stone-500 font-bold">Containers</span>
+                      </p>
+                    </div>
+                    <div className={`text-xl font-black font-poppins ${!isWholeContainer ? 'text-orange-500' : 'text-[#2E7D32]'}`}>
+                      {capacityPercentage.toFixed(0)}%
+                    </div>
+                  </div>
+
+                  <div className="relative w-full h-3 bg-stone-200/50 rounded-full overflow-hidden shadow-inner">
+                    <div 
+                      className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${
+                        !isWholeContainer ? 'bg-orange-500' : 'bg-gradient-to-r from-[#43A047] to-[#2E7D32] shadow-[0_0_10px_rgba(46,125,50,0.5)]'
+                      }`}
+                      style={{ width: `${capacityPercentage}%` }}
+                    />
+                  </div>
+                  {!isWholeContainer && (
+                    <div className="mt-3">
+                      <p className="text-[10px] font-bold text-orange-600 text-center">
+                        Add {remainingForNextFull.toFixed(2)} more container to complete the next full container.
+                      </p>
+                      <p className="text-[9px] font-semibold text-orange-500 text-center mt-0.5 opacity-80">
+                        Checkout is available only for full container quantities. Please complete the remaining container capacity.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
               {/* 3D Container Preview (Mobile Only) */}
               <div className="lg:hidden relative w-full mt-4 border border-stone-200/50 rounded-2xl overflow-hidden shadow-sm">
@@ -439,8 +488,8 @@ const ProductView = () => {
                              onClick={() => {
                                setExtraItems(prev => {
                                  const existing = prev.find(p => p.product._id === relProduct._id);
-                                 if (existing && existing.quantity > 1) {
-                                   return prev.map(p => p.product._id === relProduct._id ? { ...p, quantity: p.quantity - 1 } : p);
+                                 if (existing && existing.quantity > 0.25) {
+                                   return prev.map(p => p.product._id === relProduct._id ? { ...p, quantity: p.quantity - 0.25 } : p);
                                  } else {
                                    return prev.filter(p => p.product._id !== relProduct._id);
                                  }
@@ -457,9 +506,9 @@ const ProductView = () => {
                                setExtraItems(prev => {
                                  const existing = prev.find(p => p.product._id === relProduct._id);
                                  if (existing) {
-                                   return prev.map(p => p.product._id === relProduct._id ? { ...p, quantity: p.quantity + 1 } : p);
+                                   return prev.map(p => p.product._id === relProduct._id ? { ...p, quantity: p.quantity + 0.25 } : p);
                                  } else {
-                                   return [...prev, { product: relProduct, quantity: 1 }];
+                                   return [...prev, { product: relProduct, quantity: 0.25 }];
                                  }
                                });
                              }}
@@ -474,14 +523,7 @@ const ProductView = () => {
                 </div>
               </div>
               
-              {isOverCapacity && (
-                <div className="flex gap-2 items-start bg-red-50 p-3 rounded-xl border border-red-100">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                  <p className="text-xs font-semibold text-red-700 leading-tight">
-                    Warning: Quantity exceeds container capacity!
-                  </p>
-                </div>
-              )}
+
 
               {/* INLINE CHECKOUT ACTIONS FOR CONFIGURATOR (Desktop Only) */}
               <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:block">
@@ -495,20 +537,18 @@ const ProductView = () => {
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    disabled={actionLoading || isOverCapacity}
-                    className={`flex-1 bg-white border-2 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group ${
-                      isOverCapacity ? 'border-stone-300 text-stone-400 opacity-50 blur-[1px] cursor-not-allowed' : 'border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]'
-                    }`}
+                    disabled={actionLoading}
+                    className={`flex-1 bg-white border-2 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]`}
                   >
                     {actionLoading ? 'ADDING...' : 'ADD TO CART'}
                   </button>
                   <button
                     type="button"
                     onClick={handleProceedToCheckout}
-                    disabled={actionLoading || isOverCapacity}
+                    disabled={actionLoading || !isWholeContainer}
                     className={`flex-1 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
-                      isOverCapacity 
-                        ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
+                      !isWholeContainer 
+                        ? 'bg-stone-300 text-stone-500 opacity-60 cursor-not-allowed'
                         : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
                     }`}
                   >
@@ -530,7 +570,15 @@ const ProductView = () => {
               
               <div className="space-y-3.5 text-xs font-bold text-stone-600">
                 <div className="flex justify-between items-center">
-                  <span>Subtotal ({quantity} Pallets)</span>
+                  <span>Total Containers</span>
+                  <span className="text-stone-900 font-bold">{totalQuantity.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Total Pieces</span>
+                  <span className="text-stone-900 font-bold">{Math.round(totalPieces).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Subtotal</span>
                   <span className="text-stone-900 text-sm font-black font-poppins">{subtotalData.formatted}</span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -550,13 +598,11 @@ const ProductView = () => {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  disabled={actionLoading || isOverCapacity}
-                  className={`w-full bg-white border-2 font-poppins text-xs font-black py-3.5 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group ${
-                    isOverCapacity ? 'border-stone-300 text-stone-400 opacity-50 blur-[1px] cursor-not-allowed' : 'border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]'
-                  }`}
+                  disabled={actionLoading}
+                  className={`w-full bg-white border-2 font-poppins text-xs font-black py-3.5 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]`}
                 >
                   {actionLoading ? 'ADDING...' : 'ADD TO CART'}
-                  <ShoppingBag className={`w-4 h-4 transition-transform ${isOverCapacity ? '' : 'group-hover:scale-110'}`} />
+                  <ShoppingBag className={`w-4 h-4 transition-transform group-hover:scale-110`} />
                 </button>
 
                 {!showConfigurator && (

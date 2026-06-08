@@ -28,6 +28,10 @@ const OrderSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        pieces: {
+          type: Number,
+          default: 0,
+        },
         unitPrice: {
           type: Number,
           required: true,
@@ -39,6 +43,14 @@ const OrderSchema = new mongoose.Schema(
       required: true,
     },
     shippingCharge: {
+      type: Number,
+      default: 0,
+    },
+    discount: {
+      type: Number,
+      default: 0,
+    },
+    tax: {
       type: Number,
       default: 0,
     },
@@ -58,7 +70,7 @@ const OrderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ['pending', 'confirmed', 'production', 'packed', 'loaded', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'confirmed', 'packed', 'loaded', 'shipped', 'delivered', 'cancelled'],
       default: 'pending',
     },
     refunds: [
@@ -68,6 +80,14 @@ const OrderSchema = new mongoose.Schema(
       }
     ],
     refundedAmount: {
+      type: Number,
+      default: 0,
+    },
+    totalContainers: {
+      type: Number,
+      default: 0,
+    },
+    totalPieces: {
       type: Number,
       default: 0,
     },
@@ -100,6 +120,14 @@ const OrderSchema = new mongoose.Schema(
       country: String,
       postalCode: String, // Legacy
       zipCode: String,
+    },
+    shippingDetails: {
+      shippingMethod: String,
+      portOfLoading: String,
+      portOfDischarge: String,
+      incoterms: { type: String, default: 'FOB' },
+      transitTime: String,
+      containerType: String,
     },
     trackingNumber: {
       type: String,

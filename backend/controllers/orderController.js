@@ -12,13 +12,22 @@ import { sendOrderConfirmationWithInvoice, sendShipmentUpdate } from '../utils/E
 // @route   POST /api/orders
 // @access  Private
 export const createOrder = async (req, res) => {
-  const { quoteId, items, shippingAddress, paymentGateway, containerType, shippingCharge = 0 } = req.body;
+  const { quoteId, items, shippingAddress, paymentGateway, containerType, shippingCharge = 0, shippingDetails = {}, discount = 0, tax = 0 } = req.body;
 
   try {
     let orderItems = [];
     let totalAmount = 0;
     let totalWeight = 0;
     let totalVolume = 0;
+    let totalPieces = 0;
+    
+    const getPiecesForContainer = (cType, palletCount = 300) => {
+      if (!cType) return 10 * palletCount;
+      if (cType.includes('40FT')) return 22 * palletCount;
+      return 10 * palletCount;
+    };
+
+    const requestedContainer = containerType || shippingDetails.containerType || '20FT FCL';
 
     // Case 1: Order is converted from an approved quote
     if (quoteId) {
@@ -31,16 +40,21 @@ export const createOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: 'This quote is not in a payable state.' });
       }
 
+      const pieces = quote.quantity * getPiecesForContainer(requestedContainer, quote.product.palletCount);
+      
       orderItems = [
         {
           product: quote.product._id,
-          quantity: quote.quantity,
+          productName: quote.product.name,
+          quantity: quote.quantity, // Fraction
+          pieces: pieces,
           unitPrice: quote.pricingProposed || quote.product.price,
         },
       ];
-      totalAmount = (quote.pricingProposed || quote.product.price) * quote.quantity;
-      totalWeight = (quote.product.weight || 0) * quote.quantity;
-      totalVolume = (quote.product.volumeCBM || 0) * quote.quantity;
+      totalPieces = pieces;
+      totalAmount = (quote.pricingProposed || quote.product.price) * pieces;
+      totalWeight = (quote.product.weight || 0) * pieces;
+      totalVolume = (quote.product.volumeCBM || 0) * pieces;
     } 
     // Case 2: Order is created directly from catalog
     else if (items && items.length > 0) {
@@ -50,17 +64,27 @@ export const createOrder = async (req, res) => {
           return res.status(404).json({ success: false, message: `Product ${item.product} not found` });
         }
 
+        const pieces = item.quantity * getPiecesForContainer(item.containerType || requestedContainer, product.palletCount);
+        
         orderItems.push({
           product: product._id,
-          quantity: item.quantity,
+          productName: product.name,
+          quantity: item.quantity, // Fraction
+          pieces: pieces,
           unitPrice: product.price,
         });
-        totalAmount += product.price * item.quantity;
-        totalWeight += (product.weight || 0) * item.quantity;
-        totalVolume += (product.volumeCBM || 0) * item.quantity;
+        totalPieces += pieces;
+        totalAmount += product.price * pieces;
+        totalWeight += (product.weight || 0) * pieces;
+        totalVolume += (product.volumeCBM || 0) * pieces;
       }
     } else {
       return res.status(400).json({ success: false, message: 'No items or quote provided for order' });
+    }
+
+    const totalOrderQuantity = orderItems.reduce((acc, item) => acc + item.quantity, 0);
+    if (totalOrderQuantity < 1 || !Number.isInteger(totalOrderQuantity)) {
+      return res.status(400).json({ success: false, message: 'Checkout is available only for full container quantities. Please complete the remaining container capacity.' });
     }
 
     let recommendedContainer = containerType || '20FT Container';
@@ -83,13 +107,25 @@ export const createOrder = async (req, res) => {
       user: req.user.id,
       quote: quoteId || null,
       items: orderItems,
-      totalAmount: totalAmount + Number(shippingCharge),
+      totalAmount: totalAmount + Number(shippingCharge) - Number(discount) + Number(tax),
       shippingCharge: Number(shippingCharge),
+      discount: Number(discount),
+      tax: Number(tax),
       shippingAddress,
+      shippingDetails: {
+        shippingMethod: shippingDetails.shippingMethod || 'Not Specified',
+        portOfLoading: shippingDetails.portOfLoading || 'Origin Port',
+        portOfDischarge: shippingDetails.portOfDischarge || 'Destination Port',
+        incoterms: shippingDetails.incoterms || 'FOB',
+        transitTime: shippingDetails.transitTime || 'TBD',
+        containerType: requestedContainer,
+      },
       paymentGateway: paymentGateway || 'mock',
       totalWeight,
       totalVolume,
-      recommendedContainer,
+      totalContainers: totalOrderQuantity,
+      totalPieces: totalPieces,
+      recommendedContainer: requestedContainer,
     });
 
     // Populate for email
@@ -97,43 +133,8 @@ export const createOrder = async (req, res) => {
 
     if (paymentGateway === 'cod' || paymentGateway === 'wire') {
       try {
-        const address = populatedOrder.shippingAddress || {};
-        const invoiceData = {
-          invoiceNumber: 'INV-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-          orderId: order._id.toString().slice(-8).toUpperCase(),
-          customerName: populatedOrder.user.name,
-          customerEmail: populatedOrder.user.email,
-          customerPhone: (populatedOrder.user.phone && populatedOrder.user.phone !== 'N/A' && populatedOrder.user.phone !== 'Not Provided') 
-            ? (populatedOrder.user.phone.startsWith('+') ? populatedOrder.user.phone : '+' + populatedOrder.user.phone) 
-            : 'Not Provided',
-          shippingAddress: {
-            street: address.street || address.addressLine || 'Address not provided',
-            city: address.city || 'City not provided',
-            state: address.state || '',
-            zip: address.zipCode || address.zip || address.postalCode || '',
-            country: address.country || 'India',
-          },
-          paymentStatus: 'pending',
-          paymentMethod: paymentGateway.toUpperCase(),
-          transactionId: paymentGateway === 'cod' ? 'CASH ON DELIVERY' : (paymentGateway === 'wire' ? 'BANK WIRE' : 'N/A'),
-          totalAmount: populatedOrder.totalAmount,
-          containerType: populatedOrder.recommendedContainer || '20FT Container',
-          estimatedWeight: populatedOrder.totalWeight || 0,
-          estimatedVolume: populatedOrder.totalVolume || 0,
-          containerUtilization: (() => {
-            const totalPallets = populatedOrder.items.reduce((acc, item) => acc + item.quantity, 0);
-            const capacity = (populatedOrder.recommendedContainer && populatedOrder.recommendedContainer.includes('40')) ? 22 : 10;
-            return Math.min(Math.round((totalPallets / capacity) * 100), 100);
-          })(),
-          items: populatedOrder.items.map(item => ({
-            productName: item.productName || (item.product && item.product.name) || 'Product',
-            sku: (item.product && item.product.slug) ? item.product.slug.toUpperCase().substring(0, 8) : 'COCO-ITEM',
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            subtotal: item.unitPrice * item.quantity
-          })),
-          status: order.paymentStatus === 'paid' ? 'PAID' : 'UNPAID'
-        };
+        const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
+        const invoiceData = buildInvoiceDataFromOrder(populatedOrder);
 
         const pdfBuffer = await generateInvoicePDF(invoiceData);
 
@@ -266,3 +267,36 @@ export const cancelOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Download Order Invoice PDF
+// @route   GET /api/orders/:id/invoice
+// @access  Private
+export const downloadInvoice = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email phone currency')
+      .populate('items.product', 'name slug price palletCount');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.user._id.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'manager') {
+      return res.status(403).json({ success: false, message: 'Not authorized to view this invoice' });
+    }
+
+    const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
+    const invoiceData = buildInvoiceDataFromOrder(order);
+
+    const pdfBuffer = await generateInvoicePDF(invoiceData);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Invoice-${invoiceData.invoiceNumber}.pdf`);
+    
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Invoice generation failed:', error);
+    res.status(500).json({ success: false, message: 'Failed to generate invoice' });
+  }
+};
+

@@ -4,42 +4,134 @@
  */
 import React from 'react';
 import * as THREE from 'three';
-import { Text } from '@react-three/drei';
+import { useLoader } from '@react-three/fiber';
+import { Text, Billboard } from '@react-three/drei';
 
 // Procedural pallet and product load
 export const PalletModel = ({ position, index, product }) => {
   const palletWidth = 1.0;
   const palletDepth = 1.1;
   const palletHeight = 0.15;
-  const loadHeight = 1.4;
+  const loadHeight = 1.3;
 
   const category = product?.category || 'Coco Peat Products';
-  const isGrowBag = category.toLowerCase().includes('bag');
+  const isGrowBag = category.toLowerCase().includes('grow bag') || category.toLowerCase().includes('growbag');
+  const isBag = category.toLowerCase().includes('bag') && !isGrowBag;
   const isDisc = category.toLowerCase().includes('disc');
-  const isPot = category.toLowerCase().includes('pot');
-
-  let productHex = '#3e2723'; // Default dark brown coco peat
-  if (isGrowBag) productHex = '#f5f5f5'; // White bags
-  else if (isPot) productHex = '#d7ccc8'; // Light tan
-  else if (isDisc) productHex = '#4e342e'; // Darker brown
 
   const woodMaterial = new THREE.MeshStandardMaterial({
     color: '#8b5a2b',
     roughness: 1.0,
   });
 
-  const wrapMaterial = new THREE.MeshStandardMaterial({
+  const wrapMaterial = new THREE.MeshPhysicalMaterial({
     color: '#ffffff',
-    roughness: 0.3,
+    roughness: 0.2,
     metalness: 0.1,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.2,
+    transmission: 0.6,
   });
 
-  const productMaterial = new THREE.MeshStandardMaterial({
-    color: productHex,
-    roughness: 0.9,
-  });
+  // Load the product image to use as the shape
+  const imageUrl = product?.images?.[0] || 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&w=400&q=80';
+  const texture = useLoader(THREE.TextureLoader, imageUrl);
+
+  const renderProductStack = () => {
+    const items = [];
+    if (isGrowBag) {
+      // Cylinders (Grow Bags)
+      const radius = 0.14;
+      const height = 0.25;
+      const cols = 3;
+      const rows = 3;
+      const layers = 5;
+      for (let y = 0; y < layers; y++) {
+        for (let x = 0; x < cols; x++) {
+          for (let z = 0; z < rows; z++) {
+            const posX = (x - (cols - 1) / 2) * (radius * 2.2);
+            const posZ = (z - (rows - 1) / 2) * (radius * 2.2);
+            const posY = palletHeight + (height / 2) + (y * height);
+            items.push(
+              <mesh key={`gb-${x}-${y}-${z}`} position={[posX, posY, posZ]} castShadow>
+                <cylinderGeometry args={[radius, radius, height, 16]} />
+                <meshStandardMaterial map={texture} color="#ffffff" roughness={0.9} />
+              </mesh>
+            );
+          }
+        }
+      }
+    } else if (isBag) {
+      // Standing Pouch / 5KG bags
+      const w = 0.3;
+      const h = 0.4;
+      const d = 0.15;
+      const cols = 3;
+      const rows = 6;
+      const layers = 3;
+      for (let y = 0; y < layers; y++) {
+        for (let x = 0; x < cols; x++) {
+          for (let z = 0; z < rows; z++) {
+            const posX = (x - (cols - 1) / 2) * (w + 0.02);
+            const posZ = (z - (rows - 1) / 2) * (d + 0.02);
+            const posY = palletHeight + (h / 2) + (y * h);
+            items.push(
+              <mesh key={`bg-${x}-${y}-${z}`} position={[posX, posY, posZ]} castShadow>
+                <boxGeometry args={[w, h, d]} />
+                <meshStandardMaterial map={texture} color="#ffffff" roughness={0.9} />
+              </mesh>
+            );
+          }
+        }
+      }
+    } else if (isDisc) {
+      // Discs
+      const radius = 0.15;
+      const height = 0.05;
+      const cols = 3;
+      const rows = 3;
+      const layers = 24;
+      for (let y = 0; y < layers; y++) {
+        for (let x = 0; x < cols; x++) {
+          for (let z = 0; z < rows; z++) {
+            const posX = (x - (cols - 1) / 2) * (radius * 2.1);
+            const posZ = (z - (rows - 1) / 2) * (radius * 2.1);
+            const posY = palletHeight + (height / 2) + (y * height);
+            items.push(
+              <mesh key={`dsc-${x}-${y}-${z}`} position={[posX, posY, posZ]} castShadow>
+                <cylinderGeometry args={[radius, radius, height, 16]} />
+                <meshStandardMaterial map={texture} color="#ffffff" roughness={0.9} />
+              </mesh>
+            );
+          }
+        }
+      }
+    } else {
+      // Default: Blocks (Bricks)
+      const w = 0.3;
+      const h = 0.15;
+      const d = 0.15;
+      const cols = 3;
+      const rows = 6;
+      const layers = 8;
+      for (let y = 0; y < layers; y++) {
+        for (let x = 0; x < cols; x++) {
+          for (let z = 0; z < rows; z++) {
+            const posX = (x - (cols - 1) / 2) * (w + 0.01);
+            const posZ = (z - (rows - 1) / 2) * (d + 0.01);
+            const posY = palletHeight + (h / 2) + (y * h);
+            items.push(
+              <mesh key={`blk-${x}-${y}-${z}`} position={[posX, posY, posZ]} castShadow>
+                <boxGeometry args={[w, h, d]} />
+                <meshStandardMaterial map={texture} color="#ffffff" roughness={1.0} />
+              </mesh>
+            );
+          }
+        }
+      }
+    }
+    return items;
+  };
 
   return (
     <group position={position}>
@@ -49,16 +141,13 @@ export const PalletModel = ({ position, index, product }) => {
         <primitive object={woodMaterial} attach="material" />
       </mesh>
       
+      {/* Shaped Product Stack */}
+      {renderProductStack()}
+
       {/* Wrapped Load */}
       <mesh castShadow receiveShadow position={[0, palletHeight + loadHeight / 2, 0]}>
         <boxGeometry args={[palletWidth * 0.95, loadHeight, palletDepth * 0.95]} />
         <primitive object={wrapMaterial} attach="material" />
-      </mesh>
-
-      {/* Product inside wrap (visible through semi-transparent wrap) */}
-      <mesh castShadow position={[0, palletHeight + loadHeight / 2, 0]}>
-        <boxGeometry args={[palletWidth * 0.9, loadHeight * 0.98, palletDepth * 0.9]} />
-        <primitive object={productMaterial} attach="material" />
       </mesh>
 
       {/* Shipping Label on the side of the pallet */}

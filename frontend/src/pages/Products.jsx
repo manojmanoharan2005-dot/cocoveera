@@ -148,7 +148,7 @@ const Products = () => {
 
     const existsIdx = existingCart.findIndex(item => item._id === product._id && item.containerType === '20FT');
     if (existsIdx > -1) {
-      existingCart[existsIdx].quantity += 1;
+      existingCart[existsIdx].quantity += 0.25;
     } else {
       existingCart.push({
         _id: product._id,
@@ -156,7 +156,7 @@ const Products = () => {
         price: product.price,
         images: product.images || [],
         containerType: '20FT',
-        quantity: 1
+        quantity: 0.25
       });
     }
 

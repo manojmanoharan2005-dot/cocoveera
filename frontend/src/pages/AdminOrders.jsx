@@ -41,7 +41,6 @@ export default function AdminOrders() {
   const orderStatuses = [
     'pending',
     'confirmed',
-    'production',
     'packed',
     'loaded',
     'shipped',
@@ -123,7 +122,6 @@ export default function AdminOrders() {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-blue-100 text-blue-800',
-      production: 'bg-purple-100 text-purple-800',
       packed: 'bg-indigo-100 text-indigo-800',
       loaded: 'bg-orange-100 text-orange-800',
       shipped: 'bg-green-100 text-green-800',

@@ -2,13 +2,16 @@
  * File: frontend/src/components/3d/ContainerViewer3D.jsx
  * Purpose: Reusable React UI component for the frontend.
  */
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, ContactShadows } from '@react-three/drei';
 import { ContainerModel } from './ContainerModel';
 import { PalletModel } from './PalletModel';
+import { Eye, EyeOff } from 'lucide-react';
 
 export const ContainerViewer3D = ({ containerType, totalQuantity, autoRotate, palletItems = [] }) => {
+  const [isTransparent, setIsTransparent] = useState(false);
+  
   const pallets = [];
   const depth = containerType === '20FT' ? 6 : 12;
   const startZ = -depth / 2 + 0.6; // Start from back wall
@@ -31,7 +34,7 @@ export const ContainerViewer3D = ({ containerType, totalQuantity, autoRotate, pa
   }
 
   return (
-    <div className="w-full h-[250px] sm:h-[500px] bg-[#F7F9F7] cursor-grab active:cursor-grabbing rounded-2xl overflow-hidden shadow-inner relative border border-stone-200/60">
+    <div className="w-full h-[200px] sm:h-[320px] bg-[#F7F9F7] cursor-grab active:cursor-grabbing rounded-2xl overflow-hidden shadow-inner relative border border-stone-200/60">
       {totalQuantity === 0 && (
         <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center bg-white/40 backdrop-blur-[2px]">
           <p className="text-stone-500 font-bold text-xs uppercase tracking-widest px-4 py-2 bg-white rounded-full shadow-sm">
@@ -39,6 +42,20 @@ export const ContainerViewer3D = ({ containerType, totalQuantity, autoRotate, pa
           </p>
         </div>
       )}
+      
+      {/* Toggle View Button */}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsTransparent(!isTransparent);
+        }}
+        className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl border border-stone-200 shadow-sm flex items-center gap-2 hover:bg-stone-50 transition-colors"
+      >
+        {isTransparent ? <EyeOff className="w-4 h-4 text-[#2E7D32]" /> : <Eye className="w-4 h-4 text-[#2E7D32]" />}
+        <span className="text-[10px] font-bold text-stone-700 uppercase tracking-wider">
+          {isTransparent ? 'Solid View' : 'X-Ray View'}
+        </span>
+      </button>
       
       <Canvas camera={{ position: [5, 3, 7], fov: 45 }} shadows dpr={[1, 2]}>
         <color attach="background" args={['#F7F9F7']} />
@@ -59,7 +76,7 @@ export const ContainerViewer3D = ({ containerType, totalQuantity, autoRotate, pa
 
         <Suspense fallback={null}>
           <group position={[0, -0.5, 0]}>
-            <ContainerModel type={containerType} autoRotate={autoRotate} />
+            <ContainerModel type={containerType} autoRotate={autoRotate} isTransparent={isTransparent} />
             {pallets}
           </group>
           

@@ -8,17 +8,11 @@ const getSealHTML = (text, dateStr) => {
   return `
     <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
       <tr>
-        <td align="center" valign="middle" style="width: 140px; height: 140px; border: 4px solid #1E5B2E; border-radius: 50%; background-color: #FFFFFF; padding: 4px;">
-          <table border="0" cellpadding="0" cellspacing="0" width="100%" height="100%" style="border: 2px dashed #1E5B2E; border-radius: 50%;">
-            <tr>
-              <td align="center" valign="middle" style="padding: 10px;">
-                <div style="color: #1E5B2E; font-size: 12px; letter-spacing: 3px; line-height: 1;">★ ★ ★</div>
-                <div style="color: #1E5B2E; font-weight: 900; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; font-family: Georgia, 'Times New Roman', Times, serif; margin: 8px 0;">${text}</div>
-                <div style="color: #1E5B2E; font-size: 10px; font-weight: bold; font-family: Georgia, 'Times New Roman', Times, serif; margin-bottom: 8px;">${dateStr}</div>
-                <div style="color: #1E5B2E; font-size: 12px; letter-spacing: 3px; line-height: 1;">★ ★ ★</div>
-              </td>
-            </tr>
-          </table>
+        <td align="center" valign="middle" style="width: 130px; height: 130px; border: 2px dashed #2E7D32; border-radius: 50%; background-color: #FFFFFF;">
+          <div style="color: #2E7D32; font-size: 16px; letter-spacing: 5px; line-height: 1;">★ ★ ★</div>
+          <div style="color: #2E7D32; font-weight: bold; font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; font-family: Arial, Helvetica, sans-serif; margin: 12px 0 8px 0;">${text}</div>
+          <div style="color: #2E7D32; font-size: 10px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; margin-bottom: 12px;">${dateStr}</div>
+          <div style="color: #2E7D32; font-size: 16px; letter-spacing: 5px; line-height: 1;">★ ★ ★</div>
         </td>
       </tr>
     </table>
