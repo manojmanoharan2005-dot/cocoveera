@@ -3,6 +3,7 @@
  * Purpose: Handles the business logic and request processing for adminCategory operations.
  */
 import Category from '../models/Category.js';
+import { clearCache } from '../middleware/cache.js';
 
 // @desc    Get all categories
 // @route   GET /api/admin/categories
@@ -52,6 +53,7 @@ export const createAdminCategory = async (req, res) => {
     }
 
     const category = await Category.create({ name, description, image });
+    clearCache('/categories');
     res.status(201).json({ success: true, data: category });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -84,6 +86,7 @@ export const updateAdminCategory = async (req, res) => {
     
     await category.save();
 
+    clearCache('/categories');
     res.status(200).json({ success: true, data: category });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -101,6 +104,7 @@ export const deleteAdminCategory = async (req, res) => {
     }
 
     await Category.findByIdAndDelete(req.params.id);
+    clearCache('/categories');
     res.status(200).json({ success: true, message: 'Category removed' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -12,6 +12,7 @@ import { X, Check, Star, Info, Droplet, Wind, Home, ChevronRight } from 'lucide-
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
+import { API_URL } from '../utils/config';
 
 export const Marketplace = ({ 
   loading = false,
@@ -51,7 +52,6 @@ export const Marketplace = ({
   useEffect(() => {
     const fetchCats = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
         const res = await axios.get(`${API_URL}/categories`);
         if (res.data.success) {
           setDbCategories(res.data.data);
