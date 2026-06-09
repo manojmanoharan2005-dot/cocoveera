@@ -205,7 +205,7 @@ const ProductView = () => {
   const subtotalData = convertCurrency(subtotalValue, user?.currency || 'INR');
 
   const imagesList = product.images?.length > 0 ? product.images : [
-    'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'
+    'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'
   ];
 
   return (
@@ -479,7 +479,7 @@ const ProductView = () => {
                     return (
                       <div key={relProduct._id} className="flex items-center justify-between bg-stone-50 border border-stone-200/60 rounded-xl p-2">
                          <div className="flex items-center gap-2">
-                           <img src={relProduct.images?.[0] || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae'} className="w-8 h-8 rounded-lg object-cover" alt="" />
+                           <img src={relProduct.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} className="w-8 h-8 rounded-lg object-cover" alt="" />
                            <span className="text-[11px] font-bold text-stone-700 max-w-[120px] truncate">{relProduct.name}</span>
                          </div>
                          <div className="flex items-center bg-white border border-stone-250 rounded-lg p-0.5">
@@ -786,7 +786,7 @@ const ProductView = () => {
                   <div>
                     <div className="h-40 rounded-[16px] overflow-hidden bg-[#F7F9F7] mb-3.5 border border-stone-100 flex-shrink-0">
                       <img 
-                        src={item.images?.[0] || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'} 
+                        src={item.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} 
                         alt={item.name} 
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103" 
                       />

@@ -219,7 +219,7 @@ export const RegisterForm = () => {
       if (res.success) {
         localStorage.removeItem('cocoveera_register_cache');
         setSuccessMsg('Verification successful. Welcome to Cocoveera!');
-        const fromPath = location.state?.from || (res.user.role === 'admin' ? '/admin' : '/dashboard');
+        const fromPath = location.state?.from || (res.user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
         setTimeout(() => {
           navigate(fromPath, { replace: true });
         }, 1500);

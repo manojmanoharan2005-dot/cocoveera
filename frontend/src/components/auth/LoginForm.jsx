@@ -84,14 +84,9 @@ export const LoginForm = () => {
       if (res.success) {
         // If the user's role is admin/manager/support, log them into the admin context
         if (['admin', 'manager', 'support'].includes(res.user?.role)) {
-          try {
-            await adminLogin(data.email, data.password);
-            navigate('/admin/dashboard');
-            return;
-          } catch (adminErr) {
-            console.error('Failed to log in as admin despite having admin role:', adminErr);
-            // Fallback to standard dashboard if admin login fails
-          }
+          await adminLogin(data.email, data.password);
+          navigate('/admin/dashboard');
+          return;
         }
 
         const fromPath = location.state?.from || (redirect ? `/${redirect}` : '/dashboard');
@@ -101,7 +96,7 @@ export const LoginForm = () => {
       if (err.message.includes('not verified') || err.message.toLowerCase().includes('otp')) {
         navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
       } else {
-        setApiError(err.message || 'Incorrect email or password. Please try again.');
+        setApiError(err.response?.data?.message || err.message || 'Incorrect email or password. Please try again.');
       }
     } finally {
       setLoading(false);

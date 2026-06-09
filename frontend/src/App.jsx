@@ -59,12 +59,35 @@ const Notifications = lazy(() => import('./pages/account/Notifications'));
 const PaymentHistory = lazy(() => import('./pages/account/PaymentHistory'));
 const HelpCenter = lazy(() => import('./pages/account/HelpCenter'));
 
+import { Ship } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
 // Loading screen matching the requested design
 const LoadingScreen = () => (
   <div className="min-h-screen bg-white flex flex-col items-center justify-center">
-    <div className="w-12 h-12 border-4 border-[#2F7D32] border-t-transparent rounded-full animate-spin mb-4"></div>
+    <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
+      {/* Outer spinning ring */}
+      <div className="absolute inset-0 border-4 border-stone-100 rounded-full"></div>
+      <div className="absolute inset-0 border-4 border-[#2F7D32] border-t-transparent border-l-transparent rounded-full animate-spin"></div>
+      
+      {/* Inner moving ship */}
+      <motion.div
+        animate={{
+          y: [-2, 2, -2],
+          rotate: [-5, 5, -5]
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="text-[#2F7D32]"
+      >
+        <Ship className="w-8 h-8" />
+      </motion.div>
+    </div>
     <p className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 font-sans">
-      Loading Cocoveera Trade Platform...
+      Loading Cocoveera...
     </p>
   </div>
 );
@@ -100,7 +123,7 @@ const AdminProtectedRoute = ({ children }) => {
   return children;
 };
 
-import { motion, AnimatePresence } from 'framer-motion';
+
 
 const PublicLayout = () => {
   const location = useLocation();

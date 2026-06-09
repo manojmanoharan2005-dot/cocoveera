@@ -5,6 +5,7 @@
 import axios from 'axios';
 
 import { API_URL } from '../utils/config';
+import imageCompression from 'browser-image-compression';
 
 const getToken = () => localStorage.getItem('adminToken');
 
@@ -60,15 +61,28 @@ export const adminProductService = {
   },
 
   uploadImage: async (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const response = await axios.post(`${API_URL}/admin/upload`, formData, {
-      headers: {
-        ...getHeaders(),
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+    try {
+      const options = {
+        maxSizeMB: 1, // Compress to max 1MB
+        maxWidthOrHeight: 1280, // Max dimension
+        useWebWorker: true,
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      
+      const formData = new FormData();
+      formData.append('image', compressedFile, compressedFile.name);
+      const response = await axios.post(`${API_URL}/admin/upload`, formData, {
+        headers: {
+          ...getHeaders(),
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error compressing or uploading image:', error);
+      throw error;
+    }
   },
 };
 

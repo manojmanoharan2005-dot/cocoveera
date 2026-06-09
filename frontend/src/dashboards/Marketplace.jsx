@@ -3,7 +3,7 @@
  * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
  */
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import FilterDrawer from './FilterDrawer';
 import ProductGrid from './ProductGrid';
@@ -30,9 +30,18 @@ export const Marketplace = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Filters & Sorting state
-  const [selectedCollection, setSelectedCollection] = useState('All');
+  const selectedCollection = searchParams.get('category') || 'All';
+  const setSelectedCollection = (cat) => {
+    if (cat === 'All') {
+      searchParams.delete('category');
+    } else {
+      searchParams.set('category', cat);
+    }
+    setSearchParams(searchParams);
+  };
   const [priceRange, setPriceRange] = useState({ min: 0, max: 99999999 });
   const [stockStatus, setStockStatus] = useState('all');
   const [ratingFilter, setRatingFilter] = useState(0);
@@ -136,7 +145,8 @@ export const Marketplace = ({
   };
 
   const handleClearFilters = () => {
-    setSelectedCollection('All');
+    searchParams.delete('category');
+    setSearchParams(searchParams);
     setPriceRange({ min: 0, max: 99999999 });
     setStockStatus('all');
     setRatingFilter(0);
@@ -161,7 +171,7 @@ export const Marketplace = ({
     return {
       name: cat,
       count: catProducts.length,
-      image: dbCat?.image || catProducts[0]?.images?.[0] || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'
+      image: dbCat?.image || catProducts[0]?.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'
     };
   });
 
@@ -314,7 +324,7 @@ export const Marketplace = ({
                   <div className="md:col-span-5 space-y-4">
                     <div className="h-64 sm:h-72 rounded-[20px] overflow-hidden bg-[#F7F9F7] border border-stone-200/60 shadow-inner">
                       <img 
-                        src={selectedProduct.images?.[0] || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'} 
+                        src={selectedProduct.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} 
                         alt={selectedProduct.name} 
                         className="w-full h-full object-contain mix-blend-multiply" 
                       />
@@ -326,7 +336,7 @@ export const Marketplace = ({
                           i === 0 ? 'border-[#2E7D32]' : 'border-stone-200'
                         }`}>
                           <img 
-                            src={selectedProduct.images?.[0] || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'} 
+                            src={selectedProduct.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} 
                             alt="thumbnail" 
                             className="w-full h-full object-cover" 
                           />
@@ -395,7 +405,7 @@ export const Marketplace = ({
                           className="border border-stone-200 rounded-[18px] p-3.5 cursor-pointer hover:shadow-md hover:border-[#2E7D32] transition-all flex gap-3 items-center bg-white"
                         >
                           <div className="w-12 h-12 rounded-[10px] overflow-hidden bg-stone-50 flex-shrink-0">
-                            <img src={item.images?.[0] || 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'} alt={item.name} className="w-full h-full object-cover" />
+                            <img src={item.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} alt={item.name} className="w-full h-full object-cover" />
                           </div>
                           <div className="leading-snug">
                             <h5 className="font-extrabold text-xs text-stone-900 line-clamp-1">{item.name}</h5>

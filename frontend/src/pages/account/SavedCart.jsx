@@ -25,7 +25,7 @@ const SavedCart = () => {
             id: p._id,
             name: p.name,
             price: p.price,
-            image: p.images?.[0] || 'https://images.unsplash.com/photo-1592424006909-5a1ff1461ff4?auto=format&fit=crop&q=80&w=200',
+            image: p.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available',
             addedDate: new Date().toISOString() // Or store the date in the schema if needed
           })).filter(i => i.id));
         }

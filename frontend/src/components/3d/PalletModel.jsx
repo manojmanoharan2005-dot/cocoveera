@@ -34,7 +34,7 @@ export const PalletModel = ({ position, index, product }) => {
   });
 
   // Load the product image to use as the shape
-  const imageUrl = product?.images?.[0] || 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&w=400&q=80';
+  const imageUrl = product?.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available';
   const texture = useLoader(THREE.TextureLoader, imageUrl);
 
   const renderProductStack = () => {

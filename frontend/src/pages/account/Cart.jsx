@@ -28,7 +28,7 @@ const Cart = () => {
             quantity: c.quantity,
             weight: c.product?.weight || 0,
             volume: c.product?.volumeCBM || 0,
-            image: c.product?.images?.[0] || 'https://images.unsplash.com/photo-1592424006909-5a1ff1461ff4?auto=format&fit=crop&q=80&w=200'
+            image: c.product?.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available'
           })).filter(i => i.id !== 'unknown'));
         }
       } catch (err) {

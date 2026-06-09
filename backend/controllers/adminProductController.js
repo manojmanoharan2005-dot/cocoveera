@@ -4,6 +4,7 @@
  */
 import Product from '../models/Product.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
+import { clearCache } from '../middleware/cache.js';
 
 // @desc    Get all products with filters, search, pagination (Admin)
 // @route   GET /api/admin/products
@@ -105,6 +106,7 @@ export const createAdminProduct = async (req, res) => {
       isPublished: isPublished || false,
     });
 
+    clearCache('/api/products');
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -157,6 +159,7 @@ export const updateAdminProduct = async (req, res) => {
       runValidators: true,
     });
 
+    clearCache('/api/products');
     res.status(200).json({ success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -172,6 +175,7 @@ export const deleteAdminProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
+    clearCache('/api/products');
     res.status(200).json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -191,6 +195,7 @@ export const togglePublishProduct = async (req, res) => {
     product.isPublished = !product.isPublished;
     await product.save();
 
+    clearCache('/api/products');
     res.status(200).json({
       success: true,
       message: `Product ${product.isPublished ? 'published' : 'unpublished'} successfully`,

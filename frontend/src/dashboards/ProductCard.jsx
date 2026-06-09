@@ -53,7 +53,7 @@ export const ProductCard = ({
           <img
             src={
               product.images?.[0] ||
-              'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'
+              'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'
             }
             alt={product.name}
             className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] transition-transform duration-700 ease-out group-hover:scale-108"

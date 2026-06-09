@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Check, Info, X, Layers, Droplet, Wind, Compass, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 import PageHero from '../components/PageHero';
@@ -12,6 +12,7 @@ import PageHero from '../components/PageHero';
 const Products = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +23,17 @@ const Products = () => {
 
   // Filtering states
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  // Sync category from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('category');
+    if (cat) {
+      setSelectedCategory(cat);
+    } else {
+      setSelectedCategory('All');
+    }
+  }, [location.search]);
   
   // Quote Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -325,7 +337,14 @@ const Products = () => {
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => {
+                setSelectedCategory(cat);
+                if (cat === 'All') {
+                  navigate('/products', { replace: true });
+                } else {
+                  navigate(`/products?category=${encodeURIComponent(cat)}`, { replace: true });
+                }
+              }}
               className={`px-5 py-2 rounded-lg font-poppins text-xs font-bold transition-all ${
                 selectedCategory === cat
                   ? 'bg-primary text-white shadow-soft'
@@ -435,13 +454,6 @@ const Products = () => {
                   
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleAddToWishlist(prod)}
-                      className="p-2 border border-stone-200 text-stone-500 hover:text-red-500 rounded-lg hover:bg-stone-50 transition-colors"
-                      title="Add to Wishlist"
-                    >
-                      <Heart className="w-4 h-4" />
-                    </button>
-                    <button
                       onClick={() => handleAddToCart(prod)}
                       className="bg-white border border-primary text-primary hover:bg-primary hover:text-white font-poppins text-xs font-bold px-3 py-2 rounded-lg transition-all flex items-center space-x-1"
                       title="Add to Cart"
@@ -449,14 +461,6 @@ const Products = () => {
                       <ShoppingBag className="w-3.5 h-3.5" />
                       <span>Add Cart</span>
                     </button>
-                    <a
-                      href="/cocoveera-brochure.pdf"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-primary hover:bg-primary-dark text-white font-poppins text-xs font-bold px-4 py-2 rounded-lg transition-colors shadow-soft flex items-center"
-                    >
-                      Brochure
-                    </a>
                   </div>
                 </div>
               </div>
