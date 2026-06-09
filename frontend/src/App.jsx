@@ -130,8 +130,7 @@ const PublicLayout = () => {
   
   return (
     <div 
-      className="flex flex-col min-h-screen relative bg-cover bg-center bg-fixed text-[#1A1A1A] font-sans"
-      style={{ backgroundImage: 'url("/bg-auth.webp")' }}
+      className="flex flex-col min-h-screen relative text-[#1A1A1A] font-sans bg-stone-50"
     >
       <div className="relative z-10 flex flex-col flex-grow w-full">
         <Navbar />

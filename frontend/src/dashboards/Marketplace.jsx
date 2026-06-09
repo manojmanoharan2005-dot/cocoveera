@@ -163,7 +163,30 @@ export const Marketplace = ({
 
   const marketTabs = ['Featured', 'Latest', 'Best Seller', 'Trending', 'New Arrival'];
 
-  const uniqueCategories = [...new Set((products || []).map(p => p.category))].filter(Boolean);
+  const uniqueCategories = React.useMemo(() => {
+    const cats = [...new Set((products || []).map(p => p.category))].filter(Boolean);
+
+    const getCategoryPriority = (name) => {
+      if (!name) return 999;
+      const lower = name.toLowerCase();
+      if (lower.includes('cube')) return 1;
+      if (lower.includes('fiber bale')) return 2;
+      if (lower.includes('substrate bag')) return 3;
+      if (lower.includes('mat') || lower.includes('blanket')) return 6;
+      if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
+      if (lower.includes('disc') || lower === 'disck') return 5;
+      return 999;
+    };
+
+    cats.sort((a, b) => {
+      const priorityA = getCategoryPriority(a);
+      const priorityB = getCategoryPriority(b);
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      return Math.random() - 0.5;
+    });
+    
+    return cats;
+  }, [products]);
   
   const categoryCards = uniqueCategories.map(cat => {
     const catProducts = (products || []).filter(p => p.category === cat);
@@ -225,11 +248,10 @@ export const Marketplace = ({
                   </div>
                 </div>
                 
-                {/* Text and action area */}
                 <div className="p-6 bg-white flex items-center justify-between">
-                  <div className="pr-4">
-                    <h4 className="font-poppins font-extrabold text-stone-900 text-lg group-hover:text-[#2E7D32] transition-colors line-clamp-1">{cat.name}</h4>
-                    <p className="text-sm text-stone-500 font-medium mt-0.5">Explore collection</p>
+                  <div className="pr-4 flex-1">
+                    <h4 className="font-poppins font-extrabold text-stone-900 text-lg group-hover:text-[#2E7D32] transition-colors leading-tight">{cat.name}</h4>
+                    <p className="text-sm text-stone-500 font-medium mt-1">Explore collection</p>
                   </div>
                   {/* Action button */}
                   <div className="w-10 h-10 shrink-0 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300 transform group-hover:translate-x-1 shadow-sm">

@@ -347,7 +347,27 @@ const Home = () => {
       try {
         const res = await axios.get(`${API_URL}/categories`);
         if (res.data.success) {
-          setDbCategories(res.data.data);
+          const fetchedCats = res.data.data;
+          const getCategoryPriority = (name) => {
+            if (!name) return 999;
+            const lower = name.toLowerCase();
+            if (lower.includes('cube')) return 1;
+            if (lower.includes('fiber bale')) return 2;
+            if (lower.includes('substrate bag')) return 3;
+            if (lower.includes('mat') || lower.includes('blanket')) return 6;
+            if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
+            if (lower.includes('disc') || lower === 'disck') return 5;
+            return 999;
+          };
+
+          fetchedCats.sort((a, b) => {
+            const priorityA = getCategoryPriority(a.name);
+            const priorityB = getCategoryPriority(b.name);
+            if (priorityA !== priorityB) return priorityA - priorityB;
+            return Math.random() - 0.5;
+          });
+          
+          setDbCategories(fetchedCats);
         }
       } catch (err) {
         console.error('Failed to fetch categories', err);
@@ -660,7 +680,7 @@ const Home = () => {
                       )}
                     </div>
                     <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 line-clamp-1">{dbCat.name}</h3>
+                    <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 leading-tight">{dbCat.name}</h3>
                     <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{desc}</p>
                     <Link
                       to={link}
@@ -686,7 +706,7 @@ const Home = () => {
                       <img src={p.img} alt={p.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                     </div>
                     <div className="p-5 flex flex-col flex-grow">
-                      <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 line-clamp-1">{p.name}</h3>
+                      <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 leading-tight">{p.name}</h3>
                       <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{p.desc}</p>
                       <Link to={p.link} className="inline-flex items-center gap-1 text-primary font-bold text-xs hover:gap-2 transition-all duration-200 mt-auto">
                         VIEW CATEGORY <ArrowRight className="w-3.5 h-3.5" />

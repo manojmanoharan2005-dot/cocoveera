@@ -338,7 +338,22 @@ const seedDatabase = async () => {
       console.log(`Admin account seeded: email=${adminEmail}`);
     }
 
-
+    // Seed default demo user
+    const userEmail = 'user@cocoveera.com';
+    let defaultUserExists = await User.findOne({ email: userEmail });
+    if (!defaultUserExists) {
+      console.log(`Seeding default user ${userEmail}...`);
+      await User.create({
+        name: 'Demo User',
+        email: userEmail,
+        companyName: 'Demo Partner Corp',
+        phone: '+919876543211',
+        password: 'Password123',
+        role: 'user',
+        isVerified: true
+      });
+      console.log(`User account seeded: email=${userEmail}`);
+    }
 
     // Demote any other accounts that might be marked as admin to enforce "anything other than this is user"
     const demoteResult = await User.updateMany(
