@@ -48,19 +48,20 @@ export const ProductCard = ({
       transition={{ type: 'spring', stiffness: 320, damping: 24 }}
       className="w-full bg-white rounded-[24px] border border-stone-200/70 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.10)] cursor-pointer flex flex-col relative group transition-shadow duration-300"
     >
-      {/* Product Image */}
-      <div className="h-[200px] w-full overflow-hidden relative bg-stone-50 flex-shrink-0">
-        <img
-          src={
-            product.images?.[0] ||
-            'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'
-          }
-          alt={product.name}
-          className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 ease-out group-hover:scale-108"
-          style={{ transform: 'scale(1)' }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.07)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-        />
+      <div className="h-[200px] w-full overflow-hidden relative bg-stone-50 flex items-center justify-center p-2 flex-shrink-0">
+        <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center">
+          <img
+            src={
+              product.images?.[0] ||
+              'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80'
+            }
+            alt={product.name}
+            className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] transition-transform duration-700 ease-out group-hover:scale-108"
+            style={{ transform: 'scale(1)' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.07)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          />
+        </div>
 
         {/* Gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none" />

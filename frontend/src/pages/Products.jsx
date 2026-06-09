@@ -225,10 +225,7 @@ const Products = () => {
   };
 
   return (
-    <div 
-      className="pb-16 min-h-screen relative bg-cover bg-center bg-fixed"
-      style={{ backgroundImage: 'url("/bg-auth.webp")' }}
-    >
+    <div className="pb-16 min-h-screen relative bg-stone-50">
       {/* Removed white overlay to show background clearly */}
       <div className="relative z-10">
         <PageHero

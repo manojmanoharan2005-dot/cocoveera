@@ -85,7 +85,12 @@ const Orders = () => {
   });
 
   if (loading) {
-    return <div className="p-12 text-center text-stone-500 font-bold">Loading orders...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-white/90 backdrop-blur-md rounded-[24px] border border-stone-200 shadow-sm max-w-5xl mx-auto">
+        <div className="w-12 h-12 border-4 border-stone-200 border-t-[#2E7D32] rounded-full animate-spin mb-4"></div>
+        <p className="text-stone-700 font-bold font-poppins text-lg">Loading your orders...</p>
+      </div>
+    );
   }
 
   return (
@@ -167,7 +172,7 @@ const Orders = () => {
                         >
                           {item.product?.name || 'Unknown Product'}
                         </h4>
-                        <div className="text-xs text-stone-500 mt-1 mb-2">Quantity: {item.quantity}</div>
+                        <div className="text-xs text-stone-500 mt-1 mb-2">Containers: {item.quantity}</div>
                         
                         <div className="mt-auto flex flex-wrap gap-2">
                           {status !== 'Pending' && status !== 'Cancelled' && (

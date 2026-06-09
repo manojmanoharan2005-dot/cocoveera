@@ -82,7 +82,6 @@ const Cart = () => {
 
   const weightUtilization = (estimatedWeight / maxWeight) * 100;
   const volumeUtilization = (estimatedVolume / maxVolume) * 100;
-  const capacityPercentage = Math.min(Math.max(weightUtilization, volumeUtilization), 100);
   const totalContainerQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const isWholeContainer = Number.isInteger(totalContainerQuantity) && totalContainerQuantity >= 1;
   const capacityPercentage = isWholeContainer ? 100 : ((totalContainerQuantity % 1) * 100);

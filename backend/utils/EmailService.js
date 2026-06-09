@@ -14,12 +14,10 @@ apiKey.apiKey = process.env.BREVO_API_KEY;
 
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-const verifiedSender = process.env.SENDER_EMAIL || 'coirsystemadmin@gmail.com';
-
 const SENDERS = {
-  admin: { email: verifiedSender, name: 'Cocoveera Admin' },
-  service: { email: verifiedSender, name: 'Cocoveera Service Desk' },
-  support: { email: verifiedSender, name: 'Cocoveera Support Desk' },
+  admin: { email: 'adminteam@cocoveera.com', name: 'COCOVEERA Admin Team' },
+  service: { email: 'servicedesk@cocoveera.com', name: 'COCOVEERA Service Desk' },
+  support: { email: 'supportdesk@cocoveera.com', name: 'COCOVEERA Support Desk' },
 };
 
 export const sendEmail = async (options, retries = 3) => {
@@ -33,7 +31,7 @@ export const sendEmail = async (options, retries = 3) => {
   sendSmtpEmail.sender = SENDERS[senderType];
   sendSmtpEmail.to = [{ email: to }];
 
-  if (attachment) {
+  if (attachment && attachment.length > 0) {
     sendSmtpEmail.attachment = attachment;
   }
 
@@ -98,9 +96,9 @@ export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary
     itemsHtml = orderSummary.items.map(item => `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px;">${item.productName}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: center;">${item.quantity}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: center;">${Math.round(item.pieces || item.quantity)}</td>
         <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">Rs. ${item.unitPrice.toFixed(2)}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">Rs. ${(item.unitPrice * item.quantity).toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">Rs. ${(item.unitPrice * (item.pieces || item.quantity)).toFixed(2)}</td>
       </tr>
     `).join('');
   }
@@ -192,13 +190,13 @@ export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary
   `;
 
   // Provide the attachment as base64 or URL according to Brevo docs
-  let attachment = [];
+  let attachment = null;
   if (pdfBuffer) {
     const base64Pdf = Buffer.isBuffer(pdfBuffer) ? pdfBuffer.toString('base64') : pdfBuffer;
-    attachment.push({
+    attachment = [{
       content: base64Pdf,
       name: `Invoice_${orderId}.pdf`,
-    });
+    }];
   }
 
   return sendEmail({ to, subject, htmlContent, senderType: 'service', attachment });
@@ -270,9 +268,9 @@ export const sendStatusUpdateEmail = async (to, order, status) => {
         <td style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #374151; font-size: 11px; font-weight: 500;">
           ${item.product?.name || 'Product'}
         </td>
-        <td align="center" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #6B7280; font-size: 11px;">${item.quantity}</td>
+        <td align="center" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #6B7280; font-size: 11px;">${Math.round(item.pieces || item.quantity)}</td>
         <td align="right" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #6B7280; font-size: 11px;">₹${(item.unitPrice || 0).toFixed(2)}</td>
-        <td align="right" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #111827; font-size: 11px; font-weight: bold;">₹${((item.unitPrice || 0) * item.quantity).toFixed(2)}</td>
+        <td align="right" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #111827; font-size: 11px; font-weight: bold;">₹${((item.unitPrice || 0) * (item.pieces || item.quantity)).toFixed(2)}</td>
       </tr>
     `).join('');
   }

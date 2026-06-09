@@ -686,7 +686,7 @@ const Checkout = () => {
                             <img src={item.product?.images?.[0] || 'https://images.unsplash.com/photo-1592424006909-5a1ff1461ff4?auto=format&fit=crop&q=80&w=200'} alt={item.product?.name} className="w-24 h-24 object-cover rounded-xl shadow-sm" />
                             <div className="flex-1 flex flex-col justify-center">
                               <h3 className="text-base font-extrabold text-stone-900 line-clamp-1">{item.product?.name || 'Unknown Product'}</h3>
-                              <p className="text-xs text-stone-500 font-medium mt-1">Quantity: <span className="font-bold text-stone-900">{item.quantity}</span></p>
+                              <p className="text-xs text-stone-500 font-medium mt-1">Containers: <span className="font-bold text-stone-900">{item.quantity}</span></p>
                               <div className="mt-3 flex items-center gap-3">
                                 <span className="text-lg font-black text-stone-900">{formatPrice(item.product?.price || 0)}</span>
                                 <span className="text-[10px] font-bold text-[#2E7D32] bg-[#E8F5E9] px-2.5 py-1 rounded-md tracking-wide">15% OFF</span>

@@ -294,8 +294,8 @@ function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
   generateHr(doc, summaryTop + 90, THEME.border, 1);
 
   doc.fillColor(THEME.primary).font('Helvetica-Bold').fontSize(14)
-     .text('GRAND TOTAL:', 300, summaryTop + 105, { width: 150, align: 'right' })
-     .text(`${curr}${total.toFixed(2)}`, 460, summaryTop + 105, { width: 85, align: 'right' });
+     .text('GRAND TOTAL:', 250, summaryTop + 105, { width: 170, align: 'right' })
+     .text(`${curr}${total.toFixed(2)}`, 425, summaryTop + 105, { width: 120, align: 'right' });
 
   const bottomY = Math.max(summaryTop + 140, 650);
 
@@ -355,7 +355,7 @@ function generateHr(doc, y, color, width) {
 function getCurrencySymbol(currencyStr) {
   const curr = (currencyStr || 'USD').toUpperCase();
   const map = {
-    'INR': '₹',
+    'INR': 'Rs. ',
     'USD': '$',
     'EUR': '€',
     'GBP': '£',

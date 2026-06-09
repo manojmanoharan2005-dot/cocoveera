@@ -338,8 +338,23 @@ const Home = () => {
   const [statsStarted, setStatsStarted] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [productScroll, setProductScroll] = useState(0);
+  const [dbCategories, setDbCategories] = useState([]);
   const statsRef = useRef(null);
   const productRef = useRef(null);
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/categories`);
+        if (res.data.success) {
+          setDbCategories(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      }
+    };
+    fetchCats();
+  }, []);
 
   // Intersection observer for stats counter
   useEffect(() => {
@@ -612,43 +627,73 @@ const Home = () => {
               className="flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory hide-scrollbar"
               style={{ scrollbarWidth: 'none' }}
             >
-              {categoryList.map((p, i) => (
-                <motion.div
-                  key={p.id || i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.5 }}
-                  whileHover={{ y: -8, scale: 1.02, rotateX: 2, rotateY: -2, boxShadow: "0 0 40px rgba(46,125,50,0.25)" }}
-                  style={{ transformStyle: "preserve-3d", perspective: 1000 }}
-                  className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative"
-                >
-                  {/* Glass reflection highlight */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
-                  <div className="relative h-48 overflow-hidden flex-shrink-0">
-                    <img
-                      src={p.img}
-                      alt={p.name}
-                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
-                    />
-                    {p.tag && (
-                      <span className="absolute top-3 left-3 bg-primary text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                        {p.tag}
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 line-clamp-1">{p.name}</h3>
-                    <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{p.desc}</p>
+              {dbCategories.length > 0 ? dbCategories.map((dbCat, i) => {
+                const displayImg = dbCat.image;
+                const link = `/products?category=${encodeURIComponent(dbCat.name)}`;
+                const desc = `Explore our premium range of ${dbCat.name} engineered for global growers.`;
+                
+                return (
+                  <motion.div
+                    key={dbCat._id || i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.5 }}
+                    whileHover={{ y: -8, scale: 1.02, rotateX: 2, rotateY: -2, boxShadow: "0 0 40px rgba(46,125,50,0.25)" }}
+                    style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                    className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative"
+                  >
+                    {/* Glass reflection highlight */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
+                    <div className="relative h-48 w-full overflow-hidden flex items-center justify-center p-3 bg-stone-50 flex-shrink-0">
+                      <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={displayImg} 
+                          alt={dbCat.name} 
+                          className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                      {dbCat.tag && (
+                        <span className="absolute top-3 left-3 bg-primary text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider z-10">
+                          {dbCat.tag}
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-5 flex flex-col flex-grow">
+                    <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 line-clamp-1">{dbCat.name}</h3>
+                    <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{desc}</p>
                     <Link
-                      to={p.link}
+                      to={link}
                       className="inline-flex items-center gap-1 text-primary font-bold text-xs hover:gap-2 transition-all duration-200 mt-auto"
                     >
                       VIEW CATEGORY <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </motion.div>
-              ))}
+                ); }) : categoryList.map((p, i) => (
+                  <motion.div
+                    key={p.id || i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.5 }}
+                    whileHover={{ y: -8, scale: 1.02, rotateX: 2, rotateY: -2, boxShadow: "0 0 40px rgba(46,125,50,0.25)" }}
+                    style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                    className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
+                    <div className="relative h-48 overflow-hidden flex-shrink-0 bg-stone-100">
+                      <img src={p.img} alt={p.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                    </div>
+                    <div className="p-5 flex flex-col flex-grow">
+                      <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 line-clamp-1">{p.name}</h3>
+                      <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{p.desc}</p>
+                      <Link to={p.link} className="inline-flex items-center gap-1 text-primary font-bold text-xs hover:gap-2 transition-all duration-200 mt-auto">
+                        VIEW CATEGORY <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </motion.div>
+                ))}
             </div>
 
             {/* Navigation Arrows */}

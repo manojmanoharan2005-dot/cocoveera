@@ -196,14 +196,16 @@ export const Marketplace = ({
                 className="group cursor-pointer bg-white rounded-[24px] border border-stone-200 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-500 flex flex-col"
               >
                 {/* Full bleed image area */}
-                <div className="relative h-56 overflow-hidden bg-stone-100">
-                  <img 
-                    src={cat.image} 
-                    alt={cat.name} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
+                <div className="relative h-56 w-full overflow-hidden bg-stone-100 flex items-center justify-center p-3">
+                  <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center">
+                    <img 
+                      src={cat.image} 
+                      alt={cat.name} 
+                      className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                    />
+                  </div>
                   {/* Subtle dark overlay for premium feel */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"></div>
                   
                   {/* Item count badge floating top-left */}
                   <div className="absolute top-4 left-4">
