@@ -29,32 +29,27 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProducts = async () => {
       try {
-        const start = Date.now();
-        const [prodRes, profRes] = await Promise.all([
-          apiClient.get('/products'),
-          apiClient.get('/users/profile')
-        ]);
-        
+        const prodRes = await apiClient.get('/products');
         if (prodRes.data.success) {
           setProducts(prodRes.data.data);
         }
-        if (profRes.data.success) {
-          const profile = profRes.data.data;
-          setWishlist(profile.wishlist || []);
-          setCartCount(profile.cart?.length || 0);
-        }
-
-        // Removed artificial delay for faster loading
       } catch (err) {
         console.error('Failed to fetch data', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchProducts();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setWishlist(user.wishlist || []);
+      setCartCount(user.cart?.length || 0);
+    }
+  }, [user]);
 
   const handleWishlistToggle = async (product) => {
     setWishlist(prev => {

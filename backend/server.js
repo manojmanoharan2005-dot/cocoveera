@@ -120,6 +120,11 @@ app.get('/', (req, res) => {
   res.json({ message: 'Cocoveera API is running successfully' });
 });
 
+// Health ping route to keep Render awake
+app.get('/api/ping', (req, res) => {
+  res.status(200).json({ success: true, message: 'pong' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
