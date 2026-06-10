@@ -11,6 +11,11 @@ export const AuthLayout = ({ children }) => {
   return (
     <div 
       className="min-h-screen text-stone-100 flex flex-col justify-between font-sans relative overflow-hidden bg-stone-900"
+      style={{
+        backgroundImage: "url('/bg-auth.webp')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
       {/* Blurry dark overlay */}
       <div className="absolute inset-0 bg-stone-950/30 backdrop-blur-sm z-0" />
