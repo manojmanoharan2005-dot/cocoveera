@@ -96,7 +96,6 @@ const ProductSchema = new mongoose.Schema(
 
 // Indexes for fast querying
 ProductSchema.index({ category: 1 });
-ProductSchema.index({ slug: 1 });
 ProductSchema.index({ isPublished: 1 });
 
 // Auto-generate slug before saving
