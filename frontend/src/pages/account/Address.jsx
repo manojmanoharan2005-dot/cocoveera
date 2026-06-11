@@ -194,7 +194,7 @@ const Address = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {addresses.map((addr) => (
-          <div key={addr._id} className={`relative rounded-[22px] p-[2px] transition-all duration-500 ${addr.isDefault ? 'bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-400 bg-[length:200%_auto] animate-[pulse_3s_ease-in-out_infinite] shadow-lg shadow-green-500/20' : 'bg-transparent border border-stone-200'}`}>
+          <div key={addr._id} className={`relative rounded-[22px] p-[2px] transition-all duration-500 ${addr.isDefault ? 'bg-[#2E7D32] shadow-md shadow-[#2E7D32]/10' : 'bg-transparent border border-stone-200'}`}>
             <div className="bg-white rounded-[20px] p-6 h-full relative overflow-hidden group">
               {/* Map Grid Background */}
               <div className="absolute inset-0 z-0 pointer-events-none opacity-50 transition-opacity duration-500 group-hover:opacity-100" style={{ backgroundImage: mapPattern }}></div>
@@ -226,7 +226,13 @@ const Address = () => {
                   <p>{addr.street}</p>
                   <p>{addr.city}, {addr.state} {addr.zip}</p>
                   <p>{addr.country}</p>
-                  <p className="pt-1 text-stone-900 font-bold">{addr.phone}</p>
+                  <p className="pt-1 text-stone-900 font-bold">
+                    {addr.phone ? (
+                      addr.phone.replace(/\D/g, '').startsWith('91') && addr.phone.replace(/\D/g, '').length > 10
+                        ? `+91 ${addr.phone.replace(/\D/g, '').slice(2)}`
+                        : addr.phone
+                    ) : ''}
+                  </p>
                 </address>
 
                 <div className="flex items-center justify-between pt-4 border-t border-stone-100">

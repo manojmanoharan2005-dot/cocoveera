@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User, Check, Menu } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User, Check, Menu, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,6 +25,7 @@ export const Header = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const wishlistCount = user?.wishlist?.length || 0;
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out of Cocoveera?')) {
@@ -164,6 +165,20 @@ export const Header = ({
       <div className="flex items-center gap-2 shrink-0 order-2 md:order-3">
 
 
+
+        {/* Wishlist */}
+        <button
+          onClick={() => setActiveTab('Wishlist')}
+          className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all"
+          title="Wishlist"
+        >
+          <Heart className="w-4.5 h-4.5" />
+          {wishlistCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 bg-[#2E7D32] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+              {wishlistCount}
+            </span>
+          )}
+        </button>
 
         {/* Cart */}
         <button
