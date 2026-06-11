@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Check, Edit2, ShieldCheck, MapPin, Truck, CreditCard, Banknote, Mail, Sparkles, Ship, Package, CheckCircle2, Palmtree, Circle, Home } from 'lucide-react';
+import { Check, Edit2, ShieldCheck, MapPin, Truck, CreditCard, Banknote, Mail, Sparkles, Ship, Package, CheckCircle2, Palmtree, Circle, Home, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -656,7 +656,13 @@ const Checkout = () => {
                         )}
                       </div>
                     </div>
-                    <button onClick={handleStep2Next} className="mt-8 hidden lg:block bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95">
+                    
+                    <div className="mt-8 flex items-center gap-2 text-xs font-semibold text-[#2E7D32] bg-[#F0FAF0] p-3 rounded-lg border border-[#2E7D32]/20">
+                      <CheckCircle2 className="w-4 h-4" />
+                      This shipping address will be automatically saved to your profile.
+                    </div>
+
+                    <button onClick={handleStep2Next} className="mt-6 hidden lg:block bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#144d18] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-[0_8px_20px_rgb(46,125,50,0.25)] hover:shadow-[0_8px_25px_rgb(46,125,50,0.35)] transition-all transform active:scale-95">
                       Deliver Here
                     </button>
                   </div>

@@ -276,7 +276,7 @@ const ProductView = () => {
               </div>
             )}
 
-            <div className="h-72 sm:h-96 rounded-[24px] overflow-hidden bg-[#F7F9F7] border border-stone-200/50 shadow-sm relative group">
+            <div className={`h-72 sm:h-96 rounded-[24px] overflow-hidden bg-[#F7F9F7] border border-stone-200/50 shadow-sm relative group`}>
               <ImageWithFallback 
                 src={imagesList[activeImageIndex]} 
                 alt={product.name} 
@@ -312,7 +312,7 @@ const ProductView = () => {
             )}
 
             {/* Certifications and special notes */}
-            <div className="grid grid-cols-2 gap-3 text-xs font-bold text-stone-600 bg-stone-50 border border-stone-100 p-4 rounded-[20px] mt-6">
+            <div className={`grid grid-cols-2 gap-3 text-xs font-bold text-stone-600 bg-stone-50 border border-stone-100 p-4 rounded-[20px] mt-6 ${showConfigurator ? 'hidden lg:grid' : ''}`}>
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center shrink-0">
                   <Droplet className="w-3.5 h-3.5" />
@@ -366,66 +366,68 @@ const ProductView = () => {
                   </div>
                 </div>
               
-                {/* Container Type Selection */}
-                <div className="space-y-2.5">
-                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Select Size</span>
-                  <div className="flex gap-3">
-                    <button 
-                      type="button"
-                      onClick={() => setContainerType('20FT')}
-                      className={`relative flex-1 py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
-                        containerType === '20FT' 
-                          ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
-                          : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
-                      }`}
-                    >
-                      {containerType === '20FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
-                      <span className={`block text-sm font-black uppercase tracking-wider transition-colors ${containerType === '20FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>20FT FCL</span>
-                      <span className="block text-[10px] font-semibold text-stone-500 mt-0.5">Standard Capacity</span>
-                    </button>
-                    
-                    <button 
-                      type="button"
-                      onClick={() => setContainerType('40FT')}
-                      className={`relative flex-1 py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
-                        containerType === '40FT' 
-                          ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
-                          : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
-                      }`}
-                    >
-                      {containerType === '40FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
-                      <span className={`block text-sm font-black uppercase tracking-wider transition-colors ${containerType === '40FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>40FT FCL</span>
-                      <span className="block text-[10px] font-semibold text-stone-500 mt-0.5">High Volume</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Adjust Quantity Control */}
-                <div className="space-y-2.5">
-                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Fractional Quantity</span>
-                  <div className="flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-2 shadow-sm">
-                    <button 
-                      type="button"
-                      onClick={() => setQuantity(q => Math.max(0.25, q - 0.25))}
-                      className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 active:scale-95"
-                    >
-                      <Minus className="w-5 h-5" />
-                    </button>
-                    
-                    <div className="flex flex-col items-center justify-center px-4">
-                      <span className="text-2xl font-poppins font-black text-stone-900 tracking-tight leading-none">
-                        {quantity.toFixed(2)}
-                      </span>
-                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mt-1">Containers</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Container Type Selection */}
+                  <div className="space-y-2.5 flex flex-col justify-end">
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Select Size</span>
+                    <div className="flex gap-2 sm:gap-3 h-full max-h-[64px]">
+                      <button 
+                        type="button"
+                        onClick={() => setContainerType('20FT')}
+                        className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
+                          containerType === '20FT' 
+                            ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
+                            : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
+                        }`}
+                      >
+                        {containerType === '20FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
+                        <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '20FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>20FT FCL</span>
+                        <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">Standard</span>
+                      </button>
+                      
+                      <button 
+                        type="button"
+                        onClick={() => setContainerType('40FT')}
+                        className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
+                          containerType === '40FT' 
+                            ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
+                            : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
+                        }`}
+                      >
+                        {containerType === '40FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
+                        <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '40FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>40FT FCL</span>
+                        <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">High Vol</span>
+                      </button>
                     </div>
+                  </div>
 
-                    <button 
-                      type="button"
-                      onClick={() => setQuantity(q => q + 0.25)}
-                      className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] rounded-xl transition-all duration-200 active:scale-95"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
+                  {/* Adjust Quantity Control */}
+                  <div className="space-y-2.5 flex flex-col justify-end">
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Fractional Quantity</span>
+                    <div className="flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-1.5 sm:p-2 shadow-sm h-full max-h-[64px]">
+                      <button 
+                        type="button"
+                        onClick={() => setQuantity(q => Math.max(0.25, q - 0.25))}
+                        className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 active:scale-95"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </button>
+                      
+                      <div className="flex flex-col items-center justify-center px-4">
+                        <span className="text-2xl font-poppins font-black text-stone-900 tracking-tight leading-none">
+                          {quantity.toFixed(2)}
+                        </span>
+                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mt-1">Containers</span>
+                      </div>
+
+                      <button 
+                        type="button"
+                        onClick={() => setQuantity(q => q + 0.25)}
+                        className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] rounded-xl transition-all duration-200 active:scale-95"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -599,16 +601,32 @@ const ProductView = () => {
                 </span>
               </div>
 
-              <div className="flex flex-col gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={actionLoading}
-                  className={`w-full bg-white border-2 font-poppins text-xs font-black py-3.5 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]`}
-                >
-                  {actionLoading ? 'ADDING...' : 'ADD TO CART'}
-                  <ShoppingBag className={`w-4 h-4 transition-transform group-hover:scale-110`} />
-                </button>
+              <div className="flex flex-col gap-2.5 mt-4">
+                <div className="flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={actionLoading}
+                    className={`flex-1 bg-white border-2 font-poppins text-[10px] font-black py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 group border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]`}
+                  >
+                    {actionLoading ? 'ADDING...' : 'ADD TO CART'}
+                    <ShoppingBag className={`w-3.5 h-3.5 transition-transform group-hover:scale-110`} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => showConfigurator ? handleProceedToCheckout() : setShowConfigurator(true)}
+                    disabled={actionLoading || (showConfigurator && isOverCapacity)}
+                    className={`flex-1 font-poppins text-[10px] font-black py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 group ${
+                      showConfigurator && isOverCapacity 
+                        ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
+                        : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
+                    }`}
+                  >
+                    {actionLoading ? 'WAIT...' : (showConfigurator ? 'CHECKOUT' : 'BUY NOW')}
+                    <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showConfigurator && isOverCapacity ? '' : 'group-hover:translate-x-0.5'}`} />
+                  </button>
+                </div>
 
                 {!showConfigurator && (
                   <button
@@ -617,26 +635,12 @@ const ProductView = () => {
                       const el = document.getElementById('spec-sheet');
                       if (el) el.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-poppins text-xs font-black py-3.5 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-poppins text-[10px] font-black py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"
                   >
                     VIEW TESTING REPORT
-                    <FileText className="w-4 h-4" />
+                    <FileText className="w-3.5 h-3.5" />
                   </button>
                 )}
-
-                <button
-                  type="button"
-                  onClick={() => showConfigurator ? handleProceedToCheckout() : setShowConfigurator(true)}
-                  disabled={actionLoading || (showConfigurator && isOverCapacity)}
-                  className={`w-full font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
-                    showConfigurator && isOverCapacity 
-                      ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
-                      : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
-                  }`}
-                >
-                  {actionLoading ? 'PROCESSING...' : (showConfigurator ? 'PROCEED TO CHECKOUT' : 'BUY NOW')}
-                  <ChevronRight className={`w-4 h-4 transition-transform ${showConfigurator && isOverCapacity ? '' : 'group-hover:translate-x-0.5'}`} />
-                </button>
               </div>
               
               <p className="text-[9px] font-extrabold text-stone-400 text-center uppercase tracking-widest pt-1">

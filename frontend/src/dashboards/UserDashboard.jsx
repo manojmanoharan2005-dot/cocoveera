@@ -98,10 +98,10 @@ const UserDashboard = () => {
     switch(tab) {
       case 'Marketplace': setActiveTab('Marketplace'); break;
       case 'Profile': setActiveTab('Profile'); break;
-      case 'My Orders': navigate('/account/orders'); break;
+      case 'Orders': navigate('/account/orders'); break;
       case 'Cart': navigate('/account/cart'); break;
       case 'Wishlist': navigate('/account/saved'); break;
-      case 'Saved Addresses': navigate('/account/address'); break;
+      case 'Addresses': navigate('/account/address'); break;
       case 'Help & Support': navigate('/account/support'); break;
       case 'Settings': navigate('/account/settings'); break;
       default: setActiveTab(tab);
@@ -145,7 +145,7 @@ const UserDashboard = () => {
         </div>
       )}
       
-      {/* Placeholder for other tabs like "My Orders", "Wishlist", "Cart", "Saved Addresses", "Settings" */}
+      {/* Placeholder for other tabs like "Orders", "Wishlist", "Cart", "Saved Addresses", "Settings" */}
       {activeTab !== 'Marketplace' && activeTab !== 'Profile' && (
         <div className="flex-1 bg-white rounded-2xl shadow-sm border border-stone-100 p-8 flex items-center justify-center min-h-[50vh]">
           <div className="text-center space-y-4 max-w-sm">

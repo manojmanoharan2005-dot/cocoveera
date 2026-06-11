@@ -34,7 +34,7 @@ const generateInvoicePdf = (order, user) => {
       // Order Info
       doc
         .fontSize(10)
-        .text(`Order ID: ${order._id}`, 50, 80)
+        .text(`Order ID: ${order._id.toString().slice(-8).toUpperCase()}`, 50, 80)
         .text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 50, 95)
         .text(`Status: ${order.paymentStatus.toUpperCase()}`, 50, 110)
         .text(`Gateway: ${order.paymentGateway.toUpperCase()}`, 50, 125);

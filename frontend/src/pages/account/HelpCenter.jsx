@@ -3,7 +3,7 @@
  * Purpose: React page component representing the HelpCenter view with a Chatbot interface.
  */
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, User, HelpCircle, Loader2 } from 'lucide-react';
+import { Bot, Send, User, HelpCircle, Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, apiClient } from '../../context/AuthContext';
 
@@ -30,6 +30,7 @@ export default function HelpCenter() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [mobileView, setMobileView] = useState('faq');
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -135,12 +136,86 @@ export default function HelpCenter() {
   };
 
   return (
-    <div className="max-w-4xl w-full h-[calc(100vh-140px)] md:h-[80vh] min-h-[500px] flex flex-col">
-      <div className="bg-white rounded-2xl shadow-sm border border-stone-200 h-full flex flex-col overflow-hidden relative">
+    <div className="max-w-6xl w-full h-[calc(100vh-140px)] md:h-[80vh] min-h-[500px] grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      {/* Sidebar - Quick FAQs & Resources */}
+      <div className={`${mobileView === 'faq' ? 'flex' : 'hidden'} md:flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-4`}>
+        <div>
+          <h2 className="text-3xl font-extrabold text-stone-900 mb-2">Help Center</h2>
+          <p className="text-stone-500 font-medium text-sm">Find quick answers to common questions or chat with our digital assistant.</p>
+        </div>
+
+        <div className="bg-stone-50 rounded-xl p-5 border border-stone-200 space-y-4">
+          <h3 className="font-bold text-stone-900 flex items-center gap-2"><HelpCircle className="w-5 h-5 text-[#2E7D32]"/> Quick FAQs</h3>
+          
+          <div className="space-y-3">
+            <details className="group cursor-pointer">
+              <summary className="font-semibold text-sm text-stone-800 hover:text-[#2E7D32] list-none flex justify-between items-center">
+                Shipping Times
+                <span className="transition group-open:rotate-180">
+                  <svg fill="none" height="14" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg>
+                </span>
+              </summary>
+              <p className="text-xs text-stone-600 mt-2 leading-relaxed">International shipping typically takes 3-5 weeks depending on customs clearance. Domestic orders arrive in 5-7 business days.</p>
+            </details>
+            <div className="h-px w-full bg-stone-200"></div>
+            
+            <details className="group cursor-pointer">
+              <summary className="font-semibold text-sm text-stone-800 hover:text-[#2E7D32] list-none flex justify-between items-center">
+                Return Policy
+                <span className="transition group-open:rotate-180">
+                  <svg fill="none" height="14" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg>
+                </span>
+              </summary>
+              <p className="text-xs text-stone-600 mt-2 leading-relaxed">If you receive damaged goods, contact us within 7 days. Once verified, refunds are processed within 5-7 business days.</p>
+            </details>
+            <div className="h-px w-full bg-stone-200"></div>
+
+            <details className="group cursor-pointer">
+              <summary className="font-semibold text-sm text-stone-800 hover:text-[#2E7D32] list-none flex justify-between items-center">
+                Payment Methods
+                <span className="transition group-open:rotate-180">
+                  <svg fill="none" height="14" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg>
+                </span>
+              </summary>
+              <p className="text-xs text-stone-600 mt-2 leading-relaxed">We accept Razorpay for domestic (India) orders and Wire Transfer/PayPal for international orders.</p>
+            </details>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-100">
+          <h3 className="font-bold text-stone-900 mb-2">Need direct help?</h3>
+          <p className="text-xs text-stone-600 mb-4">You can reach out to our human support team via email or phone.</p>
+          <div className="space-y-2 text-sm font-semibold text-[#2E7D32]">
+            <a href="mailto:support@cocoveera.com" className="block hover:underline">support@cocoveera.com</a>
+            <p>+91 123 456 7890</p>
+          </div>
+        </div>
+
+        {/* Mobile AI Assistant Button */}
+        <div 
+          onClick={() => setMobileView('chat')}
+          className="md:hidden cursor-pointer bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white rounded-xl p-5 shadow-lg flex items-center justify-between group"
+        >
+          <div>
+            <h3 className="font-bold mb-1 flex items-center gap-2"><Bot className="w-5 h-5"/> Chat with AI Assistant</h3>
+            <p className="text-xs text-white/80">Get instant answers to your questions.</p>
+          </div>
+          <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+
+      <div className={`${mobileView === 'chat' ? 'flex' : 'hidden'} md:flex md:col-span-2 bg-white rounded-2xl shadow-sm border border-stone-200 h-full flex-col overflow-hidden relative`}>
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#1B5E20] to-[#2E7D32] p-4 sm:p-6 flex-shrink-0 z-10 shadow-md">
+        <div className="bg-gradient-to-r from-[#1B5E20] via-[#2E7D32] to-[#1B5E20] bg-[length:200%_auto] animate-[pulse_4s_ease-in-out_infinite] p-4 sm:p-6 flex-shrink-0 z-10 shadow-md">
           <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setMobileView('faq')}
+              className="md:hidden text-white/80 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-lg relative flex-shrink-0">
               <Bot className="w-5 h-5 sm:w-7 sm:h-7 text-[#2E7D32]" />
               <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-400 border-2 border-white rounded-full"></div>
@@ -158,8 +233,9 @@ export default function HelpCenter() {
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
                 className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`flex w-full max-w-[90%] sm:max-w-[75%] md:max-w-[65%] gap-2 sm:gap-3 ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>

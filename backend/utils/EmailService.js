@@ -86,102 +86,133 @@ export const sendRegistrationOTP = async (to, otp) => {
 };
 
 export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary, pdfBuffer) => {
-  const subject = `Order Confirmation & Invoice - Order #${orderId}`;
-  
   const shortOrderId = orderId.toString().slice(-8).toUpperCase();
+  const subject = `Order Confirmation & Invoice - Order #${shortOrderId}`;
+  
   const orderDate = orderSummary.orderDate || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  
+  let formattedPhone = orderSummary.customerPhone || '';
+  if (formattedPhone && !formattedPhone.startsWith('+') && formattedPhone.length > 10) {
+    const diff = formattedPhone.length - 10;
+    formattedPhone = '+' + formattedPhone.substring(0, diff) + ' ' + formattedPhone.substring(diff);
+  }
   
   let itemsHtml = '';
   if (orderSummary.items && orderSummary.items.length > 0) {
     itemsHtml = orderSummary.items.map(item => `
       <tr>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px;">${item.productName}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: center;">${Math.round(item.pieces || item.quantity)}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">Rs. ${item.unitPrice.toFixed(2)}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #333; font-size: 14px; text-align: right;">Rs. ${(item.unitPrice * (item.pieces || item.quantity)).toFixed(2)}</td>
+        <td style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #374151; font-size: 11px; font-weight: 500;">
+          ${item.productName || 'Product'}
+        </td>
+        <td align="center" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #6B7280; font-size: 11px;">${Math.round(item.pieces || item.quantity)}</td>
+        <td align="right" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #6B7280; font-size: 11px;">₹${(item.unitPrice || 0).toFixed(2)}</td>
+        <td align="right" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #111827; font-size: 11px; font-weight: bold;">₹${((item.unitPrice || 0) * (item.pieces || item.quantity)).toFixed(2)}</td>
       </tr>
     `).join('');
-  }
-
-  let addressHtml = '';
-  if (orderSummary.shippingAddress) {
-    const addr = orderSummary.shippingAddress;
-    addressHtml = `
-      ${orderSummary.customerName}<br>
-      ${addr.addressLine || addr.street || ''}<br>
-      ${addr.city || ''}, ${addr.state || ''} ${addr.postalCode || addr.zip || ''}<br>
-      ${addr.country || ''}<br>
-      ${orderSummary.customerPhone ? `Tel: ${orderSummary.customerPhone}` : ''}
-    `;
-  } else {
-    addressHtml = 'Address not provided';
   }
 
   const htmlContent = `
     <!DOCTYPE html>
     <html>
-      <body style="font-family: Arial, sans-serif; background-color: #fcfcfc; padding: 20px; margin: 0;">
-        <div style="max-w-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-top: 5px solid #2E7D32;">
+      <body style="font-family: 'Inter', Arial, sans-serif; background-color: #F4F6F8; padding: 20px; margin: 0;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
           
           <!-- Header section -->
-          <div style="text-align: center; margin-bottom: 30px;">
+          <div style="background-color: #ffffff; padding: 30px; text-align: center; border-top: 5px solid #2E7D32;">
+            <img src="https://res.cloudinary.com/dyrfiop7d/image/upload/v1780933359/cocoveera_assets/logo.png" alt="COCOVEERA Logo" style="max-height: 60px; margin: 0 auto; display: block;" />
             <h1 style="color: #2E7D32; font-family: 'Times New Roman', Times, serif; font-size: 28px; margin: 10px 0 0 0; letter-spacing: 2px;">COCOVEERA</h1>
             <div style="width: 40px; height: 3px; background-color: #D4AF37; margin: 8px auto;"></div>
             <p style="color: #D4AF37; font-style: italic; font-size: 12px; margin: 5px 0 0 0; font-family: 'Times New Roman', Times, serif;">Premium Coconut Substrates & Lab Quality Testing</p>
           </div>
           
-          <hr style="border: 0; border-top: 1px solid #eaeaea; margin-bottom: 30px;">
+          <hr style="border: 0; border-top: 1px solid #eaeaea; margin-top: 0; margin-bottom: 10px;">
           
-          <p style="color: #2E7D32; font-weight: bold; font-size: 16px;">Dear ${orderSummary.customerName || 'Customer'},</p>
-          <p style="color: #555; font-size: 14px; line-height: 1.5; margin-bottom: 30px;">Your order has been successfully placed and confirmed. We are currently preparing it for shipment from our processing facility.</p>
-          
-          <!-- Order Info Box -->
-          <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; margin-bottom: 30px; display: table; width: 100%;">
-            <div style="display: table-cell; width: 50%;">
-              <p style="margin: 0; font-size: 10px; color: #888; font-weight: bold;">ORDER ID</p>
-              <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: bold; color: #333;">#${shortOrderId}</p>
-            </div>
-            <div style="display: table-cell; width: 50%;">
-              <p style="margin: 0; font-size: 10px; color: #888; font-weight: bold;">ORDER DATE</p>
-              <p style="margin: 5px 0 0 0; font-size: 14px; color: #333;">${orderDate}</p>
-            </div>
+          <!-- Status Banner Box -->
+          <div style="background-color: #05966915; border: 1px solid #05966940; border-radius: 8px; padding: 20px; margin: 20px;">
+            <h2 style="color: #059669; font-size: 18px; margin: 0 0 10px 0;">✅ Order Confirmed!</h2>
+            <p style="color: #4B5563; font-size: 12px; margin: 0; line-height: 1.5;">Dear ${orderSummary.customerName || 'Customer'}, your order status has been updated. We are preparing it for shipment.</p>
           </div>
           
-          <!-- Items Table -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <thead>
-              <tr>
-                <th style="background-color: #2E7D32; color: #fff; text-align: left; padding: 10px 12px; font-size: 13px;">Product</th>
-                <th style="background-color: #2E7D32; color: #fff; text-align: center; padding: 10px 12px; font-size: 13px;">Qty</th>
-                <th style="background-color: #2E7D32; color: #fff; text-align: right; padding: 10px 12px; font-size: 13px;">Price</th>
-                <th style="background-color: #2E7D32; color: #fff; text-align: right; padding: 10px 12px; font-size: 13px;">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-            </tbody>
+          <!-- 3 Info Cards -->
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding: 0 20px; margin-bottom: 30px;">
+            <tr>
+              <td width="31%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
+                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">ORDER ID</div>
+                <div style="font-size: 12px; font-weight: bold; color: #111827;">#${shortOrderId}</div>
+              </td>
+              <td width="3%"></td>
+              <td width="31%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
+                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">ORDER DATE</div>
+                <div style="font-size: 11px; font-weight: bold; color: #111827;">${orderDate}</div>
+              </td>
+              <td width="3%"></td>
+              <td width="32%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
+                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">PAYMENT</div>
+                <div style="font-size: 12px; font-weight: bold; color: #111827;">${orderSummary.paymentMethod || 'COD'}</div>
+              </td>
+            </tr>
           </table>
           
-          <!-- Grand Total -->
-          <div style="text-align: right; margin-bottom: 40px;">
-            <span style="font-size: 14px; font-weight: bold; color: #333; margin-right: 20px;">Grand Total:</span>
-            <span style="font-size: 18px; font-weight: bold; color: #2E7D32;">Rs. ${(orderSummary.totalAmount || 0).toFixed(2)}</span>
-          </div>
-          
-          <!-- Confirmed Stamp -->
-          <div style="text-align: center; margin-bottom: 40px;">
-            <div style="display: inline-block; border: 2px dashed #2E7D32; border-radius: 50%; padding: 25px; min-width: 80px; min-height: 80px;">
-              <div style="color: #2E7D32; font-size: 16px; margin-bottom: 5px;">★ ★ ★</div>
-              <div style="color: #2E7D32; font-weight: bold; font-size: 13px; letter-spacing: 1px; margin-bottom: 5px;">CONFIRMED</div>
-              <div style="color: #2E7D32; font-size: 10px; font-weight: bold;">${orderDate}</div>
-              <div style="color: #2E7D32; font-size: 16px; margin-top: 5px;">★ ★ ★</div>
+          <!-- Order Details Table -->
+          <div style="padding: 0 20px;">
+            <h3 style="font-size: 15px; color: #111827; margin: 0 0 15px 0;">Order Details</h3>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 0;">
+              <thead>
+                <tr>
+                  <th align="left" style="font-size: 10px; font-weight: bold; color: #6B7280; text-transform: uppercase; padding: 10px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB;">PRODUCT</th>
+                  <th align="center" style="font-size: 10px; font-weight: bold; color: #6B7280; text-transform: uppercase; padding: 10px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB;">QTY</th>
+                  <th align="right" style="font-size: 10px; font-weight: bold; color: #6B7280; text-transform: uppercase; padding: 10px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB;">PRICE</th>
+                  <th align="right" style="font-size: 10px; font-weight: bold; color: #6B7280; text-transform: uppercase; padding: 10px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB;">SUBTOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+            </table>
+            <div style="background-color: #F9FAFB; padding: 15px; text-align: right; border-radius: 0 0 6px 6px; margin-bottom: 30px;">
+              <span style="font-size: 12px; font-weight: bold; color: #4B5563; margin-right: 15px;">Grand Total:</span>
+              <span style="font-size: 16px; font-weight: 900; color: #059669;">₹${(orderSummary.totalAmount || 0).toFixed(2)}</span>
             </div>
           </div>
           
-          <!-- Shipping Destination -->
-          <h3 style="color: #2E7D32; font-size: 15px; margin-bottom: 15px;">Shipping Destination</h3>
-          <div style="border-left: 2px solid #2E7D32; padding-left: 15px; font-size: 13px; color: #555; line-height: 1.6;">
-            ${addressHtml}
+          <!-- Shipping and Seal -->
+          <div style="padding: 0 20px; margin-bottom: 30px;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+              <tr>
+                <td width="55%" valign="top">
+                  <h3 style="font-size: 14px; color: #111827; margin: 0 0 10px 0;">Shipping Destination</h3>
+                  <div style="border: 1px solid #E5E7EB; border-radius: 8px; padding: 15px; background: #FAFAFA;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #111827;">${orderSummary.customerName || 'Customer'}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 11px; color: #6B7280; line-height: 1.5;">
+                      ${orderSummary.shippingAddress?.street || orderSummary.shippingAddress?.addressLine || 'Address not provided'}<br>
+                      ${orderSummary.shippingAddress?.city || ''}, ${orderSummary.shippingAddress?.state || ''} - ${orderSummary.shippingAddress?.zip || orderSummary.shippingAddress?.postalCode || ''}<br>
+                      ${orderSummary.shippingAddress?.country || ''}
+                    </p>
+                    ${formattedPhone ? `<p style="margin: 0; font-size: 11px; color: #4B5563; font-weight: 500;">📞 ${formattedPhone}</p>` : ''}
+                  </div>
+                </td>
+                <td width="5%"></td>
+                <td width="40%" valign="middle" align="center">
+                  <!-- Dynamic Seal with Double Border -->
+                  <table align="right" border="0" cellpadding="0" cellspacing="0" style="margin-top: 10px;">
+                    <tr>
+                      <td style="border: 3px solid #059669; border-radius: 50%; padding: 4px;">
+                        <table border="0" cellpadding="0" cellspacing="0" style="border: 2px dashed #059669; border-radius: 50%; width: 130px; height: 130px;">
+                          <tr>
+                            <td align="center" valign="middle">
+                              <div style="color: #059669; font-size: 14px; letter-spacing: 4px; line-height: 1; margin-bottom: 8px;">★ ★ ★</div>
+                              <div style="color: #059669; font-weight: 900; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-family: Arial, sans-serif; margin-bottom: 5px;">CONFIRMED</div>
+                              <div style="color: #059669; font-size: 8px; font-weight: bold; font-family: Arial, sans-serif; margin-bottom: 8px; letter-spacing: 0.5px;">${orderDate.toUpperCase()}</div>
+                              <div style="color: #059669; font-size: 14px; letter-spacing: 4px; line-height: 1;">★ ★ ★</div>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
           </div>
           
         </div>

@@ -6,11 +6,13 @@ import { motion } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
+import RecommendedProducts from '../../components/common/RecommendedProducts';
 
 const Orders = () => {
   const navigate = useNavigate();
   const { user, fetchProfile } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,16 +31,16 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  const handleDownloadInvoice = async (invoiceId) => {
-    if (!invoiceId) return;
+  const handleDownloadInvoice = async (orderId) => {
+    if (!orderId) return;
     try {
-      const response = await apiClient.get(`/invoices/${invoiceId}/download`, {
+      const response = await apiClient.get(`/orders/${orderId}/invoice`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `Invoice_${invoiceId}.pdf`);
+      link.setAttribute('download', `Invoice_${orderId}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
@@ -82,8 +84,20 @@ const Orders = () => {
     const matchProduct = order.items.some(item => 
       (item.product?.name || '').toLowerCase().includes(search)
     );
-    return matchId || matchProduct;
+    const matchesSearch = matchId || matchProduct;
+
+    let matchesDate = true;
+    if (dateFilter !== 'all') {
+      const orderDate = new Date(order.createdAt || Date.now());
+      const diffTime = Math.abs(new Date() - orderDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      matchesDate = diffDays <= parseInt(dateFilter);
+    }
+
+    return matchesSearch && matchesDate;
   });
+
+
 
   if (loading) {
     return (
@@ -97,36 +111,75 @@ const Orders = () => {
   return (
     <div className="max-w-5xl space-y-6 pb-20">
       {/* Header & Controls */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-stone-900">Your Orders</h1>
+          <h1 className="text-3xl font-extrabold text-stone-900 mb-2">Your Orders</h1>
+          <p className="text-stone-500 font-semibold text-sm">Track, return, or buy things again.</p>
         </div>
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input 
-            type="text" 
-            placeholder="Search all orders..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-stone-300 rounded-lg py-2 pl-9 pr-4 text-sm font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] transition-all"
-          />
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <select 
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="bg-white border border-stone-300 rounded-lg py-2 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] appearance-none cursor-pointer"
+          >
+            <option value="all">All Time</option>
+            <option value="30">Last 30 Days</option>
+            <option value="180">Past 6 Months</option>
+            <option value="365">Past Year</option>
+          </select>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input 
+              type="text" 
+              placeholder="Search all orders..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-stone-300 rounded-lg py-2 pl-9 pr-4 text-sm font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] transition-all"
+            />
+          </div>
         </div>
       </div>
+
+
 
       {/* Orders List */}
       <div className="space-y-6">
         {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 text-center border border-stone-200 flex flex-col items-center justify-center min-h-[300px]">
-            <Package className="w-16 h-16 text-stone-300 mb-4" />
-            <h3 className="text-lg font-bold text-stone-900">No Orders Found</h3>
-            <p className="text-stone-500 font-medium text-sm mt-1">We couldn't find any orders matching your criteria.</p>
-            <button 
-              onClick={() => setSearchQuery('')}
-              className="mt-6 px-6 py-2.5 bg-stone-100 text-stone-700 font-bold text-sm rounded-lg hover:bg-stone-200 transition-colors"
-            >
-              Clear Search
-            </button>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            <div className="w-full bg-white rounded-[24px] p-16 md:p-24 text-center border border-stone-200 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+              <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-100">
+                <Package className="w-10 h-10 text-[#2E7D32]" />
+              </div>
+              <h3 className="text-2xl font-extrabold text-stone-900 mb-2">No Orders Found</h3>
+              <p className="text-stone-500 font-semibold mb-6">
+                {orders.length === 0 ? "You haven't placed any orders yet." : "We couldn't find any orders matching your criteria."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 mt-2">
+                {orders.length > 0 && (searchQuery !== '' || dateFilter !== 'all') && (
+                  <button 
+                    onClick={() => { setSearchQuery(''); setDateFilter('all'); }}
+                    className="px-8 py-3.5 bg-white text-[#2E7D32] border border-[#2E7D32] font-bold rounded-xl hover:bg-stone-50 transition-all hover:-translate-y-0.5"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+                <button 
+                  onClick={() => navigate('/dashboard')}
+                  className="px-8 py-3.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-bold rounded-xl border border-transparent hover:shadow-lg hover:shadow-[#2E7D32]/30 transition-all hover:-translate-y-0.5"
+                >
+                  Browse Marketplace
+                </button>
+              </div>
+            </div>
+            
+            <RecommendedProducts />
+          </motion.div>
         ) : (
           filteredOrders.map((order, idx) => {
             const status = order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Pending';
@@ -141,9 +194,39 @@ const Orders = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 key={order._id} 
-                className="bg-white rounded-xl border border-stone-200 overflow-hidden"
+                className={`bg-white rounded-xl border overflow-hidden relative shadow-sm hover:shadow-md transition-shadow ${
+                  status === 'Delivered' ? 'border-l-4 border-l-[#067D62] border-stone-200' : 
+                  status === 'Cancelled' ? 'border-l-4 border-l-red-500 border-stone-200' : 
+                  'border-l-4 border-l-[#F59E0B] border-stone-200'
+                }`}
               >
 
+
+                {/* Card Header (Amazon/Flipkart Style) */}
+                <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
+                  <div className="flex gap-6 md:gap-12">
+                    <div className="flex flex-col">
+                      <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order placed</span>
+                      <span className="font-semibold text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Total</span>
+                      <span className="font-semibold text-stone-700">{convertCurrency((order.totalAmount || order.total || 0), user?.currency || 'INR').formatted}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Ship to</span>
+                      <span className="font-semibold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">{user?.name || 'Customer'}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col md:items-end">
+                    <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order # {order._id.slice(-8).toUpperCase()}</span>
+                    <div className="flex gap-2 text-[#007185] font-semibold mt-0.5 text-xs">
+                      <span className="hover:text-[#C45500] hover:underline cursor-pointer">Order details</span>
+                      <span className="text-stone-300">|</span>
+                      <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => handleDownloadInvoice(order._id)}>Invoice</span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Card Body - Products List */}
                 <div className="p-4 md:p-6 space-y-6">
@@ -159,8 +242,8 @@ const Orders = () => {
                       {/* Product Image */}
                       <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
                         {item.product?.images?.[0] ? (
-                          <div className="w-full h-full relative p-1">
-                            <ImageWithFallback src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply" />
+                          <div className="w-full h-full relative p-1 overflow-hidden group">
+                            <ImageWithFallback src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" />
                           </div>
                         ) : (
                           <Package className="w-8 h-8 text-stone-300" />

@@ -5,9 +5,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Heart, ArrowRight, Package, ArrowLeft, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
+import RecommendedProducts from '../../components/common/RecommendedProducts';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -128,16 +130,24 @@ const Cart = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="max-w-4xl text-center py-20 bg-white rounded-[24px] border border-stone-200 shadow-sm">
-        <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Package className="w-10 h-10 text-stone-400" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-6xl mx-auto"
+      >
+        <div className="w-full text-center py-24 bg-white rounded-[24px] border border-stone-200 shadow-sm">
+          <div className="w-24 h-24 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-stone-100">
+            <Package className="w-10 h-10 text-[#2E7D32]" />
+          </div>
+          <h2 className="text-2xl font-extrabold text-stone-900 mb-2">Your Container is Empty</h2>
+          <p className="text-stone-500 font-semibold mb-8">Start adding products to build your export shipment.</p>
+          <button onClick={() => navigate('/dashboard')} className="px-8 py-3.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-green-500/30 transition-all hover:-translate-y-0.5">
+            Browse Marketplace
+          </button>
         </div>
-        <h2 className="text-2xl font-extrabold text-stone-900 mb-2">Your Container is Empty</h2>
-        <p className="text-stone-500 font-semibold mb-8">Start adding products to build your export shipment.</p>
-        <button onClick={() => navigate('/dashboard')} className="px-8 py-3.5 bg-[#2E7D32] text-white font-bold rounded-xl hover:bg-[#1B5E20] transition-colors">
-          Browse Marketplace
-        </button>
-      </div>
+        
+        <RecommendedProducts />
+      </motion.div>
     );
   }
 

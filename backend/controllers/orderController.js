@@ -5,6 +5,7 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Quote from '../models/Quote.js';
+import User from '../models/User.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
 import { sendOrderConfirmationWithInvoice, sendShipmentUpdate } from '../utils/EmailService.js';
 
@@ -127,6 +128,33 @@ export const createOrder = async (req, res) => {
       totalPieces: totalPieces,
       recommendedContainer: requestedContainer,
     });
+
+    // Save address to user profile if it doesn't exist
+    if (shippingAddress && shippingAddress.street) {
+      const userDoc = await User.findById(req.user.id);
+      if (userDoc) {
+        const addressExists = userDoc.addresses.some(addr => 
+          addr.street === shippingAddress.street && 
+          addr.city === shippingAddress.city && 
+          (addr.zip === shippingAddress.zipCode || addr.zip === shippingAddress.postalCode)
+        );
+
+        if (!addressExists) {
+          userDoc.addresses.push({
+            name: userDoc.name,
+            phone: userDoc.phone,
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            zip: shippingAddress.zipCode || shippingAddress.postalCode,
+            country: shippingAddress.country,
+            isDefault: userDoc.addresses.length === 0,
+            tag: 'Home'
+          });
+          await userDoc.save();
+        }
+      }
+    }
 
     // Populate for email
     const populatedOrder = await Order.findById(order._id).populate('user', 'name email phone').populate('items.product', 'name slug');

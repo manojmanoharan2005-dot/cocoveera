@@ -17,14 +17,20 @@ const THEME = {
 
 export const buildInvoiceDataFromOrder = (order) => {
   const isIndia = order.shippingAddress?.country?.toLowerCase() === 'india';
+  let formattedPhone = order.user?.phone || '';
+  if (formattedPhone && !formattedPhone.startsWith('+') && formattedPhone.length > 10) {
+    const diff = formattedPhone.length - 10;
+    formattedPhone = '+' + formattedPhone.substring(0, diff) + ' ' + formattedPhone.substring(diff);
+  }
+
   return {
     invoiceNumber: `INV-${order._id.toString().slice(-6).toUpperCase()}`,
-    orderId: order._id.toString(),
+    orderId: order._id.toString().slice(-8).toUpperCase(),
     customerId: order.user?._id?.toString() || 'Guest',
     currency: order.user?.currency || (isIndia ? 'INR' : 'USD'),
     customerName: order.user?.name || 'Customer',
     customerEmail: order.user?.email || '',
-    customerPhone: order.user?.phone || '',
+    customerPhone: formattedPhone,
     shippingAddress: order.shippingAddress || {},
     containerType: order.shippingDetails?.containerType || order.recommendedContainer || '20 ft',
     containerUtilization: order.assignedContainer ? 100 : 0, 

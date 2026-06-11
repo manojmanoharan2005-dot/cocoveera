@@ -16,8 +16,10 @@ const Address = () => {
   const { fetchProfile } = useAuth();
 
   const [formData, setFormData] = useState({
-    name: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false
+    name: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false, tag: 'Home'
   });
+
+  const mapPattern = `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232E7D32' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -54,7 +56,7 @@ const Address = () => {
       if (res.data.success) {
         setAddresses(res.data.data);
         setIsEditing(false);
-        setFormData({ name: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false });
+        setFormData({ name: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false, tag: 'Home' });
         const fetchedProfile = await fetchProfile();
         if (fetchedProfile && fetchedProfile.addresses && fetchedProfile.addresses.length === 1) {
           navigate('/dashboard');
@@ -98,7 +100,7 @@ const Address = () => {
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-stone-900 mb-2">Saved Addresses</h1>
+          <h1 className="text-3xl font-extrabold text-stone-900 mb-2">Address</h1>
           {addresses.length === 0 ? (
             <p className="text-red-500 font-bold text-sm">Action Required: Please complete your profile by adding a shipping address to proceed.</p>
           ) : (
@@ -160,6 +162,15 @@ const Address = () => {
                   <option value="India">India</option>
                 </select>
               </div>
+              <div className="space-y-2 md:col-span-1">
+                <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Address Tag</label>
+                <select name="tag" value={formData.tag || 'Home'} onChange={handleChange} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all appearance-none">
+                  <option value="Home">Home</option>
+                  <option value="Office">Office</option>
+                  <option value="Warehouse">Warehouse</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -183,69 +194,83 @@ const Address = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {addresses.map((addr) => (
-          <div key={addr._id} className={`bg-white rounded-[20px] p-6 border shadow-sm relative ${addr.isDefault ? 'border-[#2E7D32]' : 'border-stone-200'}`}>
-            {addr.isDefault && (
-              <div className="absolute -top-3 -right-3 bg-[#2E7D32] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Default
-              </div>
-            )}
-            
-            <div className="flex items-start gap-3 mb-4 border-b border-stone-100 pb-4">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${addr.isDefault ? 'bg-[#F0FAF0] text-[#2E7D32]' : 'bg-stone-100 text-stone-500'}`}>
-                <MapPin className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-extrabold text-stone-900">{addr.name}</h3>
-              </div>
-            </div>
-
-            <address className="not-italic text-sm font-semibold text-stone-600 space-y-1 mb-6 h-20">
-              <p>{addr.street}</p>
-              <p>{addr.city}, {addr.state} {addr.zip}</p>
-              <p>{addr.country}</p>
-              <p className="pt-1 text-stone-900 font-bold">{addr.phone}</p>
-            </address>
-
-            <div className="flex items-center justify-between pt-4 border-t border-stone-100">
-              {!addr.isDefault ? (
-                <button 
-                  onClick={() => handleSetDefault(addr)}
-                  className="text-xs font-bold text-[#2E7D32] hover:text-[#1B5E20] transition-colors"
-                >
-                  Set as Default
-                </button>
-              ) : (
-                <div /> // spacer
-              )}
+          <div key={addr._id} className={`relative rounded-[22px] p-[2px] transition-all duration-500 ${addr.isDefault ? 'bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-400 bg-[length:200%_auto] animate-[pulse_3s_ease-in-out_infinite] shadow-lg shadow-green-500/20' : 'bg-transparent border border-stone-200'}`}>
+            <div className="bg-white rounded-[20px] p-6 h-full relative overflow-hidden group">
+              {/* Map Grid Background */}
+              <div className="absolute inset-0 z-0 pointer-events-none opacity-50 transition-opacity duration-500 group-hover:opacity-100" style={{ backgroundImage: mapPattern }}></div>
               
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => {
-                    setIsEditing(true);
-                    setFormData({
-                      ...addr,
-                      // React controlled inputs need defined values
-                      name: addr.name || '',
-                      phone: addr.phone || '',
-                      street: addr.street || '',
-                      city: addr.city || '',
-                      state: addr.state || '',
-                      zip: addr.zip || '',
-                      country: addr.country || 'United States',
-                      isDefault: addr.isDefault || false
-                    });
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => handleDelete(addr._id)}
-                  className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              <div className="relative z-10">
+                {addr.isDefault && (
+                  <div className="absolute -top-3 -right-3 bg-[#2E7D32] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Default
+                  </div>
+                )}
+                
+                <div className="flex items-start gap-3 mb-4 border-b border-stone-100 pb-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${addr.isDefault ? 'bg-[#F0FAF0] text-[#2E7D32]' : 'bg-stone-100 text-stone-500'}`}>
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-stone-900 flex items-center gap-2">
+                      {addr.name}
+                      {addr.tag && (
+                        <span className="px-2 py-0.5 bg-stone-100 text-stone-600 text-[9px] uppercase rounded border border-stone-200 tracking-wide font-bold">
+                          {addr.tag}
+                        </span>
+                      )}
+                    </h3>
+                  </div>
+                </div>
+
+                <address className="not-italic text-sm font-semibold text-stone-600 space-y-1 mb-6 h-20">
+                  <p>{addr.street}</p>
+                  <p>{addr.city}, {addr.state} {addr.zip}</p>
+                  <p>{addr.country}</p>
+                  <p className="pt-1 text-stone-900 font-bold">{addr.phone}</p>
+                </address>
+
+                <div className="flex items-center justify-between pt-4 border-t border-stone-100">
+                  {!addr.isDefault ? (
+                    <button 
+                      onClick={() => handleSetDefault(addr)}
+                      className="text-xs font-bold text-[#2E7D32] hover:text-[#1B5E20] transition-colors"
+                    >
+                      Set as Default
+                    </button>
+                  ) : (
+                    <div /> // spacer
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        setIsEditing(true);
+                        setFormData({
+                          ...addr,
+                          name: addr.name || '',
+                          phone: addr.phone || '',
+                          street: addr.street || '',
+                          city: addr.city || '',
+                          state: addr.state || '',
+                          zip: addr.zip || '',
+                          country: addr.country || 'United States',
+                          isDefault: addr.isDefault || false,
+                          tag: addr.tag || 'Home'
+                        });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(addr._id)}
+                      className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

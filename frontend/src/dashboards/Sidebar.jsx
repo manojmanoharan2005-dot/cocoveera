@@ -30,10 +30,10 @@ export const Sidebar = ({
 }) => {
   const menuItems = [
     { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
-    { name: 'My Orders', label: 'My Orders', icon: ShoppingBag, path: '/account/orders' },
+    { name: 'Orders', label: 'Orders', icon: ShoppingBag, path: '/account/orders' },
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/account/saved' },
     { name: 'Cart', label: 'Cart', icon: ShoppingCart, badge: cartCount, path: '/account/cart' },
-    { name: 'Saved Addresses', label: 'Saved Address', icon: MapPin, path: '/account/address' },
+    { name: 'Addresses', label: 'Address', icon: MapPin, path: '/account/address' },
     { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/account/support' },
     { name: 'Settings', label: 'Settings', icon: Settings, path: '/account/settings' },
   ];

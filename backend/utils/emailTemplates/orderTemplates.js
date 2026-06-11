@@ -6,13 +6,13 @@ import { baseTemplate } from './baseTemplate.js';
 
 const getSealHTML = (text, dateStr) => {
   return `
-    <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
       <tr>
-        <td align="center" valign="middle" style="width: 130px; height: 130px; border: 2px dashed #2E7D32; border-radius: 50%; background-color: #FFFFFF;">
-          <div style="color: #2E7D32; font-size: 16px; letter-spacing: 5px; line-height: 1;">★ ★ ★</div>
-          <div style="color: #2E7D32; font-weight: bold; font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; font-family: Arial, Helvetica, sans-serif; margin: 12px 0 8px 0;">${text}</div>
-          <div style="color: #2E7D32; font-size: 10px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; margin-bottom: 12px;">${dateStr}</div>
-          <div style="color: #2E7D32; font-size: 16px; letter-spacing: 5px; line-height: 1;">★ ★ ★</div>
+        <td align="center" valign="middle" style="width: 140px; height: 140px; border: 2px dashed #059669; border-radius: 50%; background-color: #FFFFFF;">
+          <div style="color: #059669; font-size: 14px; letter-spacing: 8px; line-height: 1; margin-left: 8px;">★ ★ ★</div>
+          <div style="color: #059669; font-weight: 900; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; font-family: Arial, sans-serif; margin: 12px 0 8px 0;">${text}</div>
+          <div style="color: #059669; font-size: 9px; font-weight: bold; font-family: Arial, sans-serif; margin-bottom: 12px;">${dateStr.toUpperCase()}</div>
+          <div style="color: #059669; font-size: 14px; letter-spacing: 8px; line-height: 1; margin-left: 8px;">★ ★ ★</div>
         </td>
       </tr>
     </table>
@@ -23,25 +23,31 @@ const renderOrderDetails = (order) => {
   if (!order || !order.items) return '';
   const rows = order.items.map(item => `
     <tr>
-      <td style="padding: 12px; font-size: 14px; border-bottom: 1px solid #E2DCD0; color: #2C2C2C;">${item.name}</td>
-      <td style="padding: 12px; text-align: center; border-bottom: 1px solid #E2DCD0;">${item.quantity}</td>
-      <td style="padding: 12px; text-align: right; border-bottom: 1px solid #E2DCD0;">$${parseFloat(item.price).toFixed(2)}</td>
-      <td style="padding: 12px; text-align: right; border-bottom: 1px solid #E2DCD0;">$${(item.quantity * item.price).toFixed(2)}</td>
+      <td style="padding: 15px 10px; font-size: 13px; border-bottom: 1px solid #E5E7EB; color: #4B5563; font-family: Arial, sans-serif;">${item.name}</td>
+      <td style="padding: 15px 10px; text-align: left; border-bottom: 1px solid #E5E7EB; font-size: 13px; color: #6B7280; font-family: Arial, sans-serif;">${item.quantity}</td>
+      <td style="padding: 15px 10px; text-align: left; border-bottom: 1px solid #E5E7EB; font-size: 13px; color: #6B7280; font-family: Arial, sans-serif;">₹${parseFloat(item.price).toFixed(2)}</td>
+      <td style="padding: 15px 10px; text-align: right; border-bottom: 1px solid #E5E7EB; font-size: 13px; font-weight: bold; color: #111827; font-family: Arial, sans-serif;">₹${(item.quantity * item.price).toFixed(2)}</td>
     </tr>
   `).join('');
 
   return `
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0; border-collapse: collapse; border: 1px solid #E2DCD0; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
-      <tr style="background: linear-gradient(to right, #1E5B2E, #2E7D32); color: #FFFFFF;">
-        <th align="left" style="padding: 14px 18px; font-family: Georgia, serif; font-size: 14px; font-weight: normal; letter-spacing: 1px;">Product</th>
-        <th align="center" style="padding: 14px 18px; font-family: Georgia, serif; font-size: 14px; font-weight: normal;">Qty</th>
-        <th align="right" style="padding: 14px 18px; font-family: Georgia, serif; font-size: 14px; font-weight: normal;">Price</th>
-        <th align="right" style="padding: 14px 18px; font-family: Georgia, serif; font-size: 14px; font-weight: normal;">Subtotal</th>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 30px 0; border-collapse: collapse; overflow: hidden;">
+      <tr>
+        <th align="left" style="padding: 10px; font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB;">Product</th>
+        <th align="left" style="padding: 10px; font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB;">Qty</th>
+        <th align="left" style="padding: 10px; font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB;">Price</th>
+        <th align="right" style="padding: 10px; font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; color: #6B7280; text-transform: uppercase; border-bottom: 1px solid #E5E7EB;">Subtotal</th>
       </tr>
       ${rows}
       <tr>
-        <td colspan="3" align="right" style="padding: 18px; font-family: Georgia, serif; font-size: 15px; font-weight: bold; background-color: #FFFFFF;">Grand Total:</td>
-        <td align="right" style="padding: 18px; font-family: Georgia, serif; font-size: 17px; font-weight: bold; color: #1E5B2E; background-color: #FFFFFF;">$${parseFloat(order.totalAmount).toFixed(2)}</td>
+        <td colspan="4" style="padding: 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F9FAFB;">
+            <tr>
+              <td align="right" style="padding: 20px 10px; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #4B5563;">Grand Total:</td>
+              <td width="150" align="right" style="padding: 20px 10px; font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; color: #059669;">₹${parseFloat(order.totalAmount).toFixed(2)}</td>
+            </tr>
+          </table>
+        </td>
       </tr>
     </table>
   `;
@@ -49,37 +55,54 @@ const renderOrderDetails = (order) => {
 
 export const getOrderConfirmationTemplate = (name, order) => {
   const content = `
-    <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #1E5B2E; margin-top: 0; font-weight: normal; margin-bottom: 20px;">Dear ${name},</h3>
-    <p style="margin-bottom: 20px;">Your order has been successfully placed and confirmed. We are currently preparing it for shipment from our processing facility.</p>
-    
-    <div style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 20px; margin-bottom: 30px;">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td width="50%" valign="top">
-            <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #6B7280; font-weight: bold;">Order ID</p>
-            <p style="margin: 0; font-weight: bold; color: #111827;">#${order.orderId}</p>
-          </td>
-          <td width="50%" valign="top">
-            <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #6B7280; font-weight: bold;">Order Date</p>
-            <p style="margin: 0; color: #111827;">${order.date}</p>
-          </td>
-        </tr>
-      </table>
+    <div style="background-color: #F0FDF4; border-radius: 8px; padding: 20px; border: 1px solid #BBF7D0; margin-bottom: 30px;">
+        <h2 style="color: #059669; margin-top: 0; display: flex; align-items: center; font-family: Arial, sans-serif; font-size: 20px; margin-bottom: 15px;">
+            <span style="font-size: 24px; margin-right: 10px;">✅</span> Order Confirmed!
+        </h2>
+        <p style="color: #4B5563; font-family: Arial, sans-serif; margin-bottom: 0; font-size: 14px;">Dear ${name}, your order status has been updated. We are preparing it for shipment.</p>
     </div>
-
+    
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; border-spacing: 0;">
+      <tr>
+        <td width="32%" valign="top" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 15px; background-color: #FAFAFA;">
+          <p style="margin: 0 0 5px 0; font-size: 10px; text-transform: uppercase; color: #6B7280; font-weight: bold; font-family: Arial, sans-serif;">Order ID</p>
+          <p style="margin: 0; font-weight: bold; color: #111827; font-family: Arial, sans-serif; font-size: 13px;">#${order.orderId}</p>
+        </td>
+        <td width="2%" style="background: transparent;"></td>
+        <td width="32%" valign="top" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 15px; background-color: #FAFAFA;">
+          <p style="margin: 0 0 5px 0; font-size: 10px; text-transform: uppercase; color: #6B7280; font-weight: bold; font-family: Arial, sans-serif;">Order Date</p>
+          <p style="margin: 0; color: #111827; font-weight: bold; font-family: Arial, sans-serif; font-size: 13px;">${order.date}</p>
+        </td>
+        <td width="2%" style="background: transparent;"></td>
+        <td width="32%" valign="top" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 15px; background-color: #FAFAFA;">
+          <p style="margin: 0 0 5px 0; font-size: 10px; text-transform: uppercase; color: #6B7280; font-weight: bold; font-family: Arial, sans-serif;">Payment</p>
+          <p style="margin: 0; color: #111827; font-weight: bold; font-family: Arial, sans-serif; font-size: 13px;">${order.paymentMethod || 'COD'}</p>
+        </td>
+      </tr>
+    </table>
+    
+    <h3 style="font-family: Arial, sans-serif; font-size: 16px; color: #111827; margin-top: 0; margin-bottom: 15px; font-weight: bold;">Order Details</h3>
     ${renderOrderDetails(order)}
-    ${getSealHTML('CONFIRMED', order.date)}
-    
-    <h3 style="font-family: Georgia, serif; font-size: 16px; color: #1E5B2E; margin-top: 30px;">Shipping Destination</h3>
-    <div style="border-left: 3px solid #1E5B2E; padding: 15px 20px; border-radius: 4px; background-color: transparent;">
-      <p style="margin: 0 0 5px 0; font-weight: bold; color: #2C2C2C;">${order.shippingAddress.name}</p>
-      <p style="margin: 0 0 5px 0; color: #555555; font-size: 14px;">
-        ${order.shippingAddress.street}<br>
-        ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zip}<br>
-        ${order.shippingAddress.country}
-      </p>
-      <p style="margin: 0; color: #555555; font-size: 14px; font-weight: 600;">Tel: ${order.shippingAddress.phone}</p>
-    </div>
+
+    <h3 style="font-family: Arial, sans-serif; font-size: 16px; color: #111827; margin-top: 30px; margin-bottom: 15px; font-weight: bold;">Shipping Destination</h3>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+        <tr>
+            <td width="55%" valign="top">
+                <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; background-color: #FAFAFA;">
+                  <p style="margin: 0 0 10px 0; font-weight: bold; color: #111827; font-family: Arial, sans-serif; font-size: 14px;">${order.shippingAddress.name}</p>
+                  <p style="margin: 0 0 10px 0; color: #6B7280; font-size: 13px; font-family: Arial, sans-serif; line-height: 1.5;">
+                    ${order.shippingAddress.street}<br>
+                    ${order.shippingAddress.city}, ${order.shippingAddress.state} - <br>
+                    ${order.shippingAddress.country}
+                  </p>
+                  <p style="margin: 0; color: #4B5563; font-size: 13px; font-family: Arial, sans-serif;">📞 ${order.shippingAddress.phone}</p>
+                </div>
+            </td>
+            <td width="45%" valign="middle" align="center">
+                ${getSealHTML('CONFIRMED', order.date)}
+            </td>
+        </tr>
+    </table>
   `;
   return baseTemplate({ title: `Order Confirmation #${order.orderId}`, content });
 };
