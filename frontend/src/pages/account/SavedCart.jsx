@@ -8,6 +8,7 @@ import { ShoppingCart, Trash2, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
+import ImageWithFallback from '../../components/common/ImageWithFallback';
 
 const SavedCart = () => {
   const navigate = useNavigate();
@@ -92,8 +93,8 @@ const SavedCart = () => {
             key={item.id} 
             className="bg-white rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col"
           >
-            <div className="relative h-48 bg-stone-100 w-full overflow-hidden">
-              <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <div className="relative h-48 bg-stone-100 w-full overflow-hidden flex items-center justify-center p-4">
+              <ImageWithFallback src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
               <button 
                 onClick={() => removeItem(item.id)}
                 className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-white shadow-sm transition-all"

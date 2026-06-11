@@ -14,12 +14,14 @@ const upload = multer({ storage });
 // Import admin controllers
 import {
   adminLogin,
+  adminVerifyKey,
   refreshAdminToken,
   getAdminMe,
   adminForgotPassword,
   adminResetPassword,
   adminChangePassword,
   adminLogout,
+  adminLogoutAll,
 } from '../controllers/adminAuthController.js';
 
 import {
@@ -67,10 +69,12 @@ const router = express.Router();
 
 // ==================== ADMIN AUTH ROUTES ====================
 router.post('/auth/login', adminLogin);
+router.post('/auth/verify-key', adminVerifyKey);
 router.post('/auth/refresh', refreshAdminToken);
 router.post('/auth/forgot-password', adminForgotPassword);
 router.post('/auth/reset-password/:token', adminResetPassword);
 router.post('/auth/logout', protect, adminLogout);
+router.post('/auth/logout-all', protect, adminLogoutAll);
 
 // Protected routes
 router.get('/auth/me', protect, admin, getAdminMe);

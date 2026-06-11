@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
 import { API_URL } from '../utils/config';
+import ImageWithFallback from '../components/common/ImageWithFallback';
 
 export const Marketplace = ({ 
   loading = false,
@@ -61,9 +62,15 @@ export const Marketplace = ({
   useEffect(() => {
     const fetchCats = async () => {
       try {
+        const cached = sessionStorage.getItem('cocoveera_cats');
+        if (cached) {
+          setDbCategories(JSON.parse(cached));
+        }
+
         const res = await axios.get(`${API_URL}/categories`);
         if (res.data.success) {
           setDbCategories(res.data.data);
+          sessionStorage.setItem('cocoveera_cats', JSON.stringify(res.data.data));
         }
       } catch (err) {
         console.error('Failed to fetch categories', err);
@@ -222,44 +229,62 @@ export const Marketplace = ({
         <div className="space-y-6">
           <h3 className="font-poppins font-extrabold text-xl text-stone-900">Browse by Category</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {categoryCards.map((cat, idx) => (
-              <div 
-                key={idx}
-                onClick={() => setSelectedCollection(cat.name)}
-                className="group cursor-pointer bg-white rounded-[24px] border border-stone-200 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-500 flex flex-col"
-              >
-                {/* Full bleed image area */}
-                <div className="relative h-56 w-full overflow-hidden bg-stone-100 flex items-center justify-center p-3">
-                  <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center">
-                    <img 
-                      src={cat.image} 
-                      alt={cat.name} 
-                      className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                    />
+            {loading && categoryCards.length === 0 ? (
+              [...Array(4)].map((_, idx) => (
+                <div 
+                  key={idx}
+                  className="bg-white rounded-[24px] border border-stone-200 overflow-hidden flex flex-col animate-pulse"
+                >
+                  <div className="h-56 w-full bg-stone-100/80"></div>
+                  <div className="p-6 bg-white flex items-center justify-between">
+                    <div className="flex-1 pr-4">
+                      <div className="h-5 bg-stone-200 rounded-md w-2/3 mb-3"></div>
+                      <div className="h-3 bg-stone-100 rounded-md w-1/2"></div>
+                    </div>
+                    <div className="w-10 h-10 shrink-0 rounded-full bg-stone-100"></div>
                   </div>
-                  {/* Subtle dark overlay for premium feel */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"></div>
+                </div>
+              ))
+            ) : (
+              categoryCards.map((cat, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => setSelectedCollection(cat.name)}
+                  className="group cursor-pointer bg-white rounded-[24px] border border-stone-200 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-500 flex flex-col"
+                >
+                  {/* Full bleed image area */}
+                  <div className="relative h-56 w-full overflow-hidden bg-stone-100 flex items-center justify-center p-3">
+                    <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center">
+                      <img 
+                        src={cat.image} 
+                        alt={cat.name} 
+                        className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                      />
+                    </div>
+                    {/* Subtle dark overlay for premium feel */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"></div>
+                    
+                    {/* Item count badge floating top-left */}
+                    <div className="absolute top-4 left-4">
+                      <span className="bg-white/95 backdrop-blur-md text-stone-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                        {cat.count} Item{cat.count !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
                   
-                  {/* Item count badge floating top-left */}
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-white/95 backdrop-blur-md text-stone-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                      {cat.count} Item{cat.count !== 1 ? 's' : ''}
-                    </span>
+                  <div className="p-6 bg-white flex items-center justify-between">
+                    <div className="pr-4 flex-1">
+                      <h4 className="font-poppins font-extrabold text-stone-900 text-lg group-hover:text-[#2E7D32] transition-colors leading-tight">{cat.name}</h4>
+                      <p className="text-sm text-stone-500 font-medium mt-1">Explore collection</p>
+                    </div>
+                    {/* Action button */}
+                    <div className="w-10 h-10 shrink-0 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300 transform group-hover:translate-x-1 shadow-sm">
+                      <ChevronRight className="w-5 h-5" />
+                    </div>
                   </div>
                 </div>
-                
-                <div className="p-6 bg-white flex items-center justify-between">
-                  <div className="pr-4 flex-1">
-                    <h4 className="font-poppins font-extrabold text-stone-900 text-lg group-hover:text-[#2E7D32] transition-colors leading-tight">{cat.name}</h4>
-                    <p className="text-sm text-stone-500 font-medium mt-1">Explore collection</p>
-                  </div>
-                  {/* Action button */}
-                  <div className="w-10 h-10 shrink-0 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300 transform group-hover:translate-x-1 shadow-sm">
-                    <ChevronRight className="w-5 h-5" />
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       ) : (
@@ -344,9 +369,9 @@ export const Marketplace = ({
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                   {/* Left: Gallery */}
                   <div className="md:col-span-5 space-y-4">
-                    <div className="h-64 sm:h-72 rounded-[20px] overflow-hidden bg-[#F7F9F7] border border-stone-200/60 shadow-inner">
-                      <img 
-                        src={selectedProduct.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} 
+                    <div className="h-64 sm:h-72 rounded-[20px] overflow-hidden bg-[#F7F9F7] border border-stone-200/60 shadow-inner relative">
+                      <ImageWithFallback 
+                        src={selectedProduct.images?.[0]} 
                         alt={selectedProduct.name} 
                         className="w-full h-full object-contain mix-blend-multiply" 
                       />
@@ -354,11 +379,11 @@ export const Marketplace = ({
                     {/* Gallery Thumbs */}
                     <div className="flex gap-2.5">
                       {[...Array(3)].map((_, i) => (
-                        <div key={i} className={`w-1/3 h-16 rounded-[12px] overflow-hidden bg-stone-50 border cursor-pointer hover:border-[#2E7D32] transition-colors ${
+                        <div key={i} className={`w-1/3 h-16 rounded-[12px] overflow-hidden bg-stone-50 border cursor-pointer hover:border-[#2E7D32] transition-colors relative ${
                           i === 0 ? 'border-[#2E7D32]' : 'border-stone-200'
                         }`}>
-                          <img 
-                            src={selectedProduct.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} 
+                          <ImageWithFallback 
+                            src={selectedProduct.images?.[0]} 
                             alt="thumbnail" 
                             className="w-full h-full object-cover" 
                           />
@@ -426,8 +451,8 @@ export const Marketplace = ({
                           onClick={() => setSelectedProduct(item)}
                           className="border border-stone-200 rounded-[18px] p-3.5 cursor-pointer hover:shadow-md hover:border-[#2E7D32] transition-all flex gap-3 items-center bg-white"
                         >
-                          <div className="w-12 h-12 rounded-[10px] overflow-hidden bg-stone-50 flex-shrink-0">
-                            <img src={item.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} alt={item.name} className="w-full h-full object-cover" />
+                          <div className="w-12 h-12 rounded-[10px] overflow-hidden bg-stone-50 flex-shrink-0 relative">
+                            <ImageWithFallback src={item.images?.[0]} alt={item.name} className="w-full h-full object-cover" />
                           </div>
                           <div className="leading-snug">
                             <h5 className="font-extrabold text-xs text-stone-900 line-clamp-1">{item.name}</h5>

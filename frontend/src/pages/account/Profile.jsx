@@ -23,7 +23,7 @@ const Profile = () => {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-stone-900 mb-2">My Profile</h1>
-          <p className="text-stone-500 font-semibold text-sm">View your personal and corporate details.</p>
+          <p className="text-stone-500 font-semibold text-sm">View your personal profile details.</p>
         </div>
         <button 
           onClick={() => navigate('/account/settings')}
@@ -47,11 +47,8 @@ const Profile = () => {
           <div>
             <h2 className="text-2xl font-extrabold text-stone-900">{user.name}</h2>
             <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
-              <span className="text-[10px] text-[#2E7D32] font-bold uppercase tracking-wider bg-[#2E7D32]/10 py-1 px-3 rounded-full border border-[#2E7D32]/15 shadow-sm">
-                {user.companyName || 'Global Importer'}
-              </span>
               <span className="text-[10px] text-stone-500 font-extrabold uppercase tracking-widest bg-stone-100 py-1 px-3 rounded-full">
-                {user.role === 'admin' ? 'Administrator' : 'B2B Client'}
+                {user.role === 'admin' ? 'Administrator' : 'Customer'}
               </span>
             </div>
           </div>

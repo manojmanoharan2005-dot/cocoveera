@@ -7,6 +7,7 @@ import { Heart, Star, ShoppingBag, ArrowRight, Zap, CheckCircle } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
+import ImageWithFallback from '../components/common/ImageWithFallback';
 
 export const ProductCard = ({
   product,
@@ -50,11 +51,8 @@ export const ProductCard = ({
     >
       <div className="h-[200px] w-full overflow-hidden relative bg-stone-50 flex items-center justify-center p-2 flex-shrink-0">
         <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center">
-          <img
-            src={
-              product.images?.[0] ||
-              'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'
-            }
+          <ImageWithFallback
+            src={product.images?.[0]}
             alt={product.name}
             className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] transition-transform duration-700 ease-out group-hover:scale-108"
             style={{ transform: 'scale(1)' }}
@@ -95,36 +93,15 @@ export const ProductCard = ({
           </button>
         </div>
 
-        {/* Rating */}
-        <div className="flex items-center gap-1.5 mb-3">
-          <Star className="w-3.5 h-3.5 fill-[#EAB308] text-[#EAB308]" />
-          <span className="text-[11px] font-bold text-stone-800">{rating}</span>
-          <span className="text-[11px] font-semibold text-stone-500">({reviewCount})</span>
-        </div>
 
         {/* Price Row */}
         <div className="flex items-baseline gap-2 mt-auto">
           <span className="text-base font-poppins font-black text-stone-900">
             {priceData.formatted}
           </span>
-          {oldPrice > basePrice && (
-            <span className="text-[11px] text-stone-400 line-through font-semibold">
-              {oldPriceData.formatted}
-            </span>
-          )}
-          {discount > 0 && (
-            <span className="text-[11px] font-bold text-[#22C55E]">
-              {discount}% off
-            </span>
-          )}
+
         </div>
 
-        {/* Free Delivery */}
-        <div className="mt-1">
-          <span className="text-[10px] font-bold text-[#22C55E]">
-            Free delivery
-          </span>
-        </div>
       </div>
     </motion.div>
   );

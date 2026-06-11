@@ -14,6 +14,7 @@ import {
   updateCart,
   clearCart,
   toggleWishlist,
+  deleteUserProfile,
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -21,7 +22,8 @@ const router = express.Router();
 
 router.route('/profile')
   .get(protect, getUserProfile)
-  .put(protect, updateUserProfile);
+  .put(protect, updateUserProfile)
+  .delete(protect, deleteUserProfile);
 
 router.route('/profile/request-password-otp')
   .post(protect, requestPasswordChangeOtp);

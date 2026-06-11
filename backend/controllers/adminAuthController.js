@@ -1,98 +1,150 @@
-/**
- * File: backend/controllers/adminAuthController.js
- * Purpose: Handles the business logic and request processing for adminAuth operations.
- */
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '../utils/mailer.js';
 
-// @desc    Admin Login
+// @desc    Admin Login Step 1
 // @route   POST /api/admin/auth/login
 // @access  Public
 export const adminLogin = async (req, res) => {
   try {
     let { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
-      console.log('Login failed: Missing email or password');
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide email and password',
-      });
+      return res.status(400).json({ success: false, message: 'Invalid Credentials' });
     }
 
     email = email.toLowerCase().trim();
-    console.log(`Attempting admin login for: ${email}`);
-
-    // Check for user
     const user = await User.findOne({ email }).select('+password');
 
+    const genericError = 'Invalid Credentials';
+
     if (!user) {
-      console.log(`Login failed: User not found for email ${email}`);
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials. User not found.',
-      });
+      return res.status(401).json({ success: false, message: genericError });
     }
 
-    console.log(`User found: ${user.email}, Role: ${user.role}`);
-
-    // Check if user is admin
     if (!['admin', 'manager', 'support'].includes(user.role)) {
-      console.log(`Login failed: User ${email} does not have admin access`);
-      return res.status(403).json({
-        success: false,
-        message: 'You do not have admin access',
-      });
+      return res.status(401).json({ success: false, message: genericError });
     }
 
-    // Check if user is verified
-    if (user.isVerified === false) {
-      console.log(`Login failed: Administrator account ${email} is not verified`);
-      return res.status(403).json({
-        success: false,
-        message: 'Account not verified. Please verify your email.',
-      });
+    // Check lockout
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const remainingTime = Math.ceil((user.lockUntil - Date.now()) / 60000);
+      return res.status(403).json({ success: false, message: `Account locked. Try again in ${remainingTime} minutes.` });
     }
 
-    // Check if user is blocked
-    if (user.isBlocked === true) {
-      console.log(`Login failed: Administrator account ${email} is blocked`);
-      return res.status(403).json({
-        success: false,
-        message: 'Your account has been blocked. Contact superadmin.',
-      });
+    if (user.isBlocked) {
+      return res.status(403).json({ success: false, message: 'Your account has been blocked.' });
     }
 
-    // Check password
-    console.log(`Verifying password for ${email}`);
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      console.log(`Login failed: Password mismatch for ${email}`);
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid password',
-      });
+      user.failedLoginAttempts += 1;
+      if (user.failedLoginAttempts >= 5) {
+        user.lockUntil = Date.now() + 15 * 60 * 1000; // 15 mins
+        await user.save();
+        return res.status(403).json({ success: false, message: 'Account locked due to too many failed attempts. Try again in 15 minutes.' });
+      }
+      await user.save();
+      return res.status(401).json({ success: false, message: genericError });
     }
 
-    console.log(`Password match successful for ${email}`);
+    // Reset password attempts
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    await user.save();
 
-    // Create tokens
-    const accessToken = jwt.sign(
-      { id: user._id, role: user.role, adminRole: user.adminRole },
+    // Generate temp token for Step 2
+    const tempToken = jwt.sign(
+      { id: user._id, role: user.role, step1: true },
       process.env.JWT_SECRET || 'secret',
-      { expiresIn: '7d' } // updated to 7d as requested
+      { expiresIn: '5m' }
+    );
+
+    res.status(200).json({
+      success: true,
+      requiresVerification: true,
+      tempToken,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+// @desc    Admin Verify Key Step 2
+// @route   POST /api/admin/auth/verify-key
+// @access  Public
+export const adminVerifyKey = async (req, res) => {
+  try {
+    const { tempToken, verificationKey } = req.body;
+
+    if (!tempToken || !verificationKey) {
+      return res.status(400).json({ success: false, message: 'Missing token or key' });
+    }
+
+    // Verify temp token
+    let decoded;
+    try {
+      decoded = jwt.verify(tempToken, process.env.JWT_SECRET || 'secret');
+      if (!decoded.step1) throw new Error('Invalid token type');
+    } catch (err) {
+      return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+
+    // Check lockout
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      return res.status(403).json({ success: false, message: 'Account locked.' });
+    }
+
+    // Verify key
+    const actualKey = process.env.ADMIN_VERIFICATION_KEY || 'CVR@2026#SecureAdminKey'; // fallback for safety
+    if (verificationKey !== actualKey) {
+      user.failedKeyAttempts += 1;
+      if (user.failedKeyAttempts >= 3) {
+        user.lockUntil = Date.now() + 15 * 60 * 1000;
+        await user.save();
+        return res.status(403).json({ success: false, message: 'Account locked due to too many failed key attempts.' });
+      }
+      await user.save();
+      return res.status(401).json({ success: false, message: 'Invalid Verification Key' });
+    }
+
+    // Success! Reset attempts
+    user.failedKeyAttempts = 0;
+    user.lockUntil = null;
+
+    // Track session
+    const sessionId = crypto.randomBytes(16).toString('hex');
+    const ip = req.ip || req.connection.remoteAddress;
+    const browser = req.headers['user-agent'] || 'Unknown';
+    
+    user.sessions.push({
+      sessionId,
+      ip,
+      browser,
+      device: 'Desktop/Mobile',
+      lastActive: Date.now()
+    });
+
+    await user.save();
+
+    // Generate full tokens (with sessionId included so we can track it)
+    const accessToken = jwt.sign(
+      { id: user._id, role: user.role, adminRole: user.adminRole, sessionId },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '30m' } // Changed to 30 mins per prompt requirement
     );
 
     const refreshToken = jwt.sign(
-      { id: user._id },
+      { id: user._id, sessionId },
       process.env.REFRESH_TOKEN_SECRET || 'refresh_secret',
       { expiresIn: '7d' }
     );
-
-    console.log(`Login successful for ${email}. Tokens generated.`);
 
     res.status(200).json({
       success: true,
@@ -108,17 +160,26 @@ export const adminLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(`Admin login error: ${error.message}`);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
 
-// @desc    Refresh Admin Token
-// @route   POST /api/admin/auth/refresh
-// @access  Public
+// @desc    Admin logout all devices
+// @route   POST /api/admin/auth/logout-all
+// @access  Private
+export const adminLogoutAll = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (user) {
+      user.sessions = [];
+      await user.save();
+    }
+    res.status(200).json({ success: true, message: 'Logged out from all devices' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const refreshAdminToken = async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -144,10 +205,21 @@ export const refreshAdminToken = async (req, res) => {
       });
     }
 
+    // Generate a new sessionId because old one is expiring/refreshing, or we just keep the old one?
+    // Let's keep the existing sessionId if it's there
+    const sessionId = decoded.sessionId || crypto.randomBytes(16).toString('hex');
+    
+    // update session lastActive
+    const session = user.sessions.find(s => s.sessionId === decoded.sessionId);
+    if(session) {
+      session.lastActive = Date.now();
+      await user.save();
+    }
+
     const newAccessToken = jwt.sign(
-      { id: user._id, role: user.role, adminRole: user.adminRole },
+      { id: user._id, role: user.role, adminRole: user.adminRole, sessionId },
       process.env.JWT_SECRET || 'secret',
-      { expiresIn: '24h' }
+      { expiresIn: '30m' }
     );
 
     res.status(200).json({
@@ -302,7 +374,14 @@ export const adminChangePassword = async (req, res) => {
 // @access  Private
 export const adminLogout = async (req, res) => {
   try {
-    // Client should remove token on their end
+    // Client should remove token on their end, but we can also remove the session from the DB if sessionId is present
+    if (req.user && req.user.sessionId) {
+      const user = await User.findById(req.user.id);
+      if (user) {
+        user.sessions = user.sessions.filter(s => s.sessionId !== req.user.sessionId);
+        await user.save();
+      }
+    }
     res.status(200).json({
       success: true,
       message: 'Logged out successfully',

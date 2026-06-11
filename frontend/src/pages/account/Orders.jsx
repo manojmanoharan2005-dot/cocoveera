@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
+import ImageWithFallback from '../../components/common/ImageWithFallback';
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -158,7 +159,9 @@ const Orders = () => {
                       {/* Product Image */}
                       <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
                         {item.product?.images?.[0] ? (
-                          <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover mix-blend-multiply" />
+                          <div className="w-full h-full relative p-1">
+                            <ImageWithFallback src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply" />
+                          </div>
                         ) : (
                           <Package className="w-8 h-8 text-stone-300" />
                         )}

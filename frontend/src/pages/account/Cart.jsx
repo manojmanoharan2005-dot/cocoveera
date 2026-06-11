@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trash2, Heart, ArrowRight, Package, ArrowLeft, AlertCircle } from 'lucide-react';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
+import ImageWithFallback from '../../components/common/ImageWithFallback';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -157,7 +158,9 @@ const Cart = () => {
         <div className="lg:col-span-2 space-y-4">
           {cartItems.map(item => (
             <div key={item.id} className="bg-white p-4 rounded-2xl border border-stone-200 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm relative overflow-hidden group">
-              <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-xl bg-stone-100" />
+              <div className="w-24 h-24 rounded-xl bg-stone-100 flex-shrink-0 relative overflow-hidden">
+                <ImageWithFallback src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-multiply p-1" />
+              </div>
               
               <div className="flex-grow">
                 <h3 className="font-extrabold text-stone-900 text-base mb-1 pr-12">{item.name}</h3>

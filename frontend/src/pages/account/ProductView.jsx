@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import { ContainerViewer3D } from '../../components/3d/ContainerViewer3D';
+import ImageWithFallback from '../../components/common/ImageWithFallback';
 
 const ProductView = () => {
   const { id } = useParams();
@@ -274,10 +275,10 @@ const ProductView = () => {
             )}
 
             <div className="h-72 sm:h-96 rounded-[24px] overflow-hidden bg-[#F7F9F7] border border-stone-200/50 shadow-sm relative group">
-              <img 
+              <ImageWithFallback 
                 src={imagesList[activeImageIndex]} 
                 alt={product.name} 
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" 
+                className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 hover:scale-105" 
               />
               <button 
                 onClick={handleWishlistToggle}
@@ -294,14 +295,14 @@ const ProductView = () => {
                   <button 
                     key={i} 
                     onClick={() => setActiveImageIndex(i)}
-                    className={`w-20 h-20 rounded-[16px] overflow-hidden bg-stone-50 border cursor-pointer hover:border-[#2E7D32] transition-colors shrink-0 ${
+                    className={`relative w-20 h-20 rounded-[16px] overflow-hidden bg-stone-50 border cursor-pointer hover:border-[#2E7D32] transition-colors shrink-0 ${
                       i === activeImageIndex ? 'border-2 border-[#2E7D32]' : 'border-stone-200'
                     }`}
                   >
-                    <img 
+                    <ImageWithFallback 
                       src={img} 
                       alt={`thumbnail ${i}`} 
-                      className="w-full h-full object-cover" 
+                      className="w-full h-full object-contain mix-blend-multiply" 
                     />
                   </button>
                 ))}
@@ -479,7 +480,9 @@ const ProductView = () => {
                     return (
                       <div key={relProduct._id} className="flex items-center justify-between bg-stone-50 border border-stone-200/60 rounded-xl p-2">
                          <div className="flex items-center gap-2">
-                           <img src={relProduct.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} className="w-8 h-8 rounded-lg object-cover" alt="" />
+                           <div className="w-8 h-8 rounded-lg overflow-hidden relative">
+                             <ImageWithFallback src={relProduct.images?.[0]} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                           </div>
                            <span className="text-[11px] font-bold text-stone-700 max-w-[120px] truncate">{relProduct.name}</span>
                          </div>
                          <div className="flex items-center bg-white border border-stone-250 rounded-lg p-0.5">
@@ -784,11 +787,11 @@ const ProductView = () => {
                   className="bg-white border border-stone-200 hover:border-[#2E7D32] rounded-[22px] p-4.5 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between h-full group"
                 >
                   <div>
-                    <div className="h-40 rounded-[16px] overflow-hidden bg-[#F7F9F7] mb-3.5 border border-stone-100 flex-shrink-0">
-                      <img 
-                        src={item.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'} 
+                    <div className="relative h-40 rounded-[16px] overflow-hidden bg-[#F7F9F7] mb-3.5 border border-stone-100 flex-shrink-0">
+                      <ImageWithFallback 
+                        src={item.images?.[0]} 
                         alt={item.name} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103" 
+                        className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-103" 
                       />
                     </div>
                     <span className="text-[9px] text-[#2E7D32] font-extrabold uppercase tracking-wider block mb-1">

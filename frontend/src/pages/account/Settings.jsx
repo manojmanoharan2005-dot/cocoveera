@@ -4,10 +4,12 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../../context/AuthContext';
-import { User, Mail, Phone, MapPin, Building2, Lock, Save, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Phone, MapPin, Lock, Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 
 const Settings = () => {
-  const { user, login } = useAuth(); // login function updates the auth state
+  const { user, login, logout } = useAuth(); // login function updates the auth state
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -15,6 +17,9 @@ const Settings = () => {
   const [otp, setOtp] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
   const [pendingPayload, setPendingPayload] = useState(null);
+  
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -36,7 +41,6 @@ const Settings = () => {
             name: profile.name || '',
             email: profile.email || '',
             phone: profile.phone || '',
-            companyName: profile.companyName || '',
             country: profile.country || '',
             password: '',
             confirmPassword: ''
@@ -69,7 +73,6 @@ const Settings = () => {
       const payload = {
         name: formData.name,
         phone: formData.phone,
-        companyName: formData.companyName,
         country: formData.country,
       };
 
@@ -129,6 +132,25 @@ const Settings = () => {
     saveProfile(pendingPayload, otp);
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    try {
+      const res = await apiClient.delete('/users/profile');
+      if (res.data.success) {
+        setShowDeleteModal(false);
+        logout();
+        navigate('/');
+      }
+    } catch (err) {
+      setMessage({ 
+        text: err.response?.data?.message || 'Failed to delete account', 
+        type: 'error' 
+      });
+      setDeleteLoading(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-12 text-center text-stone-500 font-bold">Loading settings...</div>;
   }
@@ -182,24 +204,6 @@ const Settings = () => {
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" 
               />
             </div>
-          </div>
-        </div>
-
-        {/* Company Information */}
-        <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm space-y-6">
-          <h2 className="text-lg font-black text-stone-900 border-b border-stone-100 pb-3">Business Profile</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
-                <Building2 className="w-3.5 h-3.5" /> Company Name
-              </label>
-              <input 
-                type="text" name="companyName" value={formData.companyName} onChange={handleChange}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" 
-              />
-            </div>
-
             <div className="space-y-2">
               <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5" /> Country
@@ -215,7 +219,7 @@ const Settings = () => {
         {/* Security */}
         <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm space-y-6">
           <h2 className="text-lg font-black text-stone-900 border-b border-stone-100 pb-3">Security & Password</h2>
-          <p className="text-xs text-stone-500 font-semibold mb-4">Leave blank if you do not wish to change your password.</p>
+          <p className="text-xs text-stone-500 font-semibold mb-4">Entering a new password will trigger an email OTP verification for security. Leave blank if you do not wish to change your password.</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -251,6 +255,23 @@ const Settings = () => {
           </button>
         </div>
       </form>
+
+      {/* Danger Zone */}
+      <div className="bg-red-50/50 rounded-2xl p-6 border border-red-100 shadow-sm space-y-4 mt-8">
+        <h2 className="text-lg font-black text-red-700 border-b border-red-100 pb-3 flex items-center gap-2">
+          <Trash2 className="w-5 h-5" /> Danger Zone
+        </h2>
+        <p className="text-sm text-stone-600 font-semibold">
+          Once you delete your account, there is no going back. Please be certain.
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowDeleteModal(true)}
+          className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-md shadow-red-600/20"
+        >
+          Delete Account
+        </button>
+      </div>
 
       {/* OTP Modal */}
       {showOtpModal && (
@@ -293,6 +314,40 @@ const Settings = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-black text-stone-900">Delete Account</h3>
+            </div>
+            <p className="text-sm text-stone-500 font-semibold mb-6">Are you absolutely sure you want to delete your account? This action cannot be undone and will permanently remove your profile.</p>
+            
+            <div className="flex gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-3 bg-stone-100 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition-colors disabled:opacity-70"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors flex justify-center items-center gap-2 disabled:opacity-70"
+              >
+                {deleteLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Delete Permanently'}
+              </button>
+            </div>
           </div>
         </div>
       )}

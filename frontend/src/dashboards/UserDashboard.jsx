@@ -31,9 +31,16 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        const cached = sessionStorage.getItem('cocoveera_products');
+        if (cached) {
+          setProducts(JSON.parse(cached));
+          setLoading(false);
+        }
+
         const prodRes = await apiClient.get('/products');
         if (prodRes.data.success) {
           setProducts(prodRes.data.data);
+          sessionStorage.setItem('cocoveera_products', JSON.stringify(prodRes.data.data));
         }
       } catch (err) {
         console.error('Failed to fetch data', err);

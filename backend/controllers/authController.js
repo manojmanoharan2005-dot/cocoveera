@@ -147,6 +147,25 @@ export const login = async (req, res) => {
       });
     }
 
+    // Intercept admins
+    if (['admin', 'manager', 'support'].includes(user.role)) {
+      // Use the same logic as adminLogin Step 1
+      const tempToken = user.getSignedJwtToken(); // Wait, temp token should be 5 mins and include step1
+      const jwt = (await import('jsonwebtoken')).default;
+      const adminTempToken = jwt.sign(
+        { id: user._id, role: user.role, step1: true },
+        process.env.JWT_SECRET || 'secret',
+        { expiresIn: '5m' }
+      );
+
+      return res.status(200).json({
+        success: true,
+        requiresAdminVerification: true,
+        tempToken: adminTempToken,
+        message: 'Admin verification required',
+      });
+    }
+
     console.log(`[User Auth] Successful login for ${email}`);
 
     res.status(200).json({

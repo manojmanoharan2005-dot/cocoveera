@@ -98,6 +98,18 @@ const UserSchema = new mongoose.Schema(
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    failedLoginAttempts: { type: Number, default: 0 },
+    failedKeyAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
+    sessions: [
+      {
+        sessionId: String,
+        ip: String,
+        browser: String,
+        device: String,
+        lastActive: Date
+      }
+    ],
   },
   {
     timestamps: true,

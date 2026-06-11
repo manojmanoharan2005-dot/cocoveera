@@ -20,6 +20,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const AuthLayout = lazy(() => import('./layouts/AuthLayout'));
 const OTPForm = lazy(() => import('./components/auth/OTPForm'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -325,8 +326,10 @@ function AppContent() {
           }
         />
 
-        {/* Catch all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Catch all route */}
+        <Route element={<PublicLayout />}>
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Routes>
     </Suspense>
   );

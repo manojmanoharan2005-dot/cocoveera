@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../utils/config';
 import LazyVideo from '../components/LazyVideo';
+import ImageWithFallback from '../components/common/ImageWithFallback';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowRight,
@@ -666,8 +667,8 @@ const Home = () => {
                     {/* Glass reflection highlight */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
                     <div className="relative h-48 w-full overflow-hidden flex items-center justify-center p-3 bg-stone-50 flex-shrink-0">
-                      <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center">
-                        <img 
+                      <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center relative">
+                        <ImageWithFallback 
                           src={displayImg} 
                           alt={dbCat.name} 
                           className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] group-hover:scale-105 transition-transform duration-500"
@@ -702,8 +703,8 @@ const Home = () => {
                     className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative"
                   >
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
-                    <div className="relative h-48 overflow-hidden flex-shrink-0 bg-stone-100">
-                      <img src={p.img} alt={p.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                    <div className="relative h-48 overflow-hidden flex-shrink-0 bg-stone-100 relative">
+                      <ImageWithFallback src={p.img} alt={p.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                     </div>
                     <div className="p-5 flex flex-col flex-grow">
                       <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 leading-tight">{p.name}</h3>

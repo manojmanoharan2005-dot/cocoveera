@@ -45,6 +45,27 @@ export const AdminAuthProvider = ({ children }) => {
         password,
       });
 
+      // Step 1 returns tempToken and requiresVerification flag
+      return { 
+        success: true, 
+        requiresVerification: response.data.requiresVerification,
+        tempToken: response.data.tempToken
+      };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Login failed';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const verifyAdminKey = async (tempToken, verificationKey) => {
+    try {
+      setError(null);
+      const response = await axios.post(`${API_URL}/admin/auth/verify-key`, {
+        tempToken,
+        verificationKey,
+      });
+
       const { accessToken, refreshToken, user } = response.data;
 
       localStorage.setItem('adminToken', accessToken);
@@ -53,16 +74,32 @@ export const AdminAuthProvider = ({ children }) => {
       setAdmin(user);
       return { success: true, user };
     } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
+      const message = err.response?.data?.message || 'Verification failed';
       setError(message);
       throw err;
     }
   };
 
   const logout = () => {
+    // Optionally call backend logout
+    axios.post(`${API_URL}/admin/auth/logout`, {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+    }).catch(() => {});
+    
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminRefreshToken');
     setAdmin(null);
+  };
+
+  const logoutAllDevices = async () => {
+    try {
+      await axios.post(`${API_URL}/admin/auth/logout-all`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+      });
+      logout();
+    } catch (err) {
+      console.error('Logout all devices failed', err);
+    }
   };
 
   const refreshToken = async () => {
@@ -86,7 +123,7 @@ export const AdminAuthProvider = ({ children }) => {
 
   return (
     <AdminAuthContext.Provider
-      value={{ admin, loading, error, login, logout, refreshToken }}
+      value={{ admin, loading, error, login, logout, refreshToken, verifyAdminKey, logoutAllDevices }}
     >
       {children}
     </AdminAuthContext.Provider>

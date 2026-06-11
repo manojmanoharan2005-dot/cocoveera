@@ -12,7 +12,7 @@ import { authService } from '../../services/authService';
 
 export const LoginForm = () => {
   const { login } = useAuth();
-  const { login: adminLogin } = useAdminAuth();
+  const { verifyAdminKey } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -21,9 +21,11 @@ export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
-  const [mode, setMode] = useState('login'); // 'login' | 'forgot' | 'reset'
+  const [mode, setMode] = useState('login'); // 'login' | 'forgot' | 'reset' | 'verifyAdmin'
   const [successMessage, setSuccessMessage] = useState(null);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [adminTempToken, setAdminTempToken] = useState(null);
+  const [verificationKey, setVerificationKey] = useState('');
   const [resetEmail, setResetEmail] = useState('');
   const [resetOtp, setResetOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -72,7 +74,6 @@ export const LoginForm = () => {
     setLoading(true);
     setApiError(null);
     try {
-      // First authenticate via standard login to check the role in MongoDB
       const res = await login(data.email, data.password);
       
       if (data.rememberMe) {
@@ -81,14 +82,13 @@ export const LoginForm = () => {
         localStorage.removeItem('cocoveera_remember_email');
       }
 
-      if (res.success) {
-        // If the user's role is admin/manager/support, log them into the admin context
-        if (['admin', 'manager', 'support'].includes(res.user?.role)) {
-          await adminLogin(data.email, data.password);
-          navigate('/admin/dashboard');
-          return;
-        }
+      if (res.requiresAdminVerification) {
+        setAdminTempToken(res.tempToken);
+        setMode('verifyAdmin');
+        return;
+      }
 
+      if (res.success) {
         const fromPath = location.state?.from || (redirect ? `/${redirect}` : '/dashboard');
         navigate(fromPath, { replace: true });
       }
@@ -156,6 +156,30 @@ export const LoginForm = () => {
       }
     } catch (err) {
       setApiError(err.response?.data?.message || err.message || 'Failed to reset password. Please check the code and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAdmin = async (e) => {
+    e.preventDefault();
+    if (!verificationKey) {
+      setApiError('Please enter the verification key.');
+      return;
+    }
+    setLoading(true);
+    setApiError(null);
+    try {
+      const res = await verifyAdminKey(adminTempToken, verificationKey);
+      if (res.success) {
+        navigate('/admin/dashboard', { replace: true });
+      }
+    } catch (err) {
+      setApiError(err.response?.data?.message || err.message || 'Verification failed.');
+      // If session expired or token invalid, reset to login
+      if (err.response?.status === 401 && !err.response?.data?.message?.includes('Invalid')) {
+        setMode('login');
+      }
     } finally {
       setLoading(false);
     }
@@ -480,6 +504,69 @@ export const LoginForm = () => {
                 setApiError(null);
                 setSuccessMessage(null);
                 setIsOtpVerified(false);
+              }}
+              className="text-xs text-stone-500 hover:text-stone-700 font-semibold focus:outline-none"
+            >
+              Back to Login
+            </button>
+          </div>
+        </form>
+      )}
+
+      {mode === 'verifyAdmin' && (
+        <form onSubmit={handleVerifyAdmin} className="space-y-4 animate-fade-in">
+          <div className="text-center mb-6">
+            <ShieldCheck className="w-12 h-12 text-[#2E5E35] mx-auto mb-3" />
+            <h3 className="text-lg font-poppins font-extrabold text-stone-900">Admin Verification Required</h3>
+            <p className="text-xs text-stone-500 mt-1 font-medium">Please enter your 2-Step Verification Key to continue.</p>
+          </div>
+          <div>
+            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
+              ADMIN VERIFICATION KEY
+            </label>
+            <div className="relative">
+              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={verificationKey}
+                onChange={(e) => setVerificationKey(e.target.value)}
+                className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20 transition-all placeholder:text-stone-400"
+                placeholder="Enter Key"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <span>Verify & Continue</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+
+          <div className="text-center pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('login');
+                setApiError(null);
+                setAdminTempToken(null);
+                setVerificationKey('');
               }}
               className="text-xs text-stone-500 hover:text-stone-700 font-semibold focus:outline-none"
             >

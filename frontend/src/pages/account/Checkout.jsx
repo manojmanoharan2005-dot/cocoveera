@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../context/AuthContext';
+import ImageWithFallback from '../../components/common/ImageWithFallback';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -683,7 +684,9 @@ const Checkout = () => {
                       <div className="space-y-4">
                         {cartItems.map((item, idx) => (
                           <div key={idx} className="flex gap-5 p-4 rounded-xl hover:bg-stone-50/80 transition-colors border border-transparent hover:border-stone-100">
-                            <img src={item.product?.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available'} alt={item.product?.name} className="w-24 h-24 object-cover rounded-xl shadow-sm" />
+                            <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
+                              <ImageWithFallback src={item.product?.images?.[0]} alt={item.product?.name} className="w-full h-full object-contain mix-blend-multiply p-1" />
+                            </div>
                             <div className="flex-1 flex flex-col justify-center">
                               <h3 className="text-base font-extrabold text-stone-900 line-clamp-1">{item.product?.name || 'Unknown Product'}</h3>
                               <p className="text-xs text-stone-500 font-medium mt-1">Containers: <span className="font-bold text-stone-900">{item.quantity}</span></p>

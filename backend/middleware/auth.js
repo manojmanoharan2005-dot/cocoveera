@@ -25,6 +25,25 @@ export const protect = async (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Not authorized, user not found' });
       }
 
+      // Admin Session verification
+      if (decoded.sessionId) {
+        const session = req.user.sessions.find(s => s.sessionId === decoded.sessionId);
+        if (!session) {
+          return res.status(401).json({ success: false, message: 'Session expired or invalidated. Please log in again.' });
+        }
+        
+        // Auto-expire after 30 mins of inactivity
+        if (session.lastActive && Date.now() - new Date(session.lastActive).getTime() > 30 * 60 * 1000) {
+          req.user.sessions = req.user.sessions.filter(s => s.sessionId !== decoded.sessionId);
+          await req.user.save();
+          return res.status(401).json({ success: false, message: 'Session expired due to inactivity. Please log in again.' });
+        }
+        
+        // Update lastActive
+        session.lastActive = Date.now();
+        await req.user.save();
+      }
+
       next();
     } catch (error) {
       console.error(error);

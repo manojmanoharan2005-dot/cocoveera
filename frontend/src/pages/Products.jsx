@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Check, Info, X, Layers, Droplet, Wind, Compass, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 import PageHero from '../components/PageHero';
+import ImageWithFallback from '../components/common/ImageWithFallback';
 
 const Products = () => {
   const { user } = useAuth();
@@ -415,12 +416,12 @@ const Products = () => {
                 className="bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden border border-white/60 shadow-soft hover:shadow-premium hover:-translate-y-1 transition-all duration-300 grid grid-cols-1 md:grid-cols-12 group"
               >
               <div
-                className="md:col-span-5 relative h-64 md:h-full bg-stone-100/50 cursor-pointer overflow-hidden"
+                className="md:col-span-5 relative h-64 md:h-full bg-stone-100/50 cursor-pointer overflow-hidden relative"
                 onClick={() => navigate(`/account/product/${prod._id}`)}
               >
                 <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500 z-10 mix-blend-overlay"></div>
-                <img
-                  src={prod.images && prod.images.length > 0 ? prod.images[0] : 'https://via.placeholder.com/400?text=No+Image'}
+                <ImageWithFallback
+                  src={prod.images && prod.images.length > 0 ? prod.images[0] : null}
                   alt={prod.name}
                   className="w-full h-full object-cover mix-blend-multiply transition-transform group-hover:scale-110 duration-700"
                 />
