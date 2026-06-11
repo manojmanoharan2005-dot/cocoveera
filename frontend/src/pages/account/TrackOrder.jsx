@@ -61,7 +61,7 @@ const TrackOrder = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl space-y-6">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -82,7 +82,7 @@ const TrackOrder = () => {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl">
         
         {/* Tracking Timeline */}
         <div className="bg-white rounded-2xl p-4 md:p-8 border border-stone-200 shadow-sm relative overflow-hidden">

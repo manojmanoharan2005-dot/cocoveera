@@ -19,7 +19,7 @@ const Profile = () => {
   const userInitials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl space-y-6">
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-stone-900 mb-2">My Profile</h1>

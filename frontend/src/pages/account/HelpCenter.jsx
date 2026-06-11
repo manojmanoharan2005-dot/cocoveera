@@ -135,7 +135,7 @@ export default function HelpCenter() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto w-full h-[calc(100vh-140px)] md:h-[80vh] min-h-[500px] flex flex-col">
+    <div className="max-w-4xl w-full h-[calc(100vh-140px)] md:h-[80vh] min-h-[500px] flex flex-col">
       <div className="bg-white rounded-2xl shadow-sm border border-stone-200 h-full flex flex-col overflow-hidden relative">
         
         {/* Header */}

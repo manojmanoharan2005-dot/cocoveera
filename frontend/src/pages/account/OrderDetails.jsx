@@ -87,7 +87,7 @@ const OrderDetails = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => navigate('/account/orders')} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors">

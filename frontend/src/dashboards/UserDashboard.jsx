@@ -24,14 +24,17 @@ const UserDashboard = () => {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   
   // Product Data
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => {
+    const cached = localStorage.getItem('cocoveera_products');
+    return cached ? JSON.parse(cached) : [];
+  });
   const [wishlist, setWishlist] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !localStorage.getItem('cocoveera_products'));
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const cached = sessionStorage.getItem('cocoveera_products');
+        const cached = localStorage.getItem('cocoveera_products');
         if (cached) {
           setProducts(JSON.parse(cached));
           setLoading(false);
@@ -40,7 +43,7 @@ const UserDashboard = () => {
         const prodRes = await apiClient.get('/products');
         if (prodRes.data.success) {
           setProducts(prodRes.data.data);
-          sessionStorage.setItem('cocoveera_products', JSON.stringify(prodRes.data.data));
+          localStorage.setItem('cocoveera_products', JSON.stringify(prodRes.data.data));
         }
       } catch (err) {
         console.error('Failed to fetch data', err);

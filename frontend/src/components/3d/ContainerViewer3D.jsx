@@ -19,11 +19,14 @@ export const ContainerViewer3D = ({ containerType, totalQuantity, autoRotate, pa
   let totalIndex = 0;
   
   for (const item of palletItems) {
-    for (let i = 0; i < item.quantity; i++) {
+    const palletsPerContainer = containerType === '20FT' ? 10 : 22;
+    const numPalletsToRender = Math.round(item.quantity * palletsPerContainer);
+
+    for (let i = 0; i < numPalletsToRender; i++) {
       const row = Math.floor(totalIndex / 2);
       const col = totalIndex % 2;
       const x = col === 0 ? -0.55 : 0.55; // Left or Right side
-      const z = startZ + (row * 1.15); // Distance from back wall
+      const z = startZ + (row * 1.1); // Distance from back wall
       
       // Prevent visually overflowing the container if user selects > capacity
       if (z < depth / 2) {

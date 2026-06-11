@@ -7,7 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
   Droplet, Wind, ShieldCheck, FileText, ChevronRight,
-  Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2
+  Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2, Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
@@ -157,7 +157,7 @@ const ProductView = () => {
 
   if (error || !product) {
     return (
-      <div className="max-w-2xl mx-auto py-12 px-6 text-center space-y-4">
+      <div className="max-w-2xl py-12 px-6 text-center space-y-4">
         <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto border border-red-100">
           <AlertCircle className="w-6 h-6" />
         </div>
@@ -210,7 +210,7 @@ const ProductView = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-28 lg:pb-16">
+    <div className="max-w-6xl space-y-8 pb-28 lg:pb-16">
       
       {/* Toast Notification */}
       <AnimatePresence>
@@ -231,21 +231,23 @@ const ProductView = () => {
 
       {/* Breadcrumbs and navigation */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5 text-xs text-stone-500 font-bold">
-          <Link to="/dashboard" className="hover:text-[#2E7D32] transition-colors">Marketplace</Link>
-          <ChevronRight className="w-3 h-3 text-stone-400" />
-          <span className="text-stone-400 font-medium truncate max-w-[200px] sm:max-w-[300px]">
+        <div className="flex items-center gap-2 text-sm sm:text-base font-poppins font-extrabold min-w-0 flex-1">
+          <Link to="/dashboard" className="flex items-center gap-1.5 text-stone-600 hover:text-[#2E7D32] transition-colors shrink-0">
+            <Home className="w-4 h-4 sm:w-[18px] sm:h-[18px] mb-0.5" />
+            <span className="inline">Marketplace</span>
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-400 shrink-0" />
+          <span 
+            onClick={() => navigate(`/dashboard?category=${encodeURIComponent(product.category)}`)}
+            className="text-stone-600 hover:text-[#2E7D32] transition-colors cursor-pointer shrink-0 truncate max-w-[120px] sm:max-w-[200px]"
+          >
+            {product.category}
+          </span>
+          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-400 shrink-0" />
+          <span className="text-[#2E7D32] truncate">
             {product.name}
           </span>
         </div>
-
-        <button 
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 bg-white border border-stone-200 text-stone-700 hover:text-[#2E7D32] hover:border-[#2E7D32] px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Marketplace
-        </button>
       </div>
 
       {/* Main product layout */}

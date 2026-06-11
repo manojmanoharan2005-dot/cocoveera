@@ -12,7 +12,7 @@ export const PalletModel = ({ position, index, product }) => {
   const palletWidth = 1.0;
   const palletDepth = 1.1;
   const palletHeight = 0.15;
-  const loadHeight = 1.3;
+  const loadHeight = 2.2;
 
   const category = product?.category || 'Coco Peat Products';
   const isGrowBag = category.toLowerCase().includes('grow bag') || category.toLowerCase().includes('growbag');
@@ -45,7 +45,7 @@ export const PalletModel = ({ position, index, product }) => {
       const height = 0.25;
       const cols = 3;
       const rows = 3;
-      const layers = 5;
+      const layers = 8;
       for (let y = 0; y < layers; y++) {
         for (let x = 0; x < cols; x++) {
           for (let z = 0; z < rows; z++) {
@@ -68,7 +68,7 @@ export const PalletModel = ({ position, index, product }) => {
       const d = 0.15;
       const cols = 3;
       const rows = 6;
-      const layers = 3;
+      const layers = 5;
       for (let y = 0; y < layers; y++) {
         for (let x = 0; x < cols; x++) {
           for (let z = 0; z < rows; z++) {
@@ -90,7 +90,7 @@ export const PalletModel = ({ position, index, product }) => {
       const height = 0.05;
       const cols = 3;
       const rows = 3;
-      const layers = 24;
+      const layers = 44;
       for (let y = 0; y < layers; y++) {
         for (let x = 0; x < cols; x++) {
           for (let z = 0; z < rows; z++) {
@@ -113,7 +113,7 @@ export const PalletModel = ({ position, index, product }) => {
       const d = 0.15;
       const cols = 3;
       const rows = 6;
-      const layers = 8;
+      const layers = 14;
       for (let y = 0; y < layers; y++) {
         for (let x = 0; x < cols; x++) {
           for (let z = 0; z < rows; z++) {

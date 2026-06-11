@@ -8,6 +8,31 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import axios from 'axios';
+import { API_URL } from './utils/config';
+
+// Prefetch data globally on app load
+const prefetchData = () => {
+  try {
+    const cachedProducts = localStorage.getItem('cocoveera_products');
+    const cachedCats = localStorage.getItem('cocoveera_cats');
+    
+    if (!cachedProducts) {
+      axios.get(`${API_URL}/products`).then(res => {
+        if (res.data.success) localStorage.setItem('cocoveera_products', JSON.stringify(res.data.data));
+      }).catch(() => {});
+    }
+    
+    if (!cachedCats) {
+      axios.get(`${API_URL}/categories`).then(res => {
+        if (res.data.success) localStorage.setItem('cocoveera_cats', JSON.stringify(res.data.data));
+      }).catch(() => {});
+    }
+  } catch (err) {}
+};
+
+prefetchData();
+
 
 // Public Pages
 const Home = lazy(() => import('./pages/Home'));

@@ -128,7 +128,7 @@ const Cart = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto text-center py-20 bg-white rounded-[24px] border border-stone-200 shadow-sm">
+      <div className="max-w-4xl text-center py-20 bg-white rounded-[24px] border border-stone-200 shadow-sm">
         <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <Package className="w-10 h-10 text-stone-400" />
         </div>
@@ -142,7 +142,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl">
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-stone-900 mb-2">Build Your Container</h1>

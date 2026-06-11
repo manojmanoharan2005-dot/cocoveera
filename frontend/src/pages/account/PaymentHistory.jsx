@@ -44,7 +44,7 @@ export default function PaymentHistory() {
   if (loading) return <div className="p-12 text-center text-stone-500 font-bold">Loading payments...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl space-y-6">
       <h1 className="text-2xl font-extrabold text-stone-900">Payment History</h1>
       {payments.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 border border-stone-100 text-center text-stone-500 font-bold">No payments found</div>

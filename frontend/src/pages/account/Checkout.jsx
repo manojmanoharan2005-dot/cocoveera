@@ -536,7 +536,7 @@ const Checkout = () => {
         )}
       </AnimatePresence>
 
-      <div className="max-w-6xl mx-auto py-10 px-4 md:px-8">
+      <div className="max-w-6xl py-10 px-4 md:px-8">
         
         {/* Header Title */}
         <div className="mb-10 text-center md:text-left">

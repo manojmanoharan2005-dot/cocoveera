@@ -57,12 +57,15 @@ export const Marketplace = ({
   const [displayedProducts, setDisplayedProducts] = useState([]);
   
   // Database categories to get images
-  const [dbCategories, setDbCategories] = useState([]);
+  const [dbCategories, setDbCategories] = useState(() => {
+    const cached = localStorage.getItem('cocoveera_cats');
+    return cached ? JSON.parse(cached) : [];
+  });
 
   useEffect(() => {
     const fetchCats = async () => {
       try {
-        const cached = sessionStorage.getItem('cocoveera_cats');
+        const cached = localStorage.getItem('cocoveera_cats');
         if (cached) {
           setDbCategories(JSON.parse(cached));
         }
@@ -70,7 +73,7 @@ export const Marketplace = ({
         const res = await axios.get(`${API_URL}/categories`);
         if (res.data.success) {
           setDbCategories(res.data.data);
-          sessionStorage.setItem('cocoveera_cats', JSON.stringify(res.data.data));
+          localStorage.setItem('cocoveera_cats', JSON.stringify(res.data.data));
         }
       } catch (err) {
         console.error('Failed to fetch categories', err);
@@ -290,15 +293,15 @@ export const Marketplace = ({
       ) : (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 pb-4">
-            <div className="flex items-center gap-1.5 sm:gap-3 text-lg sm:text-2xl font-poppins font-extrabold min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-sm sm:text-base font-poppins font-extrabold min-w-0 flex-1">
               <button 
                 onClick={() => setSelectedCollection('All')}
-                className="flex items-center gap-1.5 sm:gap-2 text-stone-800 hover:text-[#2E7D32] transition-colors shrink-0"
+                className="flex items-center gap-1.5 text-stone-600 hover:text-[#2E7D32] transition-colors shrink-0"
               >
-                <Home className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5" />
-                <span className="hidden sm:inline">Marketplace</span>
+                <Home className="w-4 h-4 sm:w-[18px] sm:h-[18px] mb-0.5" />
+                <span className="inline">Marketplace</span>
               </button>
-              <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 text-stone-400 shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-400 shrink-0" />
               <span className="text-[#2E7D32] truncate">
                 {selectedCollection === 'All' ? 'Search Results' : `${selectedCollection} Products`}
               </span>

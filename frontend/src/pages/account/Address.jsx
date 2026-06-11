@@ -94,7 +94,7 @@ const Address = () => {
   if (loading) return <div className="p-12 text-center text-stone-500 font-bold">Loading addresses...</div>;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-10">
+    <div className="max-w-5xl space-y-6 pb-10">
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
         <div>

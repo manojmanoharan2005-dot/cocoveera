@@ -18,7 +18,7 @@ const OrderSuccess = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
+    <div className="max-w-2xl py-10 px-4">
       <div className="bg-white rounded-[32px] p-8 md:p-12 border border-stone-200 shadow-sm text-center flex flex-col items-center">
         
         {/* Success Animation */}
