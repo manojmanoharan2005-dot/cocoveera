@@ -145,7 +145,7 @@ const Settings = () => {
       }
     } catch (err) {
       setMessage({ 
-        text: err.response?.data?.message || 'Failed to delete account', 
+        text: err.response?.data?.message || 'Failed to delete account. Please check your network connection.', 
         type: 'error' 
       });
       setDeleteLoading(false);
