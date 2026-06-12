@@ -6,6 +6,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Lock, Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const Settings = () => {
   const { user, login, logout } = useAuth(); // login function updates the auth state
@@ -199,9 +201,16 @@ const Settings = () => {
               <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5" /> Phone Number
               </label>
-              <input 
-                type="tel" name="phone" value={formData.phone} onChange={handleChange}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" 
+              <PhoneInput
+                country={'us'}
+                value={formData.phone}
+                onChange={(phone) => setFormData({ ...formData, phone })}
+                enableSearch={true}
+                searchPlaceholder="Search country or code..."
+                inputClass="!w-full !bg-stone-50 !border-stone-200 !text-stone-900 !rounded-xl !h-[46px] !pl-12 !pr-4 !text-sm !font-semibold focus:!bg-white focus:!border-[#2E7D32] !outline-none !transition-all"
+                buttonClass="!bg-stone-50 !border-stone-200 !rounded-l-xl !pl-2"
+                dropdownClass="!rounded-xl !border-stone-200 !shadow-lg !text-sm !font-semibold"
+                searchClass="!bg-stone-50 !border-stone-200 !text-sm !font-semibold !rounded-lg !mb-2"
               />
             </div>
             <div className="space-y-2">

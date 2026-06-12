@@ -7,6 +7,8 @@ import { Plus, MapPin, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const Address = () => {
   const navigate = useNavigate();
@@ -130,7 +132,17 @@ const Address = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Phone Number</label>
-                <input required name="phone" type="tel" value={formData.phone} onChange={handleChange} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" />
+                <PhoneInput
+                  country={'us'}
+                  value={formData.phone}
+                  onChange={(phone) => setFormData({ ...formData, phone })}
+                  enableSearch={true}
+                  searchPlaceholder="Search country or code..."
+                  inputClass="!w-full !bg-stone-50 !border-stone-200 !text-stone-900 !rounded-xl !h-[46px] !pl-12 !pr-4 !text-sm !font-semibold focus:!bg-white focus:!border-[#2E7D32] !outline-none !transition-all"
+                  buttonClass="!bg-stone-50 !border-stone-200 !rounded-l-xl !pl-2"
+                  dropdownClass="!rounded-xl !border-stone-200 !shadow-lg !text-sm !font-semibold"
+                  searchClass="!bg-stone-50 !border-stone-200 !text-sm !font-semibold !rounded-lg !mb-2"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Street Address (Port / Warehouse)</label>
