@@ -19,29 +19,38 @@ const SavedCart = () => {
 
   // Sync with global user wishlist state
   useEffect(() => {
-    if (user?.wishlist) {
-      setItems(user.wishlist.map(p => ({
-        id: p._id,
-        name: p.name,
-        price: p.price,
-        image: p.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available',
-        addedDate: new Date().toISOString() // Fallback if schema doesn't have it
-      })).filter(i => i.id));
+    if (user && user.wishlist) {
+      const mappedItems = user.wishlist.map(p => {
+        // Handle case where p might be just a string ID
+        const isString = typeof p === 'string';
+        return {
+          id: isString ? p : (p._id || p.id),
+          name: isString ? 'Saved Product' : (p.name || 'Saved Product'),
+          price: isString ? 0 : (p.price || 0),
+          image: isString ? 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available' : (p.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available'),
+          addedDate: new Date().toISOString()
+        };
+      }).filter(i => i.id);
+      setItems(mappedItems);
       setLoading(false);
-    } else {
-      // If user loads but has no wishlist yet
+    } else if (user) {
+      // User is loaded but no wishlist data is present yet
       const fetchWishlist = async () => {
         try {
           const res = await apiClient.get('/users/profile');
           if (res.data.success) {
             const fetchedWishlist = res.data.data.wishlist || [];
-            setItems(fetchedWishlist.map(p => ({
-              id: p._id,
-              name: p.name,
-              price: p.price,
-              image: p.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available',
-              addedDate: new Date().toISOString()
-            })).filter(i => i.id));
+            const mappedItems = fetchedWishlist.map(p => {
+              const isString = typeof p === 'string';
+              return {
+                id: isString ? p : (p._id || p.id),
+                name: isString ? 'Saved Product' : (p.name || 'Saved Product'),
+                price: isString ? 0 : (p.price || 0),
+                image: isString ? 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available' : (p.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available'),
+                addedDate: new Date().toISOString()
+              };
+            }).filter(i => i.id);
+            setItems(mappedItems);
           }
         } catch (err) {
           console.error('Failed to fetch wishlist', err);
@@ -50,6 +59,8 @@ const SavedCart = () => {
         }
       };
       fetchWishlist();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 

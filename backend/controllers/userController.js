@@ -10,7 +10,7 @@ import { sendOTPEmail } from '../utils/mailer.js';
 // @access  Private
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.user._id)
       .populate('cart.product')
       .populate('wishlist');
       
@@ -39,7 +39,7 @@ export const getUserProfile = async (req, res) => {
 // @access  Private
 export const updateUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -86,7 +86,7 @@ export const updateUserProfile = async (req, res) => {
 // @access  Private
 export const requestPasswordChangeOtp = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -145,7 +145,7 @@ export const updateUserRole = async (req, res) => {
 // @access  Private
 export const addAddress = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     
     if (req.body.isDefault) {
@@ -178,7 +178,7 @@ export const addAddress = async (req, res) => {
 // @access  Private
 export const deleteAddress = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     user.addresses = user.addresses.filter(a => a._id.toString() !== req.params.addressId);
     await user.save();
     res.status(200).json({ success: true, data: user.addresses });
@@ -192,7 +192,7 @@ export const deleteAddress = async (req, res) => {
 // @access  Private
 export const updateCart = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate('cart.product').populate('wishlist');
+    const user = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
     const { productId, quantity, increment = false } = req.body;
     
     // Ensure quantity is a multiple of 0.25
@@ -217,7 +217,7 @@ export const updateCart = async (req, res) => {
     await user.save();
     
     // Repopulate for frontend
-    const updatedUser = await User.findById(req.user.id).populate('cart.product').populate('wishlist');
+    const updatedUser = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
     res.status(200).json({ success: true, data: updatedUser.cart });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -229,7 +229,7 @@ export const updateCart = async (req, res) => {
 // @access  Private
 export const clearCart = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     user.cart = [];
     await user.save();
     res.status(200).json({ success: true, data: user.cart });
@@ -243,7 +243,7 @@ export const clearCart = async (req, res) => {
 // @access  Private
 export const toggleWishlist = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate('cart.product').populate('wishlist');
+    const user = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
     const { productId } = req.body;
     
     const exists = user.wishlist.some(p => p._id.toString() === productId || p.toString() === productId);
@@ -255,7 +255,7 @@ export const toggleWishlist = async (req, res) => {
     }
     await user.save();
     
-    const updatedUser = await User.findById(req.user.id).populate('cart.product').populate('wishlist');
+    const updatedUser = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
     res.status(200).json({ success: true, data: updatedUser.wishlist });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -267,13 +267,13 @@ export const toggleWishlist = async (req, res) => {
 // @access  Private
 export const deleteUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
     
-    // Optionally remove related orders or references here if necessary
-    await User.findByIdAndDelete(req.user.id);
+    // Delete user from db
+    await User.findByIdAndDelete(req.user._id);
     
     res.status(200).json({ success: true, message: 'User account deleted successfully' });
   } catch (error) {
