@@ -9,7 +9,6 @@ import {
   Loader,
   AlertCircle,
   Filter,
-  Eye,
   Lock,
   Unlock,
   Trash2,
@@ -197,23 +196,22 @@ export default function AdminUsers() {
                           {user.isVerified ? 'Yes' : 'No'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm space-x-2 flex items-center">
-                        <button className="text-blue-600 hover:text-blue-700">
-                          <Eye size={18} />
-                        </button>
+                      <td className="px-6 py-4 text-sm space-x-3 flex items-center">
                         <button
                           onClick={() => handleBlockUser(user._id, user.isBlocked)}
                           className={`${
                             user.isBlocked
                               ? 'text-green-600 hover:text-green-700'
-                              : 'text-red-600 hover:text-red-700'
+                              : 'text-orange-600 hover:text-orange-700'
                           }`}
+                          title={user.isBlocked ? 'Unblock' : 'Block'}
                         >
                           {user.isBlocked ? <Unlock size={18} /> : <Lock size={18} />}
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user._id)}
                           className="text-red-600 hover:text-red-700"
+                          title="Delete User"
                         >
                           <Trash2 size={18} />
                         </button>

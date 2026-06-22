@@ -26,10 +26,25 @@ export const getAdminOrders = async (req, res) => {
 
     // Search by order ID or customer email
     if (search) {
-      query.$or = [
-        { _id: { $regex: search, $options: 'i' } },
-        { 'user.email': { $regex: search, $options: 'i' } },
-      ];
+      const users = await User.find({ email: { $regex: search, $options: 'i' } }).select('_id');
+      const userIds = users.map(u => u._id);
+
+      // Check if search is a valid ObjectId
+      const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(search);
+
+      query.$or = [];
+      if (isValidObjectId) {
+        query.$or.push({ _id: search });
+      }
+      if (userIds.length > 0) {
+        query.$or.push({ user: { $in: userIds } });
+      }
+
+      // If neither matched, return empty result by adding an unsatisfiable condition if query.$or is empty
+      if (query.$or.length === 0) {
+        query._id = null; // Forces no results
+        delete query.$or;
+      }
     }
 
     if (status) query.orderStatus = status;

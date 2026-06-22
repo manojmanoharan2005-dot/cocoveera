@@ -64,6 +64,12 @@ import {
   deleteAdminCategory,
 } from '../controllers/adminCategoryController.js';
 
+import {
+  getInquiries,
+  getInquiryById,
+  updateInquiryStatus,
+  deleteInquiry,
+} from '../controllers/adminInquiryController.js';
 
 const router = express.Router();
 
@@ -130,6 +136,12 @@ router.patch('/users/:id/unblock', protect, admin, unblockUser);
 router.patch('/users/:id', protect, admin, updateAdminUser);
 router.delete('/users/:id', protect, admin, deleteAdminUser);
 router.post('/users/export', protect, admin, exportUsers);
+
+// ==================== INQUIRY ROUTES ====================
+router.get('/inquiries', protect, admin, getInquiries);
+router.get('/inquiries/:id', protect, admin, getInquiryById);
+router.patch('/inquiries/:id/status', protect, admin, updateInquiryStatus);
+router.delete('/inquiries/:id', protect, admin, deleteInquiry);
 
 // ==================== SETTINGS ROUTES ====================
 // Note: Removed testing, discount, and settings routes/controllers per cleanup

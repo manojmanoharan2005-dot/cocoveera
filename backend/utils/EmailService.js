@@ -505,3 +505,26 @@ export const sendRefundNotificationEmail = async (to, refundStatus, amount, curr
   `;
   return sendEmail({ to, subject, htmlContent, senderType: 'service' });
 };
+
+export const sendNotificationEmail = async (to, subject, message) => {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <body style="font-family: Arial, sans-serif; background-color: #fcfcfc; padding: 20px; margin: 0; color: #333;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #2E7D32; font-family: 'Times New Roman', Times, serif; font-size: 28px; margin: 10px 0 0 0; letter-spacing: 1px;">Cocoveera Update</h1>
+        </div>
+        <div style="border-top: 4px solid #2E7D32; max-width: 600px; margin: 0 auto;"></div>
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+          <h2 style="color: #2c3e50; font-size: 20px; margin-top: 0;">Hello,</h2>
+          <p style="color: #555; font-size: 15px; line-height: 1.6;">${message}</p>
+          <div style="margin-top: 40px; text-align: center;">
+            <p style="color: #555; font-size: 14px; margin-bottom: 5px;">Best Regards,</p>
+            <p style="margin: 0;"><strong style="color: #2E7D32;">Cocoveera Team</strong></p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+  return sendEmail({ to, subject, htmlContent, senderType: 'service' });
+};

@@ -149,3 +149,91 @@ export const getMarketingCampaignTemplate = (name, campaign) => {
   `;
   return baseTemplate({ title: campaign.subject, content });
 };
+
+export const getContactInquiryTemplate = (inquiry) => {
+  const content = `
+    <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #E63946; margin-top: 0; font-weight: normal; margin-bottom: 20px;">New B2B Inquiry: ${inquiry.inquiryId}</h3>
+    <p style="margin-bottom: 20px;">A new export inquiry has been received.</p>
+    
+    <div style="background-color: #FFFDF9; border: 1px solid #E2DCD0; border-radius: 6px; padding: 20px; margin-bottom: 30px;">
+      <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Sender Details</p>
+      <p style="margin: 0 0 5px 0; color: #2C2C2C;"><strong>Name:</strong> ${inquiry.name}</p>
+      <p style="margin: 0 0 5px 0; color: #2C2C2C;"><strong>Email:</strong> ${inquiry.email}</p>
+      <p style="margin: 0 0 5px 0; color: #2C2C2C;"><strong>Phone:</strong> ${inquiry.phone || 'N/A'}</p>
+      <p style="margin: 0 0 5px 0; color: #2C2C2C;"><strong>WhatsApp:</strong> ${inquiry.whatsapp || 'N/A'}</p>
+      <p style="margin: 0 0 15px 0; color: #2C2C2C;"><strong>Company:</strong> ${inquiry.company || 'N/A'} - ${inquiry.country || 'N/A'}</p>
+      
+      <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Inquiry Details</p>
+      <p style="margin: 0 0 5px 0; font-weight: bold; color: #2C2C2C;">Type: ${inquiry.inquiryType}</p>
+      ${inquiry.productCategory ? `<p style="margin: 0 0 5px 0; color: #2C2C2C;"><strong>Product:</strong> ${inquiry.productCategory} - ${inquiry.productName}</p>` : ''}
+      ${inquiry.requiredQuantity ? `<p style="margin: 0 0 15px 0; color: #2C2C2C;"><strong>Quantity:</strong> ${inquiry.requiredQuantity} ${inquiry.unitType}</p>` : ''}
+      
+      <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Message</p>
+      <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #1E5B2E; border-radius: 4px;">
+        <p style="margin: 0; color: #555555; white-space: pre-wrap;">${inquiry.message}</p>
+      </div>
+      
+      ${inquiry.files && inquiry.files.length > 0 ? `
+        <p style="margin: 15px 0 5px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Attachments</p>
+        <ul style="margin: 0; padding-left: 20px; color: #2C2C2C;">
+          ${inquiry.files.map(url => `<li><a href="${url}" target="_blank">View File</a></li>`).join('')}
+        </ul>
+      ` : ''}
+    </div>
+  `;
+  return baseTemplate({ title: `New Inquiry: ${inquiry.inquiryType}`, content });
+};
+
+export const getInquiryConfirmationTemplate = (inquiry) => {
+  const content = `
+    <div style="text-align: center; margin-bottom: 25px;">
+      <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 22px; color: #1E5B2E; margin-top: 0; font-weight: normal; margin-bottom: 15px;">Dear ${inquiry.name},</h3>
+      <p style="font-size: 16px; color: #4A4A4A; line-height: 1.6; margin-bottom: 20px;">
+        Thank you for contacting Cocoveera. We have successfully received your inquiry and our team is currently reviewing the information provided.
+      </p>
+    </div>
+    
+    <div style="background-color: #FCFBF9; border: 1px solid #E2DCD0; border-radius: 8px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <h4 style="margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1E5B2E; border-bottom: 1px solid #E2DCD0; padding-bottom: 10px;">Inquiry Summary</h4>
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #4A4A4A;">
+        <tr><td style="padding: 8px 0; width: 40%; color: #666;"><strong>Inquiry ID:</strong></td><td style="font-weight: 600;">${inquiry.inquiryId}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;"><strong>Inquiry Type:</strong></td><td>${inquiry.inquiryType}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;"><strong>Company:</strong></td><td>${inquiry.company}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;"><strong>Country:</strong></td><td>${inquiry.country}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;"><strong>Submitted On:</strong></td><td>${new Date().toLocaleDateString()}</td></tr>
+      </table>
+      
+      <h4 style="margin: 20px 0 10px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1E5B2E; border-bottom: 1px solid #E2DCD0; padding-bottom: 10px;">Message</h4>
+      <p style="margin: 0; color: #555555; font-style: italic; white-space: pre-wrap; font-size: 14px;">${inquiry.message}</p>
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <h4 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #1E5B2E; margin-bottom: 15px;">What Happens Next?</h4>
+      <ul style="list-style: none; padding: 0; margin: 0; color: #4A4A4A; font-size: 15px; line-height: 1.8;">
+        <li style="margin-bottom: 8px;">✓ Inquiry received successfully</li>
+        <li style="margin-bottom: 8px;">✓ Assigned to our export support team</li>
+        <li style="margin-bottom: 8px;">✓ Under review by product specialists</li>
+        <li style="margin-bottom: 8px;">✓ Response within 24 business hours</li>
+      </ul>
+    </div>
+
+    <div style="background-color: #F3F8F4; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
+      <h4 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #1E5B2E; margin-top: 0; margin-bottom: 15px;">Why Cocoveera?</h4>
+      <ul style="list-style: none; padding: 0; margin: 0; color: #4A4A4A; font-size: 15px; line-height: 1.8;">
+        <li style="margin-bottom: 5px;">✓ Premium Quality Coconut Substrates</li>
+        <li style="margin-bottom: 5px;">✓ Global Export Standards</li>
+        <li style="margin-bottom: 5px;">✓ Customized Solutions</li>
+        <li style="margin-bottom: 5px;">✓ Reliable Logistics Support</li>
+        <li style="margin-bottom: 5px;">✓ Dedicated Customer Assistance</li>
+      </ul>
+    </div>
+    
+    <div style="text-align: center; margin-bottom: 20px; font-size: 14px;">
+      <p style="color: #666666; margin-bottom: 10px;">Need Immediate Assistance?</p>
+      <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:supportdesk@cocoveera.com" style="color: #1E5B2E; text-decoration: none;">supportdesk@cocoveera.com</a></p>
+      <p style="margin: 5px 0;"><strong>Website:</strong> <a href="http://www.cocoveera.com" target="_blank" style="color: #1E5B2E; text-decoration: none;">www.cocoveera.com</a></p>
+    </div>
+  `;
+  return baseTemplate({ title: `Thank You for Contacting Cocoveera | Inquiry Received Successfully`, preheader: 'We have received your inquiry. View details inside.', content });
+};
+

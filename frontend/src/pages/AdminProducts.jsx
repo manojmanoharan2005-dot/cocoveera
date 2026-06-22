@@ -513,18 +513,21 @@ export default function AdminProducts() {
                         <button
                           onClick={() => handlePublish(product._id)}
                           className="text-blue-600 hover:text-blue-700"
+                          title={product.isPublished ? "Unpublish" : "Publish"}
                         >
                           {product.isPublished ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                         <button
                           onClick={() => handleEdit(product)}
                           className="text-green-600 hover:text-green-700"
+                          title="Edit"
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(product._id)}
                           className="text-red-600 hover:text-red-700"
+                          title="Delete"
                         >
                           <Trash2 size={18} />
                         </button>

@@ -10,6 +10,13 @@ import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link a
 import { authService } from '../../services/authService';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import SuccessAnimation from './SuccessAnimation';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const formVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.05 } }
+};
 
 const COUNTRY_CURRENCY_MAP = {
   'USA': 'USD',
@@ -48,6 +55,9 @@ export const RegisterForm = () => {
   // Password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Animation State
+  const [showAnimation, setShowAnimation] = useState(false);
 
   const {
     register,
@@ -219,10 +229,7 @@ export const RegisterForm = () => {
       if (res.success) {
         localStorage.removeItem('cocoveera_register_cache');
         setSuccessMsg('Verification successful. Welcome to Cocoveera!');
-        const fromPath = location.state?.from || (res.user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
-        setTimeout(() => {
-          navigate(fromPath, { replace: true });
-        }, 1500);
+        setShowAnimation(true);
       }
     } catch (err) {
       setApiError(err.message || 'OTP verification failed. Please try again.');
@@ -253,6 +260,18 @@ export const RegisterForm = () => {
     }
   };
 
+  if (showAnimation) {
+    return (
+      <SuccessAnimation 
+        type="register" 
+        onComplete={() => {
+          const fromPath = location.state?.from || '/dashboard';
+          navigate(fromPath, { replace: true });
+        }} 
+      />
+    );
+  }
+
   return (
     <div className="bg-white border border-stone-200/85 rounded-3xl p-6 shadow-soft text-stone-900 max-w-md w-full mx-auto">
       <div className="text-center mb-6">
@@ -273,7 +292,7 @@ export const RegisterForm = () => {
         </div>
       )}
 
-      <form onSubmit={otpSent ? handleVerifyOtp : handleSubmit(handleRegisterSubmit)} className="space-y-4">
+      <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={otpSent ? handleVerifyOtp : handleSubmit(handleRegisterSubmit)} className="space-y-4">
         {/* Full Name */}
         <div>
           <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
@@ -564,7 +583,7 @@ export const RegisterForm = () => {
             Edit Registration Details
           </button>
         )}
-      </form>
+      </motion.form>
 
       {!otpSent && (
         <p className="text-center text-xs text-stone-555 mt-6 font-semibold">

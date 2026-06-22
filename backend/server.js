@@ -21,6 +21,7 @@ import contactRoutes from './routes/contactRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
+import testingRoutes from './routes/testingRoutes.js';
 
 // Models for seeding
 import Product from './models/Product.js';
@@ -114,6 +115,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/testing', testingRoutes);
 
 // Root route
 app.get('/', (req, res) => {

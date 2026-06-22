@@ -19,7 +19,9 @@ import {
   getComparisonRecommendationTemplate,
   getHelpTicketTemplate,
   getAdminNotificationTemplate,
-  getMarketingCampaignTemplate
+  getMarketingCampaignTemplate,
+  getContactInquiryTemplate,
+  getInquiryConfirmationTemplate
 } from './emailTemplates/index.js';
 
 dotenv.config();
@@ -174,4 +176,27 @@ export const sendMarketingCampaignEmail = async (email, name, campaign) => {
   const htmlContent = getMarketingCampaignTemplate(name, campaign);
   // Marketing emails can fall under Support Desk or a dedicated marketing email if added later. Defaulting to Support.
   return sendEmail(campaign.subject, htmlContent, [{ email, name }], 'COCOVEERA Support Desk', 'supportdesk@cocoveera.com');
+};
+
+export const sendContactInquiryEmail = async (inquiry) => {
+  const htmlContent = getContactInquiryTemplate(inquiry);
+  // Send notification to supportdesk
+  return sendEmail(
+    `New Contact Inquiry: ${inquiry.inquiryType || 'General Inquiry'}`,
+    htmlContent,
+    [{ email: 'supportdesk@cocoveera.com', name: 'Cocoveera Support Desk' }],
+    `${inquiry.name} via Cocoveera`,
+    'adminteam@cocoveera.com'
+  );
+};
+
+export const sendInquiryConfirmationEmail = async (inquiry) => {
+  const htmlContent = getInquiryConfirmationTemplate(inquiry);
+  return sendEmail(
+    `We Have Received Your Inquiry - ${inquiry.inquiryId}`,
+    htmlContent,
+    [{ email: inquiry.email, name: inquiry.name }],
+    'COCOVEERA Export Desk',
+    'supportdesk@cocoveera.com'
+  );
 };

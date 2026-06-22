@@ -20,6 +20,7 @@ import {
   Tag,
   Tags,
   RefreshCw,
+  MessageSquare,
 } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
@@ -38,6 +39,7 @@ export default function AdminLayout({ children }) {
     { name: 'Categories', icon: Tags, path: '/admin/categories' },
     { name: 'Orders', icon: ShoppingCart, path: '/admin/orders' },
     { name: 'Refunds', icon: RefreshCw, path: '/admin/refunds' },
+    { name: 'Inquiries', icon: MessageSquare, path: '/admin/inquiries' },
     { name: 'Users', icon: Users, path: '/admin/users' },
     { name: 'Reports', icon: BarChart3, path: '/admin/reports' },
     { name: 'Discounts', icon: Tag, path: '/admin/discounts' },

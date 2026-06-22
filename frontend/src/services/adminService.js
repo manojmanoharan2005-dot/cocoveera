@@ -398,3 +398,36 @@ export const adminTestingService = {
     return response.data;
   },
 };
+
+// ==================== INQUIRIES ====================
+export const adminInquiryService = {
+  getAll: async () => {
+    const response = await axios.get(`${API_URL}/admin/inquiries`, {
+      headers: getHeaders(),
+    });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await axios.get(`${API_URL}/admin/inquiries/${id}`, {
+      headers: getHeaders(),
+    });
+    return response.data;
+  },
+
+  updateStatus: async (id, status) => {
+    const response = await axios.patch(
+      `${API_URL}/admin/inquiries/${id}/status`,
+      { status },
+      { headers: getHeaders() }
+    );
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await axios.delete(`${API_URL}/admin/inquiries/${id}`, {
+      headers: getHeaders(),
+    });
+    return response.data;
+  },
+};

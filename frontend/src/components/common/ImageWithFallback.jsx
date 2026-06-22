@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 
-const GOOGLE_IMAGE_URL = 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?auto=format&fit=crop&w=800&q=80';
-const DEFAULT_FALLBACK = 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available';
-
 export const ImageWithFallback = ({
   src,
   alt,
@@ -14,9 +11,11 @@ export const ImageWithFallback = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  // If the source is the specific Google image or no source is provided, treat it as an error/fallback immediately
-  const isInvalidSource = !src || src === GOOGLE_IMAGE_URL;
-  const imageSrc = isInvalidSource || hasError ? DEFAULT_FALLBACK : src;
+  // Allow the local logo to be used as a valid fallback
+  const isInvalidSource = !src || src === 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?auto=format&fit=crop&w=800&q=80';
+  
+  // Use the local site logo as a fallback instead of an external image
+  const imageSrc = isInvalidSource || hasError ? '/logo.webp' : src;
 
   return (
     <>

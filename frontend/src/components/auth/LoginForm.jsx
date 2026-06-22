@@ -9,6 +9,18 @@ import { useAuth } from '../../context/AuthContext';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { Mail, KeyRound, Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
+import SuccessAnimation from './SuccessAnimation';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const formVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.05 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 }
+};
 
 export const LoginForm = () => {
   const { login } = useAuth();
@@ -33,6 +45,9 @@ export const LoginForm = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
+
+  // Animation State
+  const [showAnimation, setShowAnimation] = useState(false);
 
   const getPasswordStrength = (pass) => {
     if (!pass) return { score: 0, label: '', color: 'bg-stone-200', textColor: 'text-stone-500' };
@@ -89,8 +104,7 @@ export const LoginForm = () => {
       }
 
       if (res.success) {
-        const fromPath = location.state?.from || (redirect ? `/${redirect}` : '/dashboard');
-        navigate(fromPath, { replace: true });
+        setShowAnimation(true);
       }
     } catch (err) {
       if (err.message.includes('not verified') || err.message.toLowerCase().includes('otp')) {
@@ -185,6 +199,18 @@ export const LoginForm = () => {
     }
   };
 
+  if (showAnimation) {
+    return (
+      <SuccessAnimation 
+        type="login" 
+        onComplete={() => {
+          const fromPath = location.state?.from || (redirect ? `/${redirect}` : '/dashboard');
+          navigate(fromPath, { replace: true });
+        }} 
+      />
+    );
+  }
+
   return (
     <div className="bg-white border border-stone-200/80 rounded-3xl p-8 shadow-soft text-stone-900 max-w-md w-full mx-auto">
       <div className="text-center mb-8">
@@ -213,7 +239,7 @@ export const LoginForm = () => {
       )}
 
       {mode === 'login' && (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email */}
           <div>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
@@ -319,11 +345,11 @@ export const LoginForm = () => {
               </>
             )}
           </button>
-        </form>
+        </motion.form>
       )}
 
       {mode === 'forgot' && (
-        <form onSubmit={handleForgotSubmit} className="space-y-4 animate-fade-in">
+        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleForgotSubmit} className="space-y-4">
           <div>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               EMAIL ADDRESS
@@ -369,11 +395,11 @@ export const LoginForm = () => {
               Back to Login
             </button>
           </div>
-        </form>
+        </motion.form>
       )}
 
       {mode === 'reset' && (
-        <form onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode} className="space-y-4 animate-fade-in">
+        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode} className="space-y-4">
           <div>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               RESET CODE (OTP)
@@ -510,11 +536,11 @@ export const LoginForm = () => {
               Back to Login
             </button>
           </div>
-        </form>
+        </motion.form>
       )}
 
       {mode === 'verifyAdmin' && (
-        <form onSubmit={handleVerifyAdmin} className="space-y-4 animate-fade-in">
+        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleVerifyAdmin} className="space-y-4">
           <div className="text-center mb-6">
             <ShieldCheck className="w-12 h-12 text-[#2E5E35] mx-auto mb-3" />
             <h3 className="text-lg font-poppins font-extrabold text-stone-900">Admin Verification Required</h3>
@@ -573,7 +599,7 @@ export const LoginForm = () => {
               Back to Login
             </button>
           </div>
-        </form>
+        </motion.form>
       )}
 
       {mode === 'login' && (

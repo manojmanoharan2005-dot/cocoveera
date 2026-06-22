@@ -401,6 +401,22 @@ const Home = () => {
     el.scrollBy({ left: dir * 320, behavior: 'smooth' });
   };
 
+  // Auto-scroll products
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const el = productRef.current;
+      if (!el) return;
+      
+      // If we've reached the end, scroll back to 0
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: 320, behavior: 'smooth' });
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-white overflow-hidden">
 

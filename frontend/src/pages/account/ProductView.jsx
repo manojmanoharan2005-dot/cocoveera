@@ -7,7 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
   Droplet, Wind, ShieldCheck, FileText, ChevronRight,
-  Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2, Home
+  Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2, Home, Beaker
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
@@ -33,6 +33,12 @@ const ProductView = () => {
   const [containerType, setContainerType] = useState('20FT');
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [extraItems, setExtraItems] = useState([]);
+
+  // Testing Feature States
+  const [isTestingModalOpen, setIsTestingModalOpen] = useState(false);
+  const [testingPackages, setTestingPackages] = useState([]);
+  const [selectedTestingPackage, setSelectedTestingPackage] = useState(null);
+  const [testingLoading, setTestingLoading] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -76,7 +82,19 @@ const ProductView = () => {
       }
     };
 
+    const fetchTestingPackages = async () => {
+      try {
+        const res = await apiClient.get('/testing/packages');
+        if (res.data.success) {
+          setTestingPackages(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch testing packages:', err);
+      }
+    };
+
     fetchProductDetails();
+    fetchTestingPackages();
   }, [id, user]);
 
   const handleWishlistToggle = async () => {
@@ -142,6 +160,96 @@ const ProductView = () => {
         containerType 
       } 
     });
+  };
+
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleTestingPayment = async () => {
+    if (!selectedTestingPackage) return;
+    setTestingLoading(true);
+
+    try {
+      // Create testing order
+      const res = await apiClient.post('/testing/orders', {
+        productId: product._id,
+        packageId: selectedTestingPackage._id,
+        gateway: 'razorpay'
+      });
+
+      if (!res.data.success) throw new Error('Failed to initiate payment');
+
+      const { id, amount, currency, testingOrderId, gateway } = res.data;
+
+      if (gateway === 'mock' || id.startsWith('mock_')) {
+        await apiClient.post('/testing/orders/confirm', {
+          testingOrderId,
+          paymentId: id,
+          gateway,
+          status: 'success'
+        });
+        setIsTestingModalOpen(false);
+        navigate('/account/testing-reports');
+        return;
+      }
+
+      const resLoad = await loadRazorpay();
+      if (!resLoad) {
+        alert('Razorpay SDK failed to load. Are you online?');
+        setTestingLoading(false);
+        return;
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_mock',
+        amount: amount.toString(),
+        currency: currency,
+        name: 'Cocoveera Quality Testing',
+        description: `Testing Fee for ${product.name}`,
+        order_id: id,
+        handler: async function (response) {
+          try {
+            await apiClient.post('/testing/orders/confirm', {
+              testingOrderId,
+              paymentId: response.razorpay_payment_id,
+              gateway: 'razorpay',
+              status: 'success'
+            });
+            setIsTestingModalOpen(false);
+            navigate('/account/testing-reports');
+          } catch (err) {
+            console.error(err);
+            alert('Payment verification failed');
+          }
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+        },
+        theme: {
+          color: '#2E7D32',
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        alert('Payment Failed');
+      });
+      rzp.open();
+
+    } catch (err) {
+      console.error(err);
+      alert('Error initiating payment');
+    } finally {
+      setTestingLoading(false);
+    }
   };
 
   if (loading) {
@@ -631,14 +739,11 @@ const ProductView = () => {
                 {!showConfigurator && (
                   <button
                     type="button"
-                    onClick={() => {
-                      const el = document.getElementById('spec-sheet');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-poppins text-[10px] font-black py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"
+                    onClick={() => setIsTestingModalOpen(true)}
+                    className="w-full bg-[#2E7D32]/10 hover:bg-[#2E7D32]/20 text-[#2E7D32] font-poppins text-[10px] font-black py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"
                   >
-                    VIEW TESTING REPORT
-                    <FileText className="w-3.5 h-3.5" />
+                    TEST NOW
+                    <Beaker className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -863,6 +968,120 @@ const ProductView = () => {
         </div>
       </div>
 
+      {/* Testing Modal */}
+      <AnimatePresence>
+        {isTestingModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-stone-100 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-poppins font-black text-lg text-stone-900">Professional Quality Testing</h3>
+                  <p className="text-xs font-semibold text-stone-500">NABL / Technical Lab Verification</p>
+                </div>
+              </div>
+              
+              <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                <div className="bg-stone-50 rounded-2xl p-4 mb-6 border border-stone-100 flex items-center gap-4">
+                  <img src={product.images[0]} alt="" className="w-12 h-12 rounded-xl object-cover bg-white shadow-sm" />
+                  <div>
+                    <p className="text-sm font-bold text-stone-900">{product.name}</p>
+                    <p className="text-[10px] font-semibold text-stone-500 mt-0.5">Category: {product.category}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-stone-900 uppercase tracking-widest">Select Testing Package</h4>
+                  {testingPackages.map((pkg) => (
+                    <div 
+                      key={pkg._id}
+                      onClick={() => setSelectedTestingPackage(pkg)}
+                      className={`cursor-pointer rounded-2xl border-2 transition-all p-4 ${
+                        selectedTestingPackage?._id === pkg._id 
+                          ? 'border-[#2E7D32] bg-[#2E7D32]/5' 
+                          : 'border-stone-100 bg-white hover:border-stone-200'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                            selectedTestingPackage?._id === pkg._id ? 'border-[#2E7D32]' : 'border-stone-300'
+                          }`}>
+                            {selectedTestingPackage?._id === pkg._id && <div className="w-2 h-2 rounded-full bg-[#2E7D32]" />}
+                          </div>
+                          <span className="font-poppins font-bold text-sm text-stone-900">{pkg.name}</span>
+                        </div>
+                        <span className="font-poppins font-black text-[#2E7D32]">₹{pkg.price}</span>
+                      </div>
+                      {pkg.description && (
+                        <p className="text-xs text-stone-500 font-semibold pl-6 mb-2 whitespace-pre-wrap">
+                          {pkg.description}
+                        </p>
+                      )}
+                      <div className="pl-6 flex items-center gap-1.5 text-[10px] font-bold text-stone-400">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Estimated Delivery: {pkg.deliveryDays} Days
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-stone-100 bg-stone-50">
+                {selectedTestingPackage ? (
+                  <div className="mb-4 space-y-2">
+                    <div className="flex justify-between text-xs font-semibold text-stone-600">
+                      <span>Testing Fee</span>
+                      <span>₹{selectedTestingPackage.price}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-poppins font-black text-stone-900">
+                      <span>Total Amount</span>
+                      <span>₹{selectedTestingPackage.price}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-stone-500 text-center mb-4 font-semibold">Please select a package to proceed</p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setIsTestingModalOpen(false);
+                      setSelectedTestingPackage(null);
+                    }}
+                    className="flex-1 bg-white border-2 border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300 font-poppins text-xs font-bold py-3.5 rounded-xl transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleTestingPayment}
+                    disabled={!selectedTestingPackage || testingLoading}
+                    className="flex-[2] bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {testingLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      'Proceed to Payment'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -155,14 +155,19 @@ function generateCompanyAndCustomerInfo(doc, invoice) {
   // Company Info (Left)
   doc.fillColor(THEME.primary).fontSize(11).font('Helvetica-Bold').text('FROM:', 40, top);
   doc.fillColor(THEME.textMain).fontSize(10).font('Helvetica-Bold').text('COCOVEERA', 40, top + 15);
+  
+  const companyLines = [
+    '123 Export Trade Center',
+    'Mumbai Port Zone, MH 400001, India',
+    'GST: 27AABCT1234D1Z2',
+    'IEC: 0312345678',
+    'Email: servicedesk@cocoveera.com',
+    'Phone: +91 98765 43210',
+    'Web: www.cocoveera.com'
+  ];
+
   doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica')
-     .text('123 Export Trade Center', 40, top + 30)
-     .text('Mumbai Port Zone, MH 400001, India', 40, top + 42)
-     .text('GST: 27AABCT1234D1Z2', 40, top + 54)
-     .text('IEC: 0312345678', 40, top + 66)
-     .text('Email: servicedesk@cocoveera.com', 40, top + 78)
-     .text('Phone: +91 98765 43210', 40, top + 90)
-     .text('Web: www.cocoveera.com', 40, top + 102);
+     .text(companyLines.join('\n'), 40, top + 30, { width: 240 });
 
   // Customer Info (Right)
   doc.fillColor(THEME.primary).fontSize(11).font('Helvetica-Bold').text('BILL TO / SHIP TO:', 300, top);
@@ -170,13 +175,23 @@ function generateCompanyAndCustomerInfo(doc, invoice) {
   
   const address = invoice.shippingAddress || {};
   
-  doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica')
-     .text(invoice.customerEmail, 300, top + 30)
-     .text(invoice.customerPhone || '', 300, top + 42)
-     .text(address.street || address.addressLine || 'Address not provided', 300, top + 54)
-     .text(`${address.city || ''}, ${address.state || ''} ${address.postalCode || address.zipCode || ''}`, 300, top + 66)
-     .text(address.country || '', 300, top + 78);
+  const cityState = [address.city, address.state].filter(Boolean).join(', ');
+  const zip = address.postalCode || address.zipCode || '';
+  const cityStateZip = [cityState, zip].filter(Boolean).join(' ');
 
+  const customerLines = [
+    invoice.customerEmail,
+    invoice.customerPhone,
+    address.street || address.addressLine || 'Address not provided',
+    cityStateZip,
+    address.country
+  ].filter(Boolean);
+
+  doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica')
+     .text(customerLines.join('\n'), 300, top + 30, { width: 240 });
+
+  // Generate HR dynamically based on the tallest block
+  // Default hr is at top + 120, we can just keep it there unless address is extremely long
   generateHr(doc, top + 120, THEME.border, 1);
 }
 

@@ -1,459 +1,239 @@
-/**
- * File: frontend/src/pages/AdminTesting.jsx
- * Purpose: React page component representing the AdminTesting view.
- */
-import { useEffect, useState } from 'react';
-import { adminTestingService } from '../services/adminService';
+import React, { useEffect, useState } from 'react';
+import apiClient from '../utils/apiClient';
 import {
+  FileText,
   Search,
-  Loader,
-  AlertCircle,
-  Filter,
   Plus,
+  Edit2,
   CheckCircle,
   XCircle,
-  Clock,
-  Eye,
+  Loader,
+  AlertCircle,
+  Package,
+  Upload,
+  Download
 } from 'lucide-react';
 import AdminLayout from '../layouts/AdminLayout';
 
 export default function AdminTesting() {
-  const [reports, setReports] = useState([]);
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' or 'packages'
+  
+  // Data States
+  const [orders, setOrders] = useState([]);
+  const [packages, setPackages] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [pagination, setPagination] = useState({});
 
-  // Filters & Search
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-
-  // Form Data
-  const [formData, setFormData] = useState({
-    productName: '',
-    batchNumber: '',
-    ecValue: '',
-    phValue: '',
-    moisturePercent: '',
-    testerName: '',
-    remarks: '',
+  // Package Form State
+  const [showPackageForm, setShowPackageForm] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [packageFormData, setPackageFormData] = useState({
+    name: '',
+    price: '',
+    description: '',
+    deliveryDays: 3,
+    active: true
   });
 
-  const reportStatuses = ['pending', 'approved', 'rejected'];
+  // Report Upload State
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [reportUrl, setReportUrl] = useState('');
 
-  const fetchReports = async () => {
+  useEffect(() => {
+    fetchData();
+  }, [activeTab]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError('');
     try {
-      setError('');
-      setLoading(true);
-      const response = await adminTestingService.getAll(page, 10, status, search);
-      setReports(response.data);
-      setPagination(response.pagination);
+      if (activeTab === 'orders') {
+        const res = await apiClient.get('/testing/admin/orders');
+        if (res.data.success) setOrders(res.data.data);
+      } else {
+        const res = await apiClient.get('/testing/admin/packages');
+        if (res.data.success) setPackages(res.data.data);
+      }
     } catch (err) {
-      setError('Failed to load testing reports');
-      console.error(err);
+      setError('Failed to fetch data');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchReports();
-  }, [page, search, status]);
-
-  const handleSubmit = async (e) => {
+  // --- Package Logic ---
+  const handlePackageSubmit = async (e) => {
     e.preventDefault();
     try {
-      setError('');
-
-      if (selectedReport) {
-        await adminTestingService.update(selectedReport._id, formData);
+      if (selectedPackage) {
+        await apiClient.put(`/testing/admin/packages/${selectedPackage._id}`, packageFormData);
       } else {
-        await adminTestingService.create(formData);
+        await apiClient.post('/testing/admin/packages', packageFormData);
       }
+      setShowPackageForm(false);
+      setSelectedPackage(null);
+      fetchData();
+    } catch (err) {
+      alert('Failed to save package');
+    }
+  };
 
-      setFormData({
-        productName: '',
-        batchNumber: '',
-        ecValue: '',
-        phValue: '',
-        moisturePercent: '',
-        testerName: '',
-        remarks: '',
+  const openPackageForm = (pkg = null) => {
+    if (pkg) {
+      setSelectedPackage(pkg);
+      setPackageFormData({
+        name: pkg.name,
+        price: pkg.price,
+        description: pkg.description,
+        deliveryDays: pkg.deliveryDays,
+        active: pkg.active
       });
-      setSelectedReport(null);
-      setShowForm(false);
-      fetchReports();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save report');
+    } else {
+      setSelectedPackage(null);
+      setPackageFormData({ name: '', price: '', description: '', deliveryDays: 3, active: true });
     }
+    setShowPackageForm(true);
   };
 
-  const handleApprove = async (id) => {
+  // --- Order Logic ---
+  const updateOrderStatus = async (id, status) => {
     try {
-      await adminTestingService.approve(id, '');
-      fetchReports();
+      await apiClient.put(`/testing/admin/orders/${id}/status`, { testingStatus: status });
+      fetchData();
     } catch (err) {
-      setError('Failed to approve report');
+      alert('Failed to update status');
     }
   };
 
-  const handleReject = async (id) => {
+  const handleReportUpload = async (e) => {
+    e.preventDefault();
     try {
-      await adminTestingService.reject(id, 'Rejected by admin');
-      fetchReports();
+      await apiClient.post(`/testing/admin/orders/${selectedOrder._id}/report`, { reportUrl });
+      setShowUploadForm(false);
+      setSelectedOrder(null);
+      setReportUrl('');
+      fetchData();
     } catch (err) {
-      setError('Failed to reject report');
+      alert('Failed to upload report');
     }
-  };
-
-  const getStatusIcon = (status) => {
-    if (status === 'approved') return <CheckCircle className="text-green-600" size={20} />;
-    if (status === 'rejected') return <XCircle className="text-red-600" size={20} />;
-    return <Clock className="text-yellow-600" size={20} />;
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <AdminLayout activeTab="Testing">
+      <div className="p-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Quality Testing</h1>
-            <p className="text-gray-600 mt-1">Manage product quality reports</p>
+            <h1 className="text-2xl font-poppins font-black text-stone-900">Testing Management</h1>
+            <p className="text-sm text-stone-500 font-semibold mt-1">Manage testing packages and customer orders</p>
           </div>
-          <button
-            onClick={() => {
-              setShowForm(true);
-              setSelectedReport(null);
-              setFormData({
-                productName: '',
-                batchNumber: '',
-                ecValue: '',
-                phValue: '',
-                moisturePercent: '',
-                testerName: '',
-                remarks: '',
-              });
-            }}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={20} />
-            <span>New Report</span>
-          </button>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3">
-            <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
-            <p className="text-red-700">{error}</p>
-          </div>
-        )}
-
-        {/* Search & Filters */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search by product or batch..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <select
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Status</option>
-              {reportStatuses.map((s) => (
-                <option key={s} value={s}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </option>
-              ))}
-            </select>
-
+          <div className="flex bg-stone-100 p-1 rounded-xl">
             <button
-              onClick={() => {
-                setSearch('');
-                setStatus('');
-                setPage(1);
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              onClick={() => setActiveTab('orders')}
+              className={`px-6 py-2 rounded-lg font-poppins text-xs font-bold transition-all ${
+                activeTab === 'orders' ? 'bg-white shadow-sm text-[#2E7D32]' : 'text-stone-500 hover:text-stone-700'
+              }`}
             >
-              <Filter size={20} className="mx-auto" />
+              Testing Orders
+            </button>
+            <button
+              onClick={() => setActiveTab('packages')}
+              className={`px-6 py-2 rounded-lg font-poppins text-xs font-bold transition-all ${
+                activeTab === 'packages' ? 'bg-white shadow-sm text-[#2E7D32]' : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              Packages
             </button>
           </div>
         </div>
 
-        {/* Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {selectedReport ? 'Edit Report' : 'New Testing Report'}
-                </h2>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Product Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="productName"
-                        value={formData.productName}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            productName: e.target.value,
-                          }))
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Batch Number *
-                      </label>
-                      <input
-                        type="text"
-                        name="batchNumber"
-                        value={formData.batchNumber}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            batchNumber: e.target.value,
-                          }))
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        EC Value *
-                      </label>
-                      <input
-                        type="text"
-                        name="ecValue"
-                        value={formData.ecValue}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            ecValue: e.target.value,
-                          }))
-                        }
-                        placeholder="e.g., 0.35 mS/cm"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        pH Value *
-                      </label>
-                      <input
-                        type="text"
-                        name="phValue"
-                        value={formData.phValue}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            phValue: e.target.value,
-                          }))
-                        }
-                        placeholder="e.g., 6.1"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Moisture % *
-                      </label>
-                      <input
-                        type="text"
-                        name="moisturePercent"
-                        value={formData.moisturePercent}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            moisturePercent: e.target.value,
-                          }))
-                        }
-                        placeholder="e.g., 14.2%"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tester Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="testerName"
-                        value={formData.testerName}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            testerName: e.target.value,
-                          }))
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Remarks
-                    </label>
-                    <textarea
-                      name="remarks"
-                      value={formData.remarks}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          remarks: e.target.value,
-                        }))
-                      }
-                      rows="3"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-3 pt-4">
-                    <button
-                      type="submit"
-                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-                    >
-                      {selectedReport ? 'Update Report' : 'Create Report'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowForm(false);
-                        setSelectedReport(null);
-                      }}
-                      className="flex-1 bg-gray-300 text-gray-900 py-2 rounded-lg font-medium hover:bg-gray-400 transition"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
+        {error && (
+          <div className="mb-6 bg-red-50 text-red-500 p-4 rounded-xl flex items-center gap-3">
+            <AlertCircle className="w-5 h-5" />
+            <span className="text-sm font-bold">{error}</span>
           </div>
         )}
 
-        {/* Reports Table */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader size={32} className="animate-spin text-blue-600" />
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader className="w-8 h-8 text-[#2E7D32] animate-spin mb-4" />
+            <p className="text-xs font-bold text-stone-500 uppercase tracking-widest">Loading...</p>
           </div>
-        ) : (
-          <>
-            <div className="bg-white rounded-lg shadow overflow-x-auto">
-              <table className="w-full whitespace-nowrap">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Product
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Batch
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      EC
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      pH
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Moisture
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Actions
-                    </th>
+        ) : activeTab === 'orders' ? (
+          <div className="bg-white rounded-[24px] border border-stone-200/60 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-stone-50 border-b border-stone-200 text-xs font-poppins font-bold text-stone-500 uppercase tracking-wider">
+                    <th className="px-6 py-4">Order Details</th>
+                    <th className="px-6 py-4">Customer</th>
+                    <th className="px-6 py-4">Package</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {reports.map((report) => (
-                    <tr key={report._id} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                        {report.productName}
+                <tbody className="divide-y divide-stone-100">
+                  {orders.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-12 text-center text-stone-500 text-sm font-semibold">
+                        No testing orders found.
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 font-mono">
-                        {report.batchNumber}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{report.ecValue}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{report.phValue}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {report.moisturePercent}
+                    </tr>
+                  ) : orders.map(order => (
+                    <tr key={order._id} className="hover:bg-stone-50/50">
+                      <td className="px-6 py-4">
+                        <p className="text-xs font-bold font-mono text-stone-600 mb-1">{order._id.slice(-8).toUpperCase()}</p>
+                        <p className="text-sm font-bold text-stone-900">{order.productId?.name || 'N/A'}</p>
+                        <p className="text-[10px] text-stone-500 font-semibold">{new Date(order.createdAt).toLocaleDateString()}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            report.status
-                          )}`}
-                        >
-                          {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                        <p className="text-xs font-bold text-stone-900">{order.userId?.name}</p>
+                        <p className="text-[10px] text-stone-500">{order.userId?.email}</p>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-semibold text-stone-700">
+                        {order.packageId?.name || 'N/A'} (₹{order.amountPaid})
+                      </td>
+                      <td className="px-6 py-4 text-xs">
+                        <span className={`px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider ${
+                          order.testingStatus === 'Report Available' ? 'bg-green-100 text-green-700' :
+                          order.testingStatus === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {order.testingStatus}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm space-x-2 flex items-center">
-                        <button className="text-blue-600 hover:text-blue-700">
-                          <Eye size={18} />
-                        </button>
-                        {report.status === 'pending' && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(report._id)}
-                              className="text-green-600 hover:text-green-700"
-                            >
-                              <CheckCircle size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleReject(report._id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <XCircle size={18} />
-                            </button>
-                          </>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        {order.testingStatus === 'Testing Requested' && (
+                          <button
+                            onClick={() => updateOrderStatus(order._id, 'In Progress')}
+                            className="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-colors"
+                          >
+                            Mark In Progress
+                          </button>
+                        )}
+                        {(order.testingStatus === 'In Progress' || order.testingStatus === 'Testing Requested') && (
+                          <button
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setShowUploadForm(true);
+                            }}
+                            className="bg-[#2E7D32]/10 hover:bg-[#2E7D32]/20 text-[#2E7D32] px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-colors inline-flex items-center gap-1"
+                          >
+                            <Upload className="w-3 h-3" />
+                            Upload Report
+                          </button>
+                        )}
+                        {order.reportUrl && (
+                          <a
+                            href={order.reportUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-stone-100 hover:bg-stone-200 text-stone-600 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-colors inline-flex items-center gap-1"
+                          >
+                            <Download className="w-3 h-3" />
+                            View
+                          </a>
                         )}
                       </td>
                     </tr>
@@ -461,33 +241,173 @@ export default function AdminTesting() {
                 </tbody>
               </table>
             </div>
-
-            {/* Pagination */}
-            <div className="mt-6 flex items-center justify-between">
-              <p className="text-gray-600">
-                Showing {reports.length} of {pagination.total} reports
-              </p>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
-                >
-                  Previous
-                </button>
-                <span className="px-4 py-2">
-                  Page {pagination.currentPage} of {pagination.pages}
-                </span>
-                <button
-                  onClick={() => setPage(Math.min(pagination.pages, page + 1))}
-                  disabled={page === pagination.pages}
-                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
-                >
-                  Next
-                </button>
-              </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-[24px] border border-stone-200/60 shadow-sm p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-poppins font-bold text-stone-900">Testing Packages</h2>
+              <button
+                onClick={() => openPackageForm()}
+                className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white px-4 py-2 rounded-xl text-xs font-bold font-poppins transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Package
+              </button>
             </div>
-          </>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {packages.map(pkg => (
+                <div key={pkg._id} className="border border-stone-200 rounded-2xl p-5 hover:border-[#2E7D32] transition-colors relative">
+                  {!pkg.active && (
+                    <span className="absolute top-4 right-4 bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                      Inactive
+                    </span>
+                  )}
+                  <div className="w-10 h-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-4">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-poppins font-bold text-stone-900 text-lg">{pkg.name}</h3>
+                  <p className="text-2xl font-black text-[#2E7D32] my-2">₹{pkg.price}</p>
+                  <p className="text-xs text-stone-500 font-semibold mb-4 line-clamp-3">{pkg.description}</p>
+                  <p className="text-xs text-stone-400 font-bold mb-4">Delivery: {pkg.deliveryDays} Days</p>
+                  
+                  <button
+                    onClick={() => openPackageForm(pkg)}
+                    className="w-full border border-stone-200 hover:bg-stone-50 text-stone-600 font-poppins text-xs font-bold py-2 rounded-lg transition-colors flex justify-center items-center gap-2"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    Edit Package
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Upload Report Modal */}
+        {showUploadForm && selectedOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6">
+              <h3 className="font-poppins font-black text-lg text-stone-900 mb-2">Upload Testing Report</h3>
+              <p className="text-xs font-semibold text-stone-500 mb-6">Order ID: {selectedOrder._id.slice(-8).toUpperCase()}</p>
+              
+              <form onSubmit={handleReportUpload} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider">Report URL (PDF link)</label>
+                  <input
+                    type="url"
+                    required
+                    value={reportUrl}
+                    onChange={(e) => setReportUrl(e.target.value)}
+                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] outline-none transition-all bg-stone-50 focus:bg-white"
+                    placeholder="https://example.com/report.pdf"
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadForm(false)}
+                    className="flex-1 border-2 border-stone-200 text-stone-600 hover:bg-stone-50 font-poppins text-xs font-bold py-3 rounded-xl transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-bold py-3 rounded-xl transition-all"
+                  >
+                    Save Report
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Package Form Modal */}
+        {showPackageForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+              <h3 className="font-poppins font-black text-lg text-stone-900 mb-6">
+                {selectedPackage ? 'Edit Package' : 'Create Package'}
+              </h3>
+              
+              <form onSubmit={handlePackageSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider">Package Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={packageFormData.name}
+                    onChange={(e) => setPackageFormData({...packageFormData, name: e.target.value})}
+                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:border-[#2E7D32] outline-none bg-stone-50 focus:bg-white"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider">Price (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={packageFormData.price}
+                      onChange={(e) => setPackageFormData({...packageFormData, price: e.target.value})}
+                      className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:border-[#2E7D32] outline-none bg-stone-50 focus:bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider">Delivery Days</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={packageFormData.deliveryDays}
+                      onChange={(e) => setPackageFormData({...packageFormData, deliveryDays: e.target.value})}
+                      className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:border-[#2E7D32] outline-none bg-stone-50 focus:bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider">Description</label>
+                  <textarea
+                    rows="4"
+                    value={packageFormData.description}
+                    onChange={(e) => setPackageFormData({...packageFormData, description: e.target.value})}
+                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:border-[#2E7D32] outline-none bg-stone-50 focus:bg-white resize-none"
+                  ></textarea>
+                </div>
+
+                <div className="flex items-center gap-3 py-2">
+                  <input
+                    type="checkbox"
+                    id="active"
+                    checked={packageFormData.active}
+                    onChange={(e) => setPackageFormData({...packageFormData, active: e.target.checked})}
+                    className="w-4 h-4 text-[#2E7D32] rounded focus:ring-[#2E7D32]"
+                  />
+                  <label htmlFor="active" className="text-sm font-bold text-stone-700">Active (Visible to customers)</label>
+                </div>
+                
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPackageForm(false)}
+                    className="flex-1 border-2 border-stone-200 text-stone-600 hover:bg-stone-50 font-poppins text-xs font-bold py-3 rounded-xl transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-bold py-3 rounded-xl transition-all"
+                  >
+                    Save Package
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </div>
     </AdminLayout>

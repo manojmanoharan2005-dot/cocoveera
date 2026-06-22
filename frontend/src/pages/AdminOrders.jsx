@@ -14,7 +14,8 @@ import {
   Truck,
   Package,
   Mail,
-  FileText
+  FileText,
+  Edit2
 } from 'lucide-react';
 import AdminLayout from '../layouts/AdminLayout';
 import { apiClient } from '../context/AuthContext';
@@ -417,11 +418,16 @@ export default function AdminOrders() {
                         <button
                           onClick={() => handleViewOrder(order)}
                           className="text-blue-600 hover:text-blue-700"
+                          title="View Details"
                         >
                           <Eye size={18} />
                         </button>
-                        <button className="text-green-600 hover:text-green-700">
-                          <Truck size={18} />
+                        <button 
+                          onClick={() => handleViewOrder(order)}
+                          className="text-green-600 hover:text-green-700"
+                          title="Update Order"
+                        >
+                          <Edit2 size={18} />
                         </button>
                       </td>
                     </tr>

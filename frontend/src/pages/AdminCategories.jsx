@@ -299,7 +299,7 @@ export default function AdminCategories() {
                       <td className="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">
                         {category.description || '-'}
                       </td>
-                      <td className="px-6 py-4 text-sm space-x-3 text-right">
+                      <td className="px-6 py-4 text-sm space-x-3 flex items-center justify-end">
                         <button
                           onClick={() => {
                             setSelectedCategory(category);
@@ -310,15 +310,17 @@ export default function AdminCategories() {
                             });
                             setShowForm(true);
                           }}
-                          className="text-blue-600 hover:text-blue-700 transition"
+                          className="text-green-600 hover:text-green-700 transition"
+                          title="Edit"
                         >
-                          <Edit2 size={18} className="inline" />
+                          <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(category._id)}
                           className="text-red-600 hover:text-red-700 transition"
+                          title="Delete"
                         >
-                          <Trash2 size={18} className="inline" />
+                          <Trash2 size={18} />
                         </button>
                       </td>
                     </tr>

@@ -25,11 +25,11 @@ export const LoginModal = ({ isOpen, onClose, initialTab = 'login' }) => {
           />
 
           {/* Modal Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: 'spring', duration: 0.5 }}
+            exit={{ opacity: 0, scale: 0.96, y: 15 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="relative w-full max-w-lg bg-stone-900 border border-stone-800 rounded-3xl overflow-hidden shadow-2xl z-10 max-h-[90vh] flex flex-col"
           >
             {/* Close Button */}
@@ -53,6 +53,7 @@ export const LoginModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                   <motion.div
                     layoutId="activeTabUnderline"
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-light"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   />
                 )}
               </button>
@@ -67,6 +68,7 @@ export const LoginModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                   <motion.div
                     layoutId="activeTabUnderline"
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-light"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   />
                 )}
               </button>
@@ -74,15 +76,31 @@ export const LoginModal = ({ isOpen, onClose, initialTab = 'login' }) => {
 
             {/* Form Scroll Area */}
             <div className="overflow-y-auto flex-grow p-6 md:p-8 bg-stone-900/40">
-              {activeTab === 'login' ? (
-                <div className="modal-form-override">
-                  <LoginForm />
-                </div>
-              ) : (
-                <div className="modal-form-override">
-                  <RegisterForm />
-                </div>
-              )}
+              <AnimatePresence mode="wait">
+                {activeTab === 'login' ? (
+                  <motion.div
+                    key="login"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="modal-form-override"
+                  >
+                    <LoginForm />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="register"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="modal-form-override"
+                  >
+                    <RegisterForm />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>

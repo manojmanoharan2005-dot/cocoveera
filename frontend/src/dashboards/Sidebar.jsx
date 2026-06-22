@@ -33,6 +33,7 @@ export const Sidebar = ({
     { name: 'Orders', label: 'Orders', icon: ShoppingBag, path: '/account/orders' },
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/account/saved' },
     { name: 'Cart', label: 'Cart', icon: ShoppingCart, badge: cartCount, path: '/account/cart' },
+    { name: 'Testing Reports', label: 'Quality Testing', icon: FileText, path: '/account/testing-reports' },
     { name: 'Addresses', label: 'Address', icon: MapPin, path: '/account/address' },
     { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/account/support' },
     { name: 'Settings', label: 'Settings', icon: Settings, path: '/account/settings' },

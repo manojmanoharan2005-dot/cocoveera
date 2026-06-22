@@ -53,6 +53,7 @@ const AdminProducts = lazy(() => import('./pages/AdminProducts'));
 const AdminCategories = lazy(() => import('./pages/AdminCategories'));
 const AdminOrders = lazy(() => import('./pages/AdminOrders'));
 const AdminUsers = lazy(() => import('./pages/AdminUsers'));
+const AdminInquiries = lazy(() => import('./pages/admin/AdminInquiries'));
 const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'));
 const AdminRefunds = lazy(() => import('./pages/admin/AdminRefunds'));
 const AdminTesting = lazy(() => import('./pages/AdminTesting'));
@@ -83,6 +84,7 @@ const Invoices = lazy(() => import('./pages/account/Invoices'));
 const Quotes = lazy(() => import('./pages/account/Quotes'));
 const Notifications = lazy(() => import('./pages/account/Notifications'));
 const PaymentHistory = lazy(() => import('./pages/account/PaymentHistory'));
+const CustomerTestingReports = lazy(() => import('./pages/account/CustomerTestingReports'));
 const HelpCenter = lazy(() => import('./pages/account/HelpCenter'));
 
 import { Ship } from 'lucide-react';
@@ -154,6 +156,8 @@ const AdminProtectedRoute = ({ children }) => {
 const PublicLayout = () => {
   const location = useLocation();
   
+  const hideFooter = ['/login', '/register'].includes(location.pathname);
+
   return (
     <div 
       className="flex flex-col min-h-screen relative text-[#1A1A1A] font-sans bg-stone-50"
@@ -172,7 +176,7 @@ const PublicLayout = () => {
           <Outlet />
         </motion.div>
       </AnimatePresence>
-      <Footer />
+      {!hideFooter && <Footer />}
       </div>
     </div>
   );
@@ -239,6 +243,7 @@ function AppContent() {
           <Route path="invoices" element={<Invoices />} />
           <Route path="quotes" element={<Quotes />} />
           <Route path="payments" element={<PaymentHistory />} />
+          <Route path="testing-reports" element={<CustomerTestingReports />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="support" element={<HelpCenter />} />
           <Route path="product/:id" element={<ProductView />} />
@@ -267,6 +272,14 @@ function AppContent() {
           element={
             <AdminProtectedRoute>
               <AdminCategories />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/inquiries"
+          element={
+            <AdminProtectedRoute>
+              <AdminInquiries />
             </AdminProtectedRoute>
           }
         />
