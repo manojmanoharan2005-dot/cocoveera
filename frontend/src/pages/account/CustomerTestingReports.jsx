@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Loader, Download, AlertCircle } from 'lucide-react';
-import apiClient from '../../utils/apiClient';
+import { apiClient } from '../../context/AuthContext';
 
 export default function CustomerTestingReports() {
   const [reports, setReports] = useState([]);
