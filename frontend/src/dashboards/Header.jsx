@@ -131,7 +131,7 @@ export const Header = ({
               <AnimatePresence>
                 {sortDropdownOpen && (
                   <>
-                    <div className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent" onClick={() => setSortDropdownOpen(false)} />
+                    <div className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent cursor-pointer" onClick={() => setSortDropdownOpen(false)} onTouchStart={() => setSortDropdownOpen(false)} />
                     <motion.div
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -224,7 +224,7 @@ export const Header = ({
           <AnimatePresence>
             {dropdownOpen && (
               <>
-                <div className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent" onClick={() => setDropdownOpen(false)} />
+                <div className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent cursor-pointer" onClick={() => setDropdownOpen(false)} onTouchStart={() => setDropdownOpen(false)} />
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
