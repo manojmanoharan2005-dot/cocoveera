@@ -1,7 +1,3 @@
-/**
- * File: frontend/src/layouts/AdminLayout.jsx
- * Purpose: Source code file for the Cocoveera project.
- */
 import { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -101,8 +97,12 @@ export default function AdminLayout({ children }) {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 rounded-lg hover:bg-gray-100"
             >
-              {sidebarOpen ? <X size={24} className="lg:hidden" /> : <Menu size={24} />}
-              <Menu size={24} className="hidden lg:block" />
+              <span className="lg:hidden">
+                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+              </span>
+              <span className="hidden lg:block">
+                <Menu size={24} />
+              </span>
             </button>
 
             <div className="flex items-center space-x-4">

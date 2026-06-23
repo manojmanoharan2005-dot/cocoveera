@@ -76,8 +76,8 @@ export const ProductCard = ({
       <div className="p-4 flex flex-col flex-grow bg-white">
         
         {/* Title and Wishlist Row */}
-        <div className="flex items-start justify-between gap-3 mb-1.5">
-          <h3 className="font-poppins font-bold text-stone-800 text-[13px] leading-snug line-clamp-2">
+        <div className="flex items-start justify-between gap-3 mb-1.5 min-w-0 w-full">
+          <h3 className="font-poppins font-bold text-stone-800 text-[13px] leading-snug line-clamp-2 break-words flex-grow">
             {product.name}
           </h3>
           <button
@@ -95,8 +95,8 @@ export const ProductCard = ({
 
 
         {/* Price Row */}
-        <div className="flex items-baseline gap-2 mt-auto">
-          <span className="text-base font-poppins font-black text-stone-900">
+        <div className="flex items-baseline gap-2 mt-auto w-full min-w-0">
+          <span className="text-base font-poppins font-black text-stone-900 truncate overflow-hidden text-ellipsis whitespace-nowrap block max-w-full">
             {priceData.formatted}
           </span>
 

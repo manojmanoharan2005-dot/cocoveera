@@ -176,7 +176,7 @@ const Cart = () => {
                 <h3 className="font-extrabold text-stone-900 text-base mb-1 pr-12">{item.name}</h3>
                 <p className="text-[#2E7D32] font-black text-sm mb-3">{convertCurrency(item.price, user?.currency).formatted} <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">/ Piece</span></p>
                 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2">
                   {/* Quantity */}
                   <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg p-1">
                     <button onClick={() => updateQuantity(item.id, item.quantity - 0.25)} className="w-7 h-7 flex items-center justify-center text-stone-500 hover:bg-stone-200 hover:text-stone-900 rounded-md transition-colors font-bold">-</button>

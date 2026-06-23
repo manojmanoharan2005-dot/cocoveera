@@ -3,7 +3,7 @@
  * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
  */
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User, Check, Menu, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,11 +21,17 @@ export const Header = ({
   onMenuClick
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const wishlistCount = user?.wishlist?.length || 0;
+
+  React.useEffect(() => {
+    setDropdownOpen(false);
+    setSortDropdownOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out of Cocoveera?')) {
@@ -125,7 +131,7 @@ export const Header = ({
               <AnimatePresence>
                 {sortDropdownOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setSortDropdownOpen(false)} />
+                    <div className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent" onClick={() => setSortDropdownOpen(false)} />
                     <motion.div
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -218,7 +224,7 @@ export const Header = ({
           <AnimatePresence>
             {dropdownOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
+                <div className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent" onClick={() => setDropdownOpen(false)} />
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}

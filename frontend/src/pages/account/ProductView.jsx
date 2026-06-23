@@ -928,20 +928,20 @@ const ProductView = () => {
       )}
 
       {/* Mobile Sticky Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-3 items-center backdrop-blur-md bg-white/95">
-        <div className="flex-1 flex flex-col justify-center">
-          <span className="text-stone-500 text-[9px] font-extrabold uppercase tracking-wider block mb-0.5">Subtotal</span>
+      <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 items-center backdrop-blur-md bg-white/95">
+        <div className="w-full sm:flex-1 flex sm:flex-col justify-between sm:justify-center items-center sm:items-start px-1 sm:px-0">
+          <span className="text-stone-500 text-[9px] font-extrabold uppercase tracking-wider block sm:mb-0.5">Subtotal</span>
           <span className="text-sm font-poppins font-black text-[#2E7D32] leading-none">{subtotalData.formatted}</span>
         </div>
-        <div className="flex gap-2 flex-[2]">
+        <div className="flex gap-2 w-full sm:flex-[2]">
           <button
             type="button"
             onClick={handleAddToCart}
             disabled={actionLoading || isOverCapacity}
-            className="flex-1 bg-white border-2 border-[#2E7D32] text-[#2E7D32] font-poppins text-[10px] font-black py-3 rounded-xl flex items-center justify-center shadow-sm disabled:opacity-50 disabled:border-stone-300 disabled:text-stone-400"
+            className="flex-1 bg-white border-2 border-[#2E7D32] text-[#2E7D32] font-poppins text-[10px] font-black py-2.5 sm:py-3 rounded-xl flex items-center justify-center shadow-sm disabled:opacity-50 disabled:border-stone-300 disabled:text-stone-400"
           >
-            <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
-            CART
+            <ShoppingBag className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+            <span className="truncate">CART</span>
           </button>
           <button
             type="button"
@@ -960,10 +960,10 @@ const ProductView = () => {
               }
             }}
             disabled={actionLoading || (showConfigurator && isOverCapacity)}
-            className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-[10px] font-black py-3 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 disabled:bg-stone-300 disabled:shadow-none transition-colors"
+            className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-[10px] font-black py-2.5 sm:py-3 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 disabled:bg-stone-300 disabled:shadow-none transition-colors"
           >
-            {showConfigurator ? 'CHECKOUT' : 'BUY'}
-            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+            <span className="truncate">{showConfigurator ? 'CHECKOUT' : 'BUY'}</span>
+            <ChevronRight className="w-3.5 h-3.5 ml-0.5 shrink-0" />
           </button>
         </div>
       </div>

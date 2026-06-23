@@ -475,13 +475,13 @@ export const Marketplace = ({
                   <strong className="text-xl font-poppins font-extrabold text-[#2E7D32]">{convertCurrency(selectedProduct.price, user?.currency).formatted}<span className="text-xs text-stone-400 font-bold ml-1">/ ton</span></strong>
                 </div>
                 
-                <div className="flex gap-3">
+                <div className="flex gap-3 w-full sm:w-auto flex-col sm:flex-row">
                   <button
                     onClick={() => {
                       onAddToCart(selectedProduct);
                       setSelectedProduct(null);
                     }}
-                    className="bg-white border border-stone-250 hover:border-[#2E7D32] text-stone-700 hover:text-[#2E7D32] font-poppins text-xs font-bold py-3 px-6 rounded-[14px] transition-colors shadow-sm"
+                    className="w-full sm:w-auto bg-white border border-stone-250 hover:border-[#2E7D32] text-stone-700 hover:text-[#2E7D32] font-poppins text-xs font-bold py-3 px-6 rounded-[14px] transition-colors shadow-sm"
                   >
                     Add Container
                   </button>
@@ -490,7 +490,7 @@ export const Marketplace = ({
                       onBuyNow(selectedProduct);
                       setSelectedProduct(null);
                     }}
-                    className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-bold py-3 px-6 rounded-[14px] transition-all shadow-md shadow-[#2E7D32]/10"
+                    className="w-full sm:w-auto bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-bold py-3 px-6 rounded-[14px] transition-all shadow-md shadow-[#2E7D32]/10"
                   >
                     Buy 1 Container
                   </button>
