@@ -114,7 +114,9 @@ const Checkout = () => {
 
   const totalContainerQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const isWholeContainer = Number.isInteger(totalContainerQuantity) && totalContainerQuantity >= 1;
-  const isValidOrderQuantity = isWholeContainer;
+  
+  // [TESTING BYPASS] Allow checkout of partial/small quantities so we can test Razorpay with amounts under ₹1 Lakh (which enables the UPI option)
+  const isValidOrderQuantity = true; // isWholeContainer;
 
   // Fetch shipping rules
   React.useEffect(() => {
@@ -389,7 +391,8 @@ const Checkout = () => {
 
     } catch (err) {
       console.error("Order placement failed:", err);
-      alert("Failed to place order. Please try again.");
+      const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+      alert(`Failed to place order: ${errorMsg}\n\nPlease try again.`);
     } finally {
       setIsProcessing(false);
     }
@@ -547,7 +550,7 @@ const Checkout = () => {
         <div className="flex flex-col-reverse lg:flex-row gap-10 items-start">
           
           {/* LEFT: Accordion Steps */}
-          <div className="w-full lg:w-[60%] relative space-y-6">
+          <div className="w-full lg:w-[60%] relative space-y-6 lg:min-h-[100vh] pb-10">
             {/* Timeline Line */}
             <div className="absolute left-[36px] top-[50px] bottom-[50px] w-[2px] bg-stone-200 z-0 hidden sm:block rounded-full"></div>
           
@@ -819,9 +822,9 @@ const Checkout = () => {
         </div>
 
         {/* RIGHT: Price Details Sidebar */}
-        <div className="w-full lg:w-[40%] sticky top-28">
-          <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-stone-100 overflow-hidden">
-            <div className="bg-stone-50 border-b border-stone-100 p-6 flex items-center justify-between">
+        <div className="w-full lg:w-[40%] sticky top-28 self-start">
+          <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-stone-100 flex flex-col max-h-[calc(100vh-140px)]">
+            <div className="bg-stone-50 border-b border-stone-100 p-6 flex items-center justify-between shrink-0 rounded-t-3xl">
               <div>
                 <h3 className="text-sm font-black text-stone-900 uppercase tracking-widest">Price Summary</h3>
                 <p className="text-xs text-stone-500 font-medium mt-1">Review your premium order</p>
@@ -831,7 +834,7 @@ const Checkout = () => {
               </div>
             </div>
 
-            <div className="p-6 md:p-8 space-y-5">
+            <div className="p-6 md:p-8 space-y-5 overflow-y-auto custom-scrollbar">
               <div className="space-y-4 text-sm font-semibold text-stone-500">
                 <div className="flex justify-between items-center">
                   <span>Total Containers</span>

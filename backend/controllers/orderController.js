@@ -268,27 +268,63 @@ export const getOrderById = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-// @desc    Cancel order (User only if pending)
+// @desc    Cancel order
 // @route   PUT /api/orders/:id/cancel
 // @access  Private
 export const cancelOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const { cancellationReason, cancellationCustomReason } = req.body;
+    
+    if (!cancellationReason) {
+      return res.status(400).json({ success: false, message: 'Cancellation reason is required' });
+    }
+    
+    if (cancellationReason === 'Other' && !cancellationCustomReason) {
+      return res.status(400).json({ success: false, message: 'Custom reason is required when "Other" is selected' });
+    }
+
+    const order = await Order.findById(req.params.id).populate('user', 'name email phone');
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    if (order.user.toString() !== req.user.id) {
+    if (order.user._id.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized to cancel this order' });
     }
 
-    if (order.orderStatus !== 'pending') {
-      return res.status(400).json({ success: false, message: 'Cannot cancel an order that is already being processed' });
+    // Cancellation Allowed: pending, confirmed, packed, loaded
+    // Cancellation Not Allowed: shipped, delivered, cancelled
+    const notAllowedStatuses = ['shipped', 'delivered', 'cancelled'];
+    if (notAllowedStatuses.includes(order.orderStatus)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'This order has already been shipped and can no longer be cancelled. Please contact support for assistance.' 
+      });
     }
 
     order.orderStatus = 'cancelled';
+    order.cancellationReason = cancellationReason;
+    if (cancellationCustomReason) {
+      order.cancellationCustomReason = cancellationCustomReason;
+    }
+    order.cancelledAt = new Date();
+    
     await order.save();
+
+    // Send cancellation email
+    try {
+      const { sendOrderCancellationEmail } = await import('../utils/EmailService.js');
+      await sendOrderCancellationEmail(
+        order.user.email,
+        order._id,
+        cancellationCustomReason || cancellationReason,
+        order.cancelledAt,
+        order.paymentStatus === 'paid' ? 'Pending Refund' : 'N/A'
+      );
+    } catch (emailErr) {
+      console.error('Failed to send cancellation email:', emailErr);
+    }
 
     res.status(200).json({ success: true, message: 'Order cancelled successfully', data: order });
   } catch (error) {

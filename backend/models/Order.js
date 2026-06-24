@@ -137,6 +137,18 @@ const OrderSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    cancellationReason: {
+      type: String,
+      default: null,
+    },
+    cancellationCustomReason: {
+      type: String,
+      default: null,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -528,3 +528,57 @@ export const sendNotificationEmail = async (to, subject, message) => {
   `;
   return sendEmail({ to, subject, htmlContent, senderType: 'service' });
 };
+
+export const sendOrderCancellationEmail = async (to, orderId, reason, cancellationDate, refundStatus) => {
+  const shortOrderId = orderId.toString().slice(-8).toUpperCase();
+  const subject = `Order Cancelled - Order #${shortOrderId}`;
+  const dateStr = new Date(cancellationDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <body style="font-family: 'Inter', Arial, sans-serif; background-color: #F4F6F8; padding: 20px; margin: 0;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <div style="background-color: #ffffff; padding: 30px; text-align: center; border-top: 5px solid #DC2626;">
+            <h1 style="color: #DC2626; font-family: 'Times New Roman', Times, serif; font-size: 28px; margin: 10px 0 0 0; letter-spacing: 2px;">COCOVEERA</h1>
+            <p style="color: #D4AF37; font-style: italic; font-size: 12px; margin: 5px 0 0 0;">Premium Coconut Substrates & Lab Quality Testing</p>
+          </div>
+          <hr style="border: 0; border-top: 1px solid #eaeaea; margin-top: 0; margin-bottom: 10px;">
+          
+          <div style="background-color: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 8px; padding: 20px; margin: 20px;">
+            <h2 style="color: #DC2626; font-size: 18px; margin: 0 0 10px 0;">❌ Order Cancelled</h2>
+            <p style="color: #4B5563; font-size: 14px; margin: 0; line-height: 1.5;">Your order <strong>#${shortOrderId}</strong> has been successfully cancelled as requested.</p>
+          </div>
+          
+          <div style="padding: 0 20px 20px 20px;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FAFAFA; border: 1px solid #E5E7EB; border-radius: 6px;">
+              <tr>
+                <td style="padding: 15px; border-bottom: 1px solid #E5E7EB;">
+                  <span style="font-size: 11px; font-weight: bold; color: #6B7280; text-transform: uppercase;">Cancellation Date</span><br>
+                  <span style="font-size: 14px; color: #111827; font-weight: 500;">${dateStr}</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 15px; border-bottom: 1px solid #E5E7EB;">
+                  <span style="font-size: 11px; font-weight: bold; color: #6B7280; text-transform: uppercase;">Reason</span><br>
+                  <span style="font-size: 14px; color: #111827; font-weight: 500;">${reason}</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 15px;">
+                  <span style="font-size: 11px; font-weight: bold; color: #6B7280; text-transform: uppercase;">Refund Status</span><br>
+                  <span style="font-size: 14px; color: #111827; font-weight: 500;">${refundStatus}</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+          
+          <div style="padding: 0 20px 30px 20px;">
+            <p style="font-size: 14px; color: #4B5563; line-height: 1.6; margin: 0;">If you have any questions or need further assistance, please contact our support team at <strong style="color: #2E7D32;">supportdesk@cocoveera.com</strong>.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+  return sendEmail({ to, subject, htmlContent, senderType: 'service' });
+};

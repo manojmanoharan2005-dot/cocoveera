@@ -22,6 +22,7 @@
     "react-phone-input-2": "^2.15.1",
     "react-router-dom": "^6.23.0",
     "react-simple-maps": "^3.0.0",
+    "react-tooltip": "^6.0.8",
     "recharts": "^3.8.1",
     "three": "^0.184.0"
   },

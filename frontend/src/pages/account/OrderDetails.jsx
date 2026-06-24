@@ -108,6 +108,13 @@ const OrderDetails = () => {
         {/* Left Column - Main Details */}
         <div className="lg:col-span-2 space-y-6">
           
+          {['Shipped', 'Delivered'].includes(order.status) && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3 shadow-sm">
+              <span className="text-xl">🚚</span>
+              <p className="text-sm font-bold text-amber-800 uppercase tracking-wider">Shipped Orders Cannot Be Cancelled</p>
+            </div>
+          )}
+
           {/* Order Status & Actions */}
           <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex gap-3">

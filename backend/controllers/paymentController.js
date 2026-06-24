@@ -5,34 +5,20 @@
 import Stripe from 'stripe';
 import Razorpay from 'razorpay';
 import paypal from '@paypal/checkout-server-sdk';
+import dotenv from 'dotenv';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import Quote from '../models/Quote.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
 import { sendOrderConfirmationWithInvoice } from '../utils/EmailService.js';
 
-// Setup payment gateways with mock detection
-const isStripeMock = !process.env.STRIPE_SECRET || process.env.STRIPE_SECRET.startsWith('mock_');
-const isRazorpayMock = !process.env.RAZORPAY_KEY || process.env.RAZORPAY_KEY.startsWith('mock_');
-const isPaypalMock = !process.env.PAYPAL_SECRET || process.env.PAYPAL_SECRET.startsWith('mock_');
-
-let stripeInstance = null;
-if (!isStripeMock) {
-  stripeInstance = new Stripe(process.env.STRIPE_SECRET);
-}
-
-let razorpayInstance = null;
-if (!isRazorpayMock) {
-  razorpayInstance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY,
-    key_secret: process.env.RAZORPAY_SECRET,
-  });
-}
-
 // @desc    Initiate payment session for an order
 // @route   POST /api/payments/initiate
 // @access  Private
 export const initiatePayment = async (req, res) => {
+  // Force reload environment variables to pick up latest keys without a restart
+  dotenv.config({ override: true });
+
   const { orderId, gateway } = req.body;
 
   try {
@@ -49,6 +35,7 @@ export const initiatePayment = async (req, res) => {
 
     // 1. STRIPE GATEWAY
     if (gateway === 'stripe') {
+      const isStripeMock = !process.env.STRIPE_SECRET || process.env.STRIPE_SECRET.startsWith('mock_');
       if (isStripeMock) {
         console.log(`[Stripe Mock] Simulating payment intent for order: ${orderId}`);
         return res.status(200).json({
@@ -59,7 +46,8 @@ export const initiatePayment = async (req, res) => {
         });
       }
 
-      const paymentIntent = await stripeInstance.paymentIntents.create({
+      const activeStripeInstance = new Stripe(process.env.STRIPE_SECRET);
+      const paymentIntent = await activeStripeInstance.paymentIntents.create({
         amount: amountInCentsStripe,
         currency: 'usd',
         metadata: { orderId: orderId.toString() },
@@ -75,7 +63,11 @@ export const initiatePayment = async (req, res) => {
 
     // 2. RAZORPAY GATEWAY
     if (gateway === 'razorpay') {
-      if (isRazorpayMock) {
+      const currentRzpKey = process.env.RAZORPAY_KEY;
+      const currentRzpSecret = process.env.RAZORPAY_SECRET;
+      const isRzpMock = !currentRzpKey || currentRzpKey.startsWith('mock_');
+
+      if (isRzpMock) {
         console.log(`[Razorpay Mock] Simulating order creation for order: ${orderId}`);
         return res.status(200).json({
           success: true,
@@ -86,9 +78,21 @@ export const initiatePayment = async (req, res) => {
         });
       }
 
-      // order.totalAmount is already in INR
-      const inrAmount = Math.round(order.totalAmount * 100);
-      const rzpOrder = await razorpayInstance.orders.create({
+      // Initialize dynamically to use the latest key
+      const activeRazorpayInstance = new Razorpay({
+        key_id: currentRzpKey,
+        key_secret: currentRzpSecret,
+      });
+
+      // order.totalAmount is already in INR. 
+      // Cap at ₹5,00,000 (50000000 paise) to prevent Razorpay "Amount exceeds maximum amount allowed" error during testing large orders
+      let inrAmount = Math.round(order.totalAmount * 100);
+      if (inrAmount > 50000000) {
+        console.warn(`[Razorpay] Capping order amount from ${inrAmount} to 50000000 paise to prevent limit errors.`);
+        inrAmount = 50000000;
+      }
+      
+      const rzpOrder = await activeRazorpayInstance.orders.create({
         amount: inrAmount,
         currency: 'INR',
         receipt: orderId.toString(),

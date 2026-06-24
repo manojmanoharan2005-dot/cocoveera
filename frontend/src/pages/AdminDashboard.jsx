@@ -129,10 +129,17 @@ export default function AdminDashboard() {
                 subtext={`${stats.users?.verifiedUsers || 0} verified`}
                 color="bg-purple-600"
               />
+              <StatCard
+                icon={AlertCircle}
+                title="Cancelled Orders"
+                value={stats.orders?.totalCancelledOrders || 0}
+                subtext={`${stats.orders?.cancellationRate || 0}% rate`}
+                color="bg-red-600"
+              />
             </div>
 
             {/* Additional Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Pending Orders */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-gray-900 font-semibold mb-4">Order Status</h3>
@@ -168,6 +175,27 @@ export default function AdminDashboard() {
                       {stats.users?.blockedUsers || 0}
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {/* Cancellation Reasons */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-gray-900 font-semibold mb-4">Top Cancellation Reasons</h3>
+                <div className="space-y-3">
+                  {stats.orders?.cancellationReasons?.length > 0 ? (
+                    stats.orders.cancellationReasons.slice(0, 3).map((reason, idx) => (
+                      <div key={idx} className="flex items-center justify-between">
+                        <span className="text-gray-600 text-sm truncate mr-2" title={reason._id || 'Unknown'}>
+                          {reason._id || 'Unknown'}
+                        </span>
+                        <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium shrink-0">
+                          {reason.count}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-gray-500 text-sm">No cancellations yet</span>
+                  )}
                 </div>
               </div>
 

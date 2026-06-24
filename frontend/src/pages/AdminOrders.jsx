@@ -256,6 +256,31 @@ export default function AdminOrders() {
                   </div>
                 </div>
 
+                {/* Cancellation Info */}
+                {selectedOrder.orderStatus === 'cancelled' && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <h3 className="text-sm font-semibold text-red-900 mb-2">Cancellation Details</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-red-700">Reason</p>
+                        <p className="text-red-900 font-medium">{selectedOrder.cancellationReason || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-red-700">Cancelled At</p>
+                        <p className="text-red-900 font-medium">
+                          {selectedOrder.cancelledAt ? new Date(selectedOrder.cancelledAt).toLocaleString() : 'Unknown'}
+                        </p>
+                      </div>
+                      {selectedOrder.cancellationCustomReason && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-red-700">Custom Details</p>
+                          <p className="text-red-900 font-medium">{selectedOrder.cancellationCustomReason}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Order Items */}
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Items</h3>

@@ -321,9 +321,21 @@ export const getOrderStats = async (req, res) => {
     const totalOrders = await Order.countDocuments();
     const paidOrders = await Order.countDocuments({ paymentStatus: 'paid' });
     const pendingOrders = await Order.countDocuments({ orderStatus: 'pending' });
+    
+    // Revenue
     const totalRevenue = await Order.aggregate([
       { $match: { paymentStatus: 'paid' } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    ]);
+
+    // Cancellations
+    const totalCancelledOrders = await Order.countDocuments({ orderStatus: 'cancelled' });
+    const cancellationRate = totalOrders > 0 ? ((totalCancelledOrders / totalOrders) * 100).toFixed(2) : 0;
+    
+    const cancellationReasons = await Order.aggregate([
+      { $match: { orderStatus: 'cancelled', cancellationReason: { $ne: null } } },
+      { $group: { _id: '$cancellationReason', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
     ]);
 
     res.status(200).json({
@@ -333,6 +345,9 @@ export const getOrderStats = async (req, res) => {
         paidOrders,
         pendingOrders,
         totalRevenue: totalRevenue[0]?.total || 0,
+        totalCancelledOrders,
+        cancellationRate: Number(cancellationRate),
+        cancellationReasons,
       },
     });
   } catch (error) {
