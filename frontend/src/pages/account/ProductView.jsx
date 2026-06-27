@@ -14,6 +14,7 @@ import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import { ContainerViewer3D } from '../../components/3d/ContainerViewer3D';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
+import SEO from '../../components/SEO';
 
 const ProductView = () => {
   const { id } = useParams();
@@ -319,6 +320,12 @@ const ProductView = () => {
 
   return (
     <div className="max-w-6xl space-y-8 pb-28 lg:pb-16">
+      <SEO 
+        title={product.name}
+        description={product.description?.substring(0, 160) || `Buy premium ${product.name} at Cocoveera.`}
+        url={`/account/productview/${product._id}`}
+        image={product.images?.[0]?.url || product.image}
+      />
       
       {/* Toast Notification */}
       <AnimatePresence>

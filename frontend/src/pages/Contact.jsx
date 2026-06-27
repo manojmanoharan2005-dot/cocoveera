@@ -8,6 +8,7 @@ import { Mail, Phone, MapPin, Send, Building, CheckCircle, Upload, ArrowRight, C
 import PageHero from '../components/PageHero';
 import { API_URL } from '../utils/config';
 import axios from 'axios';
+import SEO from '../components/SEO';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -95,7 +96,12 @@ const Contact = () => {
   };
 
   return (
-    <div className="pb-16 bg-stone-50 min-h-screen">
+    <div className="pb-16 bg-white min-h-screen">
+      <SEO 
+        title="Contact Us"
+        description="Get in touch with Cocoveera for premium B2B inquiries, bulk orders, and container load planning."
+        url="/contact"
+      />
       <PageHero
         badge="GLOBAL REACH"
         title="Get in Touch With"

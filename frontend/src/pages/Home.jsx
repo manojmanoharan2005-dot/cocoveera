@@ -6,8 +6,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../utils/config';
+import useSWR from 'swr';
 import LazyVideo from '../components/LazyVideo';
 import ImageWithFallback from '../components/common/ImageWithFallback';
+import SEO from '../components/SEO';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowRight,
@@ -243,92 +245,18 @@ const testimonials = [
   },
 ];
 
-const categoryList = [
-  {
-    id: 'cat-1',
-    name: 'Coco Peat Blocks',
-    desc: 'High-quality 5kg coir pith blocks for large-scale agricultural and nursery operations.',
-    img: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Coco+Peat+Blocks'
-  },
-  {
-    id: 'cat-2',
-    name: 'Grow Bags',
-    desc: 'UV-resistant co-extruded LDPE grow bags formulated for hydroponic tomatoes, berries, and cucumbers.',
-    img: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Grow+Bags'
-  },
-  {
-    id: 'cat-3',
-    name: 'Coir Discs & Coins',
-    desc: 'Custom-compressed discs designed for quick root expansion and easy transplantation in small pots.',
-    img: 'https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Coir+Discs'
-  },
-  {
-    id: 'cat-4',
-    name: 'Coco Chips',
-    desc: 'Washed and graded coconut husk chips for excellent aeration and drainage in orchid cultivation.',
-    img: 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Coco+Chips'
-  },
-  {
-    id: 'cat-5',
-    name: 'Coco Peat Briquettes',
-    desc: 'Compact 650g briquettes perfect for hobby gardening, retail centers, and indoor plants.',
-    img: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Hobby+Gardening'
-  },
-  {
-    id: 'cat-6',
-    name: 'Erosion Control Logs',
-    desc: 'Sturdy biodegradable coir wattles for stabilizing riverbanks, slopes, and construction sites.',
-    img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Erosion+Control'
-  },
-  {
-    id: 'cat-7',
-    name: 'Coir Blankets & Nets',
-    desc: 'Woven coir netting engineered for soil containment and promoting vegetation on steep slopes.',
-    img: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Erosion+Control'
-  },
-  {
-    id: 'cat-8',
-    name: 'Coco Peat Grow Cubes',
-    desc: 'Perfectly sized growing cubes optimized for seed germination and early stage plant propagation.',
-    img: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Grow+Cubes'
-  },
-  {
-    id: 'cat-9',
-    name: 'Natural Coir Fiber',
-    desc: 'Golden-brown matured coconut fiber for industrial insulation, mattress padding, and upholstery.',
-    img: 'https://images.unsplash.com/photo-1596547609652-9cb5d8d8fc83?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Other+Coir+Products'
-  },
-  {
-    id: 'cat-10',
-    name: 'Curled Coir Ropes',
-    desc: 'Mechanically spun curled coir twine with excellent elasticity for spring mattresses and gardening.',
-    img: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Other+Coir+Products'
-  },
-  {
-    id: 'cat-11',
-    name: 'Coco Poles',
-    desc: 'Natural support poles wrapped with coir fiber, ideal for climbing plants like Monstera and Pothos.',
-    img: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Coco+Poles'
-  },
-  {
-    id: 'cat-12',
-    name: 'Coir Pots & Liners',
-    desc: '100% biodegradable planting pots and basket liners that allow roots to grow directly through the walls.',
-    img: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=Coir+Pots'
+// ─── Fetcher for SWR ────────────────────────────────────────────────────────
+const fetcher = url => axios.get(url).then(res => res.data.data);
+
+// ─── Helper: Optimize Cloudinary Image ──────────────────────────────────────
+const optimizeImage = (url) => {
+  if (!url) return '';
+  // Inject transformation if it's a cloudinary URL and doesn't already have one
+  if (url.includes('cloudinary.com') && !url.includes('/upload/f_auto,q_auto')) {
+    return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
   }
-];
+  return url;
+};
 
 // ─── Home Component ────────────────────────────────────────────────────────────
 const Home = () => {
@@ -338,44 +266,35 @@ const Home = () => {
 
   const [statsStarted, setStatsStarted] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [productScroll, setProductScroll] = useState(0);
-  const [dbCategories, setDbCategories] = useState([]);
   const statsRef = useRef(null);
   const productRef = useRef(null);
 
-  useEffect(() => {
-    const fetchCats = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/categories`);
-        if (res.data.success) {
-          const fetchedCats = res.data.data;
-          const getCategoryPriority = (name) => {
-            if (!name) return 999;
-            const lower = name.toLowerCase();
-            if (lower.includes('cube')) return 1;
-            if (lower.includes('fiber bale')) return 2;
-            if (lower.includes('substrate bag')) return 3;
-            if (lower.includes('mat') || lower.includes('blanket')) return 6;
-            if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
-            if (lower.includes('disc') || lower === 'disck') return 5;
-            return 999;
-          };
+  const { data: dbCategories = [], isLoading } = useSWR(
+    `${API_URL}/categories`,
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 600000 }
+  );
 
-          fetchedCats.sort((a, b) => {
-            const priorityA = getCategoryPriority(a.name);
-            const priorityB = getCategoryPriority(b.name);
-            if (priorityA !== priorityB) return priorityA - priorityB;
-            return Math.random() - 0.5;
-          });
-          
-          setDbCategories(fetchedCats);
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories', err);
-      }
-    };
-    fetchCats();
-  }, []);
+  const getCategoryPriority = (name) => {
+    if (!name) return 999;
+    const lower = name.toLowerCase();
+    if (lower.includes('cube')) return 1;
+    if (lower.includes('fiber bale')) return 2;
+    if (lower.includes('substrate bag')) return 3;
+    if (lower.includes('mat') || lower.includes('blanket')) return 6;
+    if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
+    if (lower.includes('disc') || lower === 'disck') return 5;
+    return 999;
+  };
+
+  const sortedCategories = [...dbCategories].sort((a, b) => {
+    const priorityA = getCategoryPriority(a.name);
+    const priorityB = getCategoryPriority(b.name);
+    if (priorityA !== priorityB) return priorityA - priorityB;
+    return 0; // Maintain stable sort if same priority
+  });
+
+
 
   // Intersection observer for stats counter
   useEffect(() => {
@@ -417,8 +336,27 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Cocoveera",
+    "url": "https://cocoveera.com",
+    "logo": "https://cocoveera.com/favicon.webp",
+    "description": "Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export.",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+91-94420-74766",
+      "contactType": "Customer Service"
+    }
+  };
+
   return (
     <div className="bg-white overflow-hidden">
+      <SEO 
+        title="Home"
+        url="/"
+        schema={orgSchema}
+      />
 
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 1: HERO — Full-screen factory illustration background
@@ -664,10 +602,23 @@ const Home = () => {
               className="flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory hide-scrollbar"
               style={{ scrollbarWidth: 'none' }}
             >
-              {dbCategories.length > 0 ? dbCategories.map((dbCat, i) => {
-                const displayImg = dbCat.image;
+              {isLoading ? (
+                // Skeleton Loaders
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={`skel-${i}`} className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft flex-shrink-0 flex flex-col">
+                    <div className="h-48 w-full bg-stone-200 animate-pulse"></div>
+                    <div className="p-5 flex flex-col flex-grow">
+                      <div className="h-4 bg-stone-200 animate-pulse rounded w-2/3 mb-4"></div>
+                      <div className="h-3 bg-stone-200 animate-pulse rounded w-full mb-2"></div>
+                      <div className="h-3 bg-stone-200 animate-pulse rounded w-4/5 mb-4"></div>
+                      <div className="mt-auto h-4 bg-stone-200 animate-pulse rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))
+              ) : sortedCategories.map((dbCat, i) => {
+                const displayImg = optimizeImage(dbCat.image);
                 const link = `/products?category=${encodeURIComponent(dbCat.name)}`;
-                const desc = `Explore our premium range of ${dbCat.name} engineered for global growers.`;
+                const desc = dbCat.description || `Explore our premium range of ${dbCat.name} engineered for global growers.`;
                 
                 return (
                   <motion.div
@@ -697,40 +648,18 @@ const Home = () => {
                       )}
                     </div>
                     <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 leading-tight">{dbCat.name}</h3>
-                    <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{desc}</p>
-                    <Link
-                      to={link}
-                      className="inline-flex items-center gap-1 text-primary font-bold text-xs hover:gap-2 transition-all duration-200 mt-auto"
-                    >
-                      VIEW CATEGORY <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </motion.div>
-                ); }) : categoryList.map((p, i) => (
-                  <motion.div
-                    key={p.id || i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.5 }}
-                    whileHover={{ y: -8, scale: 1.02, rotateX: 2, rotateY: -2, boxShadow: "0 0 40px rgba(46,125,50,0.25)" }}
-                    style={{ transformStyle: "preserve-3d", perspective: 1000 }}
-                    className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
-                    <div className="relative h-48 overflow-hidden flex-shrink-0 bg-stone-100 relative">
-                      <ImageWithFallback src={p.img} alt={p.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                    <div className="p-5 flex flex-col flex-grow">
-                      <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 leading-tight">{p.name}</h3>
-                      <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{p.desc}</p>
-                      <Link to={p.link} className="inline-flex items-center gap-1 text-primary font-bold text-xs hover:gap-2 transition-all duration-200 mt-auto">
+                      <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 leading-tight">{dbCat.name}</h3>
+                      <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{desc}</p>
+                      <Link
+                        to={link}
+                        className="inline-flex items-center gap-1 text-primary font-bold text-xs hover:gap-2 transition-all duration-200 mt-auto"
+                      >
                         VIEW CATEGORY <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     </div>
                   </motion.div>
-                ))}
+                );
+              })}
             </div>
 
             {/* Navigation Arrows */}

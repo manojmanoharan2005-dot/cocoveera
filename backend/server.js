@@ -100,6 +100,18 @@ app.use(express.json({ limit: '100kb' }));
 // Sanitization against NoSQL injection and XSS
 securitySanitizers.forEach(mw => app.use(mw));
 
+// API Response Time Monitoring Middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (req.originalUrl.startsWith('/api/')) {
+      console.log(`[API_PERF] ${req.method} ${req.originalUrl} - ${duration}ms`);
+    }
+  });
+  next();
+});
+
 // Routes
 // Apply auth rate limiter to auth endpoints
 app.use('/api/auth', authLimiter);
@@ -142,12 +154,12 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
   
-  // Seed Database if empty
-  await seedDatabase();
-
   app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });
+
+  // Run seeding asynchronously in the background so it doesn't block startup
+  seedDatabase().catch(err => console.error('Seeding error:', err));
 };
 
 const seedDatabase = async () => {

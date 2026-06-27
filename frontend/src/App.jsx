@@ -4,6 +4,7 @@
  */
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import Navbar from './components/Navbar';
@@ -375,13 +376,15 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AdminAuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </AdminAuthProvider>
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <AdminAuthProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </AdminAuthProvider>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }
 

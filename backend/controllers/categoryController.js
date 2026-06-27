@@ -9,7 +9,11 @@ import Category from '../models/Category.js';
 // @access  Public
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({}).sort({ createdAt: -1 });
+    const categories = await Category.find({})
+      .select('name slug image description')
+      .lean()
+      .sort({ createdAt: -1 });
+      
     res.status(200).json({
       success: true,
       data: categories,

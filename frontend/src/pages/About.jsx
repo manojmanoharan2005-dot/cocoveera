@@ -7,10 +7,16 @@ import { motion } from 'framer-motion';
 import { Target, Lightbulb, Compass, Sun, ShieldCheck, Factory, Award, Leaf } from 'lucide-react';
 import PageHero from '../components/PageHero';
 import LazyVideo from '../components/LazyVideo';
+import SEO from '../components/SEO';
 
 const About = () => {
   return (
     <div className="pb-16 bg-white">
+      <SEO 
+        title="About Us"
+        description="Learn about Cocoveera, our corporate heritage, and our commitment to manufacturing high-quality coconut substrates."
+        url="/about"
+      />
       <PageHero
         badge="CORPORATE HERITAGE"
         title="About"

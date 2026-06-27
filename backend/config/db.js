@@ -8,7 +8,10 @@ export const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/cocoveera', {
       serverSelectionTimeoutMS: 60000,
-      socketTimeoutMS: 45000
+      socketTimeoutMS: 45000,
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      autoIndex: process.env.NODE_ENV !== 'production' // Don't build indexes in production
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {

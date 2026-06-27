@@ -2,22 +2,39 @@
  * File: frontend/src/pages/Products.jsx
  * Purpose: React page component representing the Products view.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth, apiClient } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Check, Info, X, Layers, Droplet, Wind, Compass, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 import PageHero from '../components/PageHero';
 import ImageWithFallback from '../components/common/ImageWithFallback';
+import SEO from '../components/SEO';
+import useSWR from 'swr';
+
+// ─── Helper: Optimize Cloudinary Image ──────────────────────────────────────
+const optimizeImage = (url) => {
+  if (!url) return '';
+  // Inject transformation if it's a cloudinary URL and doesn't already have one
+  if (url.includes('cloudinary.com') && !url.includes('/upload/f_auto,q_auto')) {
+    return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+  }
+  return url;
+};
+
+// ─── Fetcher for SWR ────────────────────────────────────────────────────────
+const fetcher = url => apiClient.get(url).then(res => res.data.data);
 
 const Products = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
+  const { data: products = [], error, isLoading: loading } = useSWR(
+    '/products',
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 600000 }
+  );
 
   // Blend selector state
   const [selectedBlend, setSelectedBlend] = useState('natural');
@@ -56,102 +73,38 @@ const Products = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const [categories, setCategories] = useState(['All']);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const blendsData = {
-    natural: {
-      name: 'Natural Blend (100% Cocopeat)',
-      ratio: '100% Coco Pith / 0% Chips',
-      aeration: 'Low-Medium',
-      retention: 'Very High',
-      bestFor: 'Seedling germination, propagation plugs, leafy greens, and cut flowers.',
-      desc: 'Double sieved to remove fine particles under 1mm. Delivers maximum water holding capacity for rapid germination.'
-    },
-    mix: {
-      name: 'Mix Blend (75/25 Standard)',
-      ratio: '75% Coco Pith / 25% Husk Chips',
-      aeration: 'Medium',
-      retention: 'High',
-      bestFor: 'Standard greenhouse vegetables (peppers, eggplant) and small nurseries.',
-      desc: 'Our most popular B2B blend. Balanced air porosity with excellent water distribution to prevent dry spots.'
-    },
-    pro: {
-      name: 'Pro Blend (50/50 Balanced)',
-      ratio: '50% Coco Pith / 50% Husk Chips',
-      aeration: 'High',
-      retention: 'Medium-High',
-      bestFor: 'Hydroponic tomatoes, cucumbers, and medium-term vine crops.',
-      desc: 'Optimized drainage allows daily irrigation cycles and rapid nutrient flushing without root suffocation.'
-    },
-    premium: {
-      name: 'Premium Blend (30/70 High Drainage)',
-      ratio: '30% Coco Pith / 70% Husk Chips',
-      aeration: 'Very High',
-      retention: 'Medium',
-      bestFor: 'Soft fruits, blueberries, raspberries, and long-term woody plants.',
-      desc: 'Designed for plants sensitive to water-logging. Prevents root rot in highly humid greenhouse climates.'
-    },
-    supreme: {
-      name: 'Supreme Blend (100% Chips)',
-      ratio: '0% Coco Pith / 100% Husk Chips',
-      aeration: 'Maximum',
-      retention: 'Low-Medium',
-      bestFor: 'Orchids, bromeliads, and industrial soil aerating agents.',
-      desc: 'Crushed and sieved husk chips. Delivers maximum air-filled porosity for plants requiring rapid drainage.'
-    }
-  };
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await apiClient.get('/products');
-        if (res.data.success) {
-          // Re-map category keys if needed to match B2B names
-          const mapped = res.data.data.map(p => {
-            return p;
-          });
-          setProducts(mapped);
-          setFilteredProducts(mapped);
-          const uniqueCategories = [...new Set(mapped.map(p => p.category))].filter(Boolean);
-          
-          const getCategoryPriority = (name) => {
-            if (!name) return 999;
-            const lower = name.toLowerCase();
-            if (lower.includes('cube')) return 1;
-            if (lower.includes('fiber bale')) return 2;
-            if (lower.includes('substrate bag')) return 3;
-            if (lower.includes('mat') || lower.includes('blanket')) return 6;
-            if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
-            if (lower.includes('disc') || lower === 'disck') return 5;
-            return 999;
-          };
-
-          uniqueCategories.sort((a, b) => {
-            const priorityA = getCategoryPriority(a);
-            const priorityB = getCategoryPriority(b);
-            if (priorityA !== priorityB) return priorityA - priorityB;
-            return Math.random() - 0.5;
-          });
-
-          setCategories(['All', ...uniqueCategories]);
-        }
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load B2B substrate database.');
-      } finally {
-        setLoading(false);
-      }
+  const categories = useMemo(() => {
+    const uniqueCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
+    const getCategoryPriority = (name) => {
+      if (!name) return 999;
+      const lower = name.toLowerCase();
+      if (lower.includes('cube')) return 1;
+      if (lower.includes('fiber bale')) return 2;
+      if (lower.includes('substrate bag')) return 3;
+      if (lower.includes('mat') || lower.includes('blanket')) return 6;
+      if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
+      if (lower.includes('disc') || lower === 'disck') return 5;
+      return 999;
     };
-    fetchProducts();
-  }, []);
+    uniqueCategories.sort((a, b) => {
+      const priorityA = getCategoryPriority(a);
+      const priorityB = getCategoryPriority(b);
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      return 0;
+    });
+    return ['All', ...uniqueCategories];
+  }, [products]);
 
-  useEffect(() => {
+  const filteredProducts = useMemo(() => {
     if (selectedCategory === 'All') {
-      setFilteredProducts(products);
-    } else {
-      setFilteredProducts(products.filter(p => p.category === selectedCategory));
+      return products;
     }
+    return products.filter(p => p.category === selectedCategory);
   }, [selectedCategory, products]);
+
+
 
   const openQuoteModal = (product) => {
     if (!user) {
@@ -257,8 +210,58 @@ const Products = () => {
     }
   };
 
+  const [quoteError, setQuoteError] = useState(null);
+
+  const blendsData = {
+    natural: {
+      name: 'Natural Blend (100% Cocopeat)',
+      ratio: '100% Coco Pith / 0% Chips',
+      aeration: 'Low-Medium',
+      retention: 'Very High',
+      bestFor: 'Seedling germination, propagation plugs, leafy greens, and cut flowers.',
+      desc: 'Double sieved to remove fine particles under 1mm. Delivers maximum water holding capacity for rapid germination.'
+    },
+    mix: {
+      name: 'Mix Blend (75/25 Standard)',
+      ratio: '75% Coco Pith / 25% Husk Chips',
+      aeration: 'Medium',
+      retention: 'High',
+      bestFor: 'Standard greenhouse vegetables (peppers, eggplant) and small nurseries.',
+      desc: 'Our most popular B2B blend. Balanced air porosity with excellent water distribution to prevent dry spots.'
+    },
+    pro: {
+      name: 'Pro Blend (50/50 Balanced)',
+      ratio: '50% Coco Pith / 50% Husk Chips',
+      aeration: 'High',
+      retention: 'Medium-High',
+      bestFor: 'Hydroponic tomatoes, cucumbers, and medium-term vine crops.',
+      desc: 'Optimized drainage allows daily irrigation cycles and rapid nutrient flushing without root suffocation.'
+    },
+    premium: {
+      name: 'Premium Blend (30/70 High Drainage)',
+      ratio: '30% Coco Pith / 70% Husk Chips',
+      aeration: 'Very High',
+      retention: 'Medium',
+      bestFor: 'Soft fruits, blueberries, raspberries, and long-term woody plants.',
+      desc: 'Designed for plants sensitive to water-logging. Prevents root rot in highly humid greenhouse climates.'
+    },
+    supreme: {
+      name: 'Supreme Blend (100% Chips)',
+      ratio: '0% Coco Pith / 100% Husk Chips',
+      aeration: 'Maximum',
+      retention: 'Low-Medium',
+      bestFor: 'Orchids, bromeliads, and industrial soil aerating agents.',
+      desc: 'Crushed and sieved husk chips. Delivers maximum air-filled porosity for plants requiring rapid drainage.'
+    }
+  };
+
   return (
-    <div className="pb-16 min-h-screen relative bg-stone-50">
+    <div className="pb-16 bg-white min-h-screen">
+      <SEO 
+        title="Products"
+        description="Explore our range of premium organic coconut substrates, including Coco Peat Blocks, Grow Bags, and Coco Briquettes."
+        url="/products"
+      />
       {/* Removed white overlay to show background clearly */}
       <div className="relative z-10">
         <PageHero
@@ -421,7 +424,7 @@ const Products = () => {
               >
                 <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500 z-10 mix-blend-overlay"></div>
                 <ImageWithFallback
-                  src={prod.images && prod.images.length > 0 ? prod.images[0] : null}
+                  src={prod.images && prod.images.length > 0 ? optimizeImage(prod.images[0]) : null}
                   alt={prod.name}
                   className="w-full h-full object-cover mix-blend-multiply transition-transform group-hover:scale-110 duration-700"
                 />
@@ -559,9 +562,9 @@ const Products = () => {
 
             {/* Modal Form Scroll Area */}
             <form onSubmit={handleQuoteSubmit} className="p-6 overflow-y-auto space-y-5">
-              {error && (
+              {quoteError && (
                 <div className="bg-red-50 text-red-655 text-xs p-3 rounded-lg border border-red-150 font-semibold">
-                  {error}
+                  {quoteError}
                 </div>
               )}
 

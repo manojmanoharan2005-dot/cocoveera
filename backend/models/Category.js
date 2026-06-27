@@ -31,6 +31,9 @@ const CategorySchema = new mongoose.Schema(
   }
 );
 
+// Indexes for fast querying
+CategorySchema.index({ name: 1, createdAt: -1 });
+
 // Auto-generate slug before saving
 CategorySchema.pre('save', function(next) {
   if (!this.slug) {
