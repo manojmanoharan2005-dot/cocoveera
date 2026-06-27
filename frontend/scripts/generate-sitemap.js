@@ -56,8 +56,7 @@ async function generateSitemap() {
   const products = await fetchProducts();
   
   // Note: Adjusting the product path to how it's handled in the app.
-  // We saw routes like /account/productview/:id and /account/product/:id
-  const dynamicRoutes = products.map(product => `/account/productview/${product._id}`);
+  const dynamicRoutes = products.map(product => `/account/product/${product._id}`);
   
   const xml = generateXml(STATIC_ROUTES, dynamicRoutes);
   
