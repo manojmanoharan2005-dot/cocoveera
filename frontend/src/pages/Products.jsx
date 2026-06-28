@@ -73,7 +73,6 @@ const Products = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const categories = useMemo(() => {
     const uniqueCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
