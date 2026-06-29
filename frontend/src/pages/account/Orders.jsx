@@ -51,13 +51,8 @@ const Orders = () => {
       const response = await apiClient.get(`/orders/${orderId}/invoice`, {
         responseType: 'blob',
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Invoice_${orderId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
     } catch (error) {
       console.error('Failed to download invoice:', error);
       alert('Failed to download invoice. Please try again later.');
@@ -310,7 +305,7 @@ const Orders = () => {
                   <div className="flex flex-col md:items-end">
                     <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order # {order._id.slice(-8).toUpperCase()}</span>
                     <div className="flex gap-2 text-[#007185] font-semibold mt-0.5 text-xs">
-                      <span className="hover:text-[#C45500] hover:underline cursor-pointer">Order details</span>
+                      <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => navigate(`/account/orders/${order._id}`)}>Order details</span>
                       <span className="text-stone-300">|</span>
                       <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => handleDownloadInvoice(order._id)}>Invoice</span>
                     </div>
