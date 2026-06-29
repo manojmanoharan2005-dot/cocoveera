@@ -87,7 +87,7 @@ const Footer = () => {
               { label: 'Global Network', path: '/substrates' },
               { label: 'Notifications', path: '/account/notifications' },
               { label: 'Authentications', path: '/login' },
-              { label: 'Privacy Policy', path: '#' },
+              { label: 'Privacy Policy', path: '/privacy-policy' },
             ].map((item) => (
               <li key={item.label}>
                 <Link
@@ -175,8 +175,8 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-6 border-t border-white/10 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-stone-500 font-semibold uppercase tracking-wider gap-4">
         <p>© 2026 Cocoveera Private Limited. All rights reserved.</p>
         <div className="flex space-x-6">
-          <a href="#" className="hover:text-primary-light transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-primary-light transition-colors">Terms of Export</a>
+          <Link to="/privacy-policy" className="hover:text-primary-light transition-colors">Privacy Policy</Link>
+          <Link to="/terms-conditions" className="hover:text-primary-light transition-colors">Terms & Conditions</Link>
           <a href="#" className="hover:text-primary-light transition-colors">Sitemap</a>
         </div>
       </div>

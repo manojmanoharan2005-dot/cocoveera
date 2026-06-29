@@ -14,13 +14,17 @@ const RecommendedProducts = () => {
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -324, behavior: 'smooth' });
+      const cardWidth = scrollContainerRef.current.firstChild?.offsetWidth || 324;
+      const gap = 24; // gap-6
+      scrollContainerRef.current.scrollBy({ left: -(cardWidth + gap), behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 324, behavior: 'smooth' });
+      const cardWidth = scrollContainerRef.current.firstChild?.offsetWidth || 324;
+      const gap = 24; // gap-6
+      scrollContainerRef.current.scrollBy({ left: (cardWidth + gap), behavior: 'smooth' });
     }
   };
 
@@ -71,6 +75,10 @@ const RecommendedProducts = () => {
   }, []);
 
   const handleWishlistToggle = async (product) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     try {
       await apiClient.post('/users/wishlist', { productId: product._id });
       await fetchProfile();
@@ -80,6 +88,10 @@ const RecommendedProducts = () => {
   };
 
   const handleAddToCart = async (product) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     try {
       await apiClient.post('/users/cart', { productId: product._id, quantity: 1, increment: true });
       await fetchProfile();
@@ -121,7 +133,7 @@ const RecommendedProducts = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className="w-[280px] sm:w-[300px] snap-start flex-shrink-0"
+            className="w-full sm:w-[300px] snap-center flex-shrink-0"
           >
             <ProductCard
               product={product}

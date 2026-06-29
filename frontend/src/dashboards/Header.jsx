@@ -54,15 +54,9 @@ export const Header = ({
   return (
     <header className="w-full min-h-[68px] bg-white/80 backdrop-blur-xl border-b border-stone-200/50 sticky top-0 z-40 px-4 md:px-6 py-3 md:py-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 shadow-sm shadow-stone-100/80">
       
-      {/* Left: Mobile Menu & Brand Logo */}
+      {/* Left: Brand Logo */}
       <div className="flex items-center gap-2.5 select-none shrink-0 group order-1">
-        {/* Mobile Menu Toggle */}
-        <button 
-          onClick={onMenuClick}
-          className="lg:hidden p-1.5 -ml-1.5 text-stone-600 hover:bg-stone-100 hover:text-stone-900 rounded-lg transition-colors"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+
 
         <img
           src="/logo.webp"
@@ -206,7 +200,13 @@ export const Header = ({
         {/* Profile Dropdown */}
         <div className="relative">
           <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            onClick={() => {
+              if (window.innerWidth < 1024) {
+                navigate('/account/mobile');
+              } else {
+                setDropdownOpen(!dropdownOpen);
+              }
+            }}
             className="flex items-center gap-2.5 pl-1 focus:outline-none group"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#43A047] text-white flex items-center justify-center font-poppins font-black text-xs shadow-md shadow-[#2E7D32]/20 transition-transform duration-300 group-hover:scale-105">
@@ -220,9 +220,9 @@ export const Header = ({
             <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Premium Dropdown */}
+          {/* Premium Dropdown (Desktop Only) */}
           <AnimatePresence>
-            {dropdownOpen && (
+            {dropdownOpen && window.innerWidth >= 1024 && (
               <>
                 <div className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent cursor-pointer" onClick={() => setDropdownOpen(false)} onTouchStart={() => setDropdownOpen(false)} />
                 <motion.div

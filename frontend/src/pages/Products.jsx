@@ -6,7 +6,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth, apiClient } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Check, Info, X, Layers, Droplet, Wind, Compass, Sparkles, Heart, ShoppingBag } from 'lucide-react';
+import { Send, Check, Info, X, Layers, Droplet, Wind, Compass, Sparkles, Heart, ShoppingBag, Search, SlidersHorizontal, ChevronDown, ChevronRight, Home as HomeIcon, LayoutGrid, TestTube, ShoppingCart, User as UserIcon, Star } from 'lucide-react';
 import PageHero from '../components/PageHero';
 import ImageWithFallback from '../components/common/ImageWithFallback';
 import SEO from '../components/SEO';
@@ -254,519 +254,226 @@ const Products = () => {
     }
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const cartCount = useMemo(() => {
+    try {
+      const stored = localStorage.getItem('cocoveera_cart');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.length;
+      }
+    } catch (e) {}
+    return 0;
+  }, []);
+
   return (
-    <div className="pb-16 bg-white min-h-screen">
+    <div className="bg-[#F8FAF8] min-h-screen font-sans pb-[110px]">
       <SEO 
         title="Products"
-        description="Explore our range of premium organic coconut substrates, including Coco Peat Blocks, Grow Bags, and Coco Briquettes."
+        description="Premium organic coconut substrates."
         url="/products"
       />
-      {/* Removed white overlay to show background clearly */}
-      <div className="relative z-10">
-        <PageHero
-          badge="B2B CATALOG"
-          title="Organic Growing Media"
-          titleAccent="& Substrates"
-          subtitle="Standard-compliant raw materials sieved, washed, and compressed for bulk container freight export."
-          breadcrumbs={[{ label: 'Products', path: '/products' }]}
-        />
 
-        {/* 1. SUBSTRATE BLENDS & TEXTURES PANEL */}
-      <section className="max-w-7xl mx-auto px-6 mb-16">
-        <div className="bg-accent border border-stone-200 rounded-3xl p-6 lg:p-10">
-          <div className="text-center max-w-xl mx-auto mb-8">
-            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest">
-              SUBSTRATE GRADES & RATIOS
-            </span>
-            <h3 className="text-xl font-poppins font-extrabold text-stone-900 mt-1">
-              Select Your Core Material Blend
-            </h3>
-            <p className="text-xs text-stone-500 mt-2 font-medium">
-              We process five standard coco coir textures based on the ratio of sifted pith to crushed husk chips.
-            </p>
-          </div>
-
-          {/* Selector Bar */}
-          <div className="flex flex-wrap justify-center gap-2.5 mb-8">
-            {Object.keys(blendsData).map((key) => (
-              <button
-                key={key}
-                onClick={() => setSelectedBlend(key)}
-                className={`px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider font-poppins transition-all ${
-                  selectedBlend === key
-                    ? 'bg-primary text-white shadow-soft'
-                    : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
-                }`}
-              >
-                {key}
-              </button>
-            ))}
-          </div>
-
-          {/* Selected Blend Details */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white p-6 rounded-2xl border border-stone-200">
-            <div className="lg:col-span-7 space-y-4">
-              <h4 className="font-poppins font-extrabold text-stone-900 text-base">
-                {blendsData[selectedBlend].name}
-              </h4>
-              <p className="text-stone-500 text-xs leading-relaxed font-medium">
-                {blendsData[selectedBlend].desc}
-              </p>
-              
-              <div className="grid grid-cols-2 gap-4 text-xs font-bold text-stone-700 bg-accent p-4 rounded-xl border border-stone-150">
-                <div className="flex items-center gap-2">
-                  <Droplet className="w-4 h-4 text-primary" />
-                  <span>Water Holding: {blendsData[selectedBlend].retention}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Wind className="w-4 h-4 text-primary" />
-                  <span>Air Porosity: {blendsData[selectedBlend].aeration}</span>
-                </div>
-              </div>
-
-              <p className="text-xs text-stone-550 leading-relaxed font-medium">
-                <strong>Best Applications:</strong> {blendsData[selectedBlend].bestFor}
-              </p>
+      {/* TOP HEADER */}
+      <header className="sticky top-0 z-40 bg-white shadow-sm px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center text-white font-bold mr-2 shadow-sm">
+              <span className="text-sm">C</span>
             </div>
-            
-            <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l border-stone-200 pt-6 lg:pt-0 lg:pl-8 space-y-4">
-              <span className="text-[10px] text-stone-400 font-bold uppercase block tracking-widest">Blend Ratio Matrix</span>
-              <div className="flex justify-between items-center text-xs font-bold text-stone-700">
-                <span>Coco Pith / Peat</span>
-                <span className="text-primary">{selectedBlend === 'natural' ? '100%' : selectedBlend === 'mix' ? '75%' : selectedBlend === 'pro' ? '50%' : selectedBlend === 'premium' ? '30%' : '0%'}</span>
-              </div>
-              <div className="w-full bg-stone-100 h-2.5 rounded-full overflow-hidden flex">
-                <div 
-                  className="bg-primary h-full transition-all duration-500" 
-                  style={{ width: selectedBlend === 'natural' ? '100%' : selectedBlend === 'mix' ? '75%' : selectedBlend === 'pro' ? '50%' : selectedBlend === 'premium' ? '30%' : '0%' }}
-                ></div>
-                <div 
-                  className="bg-secondary h-full transition-all duration-500" 
-                  style={{ width: selectedBlend === 'natural' ? '0%' : selectedBlend === 'mix' ? '25%' : selectedBlend === 'pro' ? '50%' : selectedBlend === 'premium' ? '70%' : '100%' }}
-                ></div>
-              </div>
-              <div className="flex justify-between items-center text-xs font-bold text-stone-700">
-                <span>Crushed Husk Chips</span>
-                <span className="text-secondary">{selectedBlend === 'natural' ? '0%' : selectedBlend === 'mix' ? '25%' : selectedBlend === 'pro' ? '50%' : selectedBlend === 'premium' ? '70%' : '100%'}</span>
-              </div>
+            <div className="flex flex-col">
+              <span className="text-green-800 font-extrabold text-lg leading-tight tracking-tight">cocoveera</span>
+              <span className="text-[8px] text-gray-500 font-medium">Premium Coir Products</span>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* 2. PRODUCT CATEGORIES GRID */}
-      <section className="max-w-7xl mx-auto px-6 mb-16">
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                setSelectedCategory(cat);
-                if (cat === 'All') {
-                  navigate('/products', { replace: true });
-                } else {
-                  navigate(`/products?category=${encodeURIComponent(cat)}`, { replace: true });
-                }
-              }}
-              className={`px-5 py-2 rounded-lg font-poppins text-xs font-bold transition-all ${
-                selectedCategory === cat
-                  ? 'bg-primary text-white shadow-soft'
-                  : 'bg-white border border-stone-205 text-stone-600 hover:bg-stone-50'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="flex items-center space-x-4">
+          <button className="text-gray-600 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/dashboard', { state: { activeTab: 'Wishlist' } })}>
+            <Heart className="w-6 h-6" />
+          </button>
+          <button className="text-gray-600 hover:text-[#2E7D32] transition-colors relative" onClick={() => navigate('/dashboard', { state: { activeTab: 'Cart' } })}>
+            <ShoppingCart className="w-6 h-6" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1.5 bg-[#2E7D32] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                {cartCount}
+              </span>
+            )}
+          </button>
+          <div className="flex items-center space-x-1 cursor-pointer" onClick={() => navigate('/dashboard')}>
+            <div className="w-7 h-7 rounded-full bg-[#2E7D32] text-white flex items-center justify-center text-xs font-bold">
+              {user ? user.firstName?.[0]?.toUpperCase() : 'M'}
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+          </div>
         </div>
+      </header>
 
-        {/* Loading Indicator */}
+      {/* SEARCH & FILTER */}
+      <div className="bg-white px-4 py-3 shadow-sm border-t border-gray-50 z-30 relative">
+        <div className="flex space-x-3 mb-3">
+          <div className="relative flex-grow">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border-none rounded-2xl text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/30 transition-all"
+              placeholder="Search coir products..."
+            />
+          </div>
+          <button className="bg-[#2E7D32] text-white px-4 py-2.5 rounded-2xl flex items-center space-x-2 shadow-sm font-semibold text-sm hover:bg-green-800 transition-colors">
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>Filter</span>
+          </button>
+        </div>
+        
+        {/* Sort Dropdown */}
+        <div className="flex">
+          <button className="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-200 rounded-full text-xs font-semibold text-gray-700 bg-white shadow-sm">
+            <span>Sort by: Featured</span>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+          </button>
+        </div>
+      </div>
+
+      {/* BREADCRUMB */}
+      <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center space-x-2 text-xs font-bold">
+          <HomeIcon className="w-4 h-4 text-gray-500" />
+          <span className="text-gray-700">Marketplace</span>
+          <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-[#2E7D32]">{selectedCategory !== 'All' ? selectedCategory : 'All Categories'}</span>
+        </div>
+        <div className="bg-green-50 text-[#2E7D32] border border-green-100 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+          {filteredProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).length} items
+        </div>
+      </div>
+
+      {/* PRODUCT LIST */}
+      <div className="px-4 space-y-4">
         {loading && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-8">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="bg-white/50 backdrop-blur-sm rounded-2xl border border-stone-100 overflow-hidden shadow-soft flex flex-col md:flex-row h-[350px] md:h-64">
-                <div className="md:w-5/12 h-64 md:h-full bg-stone-200/50 animate-pulse"></div>
-                <div className="md:w-7/12 p-6 lg:p-8 flex flex-col justify-between w-full">
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <div className="h-4 bg-stone-200/50 rounded w-16 animate-pulse"></div>
-                      <div className="h-4 bg-stone-200/50 rounded w-16 animate-pulse"></div>
-                    </div>
-                    <div className="h-6 bg-stone-200/50 rounded w-3/4 animate-pulse"></div>
-                    <div className="space-y-2 mt-4">
-                      <div className="h-3 bg-stone-200/50 rounded w-full animate-pulse"></div>
-                      <div className="h-3 bg-stone-200/50 rounded w-5/6 animate-pulse"></div>
-                    </div>
-                  </div>
-                  <div className="h-10 bg-stone-200/50 rounded w-full mt-6 animate-pulse"></div>
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-3xl p-4 flex gap-4 shadow-sm border border-gray-50 h-32 animate-pulse">
+                <div className="w-5/12 bg-gray-100 rounded-xl"></div>
+                <div className="w-7/12 flex flex-col justify-center space-y-2">
+                  <div className="h-4 bg-gray-100 rounded w-3/4"></div>
+                  <div className="h-5 bg-gray-100 rounded w-1/4"></div>
+                  <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                  <div className="h-8 bg-gray-100 rounded w-full mt-2"></div>
                 </div>
               </div>
             ))}
           </div>
         )}
-
-        {/* Catalog Grid */}
-        <motion.div layout className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <AnimatePresence>
-            {filteredProducts.map((prod) => (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{ duration: 0.3 }}
-                key={prod._id}
-                className="bg-white/70 backdrop-blur-md rounded-2xl overflow-hidden border border-white/60 shadow-soft hover:shadow-premium hover:-translate-y-1 transition-all duration-300 grid grid-cols-1 md:grid-cols-12 group"
-              >
-              <div
-                className="md:col-span-5 relative h-64 md:h-full bg-stone-100/50 cursor-pointer overflow-hidden relative"
-                onClick={() => navigate(`/account/product/${prod._id}`)}
-              >
-                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500 z-10 mix-blend-overlay"></div>
-                <ImageWithFallback
-                  src={prod.images && prod.images.length > 0 ? optimizeImage(prod.images[0]) : null}
-                  alt={prod.name}
-                  className="w-full h-full object-cover mix-blend-multiply transition-transform group-hover:scale-110 duration-700"
-                />
+        
+        <AnimatePresence>
+          {!loading && filteredProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((prod) => (
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 15 }}
+              transition={{ duration: 0.2 }}
+              key={prod._id}
+              className="bg-white rounded-[24px] p-4 flex flex-col shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-50 hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.08)] transition-all cursor-pointer relative group"
+              onClick={() => navigate(`/account/product/${prod._id}`)}
+            >
+              {/* Top Row */}
+              <div className="flex justify-between items-start w-full mb-3 z-10 relative">
+                <div className="bg-[#2A3427] text-white text-[10px] font-bold px-3 py-1 rounded-lg">
+                  {prod.category || 'Coco Cubes'}
+                </div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToWishlist(prod);
+                  }}
+                  className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                >
+                  <Heart className="w-5 h-5" />
+                </button>
               </div>
 
-              <div className="md:col-span-7 p-6 lg:p-8 flex flex-col justify-between relative z-20">
-                <div>
-                  <div className="flex justify-between items-start">
-                    <span className="text-[10px] bg-secondary/15 border border-secondary/20 text-secondary font-poppins font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
-                      {prod.category}
-                    </span>
-                    <span className="text-stone-400 font-poppins text-xs font-semibold">
-                      Pack: {prod.packageSize}
-                    </span>
+              {/* Body */}
+              <div className="flex flex-row items-center gap-4">
+                {/* Image */}
+                <div className="w-5/12 aspect-square relative bg-white rounded-xl flex-shrink-0 flex items-center justify-center p-1">
+                  <div className="absolute top-0 left-0 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-gray-700 px-2 py-0.5 rounded shadow-sm z-10 border border-gray-100">
+                    {prod.packageSize || '10x10x7 cm'}
                   </div>
-                  <h3
-                    className="font-poppins font-extrabold text-stone-900 text-lg mt-3 cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => navigate(`/account/product/${prod._id}`)}
-                  >
-                    {prod.name}
-                  </h3>
-                  <p className="text-stone-500 text-xs leading-relaxed mt-2 font-medium">
-                    {prod.description}
-                  </p>
-
-                  {/* Specifications Table */}
-                  <div className="grid grid-cols-2 gap-2 mt-4 bg-accent p-3.5 rounded-xl border border-stone-150 text-[10px] text-stone-600 font-bold uppercase tracking-wider">
-                    <div className="flex justify-between pr-2 border-r border-stone-200">
-                      <span>EC Value:</span>
-                      <strong className="text-stone-850">{prod.specifications.ec}</strong>
-                    </div>
-                    <div className="flex justify-between pl-2">
-                      <span>pH Level:</span>
-                      <strong className="text-stone-850">{prod.specifications.ph}</strong>
-                    </div>
-                    <div className="flex justify-between pr-2 border-r border-stone-200">
-                      <span>Moisture:</span>
-                      <strong className="text-stone-850">{prod.specifications.moisture}</strong>
-                    </div>
-                    <div className="flex justify-between pl-2">
-                      <span>Expansion:</span>
-                      <strong className="text-stone-850">{prod.specifications.expansionVolume}</strong>
-                    </div>
-                  </div>
+                  <ImageWithFallback
+                    src={prod.images && prod.images.length > 0 ? optimizeImage(prod.images[0]) : null}
+                    alt={prod.name}
+                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
 
-                <div className="flex items-center justify-between border-t border-stone-105 mt-6 pt-4 flex-wrap gap-3">
-                  <div className="flex-grow">
-                    {/* Price hidden for B2B catalog */}
+                {/* Details */}
+                <div className="w-7/12 flex flex-col h-full justify-center">
+                  <h3 className="text-[14px] font-extrabold text-gray-900 leading-tight mb-1 group-hover:text-[#2E7D32] transition-colors">
+                    {prod.name}
+                  </h3>
+                  <div className="text-lg font-extrabold text-[#2E7D32] mb-1.5">
+                    £{prod.price || '9.4'}
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleAddToCart(prod)}
-                      className="bg-white border border-primary text-primary hover:bg-primary hover:text-white font-poppins text-xs font-bold px-3 py-2 rounded-lg transition-all flex items-center space-x-1"
-                      title="Add to Cart"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>Add Cart</span>
-                    </button>
+                  <div className="flex items-center space-x-1.5 mb-3 text-[11px] text-gray-500 font-semibold">
+                    <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                    <span className="text-gray-700">4.6</span>
+                    <span>(128)</span>
+                    <span className="w-1 h-1 rounded-full bg-gray-300 mx-1"></span>
+                    <span>50+ sold</span>
                   </div>
+
+                  <button 
+                    className="w-full bg-[#F4F9F4] hover:bg-[#E8F3E8] text-[#2E7D32] text-[13px] font-bold py-2.5 px-4 rounded-[14px] flex items-center justify-between transition-colors group/btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/account/product/${prod._id}`);
+                    }}
+                  >
+                    <span>View Details</span>
+                    <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                  </button>
                 </div>
               </div>
             </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      </section>
-
-      {/* 3. APPLICATION GUIDE MATRIX */}
-      <section className="max-w-7xl mx-auto px-6 mb-16">
-        <div className="bg-white border border-stone-200 rounded-3xl p-6 lg:p-10 shadow-soft overflow-x-auto">
-          <div className="text-center max-w-xl mx-auto mb-8">
-            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest">
-              AGRONOMIC USABILITY GUIDE
-            </span>
-            <h3 className="text-xl font-poppins font-extrabold text-stone-900 mt-1">
-              Substrate Application Matrix
-            </h3>
-          </div>
-
-          <table className="w-full text-left text-xs font-medium text-stone-600 min-w-[600px] border-collapse">
-            <thead>
-              <tr className="border-b border-stone-200 text-stone-405 font-bold uppercase text-[10px] tracking-widest">
-                <th className="py-3 px-4">Application Stage</th>
-                <th className="py-3 px-4">Suitable Blend</th>
-                <th className="py-3 px-4">EC Value</th>
-                <th className="py-3 px-4">pH Range</th>
-                <th className="py-3 px-4">Crop Types</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100 font-bold">
-              {[
-                { stage: 'Germination', blend: 'Natural Blend', ec: '< 0.4 mS/cm', ph: '5.5 - 6.0', crop: 'Seedlings, propagation plug trays' },
-                { stage: 'Propagation', blend: 'Mix Blend', ec: '< 0.5 mS/cm', ph: '5.6 - 6.2', crop: 'Vegetable nursery starters, flowers' },
-                { stage: 'Vegetation', blend: 'Pro Blend', ec: '< 0.6 mS/cm', ph: '5.8 - 6.4', crop: 'Hydroponic tomatoes, cucumbers, peppers' },
-                { stage: 'Soft Fruits', blend: 'Premium Blend', ec: '< 0.8 mS/cm', ph: '5.2 - 5.8', crop: 'Blueberries, strawberries, raspberries' },
-                { stage: 'Air Aeration', blend: 'Supreme Blend', ec: '< 1.0 mS/cm', ph: '5.5 - 6.8', crop: 'Orchids, potting soil conditioners' },
-              ].map((row, idx) => (
-                <tr key={idx} className="hover:bg-stone-50 transition-colors">
-                  <td className="py-4 px-4 text-stone-900 font-poppins">{row.stage}</td>
-                  <td className="py-4 px-4 text-primary">{row.blend}</td>
-                  <td className="py-4 px-4">{row.ec}</td>
-                  <td className="py-4 px-4">{row.ph}</td>
-                  <td className="py-4 px-4 text-stone-500 font-medium">{row.crop}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+          ))}
+        </AnimatePresence>
       </div>
 
-      {/* CUSTOM QUOTE DIALOG MODAL */}
-      {isModalOpen && selectedProduct && (
-        <div className="fixed inset-0 bg-stone-500/20 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl border border-stone-100 flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
-            <div className="bg-primary text-white p-6 flex justify-between items-center">
-              <div>
-                <span className="text-secondary-light text-[10px] font-bold uppercase tracking-widest bg-white/10 py-0.5 px-2 rounded">
-                  BULK QUOTE FORM
-                </span>
-                <h3 className="text-base font-poppins font-bold mt-1">
-                  Customize: {selectedProduct.name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-white/80 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Form Scroll Area */}
-            <form onSubmit={handleQuoteSubmit} className="p-6 overflow-y-auto space-y-5">
-              {quoteError && (
-                <div className="bg-red-50 text-red-655 text-xs p-3 rounded-lg border border-red-150 font-semibold">
-                  {quoteError}
-                </div>
-              )}
-
-              {submitSuccess ? (
-                <div className="text-center py-12 space-y-3">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto">
-                    <Check className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-poppins font-bold text-stone-900 text-lg">Inquiry Submitted!</h4>
-                  <p className="text-xs text-stone-500 font-medium">Redirecting to your dashboard to track proposals...</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-stone-600 mb-1">
-                        Quantity Required
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        className="w-full border border-stone-250 rounded-lg p-2.5 text-xs font-bold focus:outline-none focus:border-primary"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-stone-600 mb-1">
-                        Unit Type
-                      </label>
-                      <select
-                        value={unitType}
-                        onChange={(e) => setUnitType(e.target.value)}
-                        className="w-full border border-stone-250 rounded-lg p-2.5 text-xs font-bold focus:outline-none focus:border-primary"
-                      >
-                        <option value="Tons">Tons (Metric)</option>
-                        <option value="Containers">40ft FCL Containers</option>
-                        <option value="Pallets">Pallets</option>
-                        <option value="Pieces">Pieces</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Target Blend Option */}
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-600 mb-1">
-                      Choose Substrate Grade
-                    </label>
-                    <select
-                      value={selectedBlendOption}
-                      onChange={(e) => setSelectedBlendOption(e.target.value)}
-                      className="w-full border border-stone-250 rounded-lg p-2.5 text-xs font-bold focus:outline-none focus:border-primary"
-                    >
-                      <option value="Natural">Natural Blend (100% Pith)</option>
-                      <option value="Mix">Mix Blend (75/25)</option>
-                      <option value="Pro">Pro Blend (50/50)</option>
-                      <option value="Premium">Premium Blend (30/70)</option>
-                      <option value="Supreme">Supreme Blend (100% Chips)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs font-poppins font-bold text-stone-900 border-b border-stone-100 pb-2 mb-3">
-                      Chemical Specification Adjustments (pH, EC, Moisture)
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-bold text-stone-500 mb-1 uppercase">
-                          Target pH
-                        </label>
-                        <input
-                          type="text"
-                          value={customPh}
-                          onChange={(e) => setCustomPh(e.target.value)}
-                          className="w-full border border-stone-250 rounded-lg p-2 text-xs focus:outline-none focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-stone-500 mb-1 uppercase">
-                          Target EC
-                        </label>
-                        <input
-                          type="text"
-                          value={customEc}
-                          onChange={(e) => setCustomEc(e.target.value)}
-                          className="w-full border border-stone-250 rounded-lg p-2 text-xs focus:outline-none focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-stone-500 mb-1 uppercase">
-                          Moisture Max
-                        </label>
-                        <input
-                          type="text"
-                          value={customMoisture}
-                          onChange={(e) => setCustomMoisture(e.target.value)}
-                          className="w-full border border-stone-250 rounded-lg p-2 text-xs focus:outline-none focus:border-primary"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs font-poppins font-bold text-stone-900 border-b border-stone-100 pb-2 mb-3">
-                      Delivery Destination Coordinates
-                    </h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-[10px] font-bold text-stone-500 mb-1 uppercase">
-                          Address Line (e.g. Port Terminal or Warehouse)
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingAddress.addressLine}
-                          onChange={(e) => setShippingAddress({ ...shippingAddress, addressLine: e.target.value })}
-                          className="w-full border border-stone-250 rounded-lg p-2.5 text-xs focus:outline-none focus:border-primary"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-stone-500 mb-1 uppercase">
-                            City
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingAddress.city}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                            className="w-full border border-stone-250 rounded-lg p-2.5 text-xs focus:outline-none focus:border-primary"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-stone-500 mb-1 uppercase">
-                            Country
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingAddress.country}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-                            className="w-full border border-stone-250 rounded-lg p-2.5 text-xs focus:outline-none focus:border-primary"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-stone-500 mb-1 uppercase">
-                            Postal Code
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingAddress.postalCode}
-                            onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                            className="w-full border border-stone-250 rounded-lg p-2.5 text-xs focus:outline-none focus:border-primary"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-600 mb-1">
-                      Packaging / Additive Requests or Notes
-                    </label>
-                    <textarea
-                      rows="2.5"
-                      value={customNotes}
-                      onChange={(e) => setCustomNotes(e.target.value)}
-                      placeholder="E.g., custom label wraps, mix 70% pith & 30% husk chips..."
-                      className="w-full border border-stone-250 rounded-lg p-2.5 text-xs focus:outline-none focus:border-primary"
-                    ></textarea>
-                  </div>
-
-                  <div className="flex space-x-3 pt-3">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(false)}
-                      className="w-1/3 border border-stone-200 text-stone-600 py-3 rounded-lg text-xs font-bold hover:bg-stone-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={submitLoading}
-                      className="w-2/3 bg-primary hover:bg-primary-dark text-white font-poppins text-xs font-bold py-3 rounded-lg transition-all shadow-soft flex items-center justify-center space-x-1.5"
-                    >
-                      {submitLoading ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <>
-                          <Send className="w-3.5 h-3.5" />
-                          <span>Submit Quote Request</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
+      {/* BOTTOM NAVIGATION */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)] pb-safe pt-2 px-6 z-50 rounded-t-3xl h-[70px] flex items-center justify-between">
+        <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/')}>
+          <HomeIcon className="w-6 h-6" />
+          <span className="text-[9px] font-bold">Home</span>
+        </button>
+        <button className="flex flex-col items-center space-y-1 text-[#2E7D32]" onClick={() => navigate('/products')}>
+          <LayoutGrid className="w-6 h-6" />
+          <span className="text-[9px] font-bold">Products</span>
+        </button>
+        <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/quality-testing')}>
+          <TestTube className="w-6 h-6" />
+          <span className="text-[9px] font-bold">Quality Test</span>
+        </button>
+        <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors relative" onClick={() => navigate('/dashboard', { state: { activeTab: 'Cart' } })}>
+          <ShoppingCart className="w-6 h-6" />
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-[#2E7D32] text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border-2 border-white">
+              {cartCount}
+            </span>
+          )}
+          <span className="text-[9px] font-bold">Cart</span>
+        </button>
+        <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/dashboard')}>
+          <UserIcon className="w-6 h-6" />
+          <span className="text-[9px] font-bold">Account</span>
+        </button>
+      </div>
     </div>
   );
 };

@@ -47,6 +47,8 @@ const Register = lazy(() => import('./pages/Register'));
 const AuthLayout = lazy(() => import('./layouts/AuthLayout'));
 const OTPForm = lazy(() => import('./components/auth/OTPForm'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -87,6 +89,8 @@ const Notifications = lazy(() => import('./pages/account/Notifications'));
 const PaymentHistory = lazy(() => import('./pages/account/PaymentHistory'));
 const CustomerTestingReports = lazy(() => import('./pages/account/CustomerTestingReports'));
 const HelpCenter = lazy(() => import('./pages/account/HelpCenter'));
+const MobileAccount = lazy(() => import('./pages/account/MobileAccount'));
+const MobileBottomNav = lazy(() => import('./components/MobileBottomNav'));
 
 import { Ship } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -207,6 +211,8 @@ function AppContent() {
           <Route path="/containers/viewer" element={<ContainerViewerDemo />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-conditions" element={<TermsConditions />} />
           <Route
             path="/verify-otp"
             element={
@@ -247,8 +253,11 @@ function AppContent() {
           <Route path="testing-reports" element={<CustomerTestingReports />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="support" element={<HelpCenter />} />
+          <Route path="mobile" element={<MobileAccount />} />
           <Route path="product/:id" element={<ProductView />} />
           <Route path="productview/:id" element={<ProductView />} />
+          <Route path="privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="terms-conditions" element={<TermsConditions />} />
         </Route>
 
         {/* Admin Routes */}
@@ -370,6 +379,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
+      <MobileBottomNav />
     </Suspense>
   );
 }
