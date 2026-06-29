@@ -136,7 +136,9 @@ const OrderDetails = () => {
               >
                 <Download className="w-4 h-4" /> Invoice
               </button>
-              <button className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 font-bold text-sm rounded-xl hover:bg-stone-200 transition-colors">
+              <button 
+                onClick={() => navigate(`/account/support?orderId=${order.id}`)}
+                className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 font-bold text-sm rounded-xl hover:bg-stone-200 transition-colors">
                 <MessageSquare className="w-4 h-4" /> Support
               </button>
             </div>
