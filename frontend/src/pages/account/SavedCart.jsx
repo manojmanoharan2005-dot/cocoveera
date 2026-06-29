@@ -190,6 +190,10 @@ const SavedCart = () => {
         </AnimatePresence>
       </div>
 
+      <div className="mt-16">
+        <RecommendedProducts />
+      </div>
+
     </div>
   );
 };
