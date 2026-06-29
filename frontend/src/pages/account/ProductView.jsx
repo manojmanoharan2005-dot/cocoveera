@@ -35,6 +35,10 @@ const ProductView = () => {
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [extraItems, setExtraItems] = useState([]);
 
+  // Debounced viewer state to prevent UI freezing (hanging) when quantity changes rapidly
+  const [viewerQuantity, setViewerQuantity] = useState(0.25);
+  const [viewerPallets, setViewerPallets] = useState([]);
+
   // Testing Feature States
   const [isTestingModalOpen, setIsTestingModalOpen] = useState(false);
   const [testingPackages, setTestingPackages] = useState([]);
@@ -97,6 +101,19 @@ const ProductView = () => {
     fetchProductDetails();
     fetchTestingPackages();
   }, [id, user]);
+
+  // Update 3D viewer state with a debounce so the UI (buttons/percentage bar) won't lag
+  useEffect(() => {
+    if (!product) return;
+    const currentTotalQty = quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0);
+    const currentPalletItems = [{ product, quantity }, ...extraItems];
+    
+    const t = setTimeout(() => {
+      setViewerQuantity(currentTotalQty);
+      setViewerPallets(currentPalletItems);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [quantity, extraItems, product]);
 
   const handleWishlistToggle = async () => {
     if (!product) return;
@@ -371,7 +388,25 @@ const ProductView = () => {
           
           {/* Left: Image Gallery */}
           <div className="lg:col-span-5 space-y-4">
-
+            {/* Desktop 3D Viewer */}
+            {showConfigurator && (
+              <div className="hidden lg:flex bg-white rounded-[24px] border border-stone-200/50 shadow-sm overflow-hidden flex-col h-[400px]">
+                <div className="p-4 border-b border-stone-100 bg-stone-50 flex justify-between items-center">
+                  <h3 className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wide">
+                    Live 3D Preview
+                  </h3>
+                  <div className="px-2 py-1 bg-white rounded-lg border border-stone-200 shadow-sm flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-stone-400 uppercase">Usage</span>
+                    <span className={`text-xs font-black ${isOverCapacity ? 'text-red-500' : 'text-[#2E7D32]'}`}>
+                      {capacityPercentage.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="relative flex-1 w-full bg-[#F7F9F7]">
+                  <ContainerViewer3D containerType={containerType} totalQuantity={viewerQuantity} autoRotate={true} palletItems={viewerPallets} />
+                </div>
+              </div>
+            )}
 
             <div className={`h-72 sm:h-96 rounded-[24px] overflow-hidden bg-[#F7F9F7] border border-stone-200/50 shadow-sm relative group`}>
               <ImageWithFallback 
@@ -565,7 +600,10 @@ const ProductView = () => {
                   )}
                 </div>
 
-
+              {/* 3D Container Preview (Mobile Only) */}
+              <div className="lg:hidden relative w-full mt-4 border border-stone-200/50 rounded-2xl overflow-hidden shadow-sm">
+                <ContainerViewer3D containerType={containerType} totalQuantity={viewerQuantity} autoRotate={true} palletItems={viewerPallets} />
+              </div>
 
               {/* Mixed Load Section */}
               <div className="mt-4 border-t border-stone-100 pt-4">
