@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Truck, MessageSquare, MapPin, CreditCard, Package } from 'lucide-react';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
+import RecommendedProducts from '../../components/common/RecommendedProducts';
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -248,6 +249,10 @@ const OrderDetails = () => {
           )}
 
         </div>
+      </div>
+
+      <div className="mt-16">
+        <RecommendedProducts />
       </div>
     </div>
   );

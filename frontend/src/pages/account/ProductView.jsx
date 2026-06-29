@@ -371,25 +371,7 @@ const ProductView = () => {
           
           {/* Left: Image Gallery */}
           <div className="lg:col-span-5 space-y-4">
-            {/* Desktop 3D Viewer */}
-            {showConfigurator && (
-              <div className="hidden lg:flex bg-white rounded-[24px] border border-stone-200/50 shadow-sm overflow-hidden flex-col h-[400px]">
-                <div className="p-4 border-b border-stone-100 bg-stone-50 flex justify-between items-center">
-                  <h3 className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wide">
-                    Live 3D Preview
-                  </h3>
-                  <div className="px-2 py-1 bg-white rounded-lg border border-stone-200 shadow-sm flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-stone-400 uppercase">Usage</span>
-                    <span className={`text-xs font-black ${isOverCapacity ? 'text-red-500' : 'text-[#2E7D32]'}`}>
-                      {capacityPercentage.toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="relative flex-1 w-full bg-[#F7F9F7]">
-                  <ContainerViewer3D containerType={containerType} totalQuantity={totalQuantity} autoRotate={true} palletItems={palletItems} />
-                </div>
-              </div>
-            )}
+
 
             <div className={`h-72 sm:h-96 rounded-[24px] overflow-hidden bg-[#F7F9F7] border border-stone-200/50 shadow-sm relative group`}>
               <ImageWithFallback 
@@ -583,10 +565,7 @@ const ProductView = () => {
                   )}
                 </div>
 
-              {/* 3D Container Preview (Mobile Only) */}
-              <div className="lg:hidden relative w-full mt-4 border border-stone-200/50 rounded-2xl overflow-hidden shadow-sm">
-                <ContainerViewer3D containerType={containerType} totalQuantity={totalQuantity} autoRotate={true} palletItems={palletItems} />
-              </div>
+
 
               {/* Mixed Load Section */}
               <div className="mt-4 border-t border-stone-100 pt-4">
@@ -892,7 +871,7 @@ const ProductView = () => {
           <h2 className="font-poppins font-black text-lg text-stone-900">
             You May Also Be Interested In
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {relatedProducts.map((item) => {
               const itemPrice = convertCurrency(item.price, user?.currency || 'INR');
               return (
@@ -902,28 +881,28 @@ const ProductView = () => {
                     navigate(`/account/product/${item._id}`);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="bg-white border border-stone-200 hover:border-[#2E7D32] rounded-[22px] p-4.5 cursor-pointer hover:shadow-md transition-all flex flex-col justify-between h-full group"
+                  className="bg-white border border-stone-200 hover:border-[#2E7D32] rounded-[22px] p-4 sm:p-5 cursor-pointer hover:shadow-md transition-all flex flex-col group overflow-hidden"
                 >
-                  <div>
-                    <div className="relative h-40 rounded-[16px] overflow-hidden bg-[#F7F9F7] mb-3.5 border border-stone-100 flex-shrink-0">
+                  <div className="flex flex-col flex-grow">
+                    <div className="relative h-40 sm:h-48 rounded-[16px] overflow-hidden bg-[#F7F9F7] mb-4 border border-stone-100 flex-shrink-0">
                       <ImageWithFallback 
                         src={item.images?.[0]} 
                         alt={item.name} 
-                        className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-103" 
+                        className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105" 
                       />
                     </div>
-                    <span className="text-[9px] text-[#2E7D32] font-extrabold uppercase tracking-wider block mb-1">
+                    <span className="text-[9px] sm:text-[10px] text-[#2E7D32] font-extrabold uppercase tracking-wider block mb-1.5">
                       {item.category}
                     </span>
-                    <h3 className="font-poppins font-bold text-xs text-stone-900 line-clamp-2 leading-snug">
+                    <h3 className="font-poppins font-bold text-xs sm:text-sm text-stone-900 line-clamp-2 leading-snug">
                       {item.name}
                     </h3>
                   </div>
-                  <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-3">
-                    <span className="text-xs text-[#2E7D32] font-poppins font-extrabold">
+                  <div className="mt-4 sm:mt-5 flex items-center justify-between border-t border-stone-100 pt-3 sm:pt-4">
+                    <span className="text-sm sm:text-base text-[#2E7D32] font-poppins font-extrabold">
                       {itemPrice.formatted}
                     </span>
-                    <span className="text-[10px] text-stone-400 font-bold">
+                    <span className="text-[10px] sm:text-xs text-stone-400 font-bold group-hover:text-[#2E7D32] transition-colors">
                       View details
                     </span>
                   </div>
