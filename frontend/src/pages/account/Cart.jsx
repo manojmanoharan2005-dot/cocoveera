@@ -152,7 +152,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="max-w-6xl">
+    <div className="w-full">
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-stone-900 mb-2">Build Your Container</h1>

@@ -140,7 +140,7 @@ const Orders = () => {
   }
 
   return (
-    <div className="max-w-5xl space-y-6 pb-20">
+    <div className="w-full space-y-6 pb-20">
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
         <div>

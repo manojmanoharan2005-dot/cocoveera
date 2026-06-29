@@ -158,7 +158,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="max-w-4xl space-y-6 pb-10">
+    <div className="w-full space-y-6 pb-10">
       <div>
         <h1 className="text-3xl font-extrabold text-stone-900 mb-2">Account Settings</h1>
         <p className="text-stone-500 font-semibold text-sm">Manage your profile details and security preferences.</p>

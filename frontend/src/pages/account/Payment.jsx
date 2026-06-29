@@ -47,7 +47,7 @@ const Payment = () => {
   };
 
   return (
-    <div className="max-w-4xl pb-10">
+    <div className="w-full pb-10">
       
       {/* Checkout Header / Stepper */}
       <div className="mb-10">
