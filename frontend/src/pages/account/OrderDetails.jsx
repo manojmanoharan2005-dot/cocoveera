@@ -57,11 +57,11 @@ const OrderDetails = () => {
     status: backendOrder.orderStatus.charAt(0).toUpperCase() + backendOrder.orderStatus.slice(1),
     paymentStatus: backendOrder.paymentStatus.charAt(0).toUpperCase() + backendOrder.paymentStatus.slice(1),
     container: {
-      type: backendOrder.containerCapacity || 'LCL',
+      type: backendOrder.shippingDetails?.containerType || backendOrder.recommendedContainer || 'LCL',
       number: backendOrder.trackingNumber || 'Pending',
       capacity: 'N/A',
-      weight: 'N/A',
-      pallets: 'N/A'
+      weight: backendOrder.totalWeight ? `${backendOrder.totalWeight.toLocaleString()} KG` : 'N/A',
+      pallets: backendOrder.items ? Math.round(backendOrder.items.reduce((acc, item) => acc + item.quantity, 0) * ((backendOrder.shippingDetails?.containerType || backendOrder.recommendedContainer || '').includes('40FT') ? 22 : 10)) : 'N/A'
     },
     products: backendOrder.items.map(item => ({
       name: item.product?.name || 'Unknown',
@@ -84,7 +84,14 @@ const OrderDetails = () => {
       country: backendOrder.shippingAddress?.country || 'N/A',
       zip: backendOrder.shippingAddress?.postalCode || 'N/A'
     },
-    customerNotes: ''
+    customerNotes: '',
+    paymentMethod: backendOrder.paymentGateway === 'cod' ? 'Cash on Delivery (COD)' :
+                   backendOrder.paymentGateway === 'wire' ? 'Bank Wire Transfer (TT)' :
+                   backendOrder.paymentGateway === 'cad' ? 'Cash Against Documents (CAD)' :
+                   backendOrder.paymentGateway === 'stripe' ? 'Credit Card (Stripe)' :
+                   backendOrder.paymentGateway === 'paypal' ? 'PayPal' :
+                   backendOrder.paymentGateway ? backendOrder.paymentGateway.toUpperCase() : 'Unknown',
+    paymentId: backendOrder.paymentId || backendOrder._id
   };
 
   return (
@@ -234,8 +241,8 @@ const OrderDetails = () => {
                 <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider">Payment Method</h3>
               </div>
               <div className="text-sm font-semibold text-stone-600 bg-stone-50 p-3 rounded-xl border border-stone-100">
-                Bank Wire Transfer (TT)<br/>
-                <span className="text-xs text-stone-500 mt-1 block">Ref: TR-9988221</span>
+                {order.paymentMethod}<br/>
+                {order.paymentId && <span className="text-xs text-stone-500 mt-1 block">Ref: {order.paymentId}</span>}
               </div>
             </div>
           </div>
