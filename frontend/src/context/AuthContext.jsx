@@ -27,9 +27,24 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem('cocoveera_user');
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [token, setToken] = useState(localStorage.getItem('cocoveera_token'));
-  const [loading, setLoading] = useState(true);
+  
+  // If we already have token and user locally, we are not loading initially.
+  // We'll just update it in the background.
+  const [loading, setLoading] = useState(() => {
+    const hasToken = !!localStorage.getItem('cocoveera_token');
+    const hasUser = !!localStorage.getItem('cocoveera_user');
+    return !(hasToken && hasUser);
+  });
+  
   const [error, setError] = useState(null);
 
   const fetchProfile = async () => {
@@ -38,6 +53,7 @@ export const AuthProvider = ({ children }) => {
         const res = await apiClient.get('/users/profile');
         if (res.data.success) {
           setUser(res.data.data);
+          localStorage.setItem('cocoveera_user', JSON.stringify(res.data.data));
           setLoading(false);
           return res.data.data;
         } else {
@@ -73,6 +89,7 @@ export const AuthProvider = ({ children }) => {
       const res = await apiClient.post('/auth/verify-otp', { email, otp });
       if (res.data.success) {
         localStorage.setItem('cocoveera_token', res.data.token);
+        localStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
         setToken(res.data.token);
         setUser(res.data.user);
       }
@@ -91,6 +108,7 @@ export const AuthProvider = ({ children }) => {
       if (res.data.success) {
         if (!res.data.requiresAdminVerification) {
           localStorage.setItem('cocoveera_token', res.data.token);
+          localStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
           setToken(res.data.token);
           setUser(res.data.user);
         }
@@ -109,6 +127,7 @@ export const AuthProvider = ({ children }) => {
       const res = await apiClient.post('/auth/google', { email, name, googleId });
       if (res.data.success) {
         localStorage.setItem('cocoveera_token', res.data.token);
+        localStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
         setToken(res.data.token);
         setUser(res.data.user);
       }
@@ -122,6 +141,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('cocoveera_token');
+    localStorage.removeItem('cocoveera_user');
     setToken(null);
     setUser(null);
     setError(null);
