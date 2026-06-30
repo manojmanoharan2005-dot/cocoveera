@@ -7,6 +7,7 @@ import compression from 'compression';
 import { securitySanitizers } from './middleware/sanitize.js';
 
 import { connectDB } from './config/db.js';
+import mongoose from 'mongoose';
 
 // Route imports
 import authRoutes from './routes/authRoutes.js';
@@ -100,6 +101,35 @@ app.use(express.json({ limit: '100kb' }));
 // Sanitization against NoSQL injection and XSS
 securitySanitizers.forEach(mw => app.use(mw));
 
+// Request timeout protection (30 seconds)
+app.use((req, res, next) => {
+  req.setTimeout(30000, () => {
+    res.status(408).json({
+      success: false,
+      message: 'Request timeout'
+    });
+  });
+  next();
+});
+
+// Database availability middleware
+app.use((req, res, next) => {
+  // Allow health check, ping routes, and root to pass through even if DB is down
+  if (req.path === '/health' || req.path === '/api/ping' || req.path === '/') {
+    return next();
+  }
+  
+  const state = mongoose.connection.readyState;
+  // 1 = connected, 2 = connecting
+  if (state !== 1 && state !== 2) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database temporarily unavailable'
+    });
+  }
+  next();
+});
+
 // API Response Time Monitoring Middleware
 app.use((req, res, next) => {
   const start = Date.now();
@@ -137,6 +167,19 @@ app.get('/', (req, res) => {
 // Health ping route to keep Render awake
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ success: true, message: 'pong' });
+});
+
+// Health check route
+app.get('/health', (req, res) => {
+  const state = mongoose.connection.readyState;
+  const dbState = state === 1 ? 'connected' : 
+                  state === 2 ? 'connecting' : 'disconnected';
+  
+  res.status(200).json({
+    server: 'online',
+    database: dbState,
+    uptime: process.uptime()
+  });
 });
 
 // Error handling middleware
@@ -373,3 +416,21 @@ const seedDatabase = async () => {
 };
 
 startServer();
+
+// Graceful shutdown handling
+const gracefulShutdown = async (signal) => {
+  console.log(`\n[Server] Received ${signal}. Shutting down gracefully...`);
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.close(false);
+      console.log('[MongoDB] Connection closed due to app termination');
+    }
+    process.exit(0);
+  } catch (err) {
+    console.error(`[Server] Error during shutdown: ${err.message}`);
+    process.exit(1);
+  }
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

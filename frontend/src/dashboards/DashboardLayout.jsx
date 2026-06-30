@@ -58,12 +58,12 @@ export const DashboardLayout = ({
 
   const mobileDrawerItems = [
     { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
-    { name: 'Orders', label: 'Orders', icon: ShoppingBag, path: '/account/orders' },
-    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/account/saved' },
-    { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount, path: '/account/cart' },
-    { name: 'Addresses', label: 'Address', icon: MapPin, path: '/account/address' },
-    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/account/support' },
-    { name: 'Settings', label: 'Settings', icon: Settings, path: '/account/settings' },
+    { name: 'Orders', label: 'Orders', icon: ShoppingBag, path: '/orders' },
+    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/saved' },
+    { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount, path: '/cart' },
+    { name: 'Addresses', label: 'Address', icon: MapPin, path: '/address' },
+    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/support' },
+    { name: 'Settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   const displayName = user?.companyName && user.companyName !== 'N/A' 

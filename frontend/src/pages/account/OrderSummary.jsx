@@ -132,11 +132,11 @@ const OrderSummary = () => {
         </div>
 
         <div className="pt-6 border-t border-stone-100 flex items-center justify-between">
-          <button type="button" onClick={() => navigate('/account/checkout')} className="text-sm font-bold text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5">
+          <button type="button" onClick={() => navigate('/checkout')} className="text-sm font-bold text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5">
             <ArrowLeft className="w-4 h-4" /> Back to Shipping
           </button>
           
-          <button type="button" onClick={() => navigate('/account/payment')} className="px-8 py-3.5 bg-[#2E7D32] text-white text-sm font-black uppercase tracking-wider rounded-xl hover:bg-[#1B5E20] transition-colors shadow-lg shadow-[#2E7D32]/20 flex items-center gap-2">
+          <button type="button" onClick={() => navigate('/payment')} className="px-8 py-3.5 bg-[#2E7D32] text-white text-sm font-black uppercase tracking-wider rounded-xl hover:bg-[#1B5E20] transition-colors shadow-lg shadow-[#2E7D32]/20 flex items-center gap-2">
             Continue to Payment <ChevronRight className="w-4 h-4" />
           </button>
         </div>

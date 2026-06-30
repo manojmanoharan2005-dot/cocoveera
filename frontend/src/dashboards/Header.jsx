@@ -12,7 +12,7 @@ export const Header = ({
   searchQuery,
   setSearchQuery,
   cartCount,
-  setActiveTab,
+  activeTab,
   onNotificationClick,
   showSearchAndFilters,
   sortBy,
@@ -168,7 +168,7 @@ export const Header = ({
 
         {/* Wishlist */}
         <button
-          onClick={() => setActiveTab('Wishlist')}
+          onClick={() => navigate('/wishlist')}
           className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all"
           title="Wishlist"
         >
@@ -182,7 +182,7 @@ export const Header = ({
 
         {/* Cart */}
         <button
-          onClick={() => setActiveTab('Cart')}
+          onClick={() => navigate('/cart')}
           className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all"
           title="Cart"
         >
@@ -202,7 +202,7 @@ export const Header = ({
           <button
             onClick={() => {
               if (window.innerWidth < 1024) {
-                navigate('/account/mobile');
+                navigate('/mobile');
               } else {
                 setDropdownOpen(!dropdownOpen);
               }
@@ -245,14 +245,14 @@ export const Header = ({
 
                   <div className="py-1 px-2">
                     <button
-                      onClick={() => { setDropdownOpen(false); setActiveTab('Profile'); }}
+                      onClick={() => { setDropdownOpen(false); navigate('/profile'); }}
                       className="w-full text-left px-3 py-2.5 text-[11.5px] text-stone-700 hover:bg-[#F0FAF0] hover:text-[#2E7D32] rounded-[12px] transition-colors flex items-center gap-2.5 font-bold"
                     >
                       <User className="w-3.5 h-3.5 text-stone-400" />
                       <span>My Profile</span>
                     </button>
                     <button
-                      onClick={() => { setDropdownOpen(false); setActiveTab('Settings'); }}
+                      onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
                       className="w-full text-left px-3 py-2.5 text-[11.5px] text-stone-700 hover:bg-[#F0FAF0] hover:text-[#2E7D32] rounded-[12px] transition-colors flex items-center gap-2.5 font-bold"
                     >
                       <Settings className="w-3.5 h-3.5 text-stone-400" />

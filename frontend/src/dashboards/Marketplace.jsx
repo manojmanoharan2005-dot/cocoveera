@@ -3,7 +3,7 @@
  * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
  */
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom';
 import axios from 'axios';
 import FilterDrawer from './FilterDrawer';
 import ProductGrid from './ProductGrid';
@@ -15,23 +15,81 @@ import { convertCurrency } from '../utils/currencyConverter';
 import { API_URL } from '../utils/config';
 import ImageWithFallback from '../components/common/ImageWithFallback';
 
-export const Marketplace = ({ 
-  loading = false,
-  products, 
-  wishlist, 
-  onWishlistToggle, 
-  onAddToCart, 
-  onBuyNow,
-  searchQuery = '',
-  setSearchQuery,
-  sortBy = 'Featured',
-  setSortBy,
-  filterDrawerOpen,
-  setFilterDrawerOpen
-}) => {
-  const { user } = useAuth();
+export const Marketplace = () => {
+  const { user, fetchProfile } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  const { 
+    searchQuery, setSearchQuery, 
+    sortBy, setSortBy, 
+    filterDrawerOpen, setFilterDrawerOpen 
+  } = useOutletContext();
+  
+  const [products, setProducts] = useState(() => {
+    const cached = localStorage.getItem('cocoveera_products');
+    return cached ? JSON.parse(cached) : [];
+  });
+  const [loading, setLoading] = useState(() => !localStorage.getItem('cocoveera_products'));
+  const [wishlist, setWishlist] = useState(user?.wishlist || []);
+
+  useEffect(() => {
+    if (user) setWishlist(user.wishlist || []);
+  }, [user]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const cached = localStorage.getItem('cocoveera_products');
+        if (cached) {
+          setProducts(JSON.parse(cached));
+          setLoading(false);
+        }
+        const prodRes = await axios.get(`${API_URL}/products`);
+        if (prodRes.data.success) {
+          setProducts(prodRes.data.data);
+          localStorage.setItem('cocoveera_products', JSON.stringify(prodRes.data.data));
+        }
+      } catch (err) {
+        console.error('Failed to fetch data', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const onWishlistToggle = async (product) => {
+    setWishlist(prev => {
+      const exists = prev.find(p => p._id === product._id);
+      if (exists) return prev.filter(p => p._id !== product._id);
+      return [...prev, product];
+    });
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/users/wishlist`, { productId: product._id }, { headers: { Authorization: `Bearer ${token}` } });
+      await fetchProfile();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const onAddToCart = async (product) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${API_URL}/users/cart`, { productId: product._id, quantity: 1, increment: true }, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.data.success) {
+        await fetchProfile();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const onBuyNow = async (product) => {
+    await onAddToCart(product);
+    navigate('/cart');
+  };
 
   // Filters & Sorting state
   const selectedCollection = searchParams.get('category') || 'All';
@@ -321,7 +379,7 @@ export const Marketplace = ({
                 onWishlistToggle={onWishlistToggle}
                 onAddToCart={onAddToCart}
                 onBuyNow={onBuyNow}
-                onCardClick={(p) => navigate('/account/product/' + p._id)}
+                onCardClick={(p) => navigate('/product/' + p._id)}
               />
             ))}
           </ProductGrid>

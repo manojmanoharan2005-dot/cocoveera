@@ -66,7 +66,7 @@ const TrackOrder = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center gap-4">
         <div className="flex items-start md:items-center gap-3">
-          <button onClick={() => navigate('/account/orders')} className="w-10 h-10 shrink-0 mt-1 md:mt-0 bg-white rounded-full flex items-center justify-center shadow-sm border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors">
+          <button onClick={() => navigate('/orders')} className="w-10 h-10 shrink-0 mt-1 md:mt-0 bg-white rounded-full flex items-center justify-center shadow-sm border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="break-all">

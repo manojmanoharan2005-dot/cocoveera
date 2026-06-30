@@ -85,7 +85,7 @@ const Footer = () => {
               { label: 'About Us', path: '/about' },
               { label: 'Quality Testing', path: '/quality-testing' },
               { label: 'Global Network', path: '/substrates' },
-              { label: 'Notifications', path: '/account/notifications' },
+              { label: 'Notifications', path: '/notifications' },
               { label: 'Authentications', path: '/login' },
               { label: 'Privacy Policy', path: '/privacy-policy' },
             ].map((item) => (

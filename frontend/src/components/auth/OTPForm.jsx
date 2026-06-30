@@ -9,6 +9,7 @@ import { ShieldCheck, RefreshCw, Mail, ArrowLeft, Sprout } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authService } from '../../services/authService';
+import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
 
 export const OTPForm = () => {
   const { verifyOtp, register: authRegister } = useAuth();
@@ -24,6 +25,8 @@ export const OTPForm = () => {
   const [apiError, setApiError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [isSuccessAnimated, setIsSuccessAnimated] = useState(false);
+  const [showFullAnimation, setShowFullAnimation] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   
   const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
@@ -98,10 +101,15 @@ export const OTPForm = () => {
       const res = await verifyOtp(email, fullOtp);
       if (res.success) {
         setSuccessMsg('Account verified successfully!');
-        setIsSuccessAnimated(true);
-        setTimeout(() => {
-          navigate(res.user.role === 'admin' ? '/admin' : '/account/address');
-        }, 2500);
+        setUserRole(res.user?.role);
+        if (!localStorage.getItem('cocoveera_registration_animation_played')) {
+          setShowFullAnimation(true);
+        } else {
+          setIsSuccessAnimated(true);
+          setTimeout(() => {
+            navigate(res.user.role === 'admin' ? '/admin' : '/address');
+          }, 2500);
+        }
       }
     } catch (err) {
       setApiError(err.message || 'OTP verification failed. Please try again.');
@@ -130,6 +138,16 @@ export const OTPForm = () => {
       setLoading(false);
     }
   };
+
+  if (showFullAnimation) {
+    return (
+      <RegistrationSuccessAnimation 
+        onComplete={() => {
+          navigate(userRole === 'admin' ? '/admin' : '/address', { replace: true });
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="bg-stone-900/60 border border-stone-850 rounded-3xl p-8 backdrop-blur-md shadow-premium">

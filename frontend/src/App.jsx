@@ -49,6 +49,7 @@ const OTPForm = lazy(() => import('./components/auth/OTPForm'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -68,8 +69,8 @@ const AdminDiscounts = lazy(() => import('./pages/AdminDiscounts'));
 const ContainerViewerDemo = lazy(() => import('./pages/ContainerViewerDemo'));
 
 // User Protected Route
-const UserDashboard = lazy(() => import('./dashboards/UserDashboard'));
-const AccountLayout = lazy(() => import('./layouts/AccountLayout'));
+const Marketplace = lazy(() => import('./dashboards/Marketplace'));
+const PrivateLayout = lazy(() => import('./layouts/PrivateLayout'));
 const Orders = lazy(() => import('./pages/account/Orders'));
 const OrderDetails = lazy(() => import('./pages/account/OrderDetails'));
 const Cart = lazy(() => import('./pages/account/Cart'));
@@ -141,6 +142,21 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Guard for guest pages (redirects to dashboard if already logged in)
+const GuestRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingScreen />;
+  }
+  
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return children;
+};
+
 // Guard for admin pages
 const AdminProtectedRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
@@ -200,6 +216,9 @@ function AppContent() {
     <Suspense fallback={<LoadingScreen />}>
       <ScrollToTop />
       <Routes>
+        {/* Fullscreen Immerse Route */}
+        <Route path="/welcome" element={<Onboarding />} />
+
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
@@ -209,8 +228,8 @@ function AppContent() {
           <Route path="/substrates" element={<CoconutSubstrates />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/containers/viewer" element={<ContainerViewerDemo />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+          <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
           <Route
@@ -223,41 +242,31 @@ function AppContent() {
           />
         </Route>
 
-        {/* User Protected Route */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <UserDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Account Commerce Flow */}
-        <Route path="/account" element={<ProtectedRoute><AccountLayout /></ProtectedRoute>}>
-          <Route path="orders" element={<Orders />} />
-          <Route path="orders/:id" element={<OrderDetails />} />
-          <Route path="cart" element={<Cart />} />
-          <Route path="checkout" element={<Checkout />} />
-          <Route path="order-summary" element={<OrderSummary />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="order-success" element={<OrderSuccess />} />
-          <Route path="track/:id" element={<TrackOrder />} />
-          <Route path="saved" element={<SavedCart />} />
-          <Route path="address" element={<Address />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="invoices" element={<Invoices />} />
-          <Route path="quotes" element={<Quotes />} />
-          <Route path="payments" element={<PaymentHistory />} />
-          <Route path="testing-reports" element={<CustomerTestingReports />} />
-          <Route path="notifications" element={<Notifications />} />
-          <Route path="support" element={<HelpCenter />} />
-          <Route path="mobile" element={<MobileAccount />} />
-          <Route path="product/:id" element={<ProductView />} />
-          <Route path="productview/:id" element={<ProductView />} />
-          <Route path="privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="terms-conditions" element={<TermsConditions />} />
+        {/* User Protected Routes under PrivateLayout */}
+        <Route element={<ProtectedRoute><PrivateLayout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<Marketplace />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<OrderDetails />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-summary" element={<OrderSummary />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/track/:id" element={<TrackOrder />} />
+          <Route path="/wishlist" element={<SavedCart />} />
+          <Route path="/saved" element={<SavedCart />} />
+          <Route path="/address" element={<Address />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/quotes" element={<Quotes />} />
+          <Route path="/payments" element={<PaymentHistory />} />
+          <Route path="/testing-reports" element={<CustomerTestingReports />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/support" element={<HelpCenter />} />
+          <Route path="/mobile" element={<MobileAccount />} />
+          <Route path="/product/:id" element={<ProductView />} />
+          <Route path="/productview/:id" element={<ProductView />} />
         </Route>
 
         {/* Admin Routes */}

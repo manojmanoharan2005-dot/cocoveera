@@ -32,14 +32,14 @@ const AccountLayout = () => {
 
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path.includes('/account/orders')) return 'Orders';
-    if (path.includes('/account/cart')) return 'Cart';
-    if (path.includes('/account/saved')) return 'Wishlist';
-    if (path.includes('/account/address')) return 'Addresses';
-    if (path.includes('/account/support')) return 'Help & Support';
-    if (path.includes('/account/settings')) return 'Settings';
-    if (path.includes('/account/profile')) return 'Profile';
-    if (path.includes('/account/checkout') || path.includes('/account/payment')) return '';
+    if (path.includes('/orders')) return 'Orders';
+    if (path.includes('/cart')) return 'Cart';
+    if (path.includes('/saved')) return 'Wishlist';
+    if (path.includes('/address')) return 'Addresses';
+    if (path.includes('/support')) return 'Help & Support';
+    if (path.includes('/settings')) return 'Settings';
+    if (path.includes('/profile')) return 'Profile';
+    if (path.includes('/checkout') || path.includes('/payment')) return '';
     return 'Marketplace'; // Default
   };
 
@@ -48,13 +48,13 @@ const AccountLayout = () => {
   const handleSetActiveTab = (tabName) => {
     switch (tabName) {
       case 'Marketplace': navigate('/dashboard'); break;
-      case 'Orders': navigate('/account/orders'); break;
-      case 'Cart': navigate('/account/cart'); break;
-      case 'Wishlist': navigate('/account/saved'); break;
-      case 'Addresses': navigate('/account/address'); break;
-      case 'Help & Support': navigate('/account/support'); break;
-      case 'Settings': navigate('/account/settings'); break;
-      case 'Profile': navigate('/account/profile'); break;
+      case 'Orders': navigate('/orders'); break;
+      case 'Cart': navigate('/cart'); break;
+      case 'Wishlist': navigate('/saved'); break;
+      case 'Addresses': navigate('/address'); break;
+      case 'Help & Support': navigate('/support'); break;
+      case 'Settings': navigate('/settings'); break;
+      case 'Profile': navigate('/profile'); break;
       default: navigate('/dashboard');
     }
   };
@@ -66,12 +66,12 @@ const AccountLayout = () => {
 
   const mobileDrawerItems = [
     { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
-    { name: 'Orders', label: 'Orders', icon: ShoppingBag, path: '/account/orders' },
-    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/account/saved' },
-    { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount, path: '/account/cart' },
-    { name: 'Addresses', label: 'Address', icon: MapPin, path: '/account/address' },
-    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/account/support' },
-    { name: 'Settings', label: 'Settings', icon: Settings, path: '/account/settings' },
+    { name: 'Orders', label: 'Orders', icon: ShoppingBag, path: '/orders' },
+    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/saved' },
+    { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount, path: '/cart' },
+    { name: 'Addresses', label: 'Address', icon: MapPin, path: '/address' },
+    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/support' },
+    { name: 'Settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   const displayName = user?.companyName && user.companyName !== 'N/A' ? user.companyName : (user?.name || 'Partner');

@@ -10,7 +10,7 @@ import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link a
 import { authService } from '../../services/authService';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
-import SuccessAnimation from './SuccessAnimation';
+import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { COUNTRIES_LIST, getPhoneCountry } from '../../utils/countryHelpers';
 
@@ -130,6 +130,11 @@ export const RegisterForm = () => {
   }, [otpSent, timer]);
 
   const handleRegisterSubmit = async (data) => {
+    if (!phone || phone.length < 5) {
+      setApiError('Please enter a valid mobile number.');
+      return;
+    }
+
     setLoading(true);
     setApiError(null);
     setSuccessMsg(null);
@@ -151,7 +156,7 @@ export const RegisterForm = () => {
       const res = await authRegister(
         data.name,
         data.email,
-        phone || 'N/A', // Send phone or N/A
+        phone,
         data.password,
         countryName,
         data.country, // countryCode
@@ -223,7 +228,7 @@ export const RegisterForm = () => {
       if (res.success) {
         localStorage.removeItem('cocoveera_register_cache');
         setSuccessMsg('Verification successful. Welcome to Cocoveera!');
-        setShowAnimation(true);
+        navigate('/welcome', { replace: true });
       }
     } catch (err) {
       setApiError(err.message || 'OTP verification failed. Please try again.');
@@ -254,17 +259,7 @@ export const RegisterForm = () => {
     }
   };
 
-  if (showAnimation) {
-    return (
-      <SuccessAnimation 
-        type="register" 
-        onComplete={() => {
-          const fromPath = location.state?.from || '/dashboard';
-          navigate(fromPath, { replace: true });
-        }} 
-      />
-    );
-  }
+  // Removed showAnimation block to avoid double animation
 
   return (
     <div className="bg-white border border-stone-200/85 rounded-3xl p-6 shadow-soft text-stone-900 max-w-md w-full mx-auto">

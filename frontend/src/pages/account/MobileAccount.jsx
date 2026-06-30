@@ -42,20 +42,20 @@ const MobileAccount = () => {
     .slice(0, 2) || 'U';
 
   const quickActions = [
-    { name: 'Orders', icon: Package, path: '/account/orders' },
-    { name: 'Wishlist', icon: Heart, path: '/account/saved' },
-    { name: 'Cart', icon: ShoppingCart, path: '/account/cart' },
-    { name: 'Help Center', icon: HelpCircle, path: '/account/support' },
+    { name: 'Orders', icon: Package, path: '/orders' },
+    { name: 'Wishlist', icon: Heart, path: '/saved' },
+    { name: 'Cart', icon: ShoppingCart, path: '/cart' },
+    { name: 'Help Center', icon: HelpCircle, path: '/support' },
   ];
 
   const menuItems = [
-    { name: 'My Orders', icon: Package, path: '/account/orders' },
-    { name: 'Shipping Address', icon: MapPin, path: '/account/address' },
+    { name: 'My Orders', icon: Package, path: '/orders' },
+    { name: 'Shipping Address', icon: MapPin, path: '/address' },
 
-    { name: 'Notifications', icon: Bell, path: '/account/notifications' },
-    { name: 'Settings', icon: Settings, path: '/account/settings' },
-    { name: 'Privacy Policy', icon: Shield, path: '/account/privacy-policy' },
-    { name: 'Terms & Conditions', icon: FileText, path: '/account/terms-conditions' },
+    { name: 'Notifications', icon: Bell, path: '/notifications' },
+    { name: 'Settings', icon: Settings, path: '/settings' },
+    { name: 'Privacy Policy', icon: Shield, path: '/privacy-policy' },
+    { name: 'Terms & Conditions', icon: FileText, path: '/terms-conditions' },
   ];
 
   return (
@@ -88,7 +88,7 @@ const MobileAccount = () => {
             <p className="text-[12px] font-semibold text-[#6B7280] mt-0.5">{user?.email}</p>
           </div>
           <button 
-            onClick={() => navigate('/account/profile')}
+            onClick={() => navigate('/profile')}
             className="absolute top-4 right-4 p-2 bg-white rounded-full text-[#2E7D32] shadow-sm hover:shadow-md transition-all z-10"
           >
             <Edit2 className="w-4 h-4" />

@@ -137,7 +137,7 @@ const Navbar = () => {
 
             {user ? (
               <div className="flex items-center gap-3">
-                <Link to="/account/saved" className="relative p-1.5 text-stone-600 hover:text-primary transition-colors">
+                <Link to=\"/saved" className="relative p-1.5 text-stone-600 hover:text-primary transition-colors">
                   <Heart className="w-5 h-5" />
                   {user?.wishlist?.length > 0 && (
                     <span className="absolute top-0 -right-1 bg-primary text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white">
@@ -145,7 +145,7 @@ const Navbar = () => {
                     </span>
                   )}
                 </Link>
-                <Link to="/account/cart" className="relative p-1.5 text-stone-600 hover:text-primary transition-colors">
+                <Link to=\"/cart" className="relative p-1.5 text-stone-600 hover:text-primary transition-colors">
                   <ShoppingCart className="w-5 h-5" />
                   {user?.cart?.length > 0 && (
                     <span className="absolute top-0 -right-1 bg-primary text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white">
@@ -230,7 +230,7 @@ const Navbar = () => {
                     <User className="w-4 h-4" /> My Dashboard
                   </Link>
                   <Link
-                    to="/account/saved"
+                    to=\"/saved"
                     onClick={() => setIsOpen(false)}
                     className="w-full flex items-center justify-center gap-2 border border-stone-200 text-stone-700 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:border-primary hover:text-primary transition-colors"
                   >

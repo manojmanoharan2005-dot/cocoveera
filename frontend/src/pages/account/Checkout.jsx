@@ -250,7 +250,7 @@ const Checkout = () => {
   const handleSuccess = () => {
     setShowSuccessAnimation(true);
     setTimeout(() => {
-      navigate('/account/orders');
+      navigate('/orders');
     }, 4000);
   };
 
@@ -364,9 +364,9 @@ const Checkout = () => {
                   gateway: 'razorpay',
                   status: 'failed'
                 });
-                navigate('/account/orders');
+                navigate('/orders');
               } catch (e) {
-                navigate('/account/orders');
+                navigate('/orders');
               }
             }
           }
@@ -381,9 +381,9 @@ const Checkout = () => {
                gateway: 'razorpay',
                status: 'failed'
              });
-             navigate('/account/orders');
+             navigate('/orders');
            } catch (e) {
-             navigate('/account/orders');
+             navigate('/orders');
            }
         });
         rzp.open();

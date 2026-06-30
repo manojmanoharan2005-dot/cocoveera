@@ -23,8 +23,8 @@ const UserSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: false,
-      default: 'N/A',
+      required: [true, 'Please add a mobile number'],
+      unique: true,
     },
     password: {
       type: String,

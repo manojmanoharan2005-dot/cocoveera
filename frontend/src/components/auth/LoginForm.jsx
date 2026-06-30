@@ -254,26 +254,22 @@ export const LoginForm = () => {
 
       {mode === 'login' && (
         <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Email */}
+          {/* Email or Phone */}
           <div>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
-              EMAIL ADDRESS
+              EMAIL / MOBILE NUMBER
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
               <input
-                type="email"
+                type="text"
                 {...register('email', {
-                  required: 'Email address is required',
-                  pattern: {
-                    value: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-                    message: 'Please enter a valid email address',
-                  },
+                  required: 'Email or Mobile Number is required',
                 })}
                 className={`w-full bg-[#F3F6F8] border text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-400/80 ${
                   errors.email ? 'border-red-300' : 'border-transparent'
                 }`}
-                placeholder="you@email.com"
+                placeholder="you@email.com or +123456..."
               />
             </div>
             {errors.email && (

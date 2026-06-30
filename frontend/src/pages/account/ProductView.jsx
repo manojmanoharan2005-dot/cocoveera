@@ -160,7 +160,7 @@ const ProductView = () => {
       localStorage.setItem('preferredContainer', containerType === '40FT' ? '40FT Container' : '20FT Container');
       if (res.data.success) {
         await fetchProfile();
-        navigate('/account/cart');
+        navigate('/cart');
       }
     } catch (err) {
       console.error(err);
@@ -171,7 +171,7 @@ const ProductView = () => {
 
   const handleProceedToCheckout = () => {
     if (!product) return;
-    navigate('/account/checkout', { 
+    navigate('/checkout', { 
       state: { 
         product, 
         quantity, 
@@ -214,7 +214,7 @@ const ProductView = () => {
           status: 'success'
         });
         setIsTestingModalOpen(false);
-        navigate('/account/testing-reports');
+        navigate('/testing-reports');
         return;
       }
 
@@ -241,7 +241,7 @@ const ProductView = () => {
               status: 'success'
             });
             setIsTestingModalOpen(false);
-            navigate('/account/testing-reports');
+            navigate('/testing-reports');
           } catch (err) {
             console.error(err);
             alert('Payment verification failed');

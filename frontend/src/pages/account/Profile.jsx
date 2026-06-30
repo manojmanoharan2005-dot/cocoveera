@@ -26,7 +26,7 @@ const Profile = () => {
           <p className="text-stone-500 font-semibold text-sm">View your personal profile details.</p>
         </div>
         <button 
-          onClick={() => navigate('/account/settings')}
+          onClick={() => navigate('/settings')}
           className="flex items-center gap-2 bg-white border border-stone-200 text-stone-700 hover:text-[#2E7D32] hover:border-[#2E7D32] px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
         >
           <Edit3 className="w-4 h-4" />

@@ -103,7 +103,7 @@ const Orders = () => {
         }
       }
       await fetchProfile();
-      navigate('/account/checkout');
+      navigate('/checkout');
     } catch (error) {
       alert('Failed to reorder. Please try again.');
     }

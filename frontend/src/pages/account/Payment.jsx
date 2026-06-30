@@ -42,7 +42,7 @@ const Payment = () => {
       setIsProcessing(false);
       // Simulate success
       setPaymentStatus('success');
-      setTimeout(() => navigate('/account/order-success'), 1000);
+      setTimeout(() => navigate('/order-success'), 1000);
     }, 2500);
   };
 
@@ -260,7 +260,7 @@ const Payment = () => {
         <div className="pt-6 border-t border-stone-100 flex items-center justify-between">
           <button 
             type="button" 
-            onClick={() => navigate('/account/order-summary')} 
+            onClick={() => navigate('/order-summary')} 
             disabled={isProcessing}
             className="text-sm font-bold text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 disabled:opacity-50"
           >

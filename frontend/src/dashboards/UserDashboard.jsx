@@ -91,19 +91,19 @@ const UserDashboard = () => {
 
   const handleBuyNow = async (product) => {
     await handleAddToCart(product);
-    navigate('/account/cart');
+    navigate('/cart');
   };
 
   const handleTabChange = (tab) => {
     switch(tab) {
       case 'Marketplace': setActiveTab('Marketplace'); break;
       case 'Profile': setActiveTab('Profile'); break;
-      case 'Orders': navigate('/account/orders'); break;
-      case 'Cart': navigate('/account/cart'); break;
-      case 'Wishlist': navigate('/account/saved'); break;
-      case 'Addresses': navigate('/account/address'); break;
-      case 'Help & Support': navigate('/account/support'); break;
-      case 'Settings': navigate('/account/settings'); break;
+      case 'Orders': navigate('/orders'); break;
+      case 'Cart': navigate('/cart'); break;
+      case 'Wishlist': navigate('/saved'); break;
+      case 'Addresses': navigate('/address'); break;
+      case 'Help & Support': navigate('/support'); break;
+      case 'Settings': navigate('/settings'); break;
       default: setActiveTab(tab);
     }
   };

@@ -12,14 +12,18 @@ export const register = async (req, res) => {
   const { name, email, phone, password, country, countryCode, currency, companyName } = req.body;
 
   try {
-    let userExists = await User.findOne({ email });
+    let userExists = await User.findOne({ $or: [{ email }, { phone }] });
 
     if (userExists) {
       // If user exists but is not verified, allow re-registration to regenerate OTP
       if (!userExists.isVerified) {
-        await User.deleteOne({ email });
+        await User.deleteOne({ _id: userExists._id });
       } else {
-        return res.status(400).json({ success: false, message: 'User already exists' });
+        if (userExists.email === email) {
+          return res.status(400).json({ success: false, message: 'Email already registered' });
+        } else {
+          return res.status(400).json({ success: false, message: 'Mobile number already registered' });
+        }
       }
     }
 
@@ -106,16 +110,18 @@ export const verifyOtp = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 export const login = async (req, res) => {
-  let { email, password } = req.body;
+  let { email, password } = req.body; // 'email' holds the identifier (email or phone)
 
   try {
-    email = email.toLowerCase().trim();
-    console.log(`[User Auth] Attempting login for: ${email}`);
+    const identifier = email.toLowerCase().trim();
+    console.log(`[User Auth] Attempting login for: ${identifier}`);
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ 
+      $or: [{ email: identifier }, { phone: identifier }] 
+    }).select('+password');
 
     if (!user) {
-      console.log(`[User Auth] User not found for email ${email}`);
+      console.log(`[User Auth] User not found for identifier ${identifier}`);
       return res.status(401).json({ success: false, message: 'Invalid credentials. User not found.' });
     }
 
@@ -205,7 +211,7 @@ export const googleLogin = async (req, res) => {
       user = await User.create({
         name,
         email,
-        phone: 'N/A',
+        phone: `google_${googleId}`, // Unique placeholder until user updates profile
         password: Math.random().toString(36).slice(-8), // random temp password
         isVerified: true,
       });

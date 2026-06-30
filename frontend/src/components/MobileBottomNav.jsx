@@ -10,7 +10,7 @@ const MobileBottomNav = () => {
   // Hide on desktop (>=768px handled by md:hidden)
   // Hide on admin routes
   // Hide on checkout/product view where specific action bars exist at the bottom
-  const hiddenRoutes = ['/admin', '/account/checkout', '/product/', '/productview/', '/account/mobile'];
+  const hiddenRoutes = ['/admin', '/checkout', '/product/', '/productview/', '/mobile'];
   const shouldHide = hiddenRoutes.some(route => location.pathname.includes(route));
 
   // ONLY SHOW ON PRIVATE PAGES
@@ -22,9 +22,9 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { name: 'Home', icon: Home, path: '/dashboard' },
-    { name: 'Quality Test', icon: FlaskConical, path: '/account/testing-reports' },
-    { name: 'Cart', icon: ShoppingCart, path: '/account/cart', badge: cartCount },
-    { name: 'Account', icon: User, path: '/account/mobile' },
+    { name: 'Quality Test', icon: FlaskConical, path: '/testing-reports' },
+    { name: 'Cart', icon: ShoppingCart, path: '/cart', badge: cartCount },
+    { name: 'Account', icon: User, path: '/mobile' },
   ];
 
   return (
@@ -37,7 +37,7 @@ const MobileBottomNav = () => {
         {navItems.map((item) => {
           const isActive = 
             location.pathname === item.path || 
-            (item.name === 'Account' && location.pathname.startsWith('/account') && location.pathname !== '/account/cart' && location.pathname !== '/account/testing-reports');
+            (item.name === 'Account' && location.pathname.startsWith('/account') && location.pathname !== '/cart' && location.pathname !== '/testing-reports');
           
           return (
             <NavLink
