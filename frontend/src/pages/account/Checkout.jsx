@@ -10,6 +10,7 @@ import { convertCurrency } from '../../utils/currencyConverter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../context/AuthContext';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
+import { isIndianUser, getAvailablePaymentMethods, COUNTRIES_LIST } from '../../utils/countryHelpers';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -26,10 +27,11 @@ const Checkout = () => {
   const [shippingLoading, setShippingLoading] = useState(false);
   
   const defaultAddr = user?.addresses?.find(a => a.isDefault) || user?.addresses?.[0];
-  const defaultCountry = defaultAddr?.country || user?.country || 'India';
+  const defaultCountryCode = defaultAddr?.countryCode || user?.countryCode || '';
+  const defaultCountryName = defaultAddr?.country || user?.country || '';
 
   const [shippingMode, setShippingMode] = useState(
-    defaultCountry.trim().toLowerCase() === 'india' ? 'domestic' : 'international'
+    defaultCountryName.trim().toLowerCase() === 'india' ? 'domestic' : 'international'
   );
 
   const [formData, setFormData] = useState({
@@ -40,22 +42,22 @@ const Checkout = () => {
     city: defaultAddr?.city || '',
     state: defaultAddr?.state || '',
     zip: defaultAddr?.zip || '',
-    country: defaultCountry,
+    countryCode: defaultCountryCode,
+    country: defaultCountryName,
     port: '',
     shippingMethod: '',
     containerType: '',
   });
 
-  const isIndia = formData.country.trim().toLowerCase() === 'india';
+  const isIndia = isIndianUser(formData.countryCode, formData.country);
+  const availableMethods = getAvailablePaymentMethods(formData.countryCode, formData.country);
 
   // Automatically adjust default payment method when country changes
   React.useEffect(() => {
-    if (isIndia) {
-      if (!['cod', 'razorpay'].includes(paymentMethod)) setPaymentMethod('razorpay');
-    } else {
-      if (!['paypal', 'stripe'].includes(paymentMethod)) setPaymentMethod('stripe');
+    if (!availableMethods.includes(paymentMethod)) {
+      setPaymentMethod(availableMethods[0]);
     }
-  }, [isIndia]);
+  }, [formData.country, formData.countryCode, availableMethods, paymentMethod]);
 
   // Load Razorpay Script dynamically
   React.useEffect(() => {
@@ -181,7 +183,8 @@ const Checkout = () => {
       formData.city?.trim() &&
       formData.state?.trim() &&
       formData.zip?.trim() &&
-      formData.country?.trim()
+      formData.country?.trim() &&
+      formData.countryCode?.trim()
     );
   };
 
@@ -572,7 +575,7 @@ const Checkout = () => {
                         <p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-3">Shipping Mode</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <label className={`p-3 rounded-xl border cursor-pointer transition ${shippingMode === 'domestic' ? 'border-[#2E7D32] bg-[#F0FAF0]' : 'border-stone-200 bg-white'}`}>
-                            <input type="radio" checked={shippingMode === 'domestic'} onChange={() => { setShippingMode('domestic'); setFormData((p) => ({ ...p, country: 'India', port: '', shippingMethod: 'road' })); }} className="sr-only" />
+                            <input type="radio" checked={shippingMode === 'domestic'} onChange={() => { setShippingMode('domestic'); setFormData((p) => ({ ...p, countryCode: 'IN', country: 'India', port: '', shippingMethod: 'road' })); }} className="sr-only" />
                             <p className="font-bold text-sm text-stone-900">Domestic India</p>
                             <p className="text-xs text-stone-500">State, city, pincode</p>
                           </label>
@@ -608,7 +611,24 @@ const Checkout = () => {
                         </div>
                         <div className="flex-1 space-y-2">
                           <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">Country</label>
-                          <input name="country" value={formData.country} onChange={handleChange} className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none" />
+                          {shippingMode === 'domestic' ? (
+                            <input name="country" value="India" readOnly className="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 cursor-not-allowed outline-none" />
+                          ) : (
+                            <select 
+                              name="countryCode" 
+                              value={formData.countryCode} 
+                              onChange={(e) => {
+                                const cName = COUNTRIES_LIST.find(c => c.code === e.target.value)?.name || '';
+                                setFormData({ ...formData, countryCode: e.target.value, country: cName });
+                              }}
+                              className="w-full bg-stone-50/50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] focus:ring-4 focus:ring-[#2E7D32]/10 transition-all outline-none"
+                            >
+                              <option value="">Select Country</option>
+                              {COUNTRIES_LIST.filter(c => c.code !== 'IN').map(c => (
+                                <option key={c.code} value={c.code}>{c.name}</option>
+                              ))}
+                            </select>
+                          )}
                         </div>
                       </div>
 

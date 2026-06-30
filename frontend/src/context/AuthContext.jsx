@@ -55,10 +55,10 @@ export const AuthProvider = ({ children }) => {
     fetchProfile();
   }, [token]);
 
-  const register = async (name, email, phone, password, country, currency, companyName) => {
+  const register = async (name, email, phone, password, country, countryCode, currency, companyName) => {
     setError(null);
     try {
-      const res = await apiClient.post('/auth/register', { name, email, phone, password, country, currency, companyName });
+      const res = await apiClient.post('/auth/register', { name, email, phone, password, country, countryCode, currency, companyName });
       return res.data;
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Registration failed';

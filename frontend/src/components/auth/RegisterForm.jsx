@@ -12,27 +12,14 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import SuccessAnimation from './SuccessAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { COUNTRIES_LIST, getPhoneCountry } from '../../utils/countryHelpers';
 
 const formVariants = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.05 } }
 };
 
-const COUNTRY_CURRENCY_MAP = {
-  'USA': 'USD',
-  'India': 'INR',
-  'Germany': 'EUR',
-  'UK': 'GBP',
-  'Australia': 'AUD',
-  'Canada': 'CAD',
-  'Japan': 'JPY',
-  'Netherlands': 'EUR',
-  'UAE': 'AED',
-  'Singapore': 'SGD',
-  'New Zealand': 'NZD'
-};
 
-const COUNTRIES = Object.keys(COUNTRY_CURRENCY_MAP);
 
 export const RegisterForm = () => {
   const { register: authRegister, verifyOtp } = useAuth();
@@ -100,7 +87,10 @@ export const RegisterForm = () => {
   // Auto fill currency
   useEffect(() => {
     if (selectedCountry) {
-      setValue('currency', COUNTRY_CURRENCY_MAP[selectedCountry] || '');
+      const countryData = COUNTRIES_LIST.find(c => c.code === selectedCountry);
+      if (countryData) {
+        setValue('currency', countryData.currency);
+      }
     }
   }, [selectedCountry, setValue]);
 
@@ -113,9 +103,10 @@ export const RegisterForm = () => {
         if (parsed.name) setValue('name', parsed.name);
         if (parsed.email) setValue('email', parsed.email);
         if (parsed.phone) setPhone(parsed.phone);
-        if (parsed.country) {
-          setValue('country', parsed.country);
-          setValue('currency', COUNTRY_CURRENCY_MAP[parsed.country] || '');
+        if (parsed.countryCode) {
+          setValue('country', parsed.countryCode);
+          const cData = COUNTRIES_LIST.find(c => c.code === parsed.countryCode);
+          if (cData) setValue('currency', cData.currency);
         }
       }
     } catch (e) {
@@ -150,17 +141,20 @@ export const RegisterForm = () => {
         name: data.name,
         email: data.email,
         phone,
-        country: data.country,
+        countryCode: data.country,
+        country: COUNTRIES_LIST.find(c => c.code === data.country)?.name || data.country,
       })
     );
 
     try {
+      const countryName = COUNTRIES_LIST.find(c => c.code === data.country)?.name || data.country;
       const res = await authRegister(
         data.name,
         data.email,
         phone || 'N/A', // Send phone or N/A
         data.password,
-        data.country,
+        countryName,
+        data.country, // countryCode
         data.currency,
         'N/A' // Send N/A for companyName automatically
       );
@@ -353,7 +347,7 @@ export const RegisterForm = () => {
             MOBILE NUMBER
           </label>
           <PhoneInput
-            country={'us'}
+            country={getPhoneCountry(selectedCountry) || 'us'}
             value={phone}
             onChange={phone => setPhone(phone)}
             disabled={otpSent}
@@ -383,9 +377,9 @@ export const RegisterForm = () => {
                 } ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
               >
                 <option value="" className="text-stone-500">Select...</option>
-                {COUNTRIES.map((country) => (
-                  <option key={country} value={country} className="text-stone-900 bg-white">
-                    {country}
+                {COUNTRIES_LIST.map((country) => (
+                  <option key={country.code} value={country.code} className="text-stone-900 bg-white">
+                    {country.name}
                   </option>
                 ))}
               </select>

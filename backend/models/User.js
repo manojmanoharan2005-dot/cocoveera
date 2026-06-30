@@ -54,6 +54,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    countryCode: {
+      type: String,
+      default: null,
+    },
     currency: {
       type: String,
       default: null,

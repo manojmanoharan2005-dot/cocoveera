@@ -9,7 +9,7 @@ import { sendOTPEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../utils
 // @route   POST /api/auth/register
 // @access  Public
 export const register = async (req, res) => {
-  const { name, email, phone, password, country, currency, companyName } = req.body;
+  const { name, email, phone, password, country, countryCode, currency, companyName } = req.body;
 
   try {
     let userExists = await User.findOne({ email });
@@ -33,6 +33,7 @@ export const register = async (req, res) => {
       phone,
       password,
       country,
+      countryCode,
       currency,
       companyName,
       otpCode,
@@ -91,6 +92,7 @@ export const verifyOtp = async (req, res) => {
         phone: user.phone,
         role: user.role,
         country: user.country,
+        countryCode: user.countryCode,
         currency: user.currency,
         companyName: user.companyName,
       },
@@ -178,6 +180,7 @@ export const login = async (req, res) => {
         phone: user.phone,
         role: user.role,
         country: user.country,
+        countryCode: user.countryCode,
         currency: user.currency,
         companyName: user.companyName,
       },
@@ -221,6 +224,7 @@ export const googleLogin = async (req, res) => {
         phone: user.phone,
         role: user.role,
         country: user.country,
+        countryCode: user.countryCode,
         currency: user.currency,
         companyName: user.companyName,
       },
