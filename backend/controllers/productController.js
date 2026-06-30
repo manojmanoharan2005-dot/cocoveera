@@ -6,36 +6,20 @@ import Product from '../models/Product.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 import { clearCache } from '../middleware/cache.js';
 
-// @desc    Get all products (with category filter and pagination)
+// @desc    Get all products (with category filter)
 // @route   GET /api/products
 // @access  Public
 export const getProducts = async (req, res) => {
   try {
-    const { category, page, limit } = req.query;
+    const { category } = req.query;
     let query = {};
     if (category) {
       query.category = category;
     }
-    
-    const pageNum = parseInt(page, 10) || 1;
-    const limitNum = parseInt(limit, 10) || 100; // Keep high default if not passed to not break legacy UI, but frontend will pass 20 or 8
-    const startIndex = (pageNum - 1) * limitNum;
-    const total = await Product.countDocuments(query);
-
     const products = await Product.find(query)
       .select('name slug category description price stock images packageSize specifications')
-      .skip(startIndex)
-      .limit(limitNum)
       .lean();
-      
-    res.status(200).json({ 
-      success: true, 
-      count: products.length, 
-      total,
-      page: pageNum,
-      pages: Math.ceil(total / limitNum),
-      data: products 
-    });
+    res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

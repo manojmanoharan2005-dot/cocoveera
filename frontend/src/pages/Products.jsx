@@ -30,9 +30,19 @@ const Products = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
+  const { data: products = [], error, isLoading: loading } = useSWR(
+    '/products',
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 600000 }
+  );
+
+  // Blend selector state
+  const [selectedBlend, setSelectedBlend] = useState('natural');
+
+  // Filtering states
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  // Sync category from URL initially
+  // Sync category from URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const cat = params.get('category');
@@ -42,26 +52,6 @@ const Products = () => {
       setSelectedCategory('All');
     }
   }, [location.search]);
-
-  const categoryQuery = selectedCategory !== 'All' ? `&category=${encodeURIComponent(selectedCategory)}` : '';
-  
-  const { data: products = [], error, isLoading: loading } = useSWR(
-    `/products?page=1&limit=20${categoryQuery}`,
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 600000 }
-  );
-
-  const { data: dbCategories = [] } = useSWR(
-    '/categories',
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 600000 }
-  );
-
-  // Blend selector state
-  const [selectedBlend, setSelectedBlend] = useState('natural');
-
-  // Filtering states
-  // Removed old state initialization since it's hoisted above
   
   // Quote Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,7 +75,7 @@ const Products = () => {
 
 
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(dbCategories.map(c => c.name))].filter(Boolean);
+    const uniqueCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
     const getCategoryPriority = (name) => {
       if (!name) return 999;
       const lower = name.toLowerCase();
@@ -104,11 +94,14 @@ const Products = () => {
       return 0;
     });
     return ['All', ...uniqueCategories];
-  }, [dbCategories]);
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
-    return products;
-  }, [products]);
+    if (selectedCategory === 'All') {
+      return products;
+    }
+    return products.filter(p => p.category === selectedCategory);
+  }, [selectedCategory, products]);
 
 
 
