@@ -681,19 +681,17 @@ const ProductView = () => {
                   >
                     {actionLoading ? 'ADDING...' : 'ADD TO CART'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleProceedToCheckout}
-                    disabled={actionLoading || !isWholeContainer}
-                    className={`flex-1 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
-                      !isWholeContainer 
-                        ? 'bg-stone-300 text-stone-500 opacity-60 cursor-not-allowed'
-                        : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
-                    }`}
-                  >
-                    {actionLoading ? 'PROCESSING...' : 'CHECKOUT'}
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                  {isWholeContainer && (
+                    <button
+                      type="button"
+                      onClick={handleProceedToCheckout}
+                      disabled={actionLoading}
+                      className="flex-1 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10"
+                    >
+                      {actionLoading ? 'PROCESSING...' : 'CHECKOUT'}
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -745,19 +743,21 @@ const ProductView = () => {
                     <ShoppingBag className={`w-3.5 h-3.5 transition-transform group-hover:scale-110`} />
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => showConfigurator ? handleProceedToCheckout() : setShowConfigurator(true)}
-                    disabled={actionLoading || (showConfigurator && isOverCapacity)}
-                    className={`flex-1 font-poppins text-[10px] font-black py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 group ${
-                      showConfigurator && isOverCapacity 
-                        ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
-                        : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
-                    }`}
-                  >
-                    {actionLoading ? 'WAIT...' : (showConfigurator ? 'CHECKOUT' : 'BUY NOW')}
-                    <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showConfigurator && isOverCapacity ? '' : 'group-hover:translate-x-0.5'}`} />
-                  </button>
+                  {(!showConfigurator || isWholeContainer) && (
+                    <button
+                      type="button"
+                      onClick={() => showConfigurator ? handleProceedToCheckout() : setShowConfigurator(true)}
+                      disabled={actionLoading || (showConfigurator && isOverCapacity)}
+                      className={`flex-1 font-poppins text-[10px] font-black py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 group ${
+                        showConfigurator && isOverCapacity 
+                          ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
+                          : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
+                      }`}
+                    >
+                      {actionLoading ? 'WAIT...' : (showConfigurator ? 'CHECKOUT' : 'BUY NOW')}
+                      <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showConfigurator && isOverCapacity ? '' : 'group-hover:translate-x-0.5'}`} />
+                    </button>
+                  )}
                 </div>
 
                 {!showConfigurator && (

@@ -278,13 +278,15 @@ const Cart = () => {
               </div>
             </div>
 
-            <button 
-              onClick={() => navigate('/checkout')}
-              disabled={!isWholeContainer}
-              className={`w-full py-4 font-black rounded-xl transition-colors flex justify-center items-center gap-2 ${!isWholeContainer ? 'bg-stone-200 text-stone-500 opacity-60 cursor-not-allowed' : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white'}`}
-            >
-              {!isWholeContainer ? 'Full Container Required' : 'Proceed to Checkout'} <ArrowRight className="w-5 h-5" />
-            </button>
+            {isWholeContainer && (
+              <button 
+                onClick={() => navigate('/checkout')}
+                disabled={!isWholeContainer}
+                className={`w-full py-4 font-black rounded-xl transition-colors flex justify-center items-center gap-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white`}
+              >
+                Proceed to Checkout <ArrowRight className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
