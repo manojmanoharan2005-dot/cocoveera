@@ -608,7 +608,7 @@ const ProductView = () => {
               {/* Mixed Load Section */}
               <div className="mt-4 border-t border-stone-100 pt-4">
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2">Mix with other products</p>
-                <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                <div className="space-y-2 lg:max-h-[160px] lg:overflow-y-auto lg:pr-1">
                   {relatedProducts.map(relProduct => {
                     const existingExtra = extraItems.find(item => item.product._id === relProduct._id);
                     const relQuantity = existingExtra ? existingExtra.quantity : 0;
