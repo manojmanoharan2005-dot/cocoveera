@@ -681,17 +681,19 @@ const ProductView = () => {
                   >
                     {actionLoading ? 'ADDING...' : 'ADD TO CART'}
                   </button>
-                  {isWholeContainer && (
-                    <button
-                      type="button"
-                      onClick={handleProceedToCheckout}
-                      disabled={actionLoading}
-                      className="flex-1 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10"
-                    >
-                      {actionLoading ? 'PROCESSING...' : 'CHECKOUT'}
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleProceedToCheckout}
+                    disabled={actionLoading || !isWholeContainer}
+                    className={`flex-1 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group ${
+                      !isWholeContainer 
+                        ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
+                        : 'shadow-md bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
+                    }`}
+                  >
+                    {actionLoading && isWholeContainer ? 'PROCESSING...' : 'CHECKOUT'}
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
@@ -983,8 +985,12 @@ const ProductView = () => {
                 }, 100);
               }
             }}
-            disabled={actionLoading || (showConfigurator && isOverCapacity)}
-            className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-[10px] font-black py-2.5 sm:py-3 rounded-xl shadow-md shadow-[#2E7D32]/20 flex items-center justify-center disabled:opacity-50 disabled:bg-stone-300 disabled:shadow-none transition-colors"
+            disabled={actionLoading || (showConfigurator && !isWholeContainer)}
+            className={`flex-1 font-poppins text-[10px] font-black py-2.5 sm:py-3 rounded-xl flex items-center justify-center transition-colors ${
+              showConfigurator && !isWholeContainer
+                ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
+                : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-md shadow-[#2E7D32]/20 disabled:opacity-50 disabled:bg-stone-300 disabled:shadow-none'
+            }`}
           >
             <span className="truncate">{showConfigurator ? 'CHECKOUT' : 'BUY'}</span>
             <ChevronRight className="w-3.5 h-3.5 ml-0.5 shrink-0" />
