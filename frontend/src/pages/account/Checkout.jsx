@@ -53,7 +53,7 @@ const Checkout = () => {
     if (isIndia) {
       if (!['cod', 'razorpay'].includes(paymentMethod)) setPaymentMethod('razorpay');
     } else {
-      if (!['wire', 'paypal', 'stripe'].includes(paymentMethod)) setPaymentMethod('wire');
+      if (!['paypal', 'stripe'].includes(paymentMethod)) setPaymentMethod('stripe');
     }
   }, [isIndia]);
 
@@ -775,14 +775,6 @@ const Checkout = () => {
                         </>
                       ) : (
                         <>
-                          <label className={`flex items-center gap-3 sm:gap-5 p-4 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'wire' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
-                            <input type="radio" name="payment" value="wire" checked={paymentMethod === 'wire'} onChange={() => setPaymentMethod('wire')} className="w-4 h-4 sm:w-5 sm:h-5 accent-[#2E7D32] shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm md:text-base font-bold text-stone-900 leading-tight">International Wire Transfer</p>
-                              <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-1 leading-snug">Standard SWIFT bank transfer for export orders.</p>
-                            </div>
-                            <Banknote className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${paymentMethod === 'wire' ? 'text-[#2E7D32]' : 'text-stone-400'}`} />
-                          </label>
                           <label className={`flex items-center gap-3 sm:gap-5 p-4 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'paypal' ? 'border-[#2E7D32] bg-[#F0FAF0] shadow-sm' : 'border-transparent bg-stone-50 hover:bg-stone-100 hover:border-stone-200'}`}>
                             <input type="radio" name="payment" value="paypal" checked={paymentMethod === 'paypal'} onChange={() => setPaymentMethod('paypal')} className="w-4 h-4 sm:w-5 sm:h-5 accent-[#2E7D32] shrink-0" />
                             <div className="flex-1 min-w-0">
