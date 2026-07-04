@@ -7,6 +7,7 @@ import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import RecommendedProducts from '../../components/common/RecommendedProducts';
+import SEO from '../../components/SEO';
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -141,6 +142,7 @@ const Orders = () => {
 
   return (
     <div className="w-full space-y-6 pb-20">
+      <SEO title="Your Orders - Cocoveera" />
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
         <div>

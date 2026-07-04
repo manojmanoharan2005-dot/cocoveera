@@ -50,7 +50,7 @@ export const Sidebar = ({
     .slice(0, 2) || 'U';
 
   return (
-    <aside className="w-[256px] bg-white border border-stone-200/70 rounded-[28px] overflow-hidden h-fit sticky top-24 shadow-[0_8px_32px_rgba(0,0,0,0.07)] hidden lg:flex flex-col">
+    <aside className="w-[256px] bg-white border border-stone-200/70 rounded-[28px] overflow-hidden h-fit sticky top-24 shadow-[0_8px_32px_rgba(0,0,0,0.07)] hidden md:flex flex-col">
       {/* Brand strip */}
       <div className="bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] px-5 py-3 flex items-center gap-3">
         <img
