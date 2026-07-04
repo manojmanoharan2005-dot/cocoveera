@@ -69,8 +69,7 @@ const SavedCart = () => {
   };
 
   const clearAll = async () => {
-    const currentIds = items.map(i => i.id);
-    clearWishlist(currentIds);
+    clearWishlist();
   };
 
   const moveToCart = async (id) => {

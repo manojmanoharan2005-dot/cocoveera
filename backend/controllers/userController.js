@@ -243,19 +243,32 @@ export const clearCart = async (req, res) => {
 // @access  Private
 export const toggleWishlist = async (req, res) => {
   try {
-    const { productId } = req.body;
-    const user = await User.findById(req.user._id).select('wishlist');
+    const { productId, action } = req.body;
     
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+    // Explicit Clear All
+    if (action === 'clear') {
+      await User.updateOne({ _id: req.user._id }, { $set: { wishlist: [] } });
+      return res.status(200).json({ success: true, message: 'Wishlist cleared' });
     }
-    
-    const exists = user.wishlist.some(p => p.toString() === productId);
-    
-    if (exists) {
+
+    if (!productId) {
+      return res.status(400).json({ success: false, message: 'Product ID required' });
+    }
+
+    if (action === 'add') {
+      await User.updateOne({ _id: req.user._id }, { $addToSet: { wishlist: productId } });
+    } else if (action === 'remove') {
       await User.updateOne({ _id: req.user._id }, { $pull: { wishlist: productId } });
     } else {
-      await User.updateOne({ _id: req.user._id }, { $addToSet: { wishlist: productId } });
+      // Fallback for older clients without explicit action
+      const user = await User.findById(req.user._id).select('wishlist');
+      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+      const exists = user.wishlist.some(p => p.toString() === productId);
+      if (exists) {
+        await User.updateOne({ _id: req.user._id }, { $pull: { wishlist: productId } });
+      } else {
+        await User.updateOne({ _id: req.user._id }, { $addToSet: { wishlist: productId } });
+      }
     }
     
     res.status(200).json({ success: true, message: 'Wishlist updated' });

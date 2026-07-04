@@ -174,18 +174,32 @@ export const AuthProvider = ({ children }) => {
     console.log(`[Wishlist] Heart Click -> ${t0}ms`);
     
     if (!user) return false;
+    
+    // Determine the product ID safely (could be a string or object)
     const productId = typeof product === 'string' ? product : (product._id || product.id);
+    if (!productId) {
+      console.error('Invalid product for wishlist');
+      return false;
+    }
     
     if (pendingWishlist.has(productId)) return true; // Already processing
     
     setPendingWishlist(prev => new Set(prev).add(productId));
 
     const currentWishlist = user.wishlist || [];
-    const isWishlisted = currentWishlist.some(p => (p._id || p.id || p) === productId);
     
-    // Optimistic UI Update
+    // Safe lookup handling both populated objects and ID strings
+    const isWishlisted = currentWishlist.some(p => {
+      const id = typeof p === 'string' ? p : (p._id || p.id);
+      return id === productId;
+    });
+    
+    // Optimistic UI Update with safe ID extraction
     const newWishlist = isWishlisted 
-      ? currentWishlist.filter(p => (p._id || p.id || p) !== productId)
+      ? currentWishlist.filter(p => {
+          const id = typeof p === 'string' ? p : (p._id || p.id);
+          return id !== productId;
+        })
       : [...currentWishlist, product];
       
     const t1 = performance.now();
@@ -196,7 +210,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const t3 = performance.now();
       console.log(`[Wishlist] API Request Started -> ${(t3 - t0).toFixed(2)}ms`);
-      apiClient.post('/users/wishlist', { productId }).catch(err => {
+      // Explicitly tell the backend what action to take to avoid race condition toggles
+      apiClient.post('/users/wishlist', { 
+        productId,
+        action: isWishlisted ? 'remove' : 'add'
+      }).catch(err => {
          console.error('Wishlist sync failed:', err);
          setUser(prev => ({ ...prev, wishlist: currentWishlist }));
       });
@@ -211,16 +229,14 @@ export const AuthProvider = ({ children }) => {
   };
 
 
-  const clearWishlist = async (productIds) => {
+  const clearWishlist = async () => {
     if (!user) return;
     const currentWishlist = user.wishlist || [];
     setUser(prev => ({ ...prev, wishlist: [] })); // Optimistic clear
     
     try {
-      for (const id of productIds) {
-        await apiClient.post('/users/wishlist', { productId: id });
-      }
-      fetchProfile();
+      // Send a single explicit clear command instead of looping over IDs
+      await apiClient.post('/users/wishlist', { action: 'clear' });
     } catch (err) {
       console.error('Failed to clear wishlist', err);
       setUser(prev => ({ ...prev, wishlist: currentWishlist })); // Revert on error
