@@ -160,6 +160,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const toggleWishlist = async (product) => {
+    const t0 = performance.now();
+    console.log(`[Wishlist] Heart Click -> ${t0}ms`);
+    
     if (!user) return false;
     const productId = typeof product === 'string' ? product : (product._id || product.id);
     
@@ -175,10 +178,18 @@ export const AuthProvider = ({ children }) => {
       ? currentWishlist.filter(p => (p._id || p.id || p) !== productId)
       : [...currentWishlist, product];
       
+    const t1 = performance.now();
     setUser(prev => ({ ...prev, wishlist: newWishlist }));
+    const t2 = performance.now();
+    console.log(`[Wishlist] State Updated -> ${(t2 - t1).toFixed(2)}ms`);
 
     try {
+      const t3 = performance.now();
+      console.log(`[Wishlist] API Request Started -> ${(t3 - t0).toFixed(2)}ms`);
       await apiClient.post('/users/wishlist', { productId });
+      const t4 = performance.now();
+      console.log(`[Wishlist] Response Returned -> ${(t4 - t3).toFixed(2)}ms`);
+      
       fetchProfile(); // Sync silently in background
       return true;
     } catch (err) {
@@ -194,6 +205,7 @@ export const AuthProvider = ({ children }) => {
       });
     }
   };
+
 
   const clearWishlist = async (productIds) => {
     if (!user) return;

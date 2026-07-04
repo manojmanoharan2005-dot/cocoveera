@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
 import ImageWithFallback from '../components/common/ImageWithFallback';
 
-export const ProductCard = ({
+export const ProductCard = React.memo(({
   product,
   isWishlisted,
   onWishlistToggle,
@@ -105,6 +105,12 @@ export const ProductCard = ({
       </div>
     </motion.div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent re-render unless wishlist status or product itself changes
+  return (
+    prevProps.isWishlisted === nextProps.isWishlisted &&
+    prevProps.product._id === nextProps.product._id
+  );
+});
 
 export default ProductCard;
