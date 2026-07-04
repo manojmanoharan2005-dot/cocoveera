@@ -3,6 +3,7 @@
  * Purpose: Provides global state management context using React Context API.
  */
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -26,26 +27,34 @@ apiClient.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    try {
-      const storedUser = localStorage.getItem('cocoveera_user');
-      return storedUser ? JSON.parse(storedUser) : null;
-    } catch (e) {
-      return null;
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      window.dispatchEvent(new Event('auth:unauthorized'));
     }
-  });
+    return Promise.reject(error);
+  }
+);
+
+export const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('cocoveera_token'));
   
-  // If we already have token and user locally, we are not loading initially.
-  // We'll just update it in the background.
-  const [loading, setLoading] = useState(() => {
-    const hasToken = !!localStorage.getItem('cocoveera_token');
-    const hasUser = !!localStorage.getItem('cocoveera_user');
-    return !(hasToken && hasUser);
-  });
+  // Only show loading if a token exists and we need to verify it
+  const [loading, setLoading] = useState(!!localStorage.getItem('cocoveera_token'));
   
   const [error, setError] = useState(null);
+
+  // Global unauthorized listener
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout();
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, []);
 
   const fetchProfile = async () => {
     if (token) {
@@ -142,9 +151,12 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('cocoveera_token');
     localStorage.removeItem('cocoveera_user');
+    sessionStorage.clear();
     setToken(null);
     setUser(null);
     setError(null);
+    setLoading(false);
+    navigate('/', { replace: true });
   };
 
   return (

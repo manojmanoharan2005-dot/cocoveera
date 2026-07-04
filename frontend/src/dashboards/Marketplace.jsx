@@ -14,6 +14,9 @@ import { useAuth } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
 import { API_URL } from '../utils/config';
 import ImageWithFallback from '../components/common/ImageWithFallback';
+import useSWR from 'swr';
+
+const fetcher = url => axios.get(url).then(res => res.data.data);
 
 export const Marketplace = () => {
   const { user, fetchProfile } = useAuth();
@@ -26,38 +29,15 @@ export const Marketplace = () => {
     filterDrawerOpen, setFilterDrawerOpen 
   } = useOutletContext();
   
-  const [products, setProducts] = useState(() => {
-    const cached = localStorage.getItem('cocoveera_products');
-    return cached ? JSON.parse(cached) : [];
+  const { data: products = [], isLoading: loading } = useSWR(`${API_URL}/products`, fetcher, { 
+    revalidateOnFocus: false,
+    dedupingInterval: 60000 
   });
-  const [loading, setLoading] = useState(() => !localStorage.getItem('cocoveera_products'));
   const [wishlist, setWishlist] = useState(user?.wishlist || []);
 
   useEffect(() => {
     if (user) setWishlist(user.wishlist || []);
   }, [user]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const cached = localStorage.getItem('cocoveera_products');
-        if (cached) {
-          setProducts(JSON.parse(cached));
-          setLoading(false);
-        }
-        const prodRes = await axios.get(`${API_URL}/products`);
-        if (prodRes.data.success) {
-          setProducts(prodRes.data.data);
-          localStorage.setItem('cocoveera_products', JSON.stringify(prodRes.data.data));
-        }
-      } catch (err) {
-        console.error('Failed to fetch data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
 
   const onWishlistToggle = async (product) => {
     setWishlist(prev => {
@@ -66,7 +46,7 @@ export const Marketplace = () => {
       return [...prev, product];
     });
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('cocoveera_token');
       await axios.post(`${API_URL}/users/wishlist`, { productId: product._id }, { headers: { Authorization: `Bearer ${token}` } });
       await fetchProfile();
     } catch (err) {
@@ -76,7 +56,7 @@ export const Marketplace = () => {
 
   const onAddToCart = async (product) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('cocoveera_token');
       const res = await axios.post(`${API_URL}/users/cart`, { productId: product._id, quantity: 1, increment: true }, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) {
         await fetchProfile();
@@ -115,30 +95,10 @@ export const Marketplace = () => {
   const [displayedProducts, setDisplayedProducts] = useState([]);
   
   // Database categories to get images
-  const [dbCategories, setDbCategories] = useState(() => {
-    const cached = localStorage.getItem('cocoveera_cats');
-    return cached ? JSON.parse(cached) : [];
+  const { data: dbCategories = [] } = useSWR(`${API_URL}/categories`, fetcher, { 
+    revalidateOnFocus: false,
+    dedupingInterval: 600000 
   });
-
-  useEffect(() => {
-    const fetchCats = async () => {
-      try {
-        const cached = localStorage.getItem('cocoveera_cats');
-        if (cached) {
-          setDbCategories(JSON.parse(cached));
-        }
-
-        const res = await axios.get(`${API_URL}/categories`);
-        if (res.data.success) {
-          setDbCategories(res.data.data);
-          localStorage.setItem('cocoveera_cats', JSON.stringify(res.data.data));
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories', err);
-      }
-    };
-    fetchCats();
-  }, []);
 
   useEffect(() => {
     let result = [...(products || [])];

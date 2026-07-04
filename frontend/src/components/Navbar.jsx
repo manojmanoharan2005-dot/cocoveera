@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { Menu, X, ChevronDown, Globe, Mail, Phone, ShieldCheck, Heart, ShoppingCart, User } from 'lucide-react';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -135,7 +135,11 @@ const Navbar = () => {
               )}
             </div>
 
-            {user ? (
+            {loading ? (
+              <div className="flex items-center gap-3 w-32 h-8">
+                <div className="w-full h-full bg-stone-100 rounded-lg animate-pulse"></div>
+              </div>
+            ) : user ? (
               <div className="flex items-center gap-3">
                 <Link to="/saved" className="relative p-1.5 text-stone-600 hover:text-primary transition-colors">
                   <Heart className="w-5 h-5" />
@@ -220,7 +224,12 @@ const Navbar = () => {
             ))}
 
             <div className="border-t border-stone-100 mt-3 pt-4 flex flex-col gap-3">
-              {user ? (
+              {loading ? (
+                <div className="flex flex-col gap-3">
+                  <div className="h-10 bg-stone-100 rounded-lg animate-pulse w-full"></div>
+                  <div className="h-10 bg-stone-100 rounded-lg animate-pulse w-full"></div>
+                </div>
+              ) : user ? (
                 <>
                   <Link
                     to="/dashboard"

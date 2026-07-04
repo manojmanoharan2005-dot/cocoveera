@@ -243,8 +243,6 @@ function AppContent() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/support" element={<HelpCenter />} />
           <Route path="/mobile" element={<MobileAccount />} />
-          <Route path="/product/:id" element={<ProductView />} />
-          <Route path="/productview/:id" element={<ProductView />} />
         </Route>
 
         {/* Admin Routes */}
@@ -361,8 +359,10 @@ function AppContent() {
           }
         />
 
-        {/* Catch all route */}
+        {/* Catch all route and Product routes */}
         <Route element={<PublicLayout />}>
+          <Route path="/product/:id" element={<ProductView />} />
+          <Route path="/productview/:id" element={<ProductView />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
@@ -374,13 +374,13 @@ function AppContent() {
 function App() {
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <AdminAuthProvider>
-          <Router>
+      <Router>
+        <AuthProvider>
+          <AdminAuthProvider>
             <AppContent />
-          </Router>
-        </AdminAuthProvider>
-      </AuthProvider>
+          </AdminAuthProvider>
+        </AuthProvider>
+      </Router>
     </HelmetProvider>
   );
 }

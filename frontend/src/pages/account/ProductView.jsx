@@ -3,7 +3,7 @@
  * Purpose: React page component representing the ProductView view.
  */
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
   Droplet, Wind, ShieldCheck, FileText, ChevronRight,
@@ -19,6 +19,7 @@ import SEO from '../../components/SEO';
 const ProductView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, fetchProfile } = useAuth();
 
   // State management
@@ -117,6 +118,10 @@ const ProductView = () => {
 
   const handleWishlistToggle = async () => {
     if (!product) return;
+    if (!user) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     setIsWishlisted(prev => !prev);
     try {
       await apiClient.post('/users/wishlist', { productId: product._id });
@@ -128,6 +133,10 @@ const ProductView = () => {
 
   const handleAddToCart = async () => {
     if (!product || actionLoading) return;
+    if (!user) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     setActionLoading(true);
     try {
       const res = await apiClient.post('/users/cart', { 
@@ -150,6 +159,10 @@ const ProductView = () => {
 
   const handleBuyNow = async () => {
     if (!product || actionLoading) return;
+    if (!user) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     setActionLoading(true);
     try {
       const res = await apiClient.post('/users/cart', { 
@@ -171,6 +184,10 @@ const ProductView = () => {
 
   const handleProceedToCheckout = () => {
     if (!product) return;
+    if (!user) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     navigate('/checkout', { 
       state: { 
         product, 
@@ -192,6 +209,10 @@ const ProductView = () => {
 
   const handleTestingPayment = async () => {
     if (!selectedTestingPackage) return;
+    if (!user) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     setTestingLoading(true);
 
     try {

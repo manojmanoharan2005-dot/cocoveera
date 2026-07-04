@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 const MobileBottomNav = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   
   // Hide on desktop (>=768px handled by md:hidden)
   // Hide on admin routes
@@ -16,7 +16,7 @@ const MobileBottomNav = () => {
   // ONLY SHOW ON PRIVATE PAGES
   const isPrivatePage = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/account');
 
-  if (shouldHide || !isPrivatePage) return null;
+  if (shouldHide || !isPrivatePage || loading) return null;
 
   const cartCount = user?.cart?.length || 0;
 

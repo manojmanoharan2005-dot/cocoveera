@@ -2,26 +2,14 @@
  * File: frontend/src/components/Footer.jsx
  * Purpose: Reusable React UI component for the frontend.
  */
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Send, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 
 const Footer = () => {
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email) {
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 5000);
-    }
-  };
-
   return (
     <footer className="bg-[#1a2a1a] text-stone-300 pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
         
         {/* Col 1: Brand */}
         <div className="lg:col-span-1">
@@ -138,37 +126,7 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Col 5: Newsletter */}
-        <div>
-          <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-5">Newsletter</h4>
-          <p className="text-stone-400 text-xs leading-relaxed mb-4">
-            Subscribe to our newsletter to get updates on products and offers.
-          </p>
-          <form onSubmit={handleSubscribe} className="relative mb-4">
-            <input
-              type="email"
-              placeholder="Your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/10 border border-white/20 text-white rounded-lg py-2.5 pl-4 pr-12 w-full text-xs focus:outline-none focus:border-primary-light transition-colors placeholder-stone-500 font-medium"
-              required
-            />
-            <button
-              type="submit"
-              className="absolute right-1 top-1 bg-primary hover:bg-primary-dark p-2 rounded-lg text-white transition-colors"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </form>
-          {subscribed && (
-            <p className="text-[10px] text-primary-light font-bold animate-pulse mb-3">
-              ✓ Subscribed! Thank you.
-            </p>
-          )}
-          <p className="text-stone-500 text-[10px] leading-relaxed">
-            By subscribing, you agree to our privacy policy and consent to receive updates.
-          </p>
-        </div>
+
       </div>
 
       {/* Bottom bar */}
