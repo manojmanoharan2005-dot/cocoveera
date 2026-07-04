@@ -170,8 +170,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const toggleWishlist = async (product) => {
-    const t0 = performance.now();
-    console.log(`[Wishlist] Heart Click -> ${t0}ms`);
     
     if (!user) return false;
     
@@ -193,8 +191,6 @@ export const AuthProvider = ({ children }) => {
       return id === productId;
     });
 
-    const t1 = performance.now();
-    // Use functional state update to guarantee we never drop items due to stale closures
     setUser(prev => {
       if (!prev) return prev;
       
@@ -213,13 +209,8 @@ export const AuthProvider = ({ children }) => {
         
       return { ...prev, wishlist: updatedWishlist };
     });
-    const t2 = performance.now();
-    console.log(`[Wishlist] State Updated -> ${(t2 - t1).toFixed(2)}ms`);
 
     try {
-      const t3 = performance.now();
-      console.log(`[Wishlist] API Request Started -> ${(t3 - t0).toFixed(2)}ms`);
-      // Explicitly tell the backend what action to take to avoid race condition toggles
       apiClient.post('/users/wishlist', { 
         productId,
         action: isWishlisted ? 'remove' : 'add'
