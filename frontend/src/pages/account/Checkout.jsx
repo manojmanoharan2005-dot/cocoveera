@@ -834,7 +834,7 @@ const Checkout = () => {
         </div>
 
         {/* RIGHT: Price Details Sidebar */}
-        <div className="w-full lg:w-[40%] sticky top-28 self-start">
+        <div className="w-full lg:w-[40%]">
           <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-stone-100 flex flex-col">
             <div className="bg-stone-50 border-b border-stone-100 p-6 flex items-center justify-between shrink-0 rounded-t-3xl">
               <div>
@@ -906,9 +906,12 @@ const Checkout = () => {
                   {isProcessing ? 'Processing Securely...' : 'Complete Payment'}
                 </button>
               ) : (
-                <div className="hidden lg:flex h-14 items-center justify-center rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50">
-                  <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">Complete steps to pay</p>
-                </div>
+                <button 
+                  disabled
+                  className="hidden lg:flex w-full bg-stone-100 text-stone-400 font-black uppercase tracking-widest text-sm py-4.5 rounded-2xl border-2 border-stone-200 transition-all cursor-not-allowed items-center justify-center h-14"
+                >
+                  Complete steps to pay
+                </button>
               )}
             </div>
           </div>
