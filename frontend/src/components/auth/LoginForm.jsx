@@ -98,22 +98,8 @@ export const LoginForm = () => {
       }
 
       if (res.requiresAdminVerification) {
-        // [TESTING BYPASS] Auto-verify instead of showing 2-step UI
-        /*
         setAdminTempToken(res.tempToken);
         setMode('verifyAdmin');
-        return;
-        */
-        
-        try {
-          // Auto-submit the static admin key to bypass 2FA for testing
-          const verifyRes = await verifyAdminKey(res.tempToken, 'CVR@2026#SecureAdminKey');
-          if (verifyRes.success) {
-            navigate('/admin/dashboard', { replace: true });
-          }
-        } catch (err) {
-          setApiError('Auto-verification failed. Check backend configuration.');
-        }
         return;
       }
 
@@ -218,7 +204,10 @@ export const LoginForm = () => {
       <SuccessAnimation 
         type="login" 
         onComplete={() => {
-          const fromPath = location.state?.from || (redirect ? `/${redirect}` : '/dashboard');
+          const fromState = location.state?.from;
+          const fromPath = fromState 
+            ? `${fromState.pathname}${fromState.search || ''}` 
+            : (redirect ? `/${redirect}` : '/dashboard');
           navigate(fromPath, { replace: true });
         }} 
       />
