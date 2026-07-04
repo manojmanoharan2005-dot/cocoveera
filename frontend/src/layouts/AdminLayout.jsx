@@ -26,7 +26,7 @@ export default function AdminLayout({ children }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/login');
   };
 
   const menuItems = [

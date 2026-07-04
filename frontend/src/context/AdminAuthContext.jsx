@@ -3,14 +3,16 @@
  * Purpose: Provides global state management context using React Context API.
  */
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../utils/config';
 
 const AdminAuthContext = createContext();
 
 export const AdminAuthProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [admin, setAdmin] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!localStorage.getItem('adminToken'));
   const [error, setError] = useState(null);
 
 
@@ -30,6 +32,8 @@ export const AdminAuthProvider = ({ children }) => {
           localStorage.removeItem('adminRefreshToken');
           setAdmin(null);
         }
+      } else {
+        setAdmin(null);
       }
       setLoading(false);
     };
@@ -88,7 +92,10 @@ export const AdminAuthProvider = ({ children }) => {
     
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminRefreshToken');
+    sessionStorage.clear();
     setAdmin(null);
+    setLoading(false);
+    navigate('/login', { replace: true });
   };
 
   const logoutAllDevices = async () => {
