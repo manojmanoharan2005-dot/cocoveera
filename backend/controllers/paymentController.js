@@ -6,9 +6,11 @@ import Stripe from 'stripe';
 import Razorpay from 'razorpay';
 import paypal from '@paypal/checkout-server-sdk';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import Quote from '../models/Quote.js';
+import User from '../models/User.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
 import { sendOrderConfirmationWithInvoice } from '../utils/EmailService.js';
 
@@ -387,6 +389,126 @@ export const rejectRefund = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Refund rejected', data: payment });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Verify Razorpay payment signature
+// @route   POST /api/payments/verify-payment
+// @access  Private
+export const verifyRazorpayPayment = async (req, res) => {
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderId } = req.body;
+
+  try {
+    dotenv.config({ override: true });
+    // Use Render environment variables directly.
+    const secret = process.env.VITE_RAZORPAY_SECRET || process.env.RAZORPAY_SECRET;
+    
+    if (!secret) {
+      console.error('[Razorpay Verify] RAZORPAY_SECRET is missing from environment variables');
+      return res.status(500).json({ success: false, message: 'Server configuration error' });
+    }
+
+    // Generate signature
+    const generated_signature = crypto
+      .createHmac('sha256', secret)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest('hex');
+
+    if (generated_signature !== razorpay_signature) {
+      console.error('[Razorpay Verify] Signature mismatch!');
+      return res.status(400).json({ success: false, message: 'Payment verification failed' });
+    }
+
+    // Signature is valid. Fetch and update order.
+    const order = await Order.findById(orderId).populate('user', 'name email phone').populate('items.product', 'name');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Prevent duplicate processing
+    if (order.paymentStatus === 'paid' && order.paymentVerified) {
+       return res.status(200).json({ success: true, orderId: order._id, paymentId: razorpay_payment_id, message: 'Already verified' });
+    }
+
+    order.paymentStatus = 'paid';
+    order.orderStatus = 'confirmed';
+    order.paymentId = razorpay_payment_id;
+    order.paymentGateway = 'razorpay';
+    order.paymentVerified = true;
+    await order.save();
+
+    // Create Payment Record
+    try {
+      await Payment.create({
+        order: order._id,
+        amount: order.totalAmount,
+        status: 'completed',
+        method: 'razorpay',
+        transactionId: razorpay_payment_id,
+        paymentDate: new Date(),
+        description: `Payment for order ${order._id}`,
+        user: order.user._id
+      });
+    } catch (payErr) {
+      console.error('Failed to create Payment record:', payErr);
+    }
+
+    // Clear user cart
+    try {
+      await User.findByIdAndUpdate(order.user._id, { cart: [] });
+    } catch(err) {
+      console.error('Failed to clear cart:', err);
+    }
+
+    // Reduce Inventory
+    try {
+      const Product = (await import('../models/Product.js')).default;
+      for (const item of order.items) {
+         if (item.product && item.product._id) {
+            await Product.findByIdAndUpdate(item.product._id, { $inc: { stock: -item.pieces } });
+         }
+      }
+    } catch(err) {
+      console.error('Failed to update inventory:', err);
+    }
+
+    // Invoice & Email
+    try {
+      const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
+      const invoiceData = buildInvoiceDataFromOrder(order);
+      
+      // Hardcode SUCCESS status for verified invoices
+      invoiceData.paymentStatus = 'SUCCESS';
+      
+      const pdfBuffer = await generateInvoicePDF(invoiceData);
+
+      const orderSummary = {
+        customerName: order.user.name,
+        orderDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        totalAmount: order.totalAmount,
+        paymentStatus: 'SUCCESS', 
+        deliveryInfo: 'Will be shipped in 3-5 business days',
+        shippingAddress: order.shippingAddress,
+        items: order.items.map(item => ({
+          productName: item.productName || (item.product && item.product.name) || 'Product',
+          unitPrice: item.unitPrice,
+          quantity: item.quantity
+        }))
+      };
+      
+      await sendOrderConfirmationWithInvoice(order.user.email, order._id.toString(), orderSummary, pdfBuffer);
+    } catch (err) {
+      console.error('Invoice or email failed:', err);
+    }
+
+    return res.status(200).json({
+      success: true,
+      orderId: order._id,
+      paymentId: razorpay_payment_id
+    });
+  } catch (error) {
+    console.error('Verification error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

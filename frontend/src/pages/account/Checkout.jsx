@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../context/AuthContext';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import { isIndianUser, getAvailablePaymentMethods, COUNTRIES_LIST } from '../../utils/countryHelpers';
+import confetti from 'canvas-confetti';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [shippingRules, setShippingRules] = useState([]);
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingQuote, setShippingQuote] = useState(null);
@@ -307,11 +309,7 @@ const Checkout = () => {
       if (!orderRes.data.success) throw new Error("Failed to create order");
       const createdOrder = orderRes.data.data;
 
-      // Clear cart
-      if (!directCheckoutItem) {
-        await apiClient.delete('/users/cart');
-      }
-      await fetchProfile();
+      // Cart is now cleared on the backend ONLY upon successful payment verification.
 
       // 2. Handle specific payment gateways
       if (paymentMethod === 'cod' || paymentMethod === 'wire') {
@@ -339,15 +337,52 @@ const Checkout = () => {
           order_id: initRes.data.id,
           handler: async function (response) {
             try {
-              await apiClient.post('/payments/confirm', {
+              setIsProcessing(true); // Disable UI while verifying
+              
+              const verifyRes = await apiClient.post('/payments/verify-payment', {
                 orderId: createdOrder._id,
-                paymentId: response.razorpay_payment_id,
-                gateway: 'razorpay',
-                status: 'success'
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
               });
-              handleSuccess();
+
+              if (verifyRes.data.success) {
+                // Refresh profile since cart might be cleared
+                await fetchProfile();
+                
+                setPaymentSuccessData({
+                  orderId: createdOrder._id,
+                  paymentId: response.razorpay_payment_id,
+                  amount: total
+                });
+                setShowSuccessAnimation(true);
+                
+                // Fire premium confetti
+                confetti({
+                  particleCount: 150,
+                  spread: 70,
+                  origin: { y: 0.6 },
+                  colors: ['#2E7D32', '#4CAF50', '#81C784', '#FFD700']
+                });
+
+                // Auto redirect after 2.5s
+                setTimeout(() => {
+                  navigate('/order-success', {
+                    state: {
+                      orderId: createdOrder._id,
+                      paymentId: response.razorpay_payment_id,
+                      amount: total
+                    }
+                  });
+                }, 2500);
+              } else {
+                throw new Error(verifyRes.data.message || "Payment verification failed");
+              }
             } catch (err) {
-              alert("Payment confirmation failed.");
+              console.error("Verification error:", err);
+              setIsProcessing(false);
+              alert("Payment verification failed. If money was deducted, please contact support.");
+              navigate('/orders');
             }
           },
           prefill: {
@@ -358,16 +393,7 @@ const Checkout = () => {
           theme: { color: "#2E7D32" },
           modal: {
             ondismiss: async function() {
-              try {
-                await apiClient.post('/payments/confirm', {
-                  orderId: createdOrder._id,
-                  gateway: 'razorpay',
-                  status: 'failed'
-                });
-                navigate('/orders');
-              } catch (e) {
-                navigate('/orders');
-              }
+              setIsProcessing(false);
             }
           }
         };
@@ -957,6 +983,83 @@ const Checkout = () => {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {showSuccessAnimation && paymentSuccessData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-stone-900/60"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white/95 backdrop-blur-xl p-8 md:p-12 rounded-[2rem] shadow-2xl max-w-md w-full border border-white/50 text-center relative overflow-hidden"
+            >
+              {/* Decorative background glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b from-[#2E7D32]/10 to-transparent pointer-events-none" />
+              
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', delay: 0.2, damping: 15 }}
+                className="w-24 h-24 bg-gradient-to-br from-[#2E7D32] to-[#1B5E20] rounded-full mx-auto flex items-center justify-center shadow-lg shadow-[#2E7D32]/30 mb-6 relative z-10"
+              >
+                <Check className="w-12 h-12 text-white" strokeWidth={3} />
+              </motion.div>
+
+              <motion.h2 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-2xl md:text-3xl font-black text-stone-900 mb-2 font-poppins"
+              >
+                Payment Successful
+              </motion.h2>
+
+              <motion.p 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-stone-500 font-medium mb-8"
+              >
+                Your premium export order has been placed.
+              </motion.p>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-stone-50/80 rounded-2xl p-5 border border-stone-100/50 space-y-3 mb-8 text-sm"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-stone-500">Order ID</span>
+                  <span className="font-bold text-stone-900 truncate max-w-[150px]" title={paymentSuccessData.orderId}>{paymentSuccessData.orderId}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-stone-500">Payment ID</span>
+                  <span className="font-bold text-stone-900 truncate max-w-[150px]" title={paymentSuccessData.paymentId}>{paymentSuccessData.paymentId}</span>
+                </div>
+                <div className="flex justify-between items-center pt-3 border-t border-stone-200/50">
+                  <span className="text-stone-600 font-semibold">Amount Paid</span>
+                  <span className="font-black text-[#2E7D32] text-lg">{formatPrice(paymentSuccessData.amount)}</span>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
+                <div className="w-6 h-6 border-2 border-[#2E7D32] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-stone-400 text-xs font-medium uppercase tracking-widest">Generating Invoice...</p>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

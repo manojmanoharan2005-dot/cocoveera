@@ -6,6 +6,7 @@ import express from 'express';
 import {
   initiatePayment,
   confirmPayment,
+  verifyRazorpayPayment,
   getMyPayments,
   getAllPayments,
   requestRefund,
@@ -20,6 +21,7 @@ const router = express.Router();
 
 router.post('/initiate', protect, paymentInitiateLimiter, initiatePayment);
 router.post('/confirm', protect, confirmPayment);
+router.post('/verify-payment', protect, verifyRazorpayPayment);
 router.get('/history', protect, getMyPayments);
 router.get('/admin', protect, (req, res, next) => { if (req.user && ['admin','manager','support'].includes(req.user.role)) return next(); return res.status(403).json({ success:false, message:'Not authorized' }); }, getAllPayments);
 router.post('/refund', protect, validateRefundRequest, requestRefund);
