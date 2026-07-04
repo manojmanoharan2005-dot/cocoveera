@@ -42,7 +42,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('cocoveera_token'));
   
+  // Explicitly track auth loading state
   const [loading, setLoading] = useState(!!localStorage.getItem('cocoveera_token'));
+  
+  // Derived state for strict authentication checks
+  const isAuthenticated = !!user && !!token;
   
   const [error, setError] = useState(null);
   const [pendingWishlist, setPendingWishlist] = useState(new Set());
@@ -234,7 +238,8 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         token,
-        loading,
+        loading, // This is authLoading
+        isAuthenticated,
         error,
         register,
         verifyOtp,

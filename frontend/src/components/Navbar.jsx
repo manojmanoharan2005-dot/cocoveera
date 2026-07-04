@@ -8,13 +8,21 @@ import { useAuth } from '../context/AuthContext';
 import { Menu, X, ChevronDown, Globe, Mail, Phone, ShieldCheck, Heart, ShoppingCart, User } from 'lucide-react';
 
 const Navbar = () => {
-  const { user, loading, logout } = useAuth();
+  const { user, token, loading, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [langDropdown, setLangDropdown] = useState(false);
   const [language, setLanguage] = useState('EN');
+
+  useEffect(() => {
+    // Temporary debug logs requested by the user
+    console.log("Loading:", loading);
+    console.log("User:", user);
+    console.log("Token:", token);
+    console.log("Authenticated:", isAuthenticated);
+  }, [loading, user, token, isAuthenticated]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 40);
@@ -139,7 +147,7 @@ const Navbar = () => {
               <div className="flex items-center gap-3 w-32 h-8">
                 <div className="w-full h-full bg-stone-100 rounded-lg animate-pulse"></div>
               </div>
-            ) : user ? (
+            ) : isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <Link to="/saved" className="relative p-1.5 text-stone-600 hover:text-primary transition-colors">
                   <Heart className="w-5 h-5" />
@@ -159,7 +167,7 @@ const Navbar = () => {
                 </Link>
                 <Link to="/dashboard" className="flex items-center gap-2 pl-2 border-l border-stone-200 ml-1">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#43A047] text-white flex items-center justify-center font-poppins font-black text-xs shadow-md">
-                    {user.name?.[0]?.toUpperCase() || 'U'}
+                    {user?.name?.[0]?.toUpperCase() || 'U'}
                   </div>
                 </Link>
               </div>
@@ -229,7 +237,7 @@ const Navbar = () => {
                   <div className="h-10 bg-stone-100 rounded-lg animate-pulse w-full"></div>
                   <div className="h-10 bg-stone-100 rounded-lg animate-pulse w-full"></div>
                 </div>
-              ) : user ? (
+              ) : isAuthenticated ? (
                 <>
                   <Link
                     to="/dashboard"
