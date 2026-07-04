@@ -269,23 +269,36 @@ const Products = () => {
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <button className="text-gray-600 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/dashboard', { state: { activeTab: 'Wishlist' } })}>
-            <Heart className="w-6 h-6" />
-          </button>
-          <button className="text-gray-600 hover:text-[#2E7D32] transition-colors relative" onClick={() => navigate('/dashboard', { state: { activeTab: 'Cart' } })}>
-            <ShoppingCart className="w-6 h-6" />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1.5 bg-[#2E7D32] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-                {cartCount}
-              </span>
-            )}
-          </button>
-          <div className="flex items-center space-x-1 cursor-pointer" onClick={() => navigate('/dashboard')}>
-            <div className="w-7 h-7 rounded-full bg-[#2E7D32] text-white flex items-center justify-center text-xs font-bold">
-              {user ? user.firstName?.[0]?.toUpperCase() : 'M'}
+          {user ? (
+            <>
+              <button className="text-gray-600 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/dashboard', { state: { activeTab: 'Wishlist' } })}>
+                <Heart className="w-6 h-6" />
+              </button>
+              <button className="text-gray-600 hover:text-[#2E7D32] transition-colors relative" onClick={() => navigate('/dashboard', { state: { activeTab: 'Cart' } })}>
+                <ShoppingCart className="w-6 h-6" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 bg-[#2E7D32] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+              <div className="flex items-center space-x-1 cursor-pointer" onClick={() => navigate('/dashboard')}>
+                <div className="w-7 h-7 rounded-full bg-[#2E7D32] text-white flex items-center justify-center text-xs font-bold">
+                  {user.firstName?.[0]?.toUpperCase() || 'U'}
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center space-x-3">
+              <button onClick={() => navigate('/login')} className="text-xs font-bold text-gray-600 hover:text-[#2E7D32]">
+                Login
+              </button>
+              <button onClick={() => navigate('/register')} className="bg-[#2E7D32] text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-green-800 transition-colors">
+                Register
+              </button>
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-          </div>
+          )}
         </div>
       </header>
 
@@ -440,19 +453,28 @@ const Products = () => {
           <TestTube className="w-6 h-6" />
           <span className="text-[9px] font-bold">Quality Test</span>
         </button>
-        <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors relative" onClick={() => navigate('/dashboard', { state: { activeTab: 'Cart' } })}>
-          <ShoppingCart className="w-6 h-6" />
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-[#2E7D32] text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border-2 border-white">
-              {cartCount}
-            </span>
-          )}
-          <span className="text-[9px] font-bold">Cart</span>
-        </button>
-        <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/dashboard')}>
-          <UserIcon className="w-6 h-6" />
-          <span className="text-[9px] font-bold">Account</span>
-        </button>
+        {user ? (
+          <>
+            <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors relative" onClick={() => navigate('/dashboard', { state: { activeTab: 'Cart' } })}>
+              <ShoppingCart className="w-6 h-6" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#2E7D32] text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border-2 border-white">
+                  {cartCount}
+                </span>
+              )}
+              <span className="text-[9px] font-bold">Cart</span>
+            </button>
+            <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/dashboard')}>
+              <UserIcon className="w-6 h-6" />
+              <span className="text-[9px] font-bold">Account</span>
+            </button>
+          </>
+        ) : (
+          <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/login')}>
+            <UserIcon className="w-6 h-6" />
+            <span className="text-[9px] font-bold">Login</span>
+          </button>
+        )}
       </div>
     </div>
   );

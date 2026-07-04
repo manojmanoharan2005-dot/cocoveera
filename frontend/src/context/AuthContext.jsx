@@ -152,6 +152,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('cocoveera_token');
     localStorage.removeItem('cocoveera_user');
     sessionStorage.clear();
+    
+    // Clear any potential cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
     setToken(null);
     setUser(null);
     setError(null);
