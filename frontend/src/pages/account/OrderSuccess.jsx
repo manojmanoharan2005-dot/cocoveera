@@ -6,9 +6,11 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, Download, Package, ArrowRight, Calendar, CreditCard, Banknote } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { formatPrice } from '../../utils/currencyConverter';
+import { convertCurrency } from '../../utils/currencyConverter';
+import { useAuth } from '../../context/AuthContext';
 
 const OrderSuccess = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state || {};
@@ -63,7 +65,7 @@ const OrderSuccess = () => {
             <span className="text-[10px] text-stone-500 font-extrabold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
               <Banknote className="w-3.5 h-3.5" /> Amount Paid
             </span>
-            <span className="text-lg font-black text-[#2E7D32] leading-none">{formatPrice(orderInfo.amount)}</span>
+            <span className="text-lg font-black text-[#2E7D32] leading-none">{convertCurrency(orderInfo.amount, user?.currency || 'INR').formatted}</span>
           </div>
 
           <div className="flex flex-col">
