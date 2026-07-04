@@ -244,18 +244,21 @@ export const clearCart = async (req, res) => {
 export const toggleWishlist = async (req, res) => {
   try {
     const { productId } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select('wishlist');
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
     
     const exists = user.wishlist.some(p => p.toString() === productId);
     
     if (exists) {
-      await User.findByIdAndUpdate(req.user._id, { $pull: { wishlist: productId } });
+      await User.updateOne({ _id: req.user._id }, { $pull: { wishlist: productId } });
     } else {
-      await User.findByIdAndUpdate(req.user._id, { $addToSet: { wishlist: productId } });
+      await User.updateOne({ _id: req.user._id }, { $addToSet: { wishlist: productId } });
     }
     
-    const updatedUser = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
-    res.status(200).json({ success: true, data: updatedUser.wishlist });
+    res.status(200).json({ success: true, message: 'Wishlist updated' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
