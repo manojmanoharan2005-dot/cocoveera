@@ -143,50 +143,20 @@ const Navbar = () => {
               )}
             </div>
 
-            {loading ? (
-              <div className="flex items-center gap-3 w-32 h-8">
-                <div className="w-full h-full bg-stone-100 rounded-lg animate-pulse"></div>
-              </div>
-            ) : isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                <Link to="/saved" className="relative p-1.5 text-stone-600 hover:text-primary transition-colors">
-                  <Heart className="w-5 h-5" />
-                  {user?.wishlist?.length > 0 && (
-                    <span className="absolute top-0 -right-1 bg-primary text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white">
-                      {user.wishlist.length}
-                    </span>
-                  )}
-                </Link>
-                <Link to="/cart" className="relative p-1.5 text-stone-600 hover:text-primary transition-colors">
-                  <ShoppingCart className="w-5 h-5" />
-                  {user?.cart?.length > 0 && (
-                    <span className="absolute top-0 -right-1 bg-primary text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white">
-                      {user.cart.length}
-                    </span>
-                  )}
-                </Link>
-                <Link to="/dashboard" className="flex items-center gap-2 pl-2 border-l border-stone-200 ml-1">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#43A047] text-white flex items-center justify-center font-poppins font-black text-xs shadow-md">
-                    {user?.name?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                </Link>
-              </div>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-[11px] font-semibold uppercase tracking-wide text-stone-600 hover:text-primary transition-colors"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="border border-primary text-primary hover:bg-primary hover:text-white font-poppins text-[11px] font-bold px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 hover:shadow-[0_0_15px_rgba(46,125,50,0.4)]"
-                >
-                  Register
-                </Link>
-              </>
-            )}
+            <>
+              <Link
+                to="/login"
+                className="text-[11px] font-semibold uppercase tracking-wide text-stone-600 hover:text-primary transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="border border-primary text-primary hover:bg-primary hover:text-white font-poppins text-[11px] font-bold px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 hover:shadow-[0_0_15px_rgba(46,125,50,0.4)]"
+              >
+                Register
+              </Link>
+            </>
 
             {/* Brochure CTA */}
             <a
@@ -232,46 +202,22 @@ const Navbar = () => {
             ))}
 
             <div className="border-t border-stone-100 mt-3 pt-4 flex flex-col gap-3">
-              {loading ? (
-                <div className="flex flex-col gap-3">
-                  <div className="h-10 bg-stone-100 rounded-lg animate-pulse w-full"></div>
-                  <div className="h-10 bg-stone-100 rounded-lg animate-pulse w-full"></div>
-                </div>
-              ) : isAuthenticated ? (
-                <>
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 bg-stone-50 border border-stone-200 text-stone-700 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:border-primary hover:text-primary transition-colors"
-                  >
-                    <User className="w-4 h-4" /> My Dashboard
-                  </Link>
-                  <Link
-                    to="/saved"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 border border-stone-200 text-stone-700 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:border-primary hover:text-primary transition-colors"
-                  >
-                    <Heart className="w-4 h-4" /> Wishlist ({user?.wishlist?.length || 0})
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full text-center border border-stone-200 text-stone-700 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:border-primary hover:text-primary transition-colors"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full text-center border border-primary text-primary py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:bg-primary hover:text-white transition-all"
-                  >
-                    Register
-                  </Link>
-                </>
-              )}
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full text-center border border-stone-200 text-stone-700 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:border-primary hover:text-primary transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full text-center border border-primary text-primary py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:bg-primary hover:text-white transition-all"
+                >
+                  Register
+                </Link>
+              </>
               <a
                 href="/cocoveera-brochure.pdf"
                 target="_blank"
