@@ -835,7 +835,7 @@ const Checkout = () => {
 
         {/* RIGHT: Price Details Sidebar */}
         <div className="w-full lg:w-[40%] sticky top-28 self-start">
-          <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-stone-100 flex flex-col max-h-[calc(100vh-140px)]">
+          <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-stone-100 flex flex-col">
             <div className="bg-stone-50 border-b border-stone-100 p-6 flex items-center justify-between shrink-0 rounded-t-3xl">
               <div>
                 <h3 className="text-sm font-black text-stone-900 uppercase tracking-widest">Price Summary</h3>
@@ -846,7 +846,7 @@ const Checkout = () => {
               </div>
             </div>
 
-            <div className="p-6 md:p-8 space-y-5 overflow-y-auto custom-scrollbar">
+            <div className="p-6 md:p-8 space-y-5">
               <div className="space-y-4 text-sm font-semibold text-stone-500">
                 <div className="flex justify-between items-center">
                   <span>Total Containers</span>
