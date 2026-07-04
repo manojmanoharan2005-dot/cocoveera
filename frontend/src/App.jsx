@@ -216,8 +216,8 @@ function AppContent() {
           <Route path="/substrates" element={<CoconutSubstrates />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/containers/viewer" element={<ContainerViewerDemo />} />
-          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-          <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
           <Route
