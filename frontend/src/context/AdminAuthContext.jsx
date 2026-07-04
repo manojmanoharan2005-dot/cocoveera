@@ -95,7 +95,7 @@ export const AdminAuthProvider = ({ children }) => {
     sessionStorage.clear();
     setAdmin(null);
     setLoading(false);
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   };
 
   const logoutAllDevices = async () => {
