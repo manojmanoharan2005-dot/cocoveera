@@ -186,24 +186,33 @@ export const AuthProvider = ({ children }) => {
     
     setPendingWishlist(prev => new Set(prev).add(productId));
 
+    // Determine API action based on current state (safe because pendingWishlist prevents concurrent same-item toggles)
     const currentWishlist = user.wishlist || [];
-    
-    // Safe lookup handling both populated objects and ID strings
     const isWishlisted = currentWishlist.some(p => {
       const id = typeof p === 'string' ? p : (p._id || p.id);
       return id === productId;
     });
-    
-    // Optimistic UI Update with safe ID extraction
-    const newWishlist = isWishlisted 
-      ? currentWishlist.filter(p => {
-          const id = typeof p === 'string' ? p : (p._id || p.id);
-          return id !== productId;
-        })
-      : [...currentWishlist, product];
-      
+
     const t1 = performance.now();
-    setUser(prev => ({ ...prev, wishlist: newWishlist }));
+    // Use functional state update to guarantee we never drop items due to stale closures
+    setUser(prev => {
+      if (!prev) return prev;
+      
+      const prevWishlist = prev.wishlist || [];
+      const actuallyWishlisted = prevWishlist.some(p => {
+        const id = typeof p === 'string' ? p : (p._id || p.id);
+        return id === productId;
+      });
+      
+      const updatedWishlist = actuallyWishlisted 
+        ? prevWishlist.filter(p => {
+            const id = typeof p === 'string' ? p : (p._id || p.id);
+            return id !== productId;
+          })
+        : [...prevWishlist, product];
+        
+      return { ...prev, wishlist: updatedWishlist };
+    });
     const t2 = performance.now();
     console.log(`[Wishlist] State Updated -> ${(t2 - t1).toFixed(2)}ms`);
 
@@ -216,7 +225,18 @@ export const AuthProvider = ({ children }) => {
         action: isWishlisted ? 'remove' : 'add'
       }).catch(err => {
          console.error('Wishlist sync failed:', err);
-         setUser(prev => ({ ...prev, wishlist: currentWishlist }));
+         // Revert using functional update to preserve other items
+         setUser(prev => {
+           if (!prev) return prev;
+           const prevWishlist = prev.wishlist || [];
+           const updatedWishlist = isWishlisted 
+             ? [...prevWishlist, product] // It was wishlisted, so we put it back
+             : prevWishlist.filter(p => { // It wasn't wishlisted, so we remove it
+                 const id = typeof p === 'string' ? p : (p._id || p.id);
+                 return id !== productId;
+               });
+           return { ...prev, wishlist: updatedWishlist };
+         });
       });
       return true;
     } finally {
