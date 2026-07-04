@@ -42,10 +42,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('cocoveera_token'));
   
-  // Only show loading if a token exists and we need to verify it
   const [loading, setLoading] = useState(!!localStorage.getItem('cocoveera_token'));
   
   const [error, setError] = useState(null);
+  const [pendingWishlist, setPendingWishlist] = useState(new Set());
 
   // Global unauthorized listener
   useEffect(() => {
@@ -159,6 +159,58 @@ export const AuthProvider = ({ children }) => {
     navigate('/', { replace: true });
   };
 
+  const toggleWishlist = async (product) => {
+    if (!user) return false;
+    const productId = typeof product === 'string' ? product : (product._id || product.id);
+    
+    if (pendingWishlist.has(productId)) return true; // Already processing
+    
+    setPendingWishlist(prev => new Set(prev).add(productId));
+
+    const currentWishlist = user.wishlist || [];
+    const isWishlisted = currentWishlist.some(p => (p._id || p.id || p) === productId);
+    
+    // Optimistic UI Update
+    const newWishlist = isWishlisted 
+      ? currentWishlist.filter(p => (p._id || p.id || p) !== productId)
+      : [...currentWishlist, product];
+      
+    setUser(prev => ({ ...prev, wishlist: newWishlist }));
+
+    try {
+      await apiClient.post('/users/wishlist', { productId });
+      fetchProfile(); // Sync silently in background
+      return true;
+    } catch (err) {
+      console.error('Wishlist sync failed:', err);
+      // Revert on error
+      setUser(prev => ({ ...prev, wishlist: currentWishlist }));
+      return false;
+    } finally {
+      setPendingWishlist(prev => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+    }
+  };
+
+  const clearWishlist = async (productIds) => {
+    if (!user) return;
+    const currentWishlist = user.wishlist || [];
+    setUser(prev => ({ ...prev, wishlist: [] })); // Optimistic clear
+    
+    try {
+      for (const id of productIds) {
+        await apiClient.post('/users/wishlist', { productId: id });
+      }
+      fetchProfile();
+    } catch (err) {
+      console.error('Failed to clear wishlist', err);
+      setUser(prev => ({ ...prev, wishlist: currentWishlist })); // Revert on error
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -173,6 +225,9 @@ export const AuthProvider = ({ children }) => {
         logout,
         setError,
         fetchProfile,
+        toggleWishlist,
+        clearWishlist,
+        pendingWishlist,
       }}
     >
       {children}

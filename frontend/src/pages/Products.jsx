@@ -26,7 +26,7 @@ const optimizeImage = (url) => {
 const fetcher = url => apiClient.get(url).then(res => res.data.data);
 
 const Products = () => {
-  const { user, fetchProfile } = useAuth();
+  const { user, fetchProfile, toggleWishlist } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -154,13 +154,7 @@ const Products = () => {
       navigate('/login?redirect=products');
       return;
     }
-
-    try {
-      await apiClient.post('/users/wishlist', { productId: product._id });
-      await fetchProfile();
-    } catch (err) {
-      console.error('Wishlist error:', err);
-    }
+    toggleWishlist(product);
   };
 
   const handleQuoteSubmit = async (e) => {

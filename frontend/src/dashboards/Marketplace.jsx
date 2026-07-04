@@ -19,7 +19,7 @@ import useSWR from 'swr';
 const fetcher = url => axios.get(url).then(res => res.data.data);
 
 export const Marketplace = () => {
-  const { user, fetchProfile } = useAuth();
+  const { user, fetchProfile, toggleWishlist } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -33,25 +33,10 @@ export const Marketplace = () => {
     revalidateOnFocus: false,
     dedupingInterval: 60000 
   });
-  const [wishlist, setWishlist] = useState(user?.wishlist || []);
-
-  useEffect(() => {
-    if (user) setWishlist(user.wishlist || []);
-  }, [user]);
+  const wishlist = user?.wishlist || [];
 
   const onWishlistToggle = async (product) => {
-    setWishlist(prev => {
-      const exists = prev.find(p => p._id === product._id);
-      if (exists) return prev.filter(p => p._id !== product._id);
-      return [...prev, product];
-    });
-    try {
-      const token = localStorage.getItem('cocoveera_token');
-      await axios.post(`${API_URL}/users/wishlist`, { productId: product._id }, { headers: { Authorization: `Bearer ${token}` } });
-      await fetchProfile();
-    } catch (err) {
-      console.error(err);
-    }
+    toggleWishlist(product);
   };
 
   const onAddToCart = async (product) => {

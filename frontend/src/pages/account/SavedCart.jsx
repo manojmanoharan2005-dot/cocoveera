@@ -13,7 +13,7 @@ import RecommendedProducts from '../../components/common/RecommendedProducts';
 
 const SavedCart = () => {
   const navigate = useNavigate();
-  const { user, fetchProfile } = useAuth();
+  const { user, fetchProfile, toggleWishlist, clearWishlist } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,44 +65,23 @@ const SavedCart = () => {
   }, [user]);
 
   const removeItem = async (id) => {
-    // Optimistic smooth removal
-    setItems(prev => prev.filter(item => item.id !== id));
-    try {
-      await apiClient.post('/users/wishlist', { productId: id });
-      await fetchProfile(); // Resyncs global state
-    } catch (err) {
-      console.error(err);
-      // Revert if error
-      await fetchProfile();
-    }
+    toggleWishlist(id);
   };
 
   const clearAll = async () => {
     const currentIds = items.map(i => i.id);
-    setItems([]);
-    try {
-      // Loop to toggle them off
-      for (const id of currentIds) {
-        await apiClient.post('/users/wishlist', { productId: id });
-      }
-      await fetchProfile();
-    } catch (err) {
-      console.error(err);
-      await fetchProfile();
-    }
+    clearWishlist(currentIds);
   };
 
   const moveToCart = async (id) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+    toggleWishlist(id); // Optimistically remove from wishlist
     try {
-      // Remove from wishlist
-      await apiClient.post('/users/wishlist', { productId: id });
       // Add to cart
       await apiClient.post('/users/cart', { productId: id, quantity: 1, increment: true });
-      await fetchProfile();
+      fetchProfile(); // Sync cart in background
     } catch (err) {
       console.error(err);
-      await fetchProfile();
+      fetchProfile();
     }
   };
 

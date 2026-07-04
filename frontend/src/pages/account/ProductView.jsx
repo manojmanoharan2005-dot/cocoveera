@@ -20,7 +20,7 @@ const ProductView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, fetchProfile } = useAuth();
+  const { user, fetchProfile, toggleWishlist } = useAuth();
 
   // State management
   const [product, setProduct] = useState(null);
@@ -29,7 +29,7 @@ const ProductView = () => {
   const [quantity, setQuantity] = useState(0.25);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = user?.wishlist?.some(item => (item._id || item) === product?._id) || false;
   const [actionLoading, setActionLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState('');
   const [containerType, setContainerType] = useState('20FT');
@@ -60,11 +60,7 @@ const ProductView = () => {
           const fetchedProduct = prodRes.data.data;
           setProduct(fetchedProduct);
           
-          // Set wishlist status
-          if (user?.wishlist) {
-            setIsWishlisted(user.wishlist.some(item => item._id === fetchedProduct._id));
-          }
-
+          
           // Filter out current product for related products section
           if (allProdRes.data.success) {
             const sameCategory = allProdRes.data.data.filter(
@@ -122,13 +118,7 @@ const ProductView = () => {
       navigate('/login', { state: { from: location } });
       return;
     }
-    setIsWishlisted(prev => !prev);
-    try {
-      await apiClient.post('/users/wishlist', { productId: product._id });
-      await fetchProfile();
-    } catch (err) {
-      console.error('Wishlist error:', err);
-    }
+    toggleWishlist(product);
   };
 
   const handleAddToCart = async () => {
