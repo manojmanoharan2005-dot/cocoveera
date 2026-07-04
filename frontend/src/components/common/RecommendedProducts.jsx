@@ -140,7 +140,7 @@ const RecommendedProducts = () => {
               isWishlisted={isWishlisted(product._id)}
               onWishlistToggle={handleWishlistToggle}
               onAddToCart={handleAddToCart}
-              onCardClick={(p) => navigate(`/account/product/${p._id}`)}
+              onCardClick={(p) => navigate(`/product/${p.slug || p._id}`)}
             />
           </motion.div>
         ))}

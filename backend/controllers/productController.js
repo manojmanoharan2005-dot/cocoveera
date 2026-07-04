@@ -31,10 +31,15 @@ export const getProducts = async (req, res) => {
 // @access  Public
 export const getProductById = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ success: false, message: 'Invalid product ID format' });
+    const { id } = req.params;
+    let product;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      product = await Product.findById(id).lean();
+    } else {
+      product = await Product.findOne({ slug: id }).lean();
     }
-    const product = await Product.findById(req.params.id).lean();
+
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }

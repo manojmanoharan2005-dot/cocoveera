@@ -373,7 +373,7 @@ const Products = () => {
               transition={{ duration: 0.2 }}
               key={prod._id}
               className="bg-white rounded-[24px] p-4 flex flex-col shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-50 hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.08)] transition-all cursor-pointer relative group"
-              onClick={() => navigate(`/account/product/${prod._id}`)}
+              onClick={() => navigate(`/product/${prod.slug || prod._id}`)}
             >
               {/* Top Row */}
               <div className="flex justify-between items-start w-full mb-3 z-10 relative">
@@ -426,7 +426,7 @@ const Products = () => {
                     className="w-full bg-[#F4F9F4] hover:bg-[#E8F3E8] text-[#2E7D32] text-[13px] font-bold py-2.5 px-4 rounded-[14px] flex items-center justify-between transition-colors group/btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/account/product/${prod._id}`);
+                      navigate(`/product/${prod.slug || prod._id}`);
                     }}
                   >
                     <span>View Details</span>

@@ -324,7 +324,7 @@ export const Marketplace = () => {
                 onWishlistToggle={onWishlistToggle}
                 onAddToCart={onAddToCart}
                 onBuyNow={onBuyNow}
-                onCardClick={(p) => navigate('/product/' + p._id)}
+                onCardClick={(p) => navigate(`/product/${p.slug || p._id}`)}
               />
             ))}
           </ProductGrid>
