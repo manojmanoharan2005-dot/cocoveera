@@ -834,7 +834,7 @@ const Checkout = () => {
         </div>
 
         {/* RIGHT: Price Details Sidebar */}
-        <div className="w-full lg:w-[40%] sticky top-28 self-start">
+        <div className="w-full lg:w-[40%]">
           <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-stone-100 flex flex-col">
             <div className="bg-stone-50 border-b border-stone-100 p-6 flex items-center justify-between shrink-0 rounded-t-3xl">
               <div>
