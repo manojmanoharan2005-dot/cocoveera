@@ -104,6 +104,7 @@ export const initiatePayment = async (req, res) => {
         id: rzpOrder.id,
         amount: rzpOrder.amount,
         currency: rzpOrder.currency,
+        key: currentRzpKey, // Send the exact key used to create the order
       });
     }
 

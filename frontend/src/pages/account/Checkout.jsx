@@ -330,7 +330,7 @@ const Checkout = () => {
         if (!initRes.data.success) throw new Error("Failed to initiate Razorpay");
 
         const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY || "rzp_live_SSGOmOhJxOiqbl", // In production, serve from env
+          key: initRes.data.key || import.meta.env.VITE_RAZORPAY_KEY || "rzp_live_SSGOmOhJxOiqbl", // Use backend key directly to prevent mismatches
           amount: initRes.data.amount,
           currency: initRes.data.currency,
           name: "Cocoveera",
