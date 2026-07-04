@@ -189,6 +189,16 @@ const ScrollToTop = () => {
   return null;
 };
 
+const DynamicLayout = () => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingScreen />;
+  }
+  
+  return user ? <PrivateLayout /> : <PublicLayout />;
+};
+
 function AppContent() {
   return (
     <Suspense fallback={<LoadingScreen />}>
@@ -359,11 +369,15 @@ function AppContent() {
           }
         />
 
-        {/* Catch all route and Product routes */}
+        {/* Catch all route and Public routes */}
         <Route element={<PublicLayout />}>
+          <Route path="*" element={<NotFound />} />
+        </Route>
+
+        {/* Product routes (Dynamic: Dashboard for users, Public for guests) */}
+        <Route element={<DynamicLayout />}>
           <Route path="/product/:id" element={<ProductView />} />
           <Route path="/productview/:id" element={<ProductView />} />
-          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
       <MobileBottomNav />
