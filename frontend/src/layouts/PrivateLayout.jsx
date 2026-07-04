@@ -61,7 +61,7 @@ const PrivateLayout = () => {
             onLogoutClick={logout}
           />
 
-          <main className="flex-grow w-full overflow-hidden min-h-[70vh]">
+          <main className="flex-grow w-full min-h-[70vh]">
             <Outlet context={{
               searchQuery,
               setSearchQuery,
