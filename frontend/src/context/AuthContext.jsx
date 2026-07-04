@@ -196,17 +196,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const t3 = performance.now();
       console.log(`[Wishlist] API Request Started -> ${(t3 - t0).toFixed(2)}ms`);
-      await apiClient.post('/users/wishlist', { productId });
-      const t4 = performance.now();
-      console.log(`[Wishlist] Response Returned -> ${(t4 - t3).toFixed(2)}ms`);
-      
-      fetchProfile(); // Sync silently in background
+      apiClient.post('/users/wishlist', { productId }).catch(err => {
+         console.error('Wishlist sync failed:', err);
+         setUser(prev => ({ ...prev, wishlist: currentWishlist }));
+      });
       return true;
-    } catch (err) {
-      console.error('Wishlist sync failed:', err);
-      // Revert on error
-      setUser(prev => ({ ...prev, wishlist: currentWishlist }));
-      return false;
     } finally {
       setPendingWishlist(prev => {
         const next = new Set(prev);

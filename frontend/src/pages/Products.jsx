@@ -365,76 +365,13 @@ const Products = () => {
         
         <AnimatePresence>
           {!loading && filteredProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((prod) => (
-            <motion.div
-              layout
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              transition={{ duration: 0.2 }}
+            <MemoizedProductItem 
               key={prod._id}
-              className="bg-white rounded-[24px] p-4 flex flex-col shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-50 hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.08)] transition-all cursor-pointer relative group"
-              onClick={() => navigate(`/product/${prod.slug || prod._id}`)}
-            >
-              {/* Top Row */}
-              <div className="flex justify-between items-start w-full mb-3 z-10 relative">
-                <div className="bg-[#2A3427] text-white text-[10px] font-bold px-3 py-1 rounded-lg">
-                  {prod.category || 'Coco Cubes'}
-                </div>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToWishlist(prod);
-                  }}
-                  className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                >
-                  <Heart className={`w-5 h-5 ${user?.wishlist?.some(item => (item._id || item) === prod._id) ? 'fill-red-500 text-red-500' : ''}`} />
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="flex flex-row items-center gap-4">
-                {/* Image */}
-                <div className="w-5/12 aspect-square relative bg-white rounded-xl flex-shrink-0 flex items-center justify-center p-1">
-                  <div className="absolute top-0 left-0 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-gray-700 px-2 py-0.5 rounded shadow-sm z-10 border border-gray-100">
-                    {prod.packageSize || '10x10x7 cm'}
-                  </div>
-                  <ImageWithFallback
-                    src={prod.images && prod.images.length > 0 ? optimizeImage(prod.images[0]) : null}
-                    alt={prod.name}
-                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-
-                {/* Details */}
-                <div className="w-7/12 flex flex-col h-full justify-center">
-                  <h3 className="text-[14px] font-extrabold text-gray-900 leading-tight mb-1 group-hover:text-[#2E7D32] transition-colors">
-                    {prod.name}
-                  </h3>
-                  <div className="text-lg font-extrabold text-[#2E7D32] mb-1.5">
-                    £{prod.price || '9.4'}
-                  </div>
-                  
-                  <div className="flex items-center space-x-1.5 mb-3 text-[11px] text-gray-500 font-semibold">
-                    <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
-                    <span className="text-gray-700">4.6</span>
-                    <span>(128)</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300 mx-1"></span>
-                    <span>50+ sold</span>
-                  </div>
-
-                  <button 
-                    className="w-full bg-[#F4F9F4] hover:bg-[#E8F3E8] text-[#2E7D32] text-[13px] font-bold py-2.5 px-4 rounded-[14px] flex items-center justify-between transition-colors group/btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/product/${prod.slug || prod._id}`);
-                    }}
-                  >
-                    <span>View Details</span>
-                    <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+              prod={prod}
+              isWishlisted={user?.wishlist?.some(item => (item._id || item) === prod._id)}
+              onWishlist={handleAddToWishlist}
+              onCardClick={(p) => navigate(`/product/${p.slug || p._id}`)}
+            />
           ))}
         </AnimatePresence>
       </div>
@@ -481,3 +418,77 @@ const Products = () => {
 };
 
 export default Products;
+
+const MemoizedProductItem = React.memo(({ prod, isWishlisted, onWishlist, onCardClick }) => {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 15 }}
+      transition={{ duration: 0.2 }}
+      className="bg-white rounded-[24px] p-4 flex flex-col shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-50 hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.08)] transition-all cursor-pointer relative group"
+      onClick={() => onCardClick(prod)}
+    >
+      {/* Top Row */}
+      <div className="flex justify-between items-start w-full mb-3 z-10 relative">
+        <div className="bg-[#2A3427] text-white text-[10px] font-bold px-3 py-1 rounded-lg">
+          {prod.category || 'Coco Cubes'}
+        </div>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onWishlist(prod);
+          }}
+          className="text-gray-400 hover:text-red-500 transition-colors p-1"
+        >
+          <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-row items-center gap-4">
+        {/* Image */}
+        <div className="w-5/12 aspect-square relative bg-white rounded-xl flex-shrink-0 flex items-center justify-center p-1">
+          <div className="absolute top-0 left-0 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-gray-700 px-2 py-0.5 rounded shadow-sm z-10 border border-gray-100">
+            {prod.packageSize || '10x10x7 cm'}
+          </div>
+          <ImageWithFallback
+            src={prod.images && prod.images.length > 0 ? optimizeImage(prod.images[0]) : null}
+            alt={prod.name}
+            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+          />
+        </div>
+
+        {/* Details */}
+        <div className="w-7/12 flex flex-col h-full justify-center">
+          <h3 className="text-[14px] font-extrabold text-gray-900 leading-tight mb-1 group-hover:text-[#2E7D32] transition-colors">
+            {prod.name}
+          </h3>
+          <div className="text-lg font-extrabold text-[#2E7D32] mb-1.5">
+            £{prod.price || '9.4'}
+          </div>
+          
+          <div className="flex items-center space-x-1.5 mb-3 text-[11px] text-gray-500 font-semibold">
+            <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+            <span className="text-gray-700">4.6</span>
+            <span>(128)</span>
+            <span className="w-1 h-1 rounded-full bg-gray-300 mx-1"></span>
+            <span>50+ sold</span>
+          </div>
+
+          <button 
+            className="w-full bg-[#F4F9F4] hover:bg-[#E8F3E8] text-[#2E7D32] text-[13px] font-bold py-2.5 px-4 rounded-[14px] flex items-center justify-between transition-colors group/btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCardClick(prod);
+            }}
+          >
+            <span>View Details</span>
+            <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}, (prev, next) => prev.prod._id === next.prod._id && prev.isWishlisted === next.isWishlisted);

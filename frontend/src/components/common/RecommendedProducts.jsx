@@ -8,7 +8,7 @@ import ProductCard from '../../dashboards/ProductCard';
 const RecommendedProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user, fetchProfile } = useAuth();
+  const { user, fetchProfile, toggleWishlist } = useAuth();
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
@@ -79,12 +79,7 @@ const RecommendedProducts = () => {
       navigate('/login');
       return;
     }
-    try {
-      await apiClient.post('/users/wishlist', { productId: product._id });
-      await fetchProfile();
-    } catch (err) {
-      console.error(err);
-    }
+    toggleWishlist(product);
   };
 
   const handleAddToCart = async (product) => {
