@@ -3,122 +3,83 @@
  * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
  */
 import React, { useState, useEffect } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Home, 
-  Store, 
-  ShoppingBag, 
-  User, 
-  X, 
-  LogOut,
-  LayoutDashboard,
-  Heart,
-  MapPin,
-  Settings,
-  HelpCircle
-} from 'lucide-react';
-import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 
-// Helper component to use ShoppingBag as ShoppingCart
-const ShoppingCart = ({ className }) => <ShoppingBag className={className} />;
-
-export const DashboardLayout = ({ 
-  user, 
-  activeTab, 
-  setActiveTab, 
-  cartCount, 
-  wishlistCount, 
-  searchQuery,
-  setSearchQuery,
-  onLogoutClick,
-  sortBy,
-  setSortBy,
-  onFilterClick,
-  children 
-}) => {
-  const navigate = useNavigate();
+export const DashboardLayout = () => {
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('Featured');
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
-  // Auto-close mobile drawer when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Mobile Bottom Nav actions
-  const handleMobileNav = (tabName) => {
-    if (tabName === 'Home') {
-      navigate('/');
-    } else {
-      setActiveTab(tabName);
-    }
+  const cartCount = user?.cart?.length || 0;
+  const wishlistCount = user?.wishlist?.length || 0;
+
+  // Determine active tab purely from pathname
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path.includes('/orders')) return 'Orders';
+    if (path.includes('/cart')) return 'Cart';
+    if (path.includes('/saved') || path.includes('/wishlist')) return 'Wishlist';
+    if (path.includes('/address')) return 'Addresses';
+    if (path.includes('/support')) return 'Help & Support';
+    if (path.includes('/settings')) return 'Settings';
+    if (path.includes('/profile')) return 'Profile';
+    return 'Marketplace';
   };
 
-  const mobileDrawerItems = [
-    { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
-    { name: 'Orders', label: 'Orders', icon: ShoppingBag, path: '/orders' },
-    { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/saved' },
-    { name: 'Cart', label: 'Your Cart', icon: ShoppingCart, badge: cartCount, path: '/cart' },
-    { name: 'Addresses', label: 'Address', icon: MapPin, path: '/address' },
-    { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/support' },
-    { name: 'Settings', label: 'Settings', icon: Settings, path: '/settings' },
-  ];
-
-  const displayName = user?.companyName && user.companyName !== 'N/A' 
-    ? user.companyName 
-    : (user?.name || 'Partner');
-
-  const userInitials = displayName
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'U';
+  const activeTab = getActiveTab();
 
   return (
-    <div 
-      className="min-h-screen text-[#1A1A1A] flex flex-col font-sans relative bg-stone-50"
-    >
-      {/* Removed the white overlay to show the background image clearly as requested */}
+    <div className="min-h-screen text-[#1A1A1A] flex flex-col font-sans relative bg-stone-50">
       <div className="relative z-10 flex flex-col flex-grow w-full">
-        {/* 1. TOP HEADER */}
         <Header
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           cartCount={cartCount}
-          setActiveTab={setActiveTab}
-          onNotificationClick={() => alert('All shipments export cleared. Cargo vessels on schedule.')}
+          activeTab={activeTab}
+          onNotificationClick={() => {}}
           showSearchAndFilters={activeTab === 'Marketplace'}
           sortBy={sortBy}
           setSortBy={setSortBy}
-          onFilterClick={onFilterClick}
+          onFilterClick={() => setFilterDrawerOpen(true)}
           onMenuClick={() => setMobileMenuOpen(true)}
         />
 
-        {/* 2. DYNAMIC MAIN BODY */}
         <div className="flex-grow w-full px-6 lg:px-8 py-7 flex gap-7 items-start relative">
-          {/* Desktop Sidebar */}
           <Sidebar
             user={user}
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
             cartCount={cartCount}
             wishlistCount={wishlistCount}
-            onLogoutClick={onLogoutClick}
+            onLogoutClick={logout}
           />
 
-          {/* Main Content Area */}
-          <main className="flex-grow w-full overflow-hidden min-h-[70vh]">
-            {children}
+          <main className="flex-grow w-full min-w-0 min-h-[70vh]">
+            <Outlet context={{
+              searchQuery,
+              setSearchQuery,
+              sortBy,
+              setSortBy,
+              filterDrawerOpen,
+              setFilterDrawerOpen,
+              user,
+              cartCount,
+              wishlistCount
+            }} />
           </main>
         </div>
       </div>
-
-      {/* 3. MOBILE SIDEBAR DRAWER REMOVED */}
-
-
     </div>
   );
 };

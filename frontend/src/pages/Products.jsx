@@ -26,7 +26,7 @@ const optimizeImage = (url) => {
 const fetcher = url => apiClient.get(url).then(res => res.data.data);
 
 const Products = () => {
-  const { user } = useAuth();
+  const { user, fetchProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -149,32 +149,18 @@ const Products = () => {
     navigate('/dashboard', { state: { activeTab: 'Cart' } });
   };
 
-  const handleAddToWishlist = (product) => {
+  const handleAddToWishlist = async (product) => {
     if (!user) {
       navigate('/login?redirect=products');
       return;
     }
 
-    let existingWishlist = [];
     try {
-      const stored = localStorage.getItem('cocoveera_wishlist');
-      if (stored) existingWishlist = JSON.parse(stored);
-    } catch (e) {
-      console.error('Failed to parse wishlist:', e);
+      await apiClient.post('/users/wishlist', { productId: product._id });
+      await fetchProfile();
+    } catch (err) {
+      console.error('Wishlist error:', err);
     }
-
-    const exists = existingWishlist.find(item => item._id === product._id);
-    if (!exists) {
-      existingWishlist.push({
-        _id: product._id,
-        name: product.name,
-        category: product.category,
-        price: product.price,
-        images: product.images || []
-      });
-      localStorage.setItem('cocoveera_wishlist', JSON.stringify(existingWishlist));
-    }
-    navigate('/dashboard', { state: { activeTab: 'Wishlist' } });
   };
 
   const handleQuoteSubmit = async (e) => {
@@ -394,7 +380,7 @@ const Products = () => {
                   }}
                   className="text-gray-400 hover:text-red-500 transition-colors p-1"
                 >
-                  <Heart className="w-5 h-5" />
+                  <Heart className={`w-5 h-5 ${user?.wishlist?.some(item => (item._id || item) === prod._id) ? 'fill-red-500 text-red-500' : ''}`} />
                 </button>
               </div>
 

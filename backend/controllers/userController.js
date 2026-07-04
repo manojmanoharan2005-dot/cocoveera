@@ -243,17 +243,16 @@ export const clearCart = async (req, res) => {
 // @access  Private
 export const toggleWishlist = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
     const { productId } = req.body;
+    const user = await User.findById(req.user._id);
     
-    const exists = user.wishlist.some(p => p._id.toString() === productId || p.toString() === productId);
+    const exists = user.wishlist.some(p => p.toString() === productId);
     
     if (exists) {
-      user.wishlist = user.wishlist.filter(p => p._id.toString() !== productId && p.toString() !== productId);
+      await User.findByIdAndUpdate(req.user._id, { $pull: { wishlist: productId } });
     } else {
-      user.wishlist.push(productId);
+      await User.findByIdAndUpdate(req.user._id, { $addToSet: { wishlist: productId } });
     }
-    await user.save();
     
     const updatedUser = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
     res.status(200).json({ success: true, data: updatedUser.wishlist });

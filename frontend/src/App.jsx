@@ -48,7 +48,7 @@ const ContainerViewerDemo = lazy(() => import('./pages/ContainerViewerDemo'));
 
 // User Protected Route
 const Marketplace = lazy(() => import('./dashboards/Marketplace'));
-const PrivateLayout = lazy(() => import('./layouts/PrivateLayout'));
+const DashboardLayout = lazy(() => import('./dashboards/DashboardLayout'));
 const Orders = lazy(() => import('./pages/account/Orders'));
 const OrderDetails = lazy(() => import('./pages/account/OrderDetails'));
 const Cart = lazy(() => import('./pages/account/Cart'));
@@ -196,7 +196,7 @@ const DynamicLayout = () => {
     return <LoadingScreen />;
   }
   
-  return user ? <PrivateLayout /> : <PublicLayout />;
+  return user ? <DashboardLayout /> : <PublicLayout />;
 };
 
 function AppContent() {
@@ -230,8 +230,8 @@ function AppContent() {
           />
         </Route>
 
-        {/* User Protected Routes under PrivateLayout */}
-        <Route element={<ProtectedRoute><PrivateLayout /></ProtectedRoute>}>
+        {/* User Protected Routes under DashboardLayout */}
+        <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Marketplace />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetails />} />
