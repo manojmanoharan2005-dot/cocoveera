@@ -87,8 +87,9 @@ export const initiatePayment = async (req, res) => {
       // order.totalAmount is already in INR. 
       // Cap at ₹5,00,000 (50000000 paise) to prevent Razorpay "Amount exceeds maximum amount allowed" error during testing large orders
       let inrAmount = Math.round(order.totalAmount * 100);
-      if (inrAmount > 50000000) {
-        console.warn(`[Razorpay] Capping order amount from ${inrAmount} to 50000000 paise to prevent limit errors.`);
+      const isLive = currentRzpKey.startsWith('rzp_live_');
+      if (!isLive && inrAmount > 50000000) {
+        console.warn(`[Razorpay] Test mode: Capping order amount from ${inrAmount} to 50000000 paise to prevent limit errors.`);
         inrAmount = 50000000;
       }
       
