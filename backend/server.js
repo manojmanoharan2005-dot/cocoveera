@@ -201,6 +201,17 @@ const startServer = async () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });
 
+  // Self-Ping mechanism to prevent Render Free Tier from sleeping
+  const SELF_URL = 'https://cocoveera.onrender.com/api/ping';
+  setInterval(async () => {
+    try {
+      await fetch(SELF_URL);
+      console.log(`[Self-Ping] Successfully pinged ${SELF_URL} to keep instance awake.`);
+    } catch (err) {
+      console.error(`[Self-Ping] Failed: ${err.message}`);
+    }
+  }, 14 * 60 * 1000); // Every 14 minutes (Render sleeps at 15m)
+
   // Run seeding asynchronously in the background so it doesn't block startup
   seedDatabase().catch(err => console.error('Seeding error:', err));
 };

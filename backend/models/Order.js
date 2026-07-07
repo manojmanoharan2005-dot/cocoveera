@@ -141,6 +141,14 @@ const OrderSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    shippingDate: {
+      type: Date,
+      default: null,
+    },
+    estimatedDeliveryDate: {
+      type: Date,
+      default: null,
+    },
     cancellationCustomReason: {
       type: String,
       default: null,

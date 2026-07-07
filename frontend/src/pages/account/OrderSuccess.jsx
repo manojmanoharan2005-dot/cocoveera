@@ -80,10 +80,10 @@ const OrderSuccess = () => {
         <div className="w-full space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button 
-              onClick={() => navigate('/orders')}
+              onClick={() => navigate(`/track/${orderInfo.id}`)}
               className="w-full py-4.5 bg-[#2E7D32] text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-[#1B5E20] transition-colors shadow-[0_8px_25px_rgb(46,125,50,0.3)] hover:shadow-[0_12px_30px_rgb(46,125,50,0.4)] flex items-center justify-center gap-2 active:scale-[0.98]"
             >
-              <Package className="w-4 h-4" /> View Orders
+              <Package className="w-4 h-4" /> Track Order
             </button>
             
             <button 

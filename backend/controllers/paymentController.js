@@ -228,6 +228,8 @@ export const confirmPayment = async (req, res) => {
           paymentStatus: order.paymentStatus,
           deliveryInfo: 'Will be shipped in 3-5 business days',
           shippingAddress: order.shippingAddress,
+          shippingDate: order.shippingDate,
+          estimatedDeliveryDate: order.estimatedDeliveryDate,
           items: order.items.map(item => ({
             productName: item.productName || (item.product && item.product.name) || 'Product',
             unitPrice: item.unitPrice,
@@ -490,6 +492,8 @@ export const verifyRazorpayPayment = async (req, res) => {
         paymentStatus: 'SUCCESS', 
         deliveryInfo: 'Will be shipped in 3-5 business days',
         shippingAddress: order.shippingAddress,
+        shippingDate: order.shippingDate,
+        estimatedDeliveryDate: order.estimatedDeliveryDate,
         items: order.items.map(item => ({
           productName: item.productName || (item.product && item.product.name) || 'Product',
           unitPrice: item.unitPrice,

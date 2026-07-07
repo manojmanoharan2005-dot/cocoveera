@@ -27,8 +27,9 @@ const Settings = () => {
     name: '',
     email: '',
     phone: '',
-    companyName: '',
     country: '',
+    companyName: '',
+    currentPassword: '',
     password: '',
     confirmPassword: ''
   });
@@ -63,9 +64,19 @@ const Settings = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password && formData.password !== formData.confirmPassword) {
-      setMessage({ text: 'Passwords do not match', type: 'error' });
-      return;
+    if (formData.password) {
+      if (!formData.currentPassword) {
+        setMessage({ text: 'Current password is required to change password', type: 'error' });
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setMessage({ text: 'Passwords do not match', type: 'error' });
+        return;
+      }
+      if (formData.password === formData.currentPassword) {
+        setMessage({ text: 'New password cannot be the same as current password', type: 'error' });
+        return;
+      }
     }
 
     setSaving(true);
@@ -80,8 +91,12 @@ const Settings = () => {
 
       if (formData.password) {
         payload.password = formData.password;
+        payload.currentPassword = formData.currentPassword;
         // Request OTP
-        const resOtp = await apiClient.post('/users/profile/request-password-otp');
+        const resOtp = await apiClient.post('/users/profile/request-password-otp', {
+          currentPassword: formData.currentPassword,
+          newPassword: formData.password
+        });
         if (resOtp.data.success) {
           setPendingPayload(payload);
           setShowOtpModal(true);
@@ -109,7 +124,7 @@ const Settings = () => {
       const res = await apiClient.put('/users/profile', payload);
       if (res.data.success) {
         setMessage({ text: 'Profile updated successfully', type: 'success' });
-        setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+        setFormData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
         setShowOtpModal(false);
         setOtp('');
       }
@@ -230,6 +245,17 @@ const Settings = () => {
           <h2 className="text-lg font-black text-stone-900 border-b border-stone-100 pb-3">Security & Password</h2>
           <p className="text-xs text-stone-500 font-semibold mb-4">Entering a new password will trigger an email OTP verification for security. Leave blank if you do not wish to change your password.</p>
           
+          <div className="grid grid-cols-1 gap-6 mb-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5" /> Current Password
+              </label>
+              <input 
+                type="password" name="currentPassword" value={formData.currentPassword} onChange={handleChange}
+                className="w-full md:w-1/2 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" 
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">

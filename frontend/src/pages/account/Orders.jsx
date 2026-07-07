@@ -307,7 +307,7 @@ const Orders = () => {
                   <div className="flex flex-col md:items-end">
                     <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order # {order._id.slice(-8).toUpperCase()}</span>
                     <div className="flex gap-2 text-[#007185] font-semibold mt-0.5 text-xs">
-                      <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => navigate(`/account/orders/${order._id}`)}>Order details</span>
+                      <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => navigate(`/orders/${order._id}`)}>Order details</span>
                       <span className="text-stone-300">|</span>
                       <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => handleDownloadInvoice(order._id)}>Invoice</span>
                     </div>
@@ -348,7 +348,7 @@ const Orders = () => {
                         
                         <div className="mt-auto flex flex-wrap gap-2">
                           {status !== 'Pending' && status !== 'Cancelled' && (
-                            <button onClick={() => navigate(`/account/track/${order._id}`)} className="px-3 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-semibold rounded-full border border-[#FCD200] shadow-sm transition-colors w-fit">
+                            <button onClick={() => navigate(`/track/${order._id}`)} className="px-3 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-semibold rounded-full border border-[#FCD200] shadow-sm transition-colors w-fit">
                               Track package
                             </button>
                           )}

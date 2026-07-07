@@ -72,6 +72,13 @@ const TrackOrder = () => {
           <div className="break-all">
             <h1 className="text-xl md:text-2xl font-extrabold text-stone-900 leading-tight">Track Order <span className="text-stone-500 font-medium text-base md:text-lg block sm:inline">#{order._id.substring(order._id.length - 8)}</span></h1>
             <p className="text-stone-500 font-semibold text-xs md:text-sm mt-1">Container: {order.trackingNumber || 'Pending'} ({order.containerCapacity || 'LCL'})</p>
+            {(order.shippingDate || order.estimatedDeliveryDate) && (
+              <p className="text-stone-500 font-semibold text-xs mt-1">
+                {order.shippingDate && <span>Est. Shipping: {new Date(order.shippingDate).toLocaleDateString()}</span>}
+                {order.shippingDate && order.estimatedDeliveryDate && <span className="mx-2">&bull;</span>}
+                {order.estimatedDeliveryDate && <span>Est. Delivery: {new Date(order.estimatedDeliveryDate).toLocaleDateString()}</span>}
+              </p>
+            )}
           </div>
         </div>
         <div className="md:ml-auto flex items-center justify-between md:justify-end gap-2 bg-white p-3 md:p-0 rounded-xl border md:border-none border-stone-200 shadow-sm md:shadow-none">

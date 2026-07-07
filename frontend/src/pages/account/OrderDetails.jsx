@@ -54,6 +54,8 @@ const OrderDetails = () => {
   const order = {
     id: backendOrder._id,
     date: backendOrder.createdAt,
+    shippingDate: backendOrder.shippingDate,
+    estimatedDeliveryDate: backendOrder.estimatedDeliveryDate,
     status: backendOrder.orderStatus.charAt(0).toUpperCase() + backendOrder.orderStatus.slice(1),
     paymentStatus: backendOrder.paymentStatus.charAt(0).toUpperCase() + backendOrder.paymentStatus.slice(1),
     container: {
@@ -70,10 +72,10 @@ const OrderDetails = () => {
       price: item.unitPrice
     })),
     summary: {
-      subtotal: backendOrder.totalAmount,
-      discount: 0,
-      shipping: 0,
-      tax: 0,
+      subtotal: backendOrder.items ? backendOrder.items.reduce((acc, curr) => acc + ((curr.pieces || curr.quantity) * (curr.unitPrice || curr.price || 0)), 0) : backendOrder.totalAmount,
+      discount: backendOrder.discount || 0,
+      shipping: backendOrder.shippingCharge || 0,
+      tax: backendOrder.tax || 0,
       total: backendOrder.totalAmount
     },
     shippingAddress: {
@@ -104,9 +106,16 @@ const OrderDetails = () => {
         <div>
           <h1 className="text-2xl font-extrabold text-stone-900">Order {order.id}</h1>
           <p className="text-stone-500 font-semibold text-sm">Placed on {new Date(order.date).toLocaleString()}</p>
+          {(order.shippingDate || order.estimatedDeliveryDate) && (
+            <p className="text-stone-500 font-semibold text-xs mt-1">
+              {order.shippingDate && <span>Est. Shipping: {new Date(order.shippingDate).toLocaleDateString()}</span>}
+              {order.shippingDate && order.estimatedDeliveryDate && <span className="mx-2">&bull;</span>}
+              {order.estimatedDeliveryDate && <span>Est. Delivery: {new Date(order.estimatedDeliveryDate).toLocaleDateString()}</span>}
+            </p>
+          )}
         </div>
         <div className="ml-auto flex gap-2">
-          <button onClick={() => navigate(`/account/track/${order.id}`)} className="px-4 py-2 bg-[#2E7D32] text-white font-bold text-sm rounded-xl hover:bg-[#1B5E20] transition-colors flex items-center gap-2 shadow-md shadow-[#2E7D32]/20">
+          <button onClick={() => navigate(`/track/${order.id}`)} className="px-4 py-2 bg-[#2E7D32] text-white font-bold text-sm rounded-xl hover:bg-[#1B5E20] transition-colors flex items-center gap-2 shadow-md shadow-[#2E7D32]/20">
             <Truck className="w-4 h-4" /> Track Container
           </button>
         </div>
@@ -137,7 +146,7 @@ const OrderDetails = () => {
                 <Download className="w-4 h-4" /> Invoice
               </button>
               <button 
-                onClick={() => navigate(`/account/support?orderId=${order.id}`)}
+                onClick={() => navigate(`/support?orderId=${order.id}`)}
                 className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 font-bold text-sm rounded-xl hover:bg-stone-200 transition-colors">
                 <MessageSquare className="w-4 h-4" /> Support
               </button>

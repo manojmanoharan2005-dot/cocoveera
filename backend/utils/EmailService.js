@@ -153,6 +153,23 @@ export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary
             </tr>
           </table>
           
+          <!-- Shipping Dates Cards -->
+          ${(orderSummary.shippingDate || orderSummary.estimatedDeliveryDate) ? `
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding: 0 20px; margin-bottom: 30px;">
+            <tr>
+              <td width="48%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
+                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">SHIPPING DATE</div>
+                <div style="font-size: 12px; font-weight: bold; color: #111827;">${orderSummary.shippingDate ? new Date(orderSummary.shippingDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBD'}</div>
+              </td>
+              <td width="4%"></td>
+              <td width="48%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
+                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">EST. DELIVERY</div>
+                <div style="font-size: 12px; font-weight: bold; color: #111827;">${orderSummary.estimatedDeliveryDate ? new Date(orderSummary.estimatedDeliveryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBD'}</div>
+              </td>
+            </tr>
+          </table>
+          ` : ''}
+          
           <!-- Order Details Table -->
           <div style="padding: 0 20px;">
             <h3 style="font-size: 15px; color: #111827; margin: 0 0 15px 0;">Order Details</h3>

@@ -1019,84 +1019,101 @@ const ProductView = () => {
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white rounded-[2rem] w-full max-w-lg shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col max-h-[90vh] border border-white/20"
             >
-              <div className="p-6 border-b border-stone-100 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5" />
+              <div className="p-8 border-b border-stone-100 flex flex-col items-center justify-center text-center bg-gradient-to-br from-stone-50 to-white relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#2E7D32]/5 rounded-full blur-2xl"></div>
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#2E7D32]/5 rounded-full blur-2xl"></div>
+                
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2E7D32] to-[#1B5E20] text-white flex items-center justify-center shadow-lg shadow-[#2E7D32]/20 mb-4 z-10">
+                  <ShieldCheck className="w-7 h-7" />
                 </div>
-                <div>
-                  <h3 className="font-poppins font-black text-lg text-stone-900">Professional Quality Testing</h3>
-                  <p className="text-xs font-semibold text-stone-500">NABL / Technical Lab Verification</p>
-                </div>
+                <h3 className="font-poppins font-black text-xl text-stone-900 z-10 tracking-tight">Professional Quality Testing</h3>
+                <p className="text-sm font-medium text-stone-500 z-10 mt-1">NABL & Technical Lab Verification</p>
               </div>
               
               <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-                <div className="bg-stone-50 rounded-2xl p-4 mb-6 border border-stone-100 flex items-center gap-4">
-                  <img src={product.images[0]} alt="" className="w-12 h-12 rounded-xl object-cover bg-white shadow-sm" />
+                <div className="bg-white rounded-2xl p-4 mb-8 border border-stone-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex items-center gap-4 transition-transform hover:-translate-y-0.5">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-[#2E7D32] rounded-xl blur-[2px] opacity-20"></div>
+                    <img src={product.images[0]} alt="" className="relative w-14 h-14 rounded-xl object-cover border-2 border-white shadow-sm" />
+                  </div>
                   <div>
-                    <p className="text-sm font-bold text-stone-900">{product.name}</p>
-                    <p className="text-[10px] font-semibold text-stone-500 mt-0.5">Category: {product.category}</p>
+                    <p className="text-sm font-black text-stone-800">{product.name}</p>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#2E7D32]/10 text-[#2E7D32] mt-1">
+                      {product.category}
+                    </span>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="text-xs font-black text-stone-900 uppercase tracking-widest">Select Testing Package</h4>
+                  <h4 className="text-[11px] font-black text-stone-400 uppercase tracking-widest pl-1 mb-2">Select Testing Package</h4>
                   {packagesLoading ? (
                     <div className="flex justify-center py-6">
                       <div className="w-6 h-6 border-2 border-[#2E7D32] border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   ) : testingPackages.length === 0 ? (
-                    <p className="text-xs text-stone-500 font-semibold text-center py-4">No testing packages available.</p>
+                    <div className="flex flex-col items-center justify-center py-10 bg-stone-50/50 rounded-2xl border border-dashed border-stone-200">
+                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">
+                        <ShieldCheck className="w-6 h-6 text-stone-300" />
+                      </div>
+                      <p className="text-sm text-stone-600 font-bold">No packages available</p>
+                      <p className="text-xs text-stone-400 font-medium text-center mt-1 px-4">Currently, there are no testing packages configured for this product category.</p>
+                    </div>
                   ) : testingPackages.map((pkg) => (
                     <div 
                       key={pkg._id}
                       onClick={() => setSelectedTestingPackage(pkg)}
-                      className={`cursor-pointer rounded-2xl border-2 transition-all p-4 ${
+                      className={`cursor-pointer rounded-2xl border-2 transition-all p-5 ${
                         selectedTestingPackage?._id === pkg._id 
-                          ? 'border-[#2E7D32] bg-[#2E7D32]/5' 
-                          : 'border-stone-100 bg-white hover:border-stone-200'
+                          ? 'border-[#2E7D32] bg-[#2E7D32]/[0.02] shadow-[0_4px_20px_-4px_rgba(46,125,50,0.1)]' 
+                          : 'border-stone-100 bg-white hover:border-stone-200 hover:shadow-sm'
                       }`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                             selectedTestingPackage?._id === pkg._id ? 'border-[#2E7D32]' : 'border-stone-300'
                           }`}>
-                            {selectedTestingPackage?._id === pkg._id && <div className="w-2 h-2 rounded-full bg-[#2E7D32]" />}
+                            {selectedTestingPackage?._id === pkg._id && <div className="w-2.5 h-2.5 rounded-full bg-[#2E7D32]" />}
                           </div>
                           <span className="font-poppins font-bold text-sm text-stone-900">{pkg.name}</span>
                         </div>
-                        <span className="font-poppins font-black text-[#2E7D32]">₹{pkg.price}</span>
+                        <span className="font-poppins font-black text-[#2E7D32] bg-[#2E7D32]/10 px-3 py-1 rounded-full text-xs">₹{pkg.price}</span>
                       </div>
                       {pkg.description && (
-                        <p className="text-xs text-stone-500 font-semibold pl-6 mb-2 whitespace-pre-wrap">
+                        <p className="text-xs text-stone-500 font-medium pl-8 mb-3 whitespace-pre-wrap leading-relaxed">
                           {pkg.description}
                         </p>
                       )}
-                      <div className="pl-6 flex items-center gap-1.5 text-[10px] font-bold text-stone-400">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Estimated Delivery: {pkg.deliveryDays} Days
+                      <div className="pl-8 flex items-center gap-1.5 text-[11px] font-bold text-stone-400 bg-stone-50 w-fit px-3 py-1.5 rounded-lg border border-stone-100">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D32]" />
+                        Estimated Delivery: <span className="text-stone-600">{pkg.deliveryDays} Days</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="p-6 border-t border-stone-100 bg-stone-50">
+              <div className="p-6 border-t border-stone-100 bg-white shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)] relative z-20">
                 {selectedTestingPackage ? (
-                  <div className="mb-4 space-y-2">
-                    <div className="flex justify-between text-xs font-semibold text-stone-600">
+                  <div className="mb-5 bg-stone-50 rounded-xl p-4 border border-stone-100">
+                    <div className="flex justify-between text-xs font-semibold text-stone-500 mb-1">
                       <span>Testing Fee</span>
                       <span>₹{selectedTestingPackage.price}</span>
                     </div>
-                    <div className="flex justify-between text-sm font-poppins font-black text-stone-900">
+                    <div className="flex justify-between text-base font-poppins font-black text-[#2E7D32]">
                       <span>Total Amount</span>
                       <span>₹{selectedTestingPackage.price}</span>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-stone-500 text-center mb-4 font-semibold">Please select a package to proceed</p>
+                  <div className="mb-5 bg-orange-50/50 rounded-xl p-3.5 border border-orange-100 flex items-center justify-center">
+                    <div className="text-xs text-orange-600 font-semibold flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
+                      Please select a package to proceed
+                    </div>
+                  </div>
                 )}
 
                 <div className="flex gap-3">
@@ -1105,14 +1122,14 @@ const ProductView = () => {
                       setIsTestingModalOpen(false);
                       setSelectedTestingPackage(null);
                     }}
-                    className="flex-1 bg-white border-2 border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300 font-poppins text-xs font-bold py-3.5 rounded-xl transition-all"
+                    className="flex-1 bg-white border-2 border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300 font-poppins text-xs font-bold py-3.5 rounded-xl transition-all hover:shadow-sm"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleTestingPayment}
                     disabled={!selectedTestingPackage || testingLoading}
-                    className="flex-[2] bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center"
+                    className="flex-[2] bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#1B5E20] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none shadow-lg shadow-[#2E7D32]/25 hover:shadow-xl hover:shadow-[#2E7D32]/30 flex items-center justify-center hover:-translate-y-0.5 active:translate-y-0"
                   >
                     {testingLoading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

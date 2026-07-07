@@ -104,6 +104,13 @@ export const createOrder = async (req, res) => {
       }
     }
 
+    const now = new Date();
+    const shippingDate = new Date(now);
+    shippingDate.setDate(shippingDate.getDate() + 3); // 3 days to ship
+
+    const estimatedDeliveryDate = new Date(shippingDate);
+    estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 14); // 14 days transit
+
     const order = await Order.create({
       user: req.user.id,
       quote: quoteId || null,
@@ -118,9 +125,11 @@ export const createOrder = async (req, res) => {
         portOfLoading: shippingDetails.portOfLoading || 'Origin Port',
         portOfDischarge: shippingDetails.portOfDischarge || 'Destination Port',
         incoterms: shippingDetails.incoterms || 'FOB',
-        transitTime: shippingDetails.transitTime || 'TBD',
+        transitTime: shippingDetails.transitTime || '14 Days',
         containerType: requestedContainer,
       },
+      shippingDate,
+      estimatedDeliveryDate,
       paymentGateway: paymentGateway || 'mock',
       totalWeight,
       totalVolume,
@@ -160,6 +169,13 @@ export const createOrder = async (req, res) => {
     const populatedOrder = await Order.findById(order._id).populate('user', 'name email phone').populate('items.product', 'name slug');
 
     if (paymentGateway === 'cod' || paymentGateway === 'wire') {
+      // Clear user cart for offline methods since they are considered placed immediately
+      try {
+        await User.findByIdAndUpdate(req.user.id, { cart: [] });
+      } catch (err) {
+        console.error('Failed to clear cart for offline order:', err);
+      }
+
       try {
         const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
         const invoiceData = buildInvoiceDataFromOrder(populatedOrder);
@@ -172,7 +188,9 @@ export const createOrder = async (req, res) => {
           totalAmount: populatedOrder.totalAmount,
           paymentStatus: 'pending',
           shippingAddress: populatedOrder.shippingAddress,
-          items: invoiceData.items
+          items: invoiceData.items,
+          shippingDate: populatedOrder.shippingDate,
+          estimatedDeliveryDate: populatedOrder.estimatedDeliveryDate
         };
         await sendOrderConfirmationWithInvoice(populatedOrder.user.email, order._id.toString(), orderSummary, pdfBuffer);
       } catch (err) {

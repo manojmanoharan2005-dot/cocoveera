@@ -48,7 +48,7 @@ export const buildInvoiceDataFromOrder = (order) => {
       unitPrice: item.unitPrice || item.price || item.product?.price || 0,
       pieces: item.pieces || item.quantity
     })),
-    subtotal: order.items.reduce((acc, curr) => acc + (curr.quantity * (curr.unitPrice || curr.price || curr.product?.price || 0)), 0),
+    subtotal: order.items.reduce((acc, curr) => acc + ((curr.pieces || curr.quantity) * (curr.unitPrice || curr.price || curr.product?.price || 0)), 0),
     discount: order.discount || 0,
     shippingCharge: order.shippingCharge || 0,
     tax: order.tax || 0,

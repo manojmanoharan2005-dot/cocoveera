@@ -314,6 +314,12 @@ const Checkout = () => {
       // 2. Handle specific payment gateways
       if (paymentMethod === 'cod' || paymentMethod === 'wire') {
         // Simple completion for offline methods
+        try {
+          await apiClient.delete('/users/cart');
+          await fetchProfile();
+        } catch (err) {
+          console.error("Failed to clear cart:", err);
+        }
         handleSuccess();
         return;
       }

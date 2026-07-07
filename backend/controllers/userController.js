@@ -51,6 +51,21 @@ export const updateUserProfile = async (req, res) => {
     user.country = req.body.country !== undefined ? req.body.country : user.country;
 
     if (req.body.password) {
+      if (!req.body.currentPassword) {
+        return res.status(400).json({ success: false, message: 'Current password is required to change password' });
+      }
+
+      const userWithPassword = await User.findById(req.user._id).select('+password');
+      const isMatch = await userWithPassword.matchPassword(req.body.currentPassword);
+
+      if (!isMatch) {
+        return res.status(401).json({ success: false, message: 'Incorrect current password' });
+      }
+
+      if (req.body.currentPassword === req.body.password) {
+        return res.status(400).json({ success: false, message: 'New password cannot be the same as the current password' });
+      }
+
       if (!req.body.otp) {
         return res.status(400).json({ success: false, message: 'OTP is required to change password' });
       }
@@ -86,9 +101,22 @@ export const updateUserProfile = async (req, res) => {
 // @access  Private
 export const requestPasswordChangeOtp = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select('+password');
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (!req.body.currentPassword) {
+      return res.status(400).json({ success: false, message: 'Current password is required' });
+    }
+
+    const isMatch = await user.matchPassword(req.body.currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Incorrect current password' });
+    }
+
+    if (req.body.currentPassword === req.body.newPassword) {
+      return res.status(400).json({ success: false, message: 'New password cannot be the same as the current password' });
     }
 
     // Generate 6-digit OTP
