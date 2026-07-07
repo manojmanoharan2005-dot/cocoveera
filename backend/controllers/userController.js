@@ -11,8 +11,8 @@ import { sendOTPEmail } from '../utils/mailer.js';
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-      .populate('cart.product')
-      .populate('wishlist');
+      .populate('cart.product', 'name price images slug category stock packageSize weight')
+      .populate('wishlist', 'name price images slug category stock packageSize weight');
       
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -192,7 +192,7 @@ export const deleteAddress = async (req, res) => {
 // @access  Private
 export const updateCart = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
+    const user = await User.findById(req.user._id).populate('cart.product', 'name price images slug category stock packageSize weight').populate('wishlist', 'name price images slug category stock packageSize weight');
     const { productId, quantity, increment = false } = req.body;
     
     // Ensure quantity is a multiple of 0.25
@@ -217,7 +217,7 @@ export const updateCart = async (req, res) => {
     await user.save();
     
     // Repopulate for frontend
-    const updatedUser = await User.findById(req.user._id).populate('cart.product').populate('wishlist');
+    const updatedUser = await User.findById(req.user._id).populate('cart.product', 'name price images slug category stock packageSize weight').populate('wishlist', 'name price images slug category stock packageSize weight');
     res.status(200).json({ success: true, data: updatedUser.cart });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

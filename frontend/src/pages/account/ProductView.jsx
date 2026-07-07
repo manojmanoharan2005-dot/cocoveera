@@ -45,33 +45,38 @@ const ProductView = () => {
   const [testingPackages, setTestingPackages] = useState([]);
   const [selectedTestingPackage, setSelectedTestingPackage] = useState(null);
   const [testingLoading, setTestingLoading] = useState(false);
+  const [packagesLoading, setPackagesLoading] = useState(false);
+
+  const fetchTestingPackages = async () => {
+    setPackagesLoading(true);
+    try {
+      const res = await apiClient.get('/testing/packages');
+      if (res.data.success) {
+        setTestingPackages(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch testing packages:', err);
+    } finally {
+      setPackagesLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       setLoading(true);
       setError(null);
       try {
-        const [prodRes, allProdRes] = await Promise.all([
+        const [prodRes, relatedRes] = await Promise.all([
           apiClient.get(`/products/${id}`),
-          apiClient.get('/products')
+          apiClient.get(`/products/related/${id}`)
         ]);
 
         if (prodRes.data.success) {
           const fetchedProduct = prodRes.data.data;
           setProduct(fetchedProduct);
           
-          
-          // Filter out current product for related products section
-          if (allProdRes.data.success) {
-            const sameCategory = allProdRes.data.data.filter(
-              p => p._id !== fetchedProduct._id && p.category === fetchedProduct.category
-            );
-            const others = allProdRes.data.data.filter(
-              p => p._id !== fetchedProduct._id && p.category !== fetchedProduct.category
-            );
-            // Prioritize same category, fill up to 3 products
-            const related = [...sameCategory, ...others].slice(0, 3);
-            setRelatedProducts(related);
+          if (relatedRes.data.success) {
+            setRelatedProducts(relatedRes.data.data);
           }
         } else {
           setError('Failed to load product details.');
@@ -81,17 +86,6 @@ const ProductView = () => {
         setError(err.response?.data?.message || 'Error connecting to server. Please try again.');
       } finally {
         setLoading(false);
-      }
-    };
-
-    const fetchTestingPackages = async () => {
-      try {
-        const res = await apiClient.get('/testing/packages');
-        if (res.data.success) {
-          setTestingPackages(res.data.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch testing packages:', err);
       }
     };
 
@@ -776,7 +770,10 @@ const ProductView = () => {
                 {!showConfigurator && (
                   <button
                     type="button"
-                    onClick={() => setIsTestingModalOpen(true)}
+                    onClick={() => {
+                      setIsTestingModalOpen(true);
+                      fetchTestingPackages();
+                    }}
                     className="w-full bg-[#2E7D32]/10 hover:bg-[#2E7D32]/20 text-[#2E7D32] font-poppins text-[10px] font-black py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"
                   >
                     TEST NOW
@@ -1045,7 +1042,13 @@ const ProductView = () => {
 
                 <div className="space-y-4">
                   <h4 className="text-xs font-black text-stone-900 uppercase tracking-widest">Select Testing Package</h4>
-                  {testingPackages.map((pkg) => (
+                  {packagesLoading ? (
+                    <div className="flex justify-center py-6">
+                      <div className="w-6 h-6 border-2 border-[#2E7D32] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : testingPackages.length === 0 ? (
+                    <p className="text-xs text-stone-500 font-semibold text-center py-4">No testing packages available.</p>
+                  ) : testingPackages.map((pkg) => (
                     <div 
                       key={pkg._id}
                       onClick={() => setSelectedTestingPackage(pkg)}

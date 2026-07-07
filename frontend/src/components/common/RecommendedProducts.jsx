@@ -31,39 +31,8 @@ const RecommendedProducts = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const prodRes = await apiClient.get('/products');
-        const allProducts = prodRes.data.success ? prodRes.data.data : [];
-        
-        const categoryMap = new Map();
-        for (const product of allProducts) {
-          const category = product.category || 'Uncategorized';
-          if (!categoryMap.has(category)) {
-            categoryMap.set(category, product);
-          }
-        }
-        
-        const getCategoryPriority = (name) => {
-          if (!name) return 999;
-          const lower = name.toLowerCase();
-          if (lower.includes('cube')) return 1;
-          if (lower.includes('fiber bale')) return 2;
-          if (lower.includes('substrate bag')) return 3;
-          if (lower.includes('mat') || lower.includes('blanket')) return 6;
-          if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
-          if (lower.includes('disc') || lower === 'disck') return 5;
-          return 999;
-        };
-
-        const uniqueCategories = Array.from(categoryMap.keys());
-        uniqueCategories.sort((a, b) => {
-          const priorityA = getCategoryPriority(a);
-          const priorityB = getCategoryPriority(b);
-          if (priorityA !== priorityB) return priorityA - priorityB;
-          return a.localeCompare(b);
-        });
-
-        const sortedProducts = uniqueCategories.map(cat => categoryMap.get(cat)).slice(0, 11);
-        
+        const prodRes = await apiClient.get('/products/recommended');
+        const sortedProducts = prodRes.data.success ? prodRes.data.data : [];
         setProducts(sortedProducts);
       } catch (err) {
         console.error('Failed to fetch recommended products', err);

@@ -7,6 +7,8 @@ import multer from 'multer';
 import {
   getProducts,
   getProductById,
+  getRelatedProducts,
+  getRecommendedProducts,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -27,6 +29,12 @@ const upload = multer({
 router.route('/')
   .get(cacheMiddleware(300), getProducts)
   .post(protect, admin, upload.array('images', 5), createProduct);
+
+router.route('/recommended')
+  .get(cacheMiddleware(300), getRecommendedProducts);
+
+router.route('/related/:id')
+  .get(cacheMiddleware(300), getRelatedProducts);
 
 router.route('/:id')
   .get(cacheMiddleware(300), getProductById)

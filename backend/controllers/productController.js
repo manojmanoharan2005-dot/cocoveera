@@ -49,6 +49,88 @@ export const getProductById = async (req, res) => {
   }
 };
 
+// @desc    Get related products
+// @route   GET /api/products/related/:id
+// @access  Public
+export const getRelatedProducts = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let product;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      product = await Product.findById(id).lean();
+    } else {
+      product = await Product.findOne({ slug: id }).lean();
+    }
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    let related = await Product.find({ _id: { $ne: product._id }, category: product.category })
+      .select('name slug category price images')
+      .limit(3)
+      .lean();
+
+    if (related.length < 3) {
+      const more = await Product.find({ _id: { $ne: product._id }, category: { $ne: product.category } })
+        .select('name slug category price images')
+        .limit(3 - related.length)
+        .lean();
+      related = [...related, ...more];
+    }
+
+    res.status(200).json({ success: true, data: related });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get recommended products
+// @route   GET /api/products/recommended
+// @access  Public
+export const getRecommendedProducts = async (req, res) => {
+  try {
+    const products = await Product.find()
+      .select('name slug category price images')
+      .lean();
+
+    const categoryMap = new Map();
+    for (const product of products) {
+      const category = product.category || 'Uncategorized';
+      if (!categoryMap.has(category)) {
+        categoryMap.set(category, product);
+      }
+    }
+    
+    const getCategoryPriority = (name) => {
+      if (!name) return 999;
+      const lower = name.toLowerCase();
+      if (lower.includes('cube')) return 1;
+      if (lower.includes('fiber bale')) return 2;
+      if (lower.includes('substrate bag')) return 3;
+      if (lower.includes('mat') || lower.includes('blanket')) return 6;
+      if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
+      if (lower.includes('disc') || lower === 'disck') return 5;
+      return 999;
+    };
+
+    const uniqueCategories = Array.from(categoryMap.keys());
+    uniqueCategories.sort((a, b) => {
+      const priorityA = getCategoryPriority(a);
+      const priorityB = getCategoryPriority(b);
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      return a.localeCompare(b);
+    });
+
+    const sortedProducts = uniqueCategories.map(cat => categoryMap.get(cat)).slice(0, 11);
+    
+    res.status(200).json({ success: true, count: sortedProducts.length, data: sortedProducts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Create product (Admin only)
 // @route   POST /api/products
 // @access  Private/Admin
