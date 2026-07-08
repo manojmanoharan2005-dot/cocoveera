@@ -177,7 +177,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setError(null);
     setLoading(false);
-    navigate('/', { replace: true });
+    navigate('/login', { replace: true });
   };
 
   const toggleWishlist = async (product) => {

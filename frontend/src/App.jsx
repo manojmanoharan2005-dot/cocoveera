@@ -21,14 +21,17 @@ const Products = lazy(() => import('./pages/Products'));
 const QualityTesting = lazy(() => import('./pages/QualityTesting'));
 const CoconutSubstrates = lazy(() => import('./pages/CoconutSubstrates'));
 const Contact = lazy(() => import('./pages/Contact'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const AuthLayout = lazy(() => import('./layouts/AuthLayout'));
-const OTPForm = lazy(() => import('./components/auth/OTPForm'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
+
+// Eagerly load Authentication pages to prevent Suspend flickers during auth flow navigation
+// Eagerly load Authentication pages to prevent Suspend flickers during auth flow navigation
+import AuthLayout from './layouts/AuthLayout';
+import OTPForm from './components/auth/OTPForm';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -109,11 +112,14 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  // STRICT BROWSER HISTORY SECURITY: Verify token directly
+  const hasToken = !!localStorage.getItem('cocoveera_token');
+
   if (loading) {
     return <LoadingScreen />;
   }
 
-  if (!user) {
+  if (!user || !hasToken) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -139,11 +145,14 @@ const GuestRoute = ({ children }) => {
 const AdminProtectedRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
 
+  // STRICT BROWSER HISTORY SECURITY: Verify token directly
+  const hasToken = !!localStorage.getItem('adminToken');
+
   if (loading) {
     return <LoadingScreen />;
   }
 
-  if (!admin) {
+  if (!admin || !hasToken) {
     return <Navigate to="/login" replace />;
   }
 
@@ -155,7 +164,9 @@ const AdminProtectedRoute = ({ children }) => {
 const PublicLayout = () => {
   const location = useLocation();
   
-  const hideFooter = ['/login', '/register'].includes(location.pathname);
+  const authPaths = ['/login', '/register', '/verify-otp'];
+  const hideFooter = authPaths.includes(location.pathname);
+  const animationKey = authPaths.includes(location.pathname) ? 'auth-flow' : location.pathname;
 
   return (
     <div 
@@ -165,14 +176,16 @@ const PublicLayout = () => {
         <Navbar />
       <AnimatePresence mode="wait">
         <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 15 }}
+          key={animationKey}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -15 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="flex-grow"
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="flex-grow flex flex-col w-full"
         >
-          <Outlet />
+          <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-50 transition-opacity duration-300"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
+            <Outlet />
+          </Suspense>
         </motion.div>
       </AnimatePresence>
       {!hideFooter && <Footer />}
@@ -200,6 +213,18 @@ const DynamicLayout = () => {
 };
 
 function AppContent() {
+  // Security: Prevent bfcache from restoring authenticated pages after logout
+  useEffect(() => {
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        // Force a reload if page is restored from bfcache to guarantee fresh auth check
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   return (
     <Suspense fallback={<LoadingScreen />}>
       <ScrollToTop />
@@ -216,18 +241,15 @@ function AppContent() {
           <Route path="/substrates" element={<CoconutSubstrates />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/containers/viewer" element={<ContainerViewerDemo />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
-          <Route
-            path="/verify-otp"
-            element={
-              <AuthLayout>
-                <OTPForm />
-              </AuthLayout>
-            }
-          />
+          
+          {/* Auth Flow - Shared Layout to prevent flicker */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/register" element={<RegisterForm />} />
+            <Route path="/verify-otp" element={<OTPForm />} />
+          </Route>
         </Route>
 
         {/* User Protected Routes under DashboardLayout */}

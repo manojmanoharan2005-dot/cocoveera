@@ -3,9 +3,9 @@
  * Purpose: Source code file for the Cocoveera project.
  */
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const AuthLayout = ({ children }) => {
   return (
@@ -33,7 +33,7 @@ export const AuthLayout = ({ children }) => {
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="w-full max-w-md"
         >
-          {children}
+          {children || <Outlet />}
         </motion.div>
       </main>
 
