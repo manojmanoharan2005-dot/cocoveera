@@ -9,7 +9,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import TransitionRoutes from './components/TransitionRoutes';
 import axios from 'axios';
 import { API_URL } from './utils/config';
 
@@ -173,20 +172,11 @@ const PublicLayout = () => {
     >
       <div className="relative z-10 flex flex-col flex-grow w-full">
         <Navbar />
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={animationKey}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          transition={{ duration: 0.15, ease: "easeOut" }}
-          className="flex-grow flex flex-col w-full"
-        >
-          <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-0 transition-opacity duration-300 delay-150"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
-            <Outlet />
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
+      <div className="flex-grow flex flex-col w-full">
+        <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-0 transition-opacity duration-300 delay-150"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
+          <Outlet />
+        </Suspense>
+      </div>
       {!hideFooter && <Footer />}
       </div>
     </div>
@@ -212,12 +202,16 @@ const DynamicLayout = () => {
 };
 
 function AppContent() {
-  // Security: Prevent bfcache from restoring authenticated pages after logout
+  // Security: Handle bfcache without forcing a full page reload
   useEffect(() => {
     const handlePageShow = (event) => {
       if (event.persisted) {
-        // Force a reload if page is restored from bfcache to guarantee fresh auth check
-        window.location.reload();
+        // If restored from bfcache, we can trigger a soft re-check if needed,
+        // but we strictly avoid window.location.reload() to prevent flashes.
+        const hasToken = !!localStorage.getItem('cocoveera_token');
+        if (!hasToken && window.location.pathname.includes('/dashboard')) {
+          window.location.replace('/login'); // Use replace instead of reload
+        }
       }
     };
     window.addEventListener('pageshow', handlePageShow);
@@ -227,7 +221,7 @@ function AppContent() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <ScrollToTop />
-      <TransitionRoutes>
+      <Routes>
         {/* Fullscreen Immerse Route */}
         <Route path="/welcome" element={<Onboarding />} />
 
@@ -401,7 +395,7 @@ function AppContent() {
         <Route element={<DynamicLayout />}>
           {/* Empty dynamic block, leaving for any future public/private hybrid routes */}
         </Route>
-      </TransitionRoutes>
+      </Routes>
     </Suspense>
   );
 }
