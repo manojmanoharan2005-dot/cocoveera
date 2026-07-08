@@ -18,6 +18,21 @@ const Profile = () => {
 
   const userInitials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
 
+  const formatPhone = (phone) => {
+    if (!phone) return 'Not Provided';
+    const p = phone.replace(/\D/g, '');
+    if (p.length === 12 && p.startsWith('91')) return `+91 ${p.slice(2)}`;
+    if (p.length === 11 && p.startsWith('1')) return `+1 ${p.slice(1)}`;
+    if (p.length === 12 && p.startsWith('44')) return `+44 ${p.slice(2)}`;
+    if (p.length === 12 && p.startsWith('971')) return `+971 ${p.slice(3)}`;
+    if (p.length >= 11) {
+      if (p.length === 13) return `+${p.slice(0, 3)} ${p.slice(3)}`;
+      if (p.length === 12) return `+${p.slice(0, 2)} ${p.slice(2)}`;
+      if (p.length === 11) return `+${p.slice(0, 1)} ${p.slice(1)}`;
+    }
+    return phone.startsWith('+') ? phone : `+${p}`;
+  };
+
   return (
     <div className="w-full space-y-6">
       <div className="flex justify-between items-end mb-8">
@@ -70,7 +85,7 @@ const Profile = () => {
               </div>
               <div>
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Phone Number</p>
-                <p className="text-sm font-bold text-stone-900 mt-0.5">{user.phone || 'Not Provided'}</p>
+                <p className="text-sm font-bold text-stone-900 mt-0.5">{formatPhone(user.phone)}</p>
               </div>
             </div>
 
