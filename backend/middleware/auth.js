@@ -5,7 +5,16 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+const setNoCacheHeaders = (res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+};
+
 export const protect = async (req, res, next) => {
+  setNoCacheHeaders(res);
+  
   let token;
 
   if (
@@ -59,6 +68,7 @@ export const protect = async (req, res, next) => {
 };
 
 export const admin = (req, res, next) => {
+  setNoCacheHeaders(res);
   if (req.user && ['admin', 'manager', 'support'].includes(req.user.role)) {
     next();
   } else {

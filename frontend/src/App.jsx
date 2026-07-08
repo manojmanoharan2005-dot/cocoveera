@@ -209,8 +209,16 @@ function AppContent() {
         // If restored from bfcache, we can trigger a soft re-check if needed,
         // but we strictly avoid window.location.reload() to prevent flashes.
         const hasToken = !!localStorage.getItem('cocoveera_token');
-        if (!hasToken && window.location.pathname.includes('/dashboard')) {
-          window.location.replace('/login'); // Use replace instead of reload
+        const hasAdminToken = !!localStorage.getItem('adminToken');
+        
+        const path = window.location.pathname;
+        const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings');
+        const isAdminProtected = path.startsWith('/admin');
+        
+        if (isAdminProtected && !hasAdminToken) {
+          window.location.replace('/login');
+        } else if (isUserProtected && !hasToken) {
+          window.location.replace('/login');
         }
       }
     };

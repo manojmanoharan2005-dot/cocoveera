@@ -2,7 +2,7 @@
  * File: frontend/src/context/AdminAuthContext.jsx
  * Purpose: Provides global state management context using React Context API.
  */
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../utils/config';
@@ -14,10 +14,40 @@ export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(!!localStorage.getItem('adminToken'));
   const [error, setError] = useState(null);
+  
+  // Utility to decode JWT without external library
+  const parseJwt = (t) => {
+    try {
+      return JSON.parse(atob(t.split('.')[1]));
+    } catch (e) {
+      return null;
+    }
+  };
 
+  const adminToken = localStorage.getItem('adminToken');
 
+  // JWT Auto-Logout based on expiry
+  useEffect(() => {
+    if (!adminToken) return;
+    
+    const decodedToken = parseJwt(adminToken);
+    if (!decodedToken || !decodedToken.exp) return;
 
-  // Check if admin is logged in
+    const expirationTimeMs = decodedToken.exp * 1000;
+    const timeRemaining = expirationTimeMs - Date.now();
+
+    if (timeRemaining <= 0) {
+      logout();
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      console.warn('Admin session automatically expired.');
+      logout();
+    }, timeRemaining);
+
+    return () => clearTimeout(timeoutId);
+  }, [adminToken]);  // Check if admin is logged in
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('adminToken');
@@ -128,10 +158,12 @@ export const AdminAuthProvider = ({ children }) => {
     }
   };
 
+  const contextValue = React.useMemo(() => ({
+    admin, loading, error, login, logout, refreshToken, verifyAdminKey, logoutAllDevices
+  }), [admin, loading, error]);
+
   return (
-    <AdminAuthContext.Provider
-      value={{ admin, loading, error, login, logout, refreshToken, verifyAdminKey, logoutAllDevices }}
-    >
+    <AdminAuthContext.Provider value={contextValue}>
       {children}
     </AdminAuthContext.Provider>
   );

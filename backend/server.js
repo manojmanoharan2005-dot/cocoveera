@@ -61,10 +61,14 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         imgSrc: ["'self'", 'data:', 'https:'],
         connectSrc: ["'self'", process.env.FRONTEND_URL || 'http://localhost:5173', 'https:'],
-        frameAncestors: ["'self'"],
+        frameAncestors: ["'none'"], // Stricter: completely deny framing
         objectSrc: ["'none'"],
       },
     },
+    referrerPolicy: { policy: 'same-origin' },
+    xContentTypeOptions: true, // noSniff
+    frameguard: { action: 'deny' }, // X-Frame-Options DENY
+    xssFilter: true, // X-XSS-Protection
   })
 );
 const allowedOrigins = [

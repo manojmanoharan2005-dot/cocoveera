@@ -62,6 +62,38 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [pendingWishlist, setPendingWishlist] = useState(new Set());
 
+  // Utility to decode JWT without external library
+  const parseJwt = (t) => {
+    try {
+      return JSON.parse(atob(t.split('.')[1]));
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // JWT Auto-Logout based on expiry
+  useEffect(() => {
+    if (!token) return;
+    
+    const decodedToken = parseJwt(token);
+    if (!decodedToken || !decodedToken.exp) return;
+
+    const expirationTimeMs = decodedToken.exp * 1000;
+    const timeRemaining = expirationTimeMs - Date.now();
+
+    if (timeRemaining <= 0) {
+      logout();
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      console.warn('Session automatically expired due to token lifetime.');
+      logout();
+    }, timeRemaining);
+
+    return () => clearTimeout(timeoutId);
+  }, [token]);
+
   // Global unauthorized listener
   useEffect(() => {
     const handleUnauthorized = () => {
