@@ -14,13 +14,12 @@ import axios from 'axios';
 import { API_URL } from './utils/config';
 
 // Prefetching removed for optimization
-// Public Pages
-const Home = lazy(() => import('./pages/Home'));
-const About = lazy(() => import('./pages/About'));
-const Products = lazy(() => import('./pages/Products'));
+import Home from './pages/Home';
+import About from './pages/About';
+import Products from './pages/Products';
 const QualityTesting = lazy(() => import('./pages/QualityTesting'));
 const CoconutSubstrates = lazy(() => import('./pages/CoconutSubstrates'));
-const Contact = lazy(() => import('./pages/Contact'));
+import Contact from './pages/Contact';
 const NotFound = lazy(() => import('./pages/NotFound'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
@@ -55,7 +54,7 @@ const Marketplace = lazy(() => import('./dashboards/Marketplace'));
 const DashboardLayout = lazy(() => import('./dashboards/DashboardLayout'));
 const Orders = lazy(() => import('./pages/account/Orders'));
 const OrderDetails = lazy(() => import('./pages/account/OrderDetails'));
-const Cart = lazy(() => import('./pages/account/Cart'));
+import Cart from './pages/account/Cart';
 const Checkout = lazy(() => import('./pages/account/Checkout'));
 const OrderSummary = lazy(() => import('./pages/account/OrderSummary'));
 const Payment = lazy(() => import('./pages/account/Payment'));
@@ -65,7 +64,7 @@ const SavedCart = lazy(() => import('./pages/account/SavedCart'));
 const Address = lazy(() => import('./pages/account/Address'));
 const Settings = lazy(() => import('./pages/account/Settings'));
 const Profile = lazy(() => import('./pages/account/Profile'));
-const ProductView = lazy(() => import('./pages/account/ProductView'));
+import ProductView from './pages/account/ProductView';
 const Invoices = lazy(() => import('./pages/account/Invoices'));
 const Quotes = lazy(() => import('./pages/account/Quotes'));
 const Notifications = lazy(() => import('./pages/account/Notifications'));
@@ -177,13 +176,13 @@ const PublicLayout = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={animationKey}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
           className="flex-grow flex flex-col w-full"
         >
-          <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-50 transition-opacity duration-300"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
+          <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-0 transition-opacity duration-300 delay-150"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
             <Outlet />
           </Suspense>
         </motion.div>

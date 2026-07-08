@@ -25,8 +25,8 @@ export const TransitionRoutes = ({ children }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[9999] bg-white/70 backdrop-blur-md flex flex-col items-center justify-center pointer-events-none"
+            transition={{ duration: 0.2, delay: 0.15 }}
+            className="fixed inset-0 z-[9999] bg-white/50 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none"
           >
             <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
               <div className="absolute inset-0 border-4 border-stone-100 rounded-full"></div>
