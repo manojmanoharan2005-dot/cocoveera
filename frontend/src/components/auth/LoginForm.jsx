@@ -78,11 +78,18 @@ export const LoginForm = () => {
 
   // Pre-fill email if Remember Me was checked
   useEffect(() => {
-    const savedEmail = localStorage.getItem('cocoveera_remember_email');
+    const savedEmail = localStorage.getItem('cocoveera_auth_login_email');
     if (savedEmail) {
-      setValue('email', savedEmail);
-      setValue('rememberMe', true);
+      // Prevent injected non-email/phone values (e.g. currency 'INR')
+      if (savedEmail.includes('@') || /^\+?[0-9]{7,15}$/.test(savedEmail)) {
+        setValue('email', savedEmail);
+        setValue('rememberMe', true);
+      } else {
+        localStorage.removeItem('cocoveera_auth_login_email');
+      }
     }
+    // Clean up old buggy key
+    localStorage.removeItem('cocoveera_remember_email');
   }, [setValue]);
 
   const onSubmit = async (data) => {
@@ -92,9 +99,9 @@ export const LoginForm = () => {
       const res = await login(data.email, data.password);
       
       if (data.rememberMe) {
-        localStorage.setItem('cocoveera_remember_email', data.email);
+        localStorage.setItem('cocoveera_auth_login_email', data.email);
       } else {
-        localStorage.removeItem('cocoveera_remember_email');
+        localStorage.removeItem('cocoveera_auth_login_email');
       }
 
       if (res.requiresAdminVerification) {
@@ -252,6 +259,7 @@ export const LoginForm = () => {
               <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
               <input
                 type="text"
+                autoComplete="username email"
                 {...register('email', {
                   required: 'Email or Mobile Number is required',
                 })}
@@ -277,6 +285,7 @@ export const LoginForm = () => {
               <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
               <input
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 {...register('password', {
                   required: 'Password is required',
                   minLength: {

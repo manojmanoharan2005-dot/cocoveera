@@ -8,7 +8,7 @@ export const ProductGrid = ({ loading, children }) => {
   // Render placeholder skeleton cards
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-8">
         {[...Array(8)].map((_, idx) => (
           <div 
             key={idx} 
@@ -40,7 +40,7 @@ export const ProductGrid = ({ loading, children }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-5">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-5">
       {children}
     </div>
   );

@@ -395,6 +395,7 @@ export const RegisterForm = () => {
               <LinkIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 pointer-events-none" />
               <input
                 type="text"
+                autoComplete="off"
                 {...register('currency')}
                 readOnly
                 className="w-full bg-[#EEF2F6]/75 border border-transparent text-stone-550 rounded-xl py-3 pl-10 pr-4 text-xs font-bold focus:outline-none cursor-not-allowed"
@@ -413,6 +414,7 @@ export const RegisterForm = () => {
             <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
             <input
               type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
               disabled={otpSent}
               {...register('password', {
                 required: 'Password is required',

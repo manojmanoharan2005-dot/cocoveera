@@ -377,7 +377,7 @@ const Products = () => {
       </div>
 
       {/* BOTTOM NAVIGATION */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)] pb-safe pt-2 px-6 z-50 rounded-t-3xl h-[70px] flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)] pb-safe pt-2 px-6 z-50 rounded-t-3xl h-[70px] flex items-center justify-between lg:hidden">
         <button className="flex flex-col items-center space-y-1 text-gray-400 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/')}>
           <HomeIcon className="w-6 h-6" />
           <span className="text-[9px] font-bold">Home</span>
