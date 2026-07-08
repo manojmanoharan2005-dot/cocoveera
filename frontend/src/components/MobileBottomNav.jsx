@@ -13,10 +13,7 @@ const MobileBottomNav = () => {
   const hiddenRoutes = ['/admin', '/checkout', '/product/', '/productview/', '/mobile'];
   const shouldHide = hiddenRoutes.some(route => location.pathname.includes(route));
 
-  // ONLY SHOW ON PRIVATE PAGES
-  const isPrivatePage = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/account');
-
-  if (shouldHide || !isPrivatePage || loading) return null;
+  if (shouldHide || loading) return null;
 
   const cartCount = user?.cart?.length || 0;
 

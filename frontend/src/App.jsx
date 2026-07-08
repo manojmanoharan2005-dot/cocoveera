@@ -70,7 +70,6 @@ const PaymentHistory = lazy(() => import('./pages/account/PaymentHistory'));
 const CustomerTestingReports = lazy(() => import('./pages/account/CustomerTestingReports'));
 const HelpCenter = lazy(() => import('./pages/account/HelpCenter'));
 const MobileAccount = lazy(() => import('./pages/account/MobileAccount'));
-const MobileBottomNav = lazy(() => import('./components/MobileBottomNav'));
 
 import { Ship } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -382,7 +381,6 @@ function AppContent() {
           {/* Empty dynamic block, leaving for any future public/private hybrid routes */}
         </Route>
       </TransitionRoutes>
-      <MobileBottomNav />
     </Suspense>
   );
 }

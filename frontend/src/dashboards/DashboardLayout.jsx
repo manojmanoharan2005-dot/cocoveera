@@ -7,6 +7,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import MobileBottomNav from '../components/MobileBottomNav';
 
 export const DashboardLayout = () => {
   const { user, logout } = useAuth();
@@ -80,6 +81,7 @@ export const DashboardLayout = () => {
           </main>
         </div>
       </div>
+      <MobileBottomNav />
     </div>
   );
 };
