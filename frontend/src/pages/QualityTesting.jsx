@@ -1,7 +1,9 @@
 import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Palmtree, Settings, Box, Shield, Package, Ship } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { motion, useScroll } from 'framer-motion';
+import { Palmtree, Settings, Box, Shield, Package, Ship, ArrowRight, CheckCircle2, Home } from 'lucide-react';
 import PageHero from '../components/PageHero';
+import ImageWithFallback from '../components/common/ImageWithFallback';
 
 const QualityTesting = () => {
   const containerRef = useRef(null);
@@ -9,89 +11,247 @@ const QualityTesting = () => {
     target: containerRef,
     offset: ["start center", "end center"]
   });
+
   const productionStages = [
-    { title: 'Raw Material Collection', desc: 'Sourcing premium coconut husks from certified sustainable plantations', icon: Palmtree, color: 'bg-green-100 text-green-700' },
-    { title: 'Processing', desc: 'Advanced machinery for fiber extraction and separation', icon: Settings, color: 'bg-blue-100 text-blue-700' },
-    { title: 'Compression', desc: 'High-pressure compression into compact blocks for easy transport', icon: Box, color: 'bg-purple-100 text-purple-700' },
-    { title: 'Quality Testing', desc: 'Comprehensive laboratory analysis ensuring premium standards', icon: Shield, color: 'bg-orange-100 text-orange-700' },
-    { title: 'Packaging', desc: 'UV-stabilized packaging for maximum product protection', icon: Package, color: 'bg-pink-100 text-pink-700' },
-    { title: 'Export', desc: 'Global shipping with optimized logistics and documentation', icon: Ship, color: 'bg-cyan-100 text-cyan-700' },
+    { 
+      title: 'Raw Material Collection', 
+      desc: 'Premium coconut husks are collected from carefully selected farms to ensure high-quality raw materials while promoting sustainable sourcing.', 
+      icon: Palmtree, 
+      color: 'bg-green-100 text-green-700',
+      image: 'https://images.unsplash.com/photo-1616172655357-19dff30d5b12?auto=format&fit=crop&w=800&q=80',
+      highlights: ['Premium Husk', 'Sustainable Farming', 'Fresh Collection'],
+      ctaLabel: 'View Raw Materials',
+      ctaLink: '/products'
+    },
+    { 
+      title: 'Processing', 
+      desc: 'Advanced machinery removes fibers, screens materials, washes impurities, and prepares premium cocopeat.', 
+      icon: Settings, 
+      color: 'bg-blue-100 text-blue-700',
+      image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
+      highlights: ['Fiber Separation', 'Dust Removal', 'Machine Processed'],
+      ctaLabel: 'Learn Processing',
+      ctaLink: '/products'
+    },
+    { 
+      title: 'Compression', 
+      desc: 'The processed cocopeat is compressed into export-grade blocks with high-density hydraulic technology.', 
+      icon: Box, 
+      color: 'bg-purple-100 text-purple-700',
+      image: 'https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=crop&w=800&q=80',
+      highlights: ['High Compression', 'Uniform Density', 'Export Standard'],
+      ctaLabel: 'View Block Products',
+      ctaLink: '/products'
+    },
+    { 
+      title: 'Quality Testing', 
+      desc: 'Every batch undergoes strict quality inspections including EC, pH, moisture, expansion ratio, and contamination testing.', 
+      icon: Shield, 
+      color: 'bg-orange-100 text-orange-700',
+      image: 'https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?auto=format&fit=crop&w=800&q=80',
+      highlights: ['EC Tested', 'pH Tested', 'Lab Certified'],
+      ctaLabel: 'View Test Reports',
+      ctaLink: '/quality-testing'
+    },
+    { 
+      title: 'Packaging', 
+      desc: 'Products are securely packed using UV-resistant export packaging to ensure safe transportation worldwide.', 
+      icon: Package, 
+      color: 'bg-pink-100 text-pink-700',
+      image: 'https://images.unsplash.com/photo-1586528116311-ad8ed7c75855?auto=format&fit=crop&w=800&q=80',
+      highlights: ['UV Resistant', 'Secure Packing', 'Export Ready'],
+      ctaLabel: 'View Packaging Specs',
+      ctaLink: '/products'
+    },
+    { 
+      title: 'Export', 
+      desc: 'Products are palletized, container loaded, documented, and shipped globally following international export standards.', 
+      icon: Ship, 
+      color: 'bg-cyan-100 text-cyan-700',
+      image: 'https://images.unsplash.com/photo-1494412651409-8963ce7935a7?auto=format&fit=crop&w=800&q=80',
+      highlights: ['Container Loading', 'Global Shipping', 'Documentation Ready'],
+      ctaLabel: 'View Shipping Network',
+      ctaLink: '/substrates'
+    },
+    { 
+      title: 'Delivered to Customer', 
+      desc: 'From our global distribution centers directly to commercial greenhouses and garden enthusiasts worldwide.', 
+      icon: Home, 
+      color: 'bg-emerald-100 text-emerald-700',
+      image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4ce88?auto=format&fit=crop&w=800&q=80',
+      highlights: ['Home Gardening', 'Greenhouse Ready', 'Commercial Farms'],
+      ctaLabel: 'Shop Now',
+      ctaLink: '/products'
+    },
   ];
 
   return (
-    <div className="pb-16 bg-white min-h-screen">
+    <div className="pb-24 bg-stone-50 min-h-screen relative overflow-hidden">
+      {/* Subtle Background Pattern */}
+      <div className="absolute inset-0 opacity-[0.04] pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#2E7D32 1.5px, transparent 1.5px)', backgroundSize: '48px 48px' }} />
+
       <PageHero
         badge="MANUFACTURING STANDARDS"
         title="Production Process"
         titleAccent="& QA"
         subtitle="From raw husks to certified substrates: Review our manufacturing infrastructure and verify batch analysis scores."
-        breadcrumbs={[{ label: 'Quality Testing', path: '/quality-testing' }]}
+        breadcrumbs={[{ label: 'Production Process', path: '/quality-testing' }]}
       />
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         
-        {/* Production Process Flow */}
-        <div className="w-full max-w-4xl mx-auto space-y-6">
-          <div className="bg-white p-8 lg:p-10 rounded-3xl border border-stone-200 shadow-soft">
-            <h3 className="font-poppins font-extrabold text-stone-900 text-2xl text-center mb-10">
-              Our Streamlined Process
-            </h3>
+        {/* Alternating Vertical Timeline */}
+        <div ref={containerRef} className="relative w-full py-16">
+          
+          {/* Background Timeline Axis */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-1.5 bg-stone-200 transform -translate-x-1/2 rounded-full z-0"></div>
+          
+          {/* Animated Scroll Progress Line */}
+          <motion.div 
+            style={{ scaleY: scrollYProgress, transformOrigin: "top" }}
+            className="absolute left-1/2 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary to-primary-light transform -translate-x-1/2 rounded-full z-10"
+          ></motion.div>
 
-            {/* Alternating Vertical Timeline */}
-            <div ref={containerRef} className="relative max-w-4xl mx-auto py-8">
-              {/* Background Line */}
-              <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-1 bg-stone-100 transform md:-translate-x-1/2 rounded-full z-0"></div>
-              {/* Scroll Progress Line */}
-              <motion.div 
-                style={{ scaleY: scrollYProgress, transformOrigin: "top" }}
-                className="absolute left-6 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary-light transform md:-translate-x-1/2 rounded-full z-0"
-              ></motion.div>
+          <div className="space-y-16 lg:space-y-20">
+            {productionStages.map((stage, idx) => {
+              const Icon = stage.icon;
+              const isEven = idx % 2 === 0;
 
-              <div className="space-y-16">
-                {productionStages.map((stage, idx) => {
-                  const Icon = stage.icon;
-                  const isEven = idx % 2 === 0;
+              return (
+                <div key={idx} className={`relative flex flex-col lg:flex-row items-center gap-8 lg:gap-0 ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}>
+                  
+                  {/* IMAGE BLOCK */}
+                  <motion.div
+                    initial={{ opacity: 0, x: isEven ? -40 : 40, y: 20 }}
+                    whileInView={{ opacity: 1, x: 0, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                    className={`w-full lg:w-1/2 ${isEven ? 'lg:pr-10' : 'lg:pl-10'} flex justify-center`}
+                  >
+                    <div className="relative w-full max-w-[420px] aspect-[16/11] lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] group border-[5px] border-white bg-white z-20">
+                      <ImageWithFallback 
+                        src={stage.image}
+                        alt={stage.title}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                    </div>
+                  </motion.div>
 
-                  return (
+                  {/* Timeline Node (Mobile - In Flow) */}
+                  <div className="lg:hidden flex items-center justify-center z-30 w-full relative -my-3">
                     <motion.div 
-                      key={idx} 
-                      initial={{ opacity: 0, y: 40, x: isEven ? -40 : 40 }}
-                      whileInView={{ opacity: 1, y: 0, x: 0 }}
+                      initial={{ scale: 0 }}
+                      whileInView={{ scale: 1 }}
                       viewport={{ once: true, margin: "-50px" }}
-                      transition={{ duration: 0.7, delay: idx * 0.1, type: "spring", stiffness: 100 }}
-                      className={`relative flex flex-col md:flex-row items-center ${isEven ? 'md:justify-start' : 'md:justify-end'}`}
+                      transition={{ type: 'spring', delay: 0.2 }}
+                      className={`w-14 h-14 rounded-full flex items-center justify-center z-30 ${stage.color} shadow-lg border-[5px] border-white`}
                     >
-                      
-                      {/* Icon */}
-                      <motion.div 
-                        whileHover={{ scale: 1.15, rotate: 10 }}
-                        className={`absolute left-6 md:left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full flex items-center justify-center z-10 ${stage.color} shadow-lg border-4 border-white cursor-pointer`}
-                      >
-                        <Icon className="w-8 h-8" />
-                      </motion.div>
-
-                      {/* Content Card */}
-                      <div className={`w-full md:w-5/12 pl-24 md:pl-0 ${isEven ? 'md:pr-20' : 'md:pl-20'}`}>
-                        <motion.div 
-                          whileHover={{ y: -8, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.15)" }}
-                          className="bg-white p-8 rounded-3xl shadow-soft border border-stone-100 flex flex-col items-center text-center relative overflow-hidden group transition-all duration-300"
-                        >
-                          {/* Accent Gradient Line */}
-                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary/30 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                          
-                          <h4 className="font-poppins font-extrabold text-stone-900 text-lg mb-3">{stage.title}</h4>
-                          <p className="text-stone-500 text-sm leading-relaxed font-medium">{stage.desc}</p>
-                        </motion.div>
-                      </div>
+                      <Icon className="w-6 h-6" />
                     </motion.div>
-                  );
-                })}
-              </div>
-            </div>
+                  </div>
+
+                  {/* Timeline Node (Desktop - Absolute Center) */}
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ type: 'spring', delay: 0.2 }}
+                    className={`hidden lg:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full items-center justify-center z-30 ${stage.color} shadow-xl border-[5px] border-white bg-white`}
+                  >
+                    <Icon className="w-6 h-6" />
+                  </motion.div>
+
+                  {/* CONTENT BLOCK */}
+                  <motion.div
+                    initial={{ opacity: 0, x: isEven ? 40 : -40, y: 20 }}
+                    whileInView={{ opacity: 1, x: 0, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
+                    className={`w-full lg:w-1/2 ${isEven ? 'lg:pl-10' : 'lg:pr-10'} flex flex-col justify-center`}
+                  >
+                    <div className="bg-white p-6 sm:p-8 rounded-[1.5rem] shadow-soft border border-stone-100 relative overflow-hidden group hover:shadow-lg transition-all duration-500 hover:-translate-y-1 z-20">
+                      
+                      {/* Decorative Background Accent */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-stone-100/50 to-transparent rounded-bl-[3rem] pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+
+                      <div className="flex items-center gap-3 mb-4 relative z-10">
+                        <span className={`text-4xl font-black opacity-[0.08] font-poppins ${stage.color.split(' ')[1]}`}>
+                          0{idx + 1}
+                        </span>
+                        <h4 className="font-poppins font-extrabold text-stone-900 text-xl lg:text-2xl tracking-tight leading-tight group-hover:text-primary transition-colors duration-300">
+                          {stage.title}
+                        </h4>
+                      </div>
+                      
+                      <p className="text-stone-500 text-sm leading-relaxed font-medium mb-6 relative z-10">
+                        {stage.desc}
+                      </p>
+
+                      <div className="flex flex-col gap-2.5 mb-8 relative z-10">
+                        {stage.highlights.map((highlight, hIdx) => (
+                          <motion.div 
+                            key={hIdx}
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.4 + (hIdx * 0.1) }}
+                            className="flex items-center gap-2.5 bg-stone-50/50 p-2 rounded-lg border border-stone-100/50 hover:bg-stone-50 transition-colors"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                            </div>
+                            <span className="text-xs font-bold text-stone-700 tracking-wide">{highlight}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      <Link
+                        to={stage.ctaLink}
+                        className="inline-flex items-center justify-center gap-2 bg-stone-900 hover:bg-primary text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all duration-300 group/btn w-full sm:w-auto shadow-sm hover:shadow-md relative z-10"
+                      >
+                        {stage.ctaLabel}
+                        <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                      </Link>
+
+                    </div>
+                  </motion.div>
+
+                </div>
+              );
+            })}
           </div>
+
+          {/* Final Completion Node */}
+          <div className="relative flex flex-col items-center justify-center pt-24 pb-8 z-30">
+            <motion.div 
+              initial={{ scale: 0, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ type: 'spring', delay: 0.3 }}
+              className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-[0_0_30px_rgba(46,125,50,0.5)] border-[5px] border-white mb-6 relative"
+            >
+              {/* Pulsing ring */}
+              <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping opacity-50"></div>
+              <CheckCircle2 className="w-8 h-8 text-white" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="text-center"
+            >
+              <h3 className="font-poppins font-extrabold text-primary text-2xl sm:text-3xl tracking-tight mb-2">
+                From Farm to Your Home.
+              </h3>
+              <p className="text-stone-500 font-medium text-sm">
+                A sustainable journey completing with you.
+              </p>
+            </motion.div>
+          </div>
+
         </div>
-
-
 
       </div>
     </div>

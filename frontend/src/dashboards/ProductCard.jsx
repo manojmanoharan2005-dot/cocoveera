@@ -18,7 +18,7 @@ export const ProductCard = React.memo(({
   onCardClick
 }) => {
   const [addedToCart, setAddedToCart] = useState(false);
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   // Base price is assuming INR from DB (modify if DB stores differently)
   const basePrice = product.price || 0;
@@ -35,6 +35,13 @@ export const ProductCard = React.memo(({
     onCardClick(product);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCardClick(e);
+    }
+  };
+
   const handleAddToCart = (e) => {
     e.stopPropagation();
     onAddToCart(product);
@@ -45,6 +52,9 @@ export const ProductCard = React.memo(({
   return (
     <motion.div
       onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
       whileHover={{ y: -6 }}
       transition={{ type: 'spring', stiffness: 320, damping: 24 }}
       className="w-full bg-white rounded-[24px] border border-stone-200/70 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.10)] cursor-pointer flex flex-col relative group transition-shadow duration-300"
@@ -80,26 +90,33 @@ export const ProductCard = React.memo(({
           <h3 className="font-poppins font-bold text-stone-800 text-[13px] leading-snug line-clamp-2 break-words flex-grow">
             {product.name}
           </h3>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onWishlistToggle(product);
-            }}
-            className="action-btn flex-shrink-0 mt-0.5 text-stone-400 hover:text-red-500 transition-colors"
-          >
-            <Heart
-              className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`}
-            />
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onWishlistToggle(product);
+              }}
+              className="action-btn flex-shrink-0 mt-0.5 text-stone-400 hover:text-red-500 transition-colors"
+            >
+              <Heart
+                className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`}
+              />
+            </button>
+          )}
         </div>
 
 
-        {/* Price Row */}
+        {/* Bottom Row */}
         <div className="flex items-baseline gap-2 mt-auto w-full min-w-0">
-          <span className="text-base font-poppins font-black text-stone-900 truncate overflow-hidden text-ellipsis whitespace-nowrap block max-w-full">
-            {priceData.formatted}
-          </span>
-
+          {isAuthenticated ? (
+            <span className="text-base font-poppins font-black text-stone-900 truncate overflow-hidden text-ellipsis whitespace-nowrap block max-w-full">
+              {priceData.formatted}
+            </span>
+          ) : (
+            <div className="w-full bg-[#F7F9F7] text-[#2E7D32] group-hover:bg-[#E8F3E8] border border-[#2E7D32]/20 font-bold text-[11px] py-1.5 rounded-[10px] transition-colors flex items-center justify-center gap-1 mt-1">
+              View Product <ArrowRight className="w-3 h-3" />
+            </div>
+          )}
         </div>
 
       </div>

@@ -3,7 +3,7 @@
  * Purpose: React page component representing the Home view.
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../utils/config';
 import useSWR from 'swr';
@@ -260,6 +260,7 @@ const optimizeImage = (url) => {
 
 // ─── Home Component ────────────────────────────────────────────────────────────
 const Home = () => {
+  const navigate = useNavigate();
   const { scrollY } = useScroll();
   const yHeroImage = useTransform(scrollY, [0, 1000], [0, 150]);
   const yHeroText = useTransform(scrollY, [0, 1000], [0, -100]);
@@ -623,13 +624,22 @@ const Home = () => {
                 return (
                   <motion.div
                     key={dbCat._id || i}
+                    onClick={() => navigate(link)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(link);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.5 }}
                     whileHover={{ y: -8, scale: 1.02, rotateX: 2, rotateY: -2, boxShadow: "0 0 40px rgba(46,125,50,0.25)" }}
                     style={{ transformStyle: "preserve-3d", perspective: 1000 }}
-                    className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative"
+                    className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative cursor-pointer"
                   >
                     {/* Glass reflection highlight */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
@@ -650,12 +660,11 @@ const Home = () => {
                     <div className="p-5 flex flex-col flex-grow">
                       <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2 leading-tight">{dbCat.name}</h3>
                       <p className="text-stone-500 text-xs leading-relaxed mb-4 flex-grow line-clamp-3">{desc}</p>
-                      <Link
-                        to={link}
-                        className="inline-flex items-center gap-1 text-primary font-bold text-xs hover:gap-2 transition-all duration-200 mt-auto"
+                      <div
+                        className="inline-flex items-center gap-1 text-primary font-bold text-xs group-hover:gap-2 transition-all duration-200 mt-auto"
                       >
                         VIEW CATEGORY <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </div>
                     </div>
                   </motion.div>
                 );

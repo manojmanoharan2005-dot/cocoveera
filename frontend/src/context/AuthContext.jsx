@@ -31,7 +31,18 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      window.dispatchEvent(new Event('auth:unauthorized'));
+      // Do not trigger global logout if the request was an explicit auth action
+      const isAuthAction = error.config && error.config.url && (
+        error.config.url.includes('/auth/login') ||
+        error.config.url.includes('/auth/register') ||
+        error.config.url.includes('/auth/verify-otp') ||
+        error.config.url.includes('/auth/google') ||
+        error.config.url.includes('/admin/auth/login')
+      );
+      
+      if (!isAuthAction) {
+        window.dispatchEvent(new Event('auth:unauthorized'));
+      }
     }
     return Promise.reject(error);
   }

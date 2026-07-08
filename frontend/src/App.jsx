@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import TransitionRoutes from './components/TransitionRoutes';
 import axios from 'axios';
 import { API_URL } from './utils/config';
 
@@ -203,7 +204,7 @@ function AppContent() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <ScrollToTop />
-      <Routes>
+      <TransitionRoutes>
         {/* Fullscreen Immerse Route */}
         <Route path="/welcome" element={<Onboarding />} />
 
@@ -253,6 +254,8 @@ function AppContent() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/support" element={<HelpCenter />} />
           <Route path="/mobile" element={<MobileAccount />} />
+          <Route path="/product/:id" element={<ProductView />} />
+          <Route path="/productview/:id" element={<ProductView />} />
         </Route>
 
         {/* Admin Routes */}
@@ -374,12 +377,11 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        {/* Product routes (Dynamic: Dashboard for users, Public for guests) */}
+        {/* Product routes have been moved to ProtectedRoute above */}
         <Route element={<DynamicLayout />}>
-          <Route path="/product/:id" element={<ProductView />} />
-          <Route path="/productview/:id" element={<ProductView />} />
+          {/* Empty dynamic block, leaving for any future public/private hybrid routes */}
         </Route>
-      </Routes>
+      </TransitionRoutes>
       <MobileBottomNav />
     </Suspense>
   );
