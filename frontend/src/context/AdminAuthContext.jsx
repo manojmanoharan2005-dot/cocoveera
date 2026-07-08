@@ -34,17 +34,21 @@ export const AdminAuthProvider = ({ children }) => {
     if (!decodedToken || !decodedToken.exp) return;
 
     const expirationTimeMs = decodedToken.exp * 1000;
-    const timeRemaining = expirationTimeMs - Date.now();
+    let timeoutId;
 
-    if (timeRemaining <= 0) {
-      logout();
-      return;
-    }
+    const checkExpiration = () => {
+      const timeRemaining = expirationTimeMs - Date.now();
+      if (timeRemaining <= 0) {
+        console.warn('Admin session automatically expired.');
+        logout();
+      } else {
+        // Cap the delay to 24 hours (86400000 ms) to prevent 32-bit signed integer overflow in setTimeout
+        const delay = Math.min(timeRemaining, 86400000);
+        timeoutId = setTimeout(checkExpiration, delay);
+      }
+    };
 
-    const timeoutId = setTimeout(() => {
-      console.warn('Admin session automatically expired.');
-      logout();
-    }, timeRemaining);
+    checkExpiration();
 
     return () => clearTimeout(timeoutId);
   }, [adminToken]);  // Check if admin is logged in
