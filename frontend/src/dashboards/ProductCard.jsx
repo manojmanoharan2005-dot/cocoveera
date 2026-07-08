@@ -108,15 +108,9 @@ export const ProductCard = React.memo(({
 
         {/* Bottom Row */}
         <div className="flex items-baseline gap-2 mt-auto w-full min-w-0">
-          {isAuthenticated ? (
-            <span className="text-base font-poppins font-black text-stone-900 truncate overflow-hidden text-ellipsis whitespace-nowrap block max-w-full">
-              {priceData.formatted}
-            </span>
-          ) : (
-            <div className="w-full bg-[#F7F9F7] text-[#2E7D32] group-hover:bg-[#E8F3E8] border border-[#2E7D32]/20 font-bold text-[11px] py-1.5 rounded-[10px] transition-colors flex items-center justify-center gap-1 mt-1">
-              View Product <ArrowRight className="w-3 h-3" />
-            </div>
-          )}
+          <div className="w-full bg-[#F7F9F7] text-[#2E7D32] group-hover:bg-[#E8F3E8] border border-[#2E7D32]/20 font-bold text-[11px] py-1.5 rounded-[10px] transition-colors flex items-center justify-center gap-1 mt-1">
+            View Product <ArrowRight className="w-3 h-3" />
+          </div>
         </div>
 
       </div>

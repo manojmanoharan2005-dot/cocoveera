@@ -12,7 +12,7 @@ import Payment from '../models/Payment.js';
 import Quote from '../models/Quote.js';
 import User from '../models/User.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
-import { sendOrderConfirmationWithInvoice } from '../utils/EmailService.js';
+import { sendOrderConfirmationNotification } from '../utils/NotificationService.js';
 
 // @desc    Initiate payment session for an order
 // @route   POST /api/payments/initiate
@@ -236,7 +236,7 @@ export const confirmPayment = async (req, res) => {
             quantity: item.quantity
           }))
         };
-        await sendOrderConfirmationWithInvoice(order.user.email, order._id.toString(), orderSummary, pdfBuffer);
+        await sendOrderConfirmationNotification(order.user.email, order.user.phone, order._id.toString(), orderSummary, pdfBuffer);
 
       } catch (err) {
         console.error('Invoice generation or email failed:', err);
@@ -501,7 +501,7 @@ export const verifyRazorpayPayment = async (req, res) => {
         }))
       };
       
-      await sendOrderConfirmationWithInvoice(order.user.email, order._id.toString(), orderSummary, pdfBuffer);
+      await sendOrderConfirmationNotification(order.user.email, order.user.phone, order._id.toString(), orderSummary, pdfBuffer);
     } catch (err) {
       console.error('Invoice or email failed:', err);
     }

@@ -33,6 +33,7 @@
     "razorpay": "^2.9.2",
     "sib-api-v3-sdk": "^8.5.0",
     "stripe": "^15.1.0",
+    "twilio": "^6.0.2",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {

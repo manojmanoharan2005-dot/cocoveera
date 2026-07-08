@@ -5,7 +5,7 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
-import { sendStatusUpdateEmail } from '../utils/EmailService.js';
+import { sendStatusUpdateNotification } from '../utils/NotificationService.js';
 
 // @desc    Get all orders (Admin)
 // @route   GET /api/admin/orders
@@ -125,7 +125,7 @@ export const updateOrderStatus = async (req, res) => {
     // Send email notification to user
     try {
       if (order.user && order.user.email) {
-        await sendStatusUpdateEmail(order.user.email, order, orderStatus);
+        await sendStatusUpdateNotification(order.user.email, order.user.phone, order, orderStatus);
       }
     } catch (emailErr) {
       console.error('Failed to send status update email:', emailErr);
@@ -268,15 +268,16 @@ export const resendInvoiceEmail = async (req, res) => {
     }
 
     const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
-    const { sendOrderConfirmationWithInvoice } = await import('../utils/EmailService.js');
+    const { sendOrderConfirmationNotification } = await import('../utils/NotificationService.js');
     
     // Map order data to invoiceData
     const invoiceData = buildInvoiceDataFromOrder(order);
 
     const pdfBuffer = await generateInvoicePDF(invoiceData);
 
-    await sendOrderConfirmationWithInvoice(
+    await sendOrderConfirmationNotification(
       invoiceData.customerEmail,
+      order.user?.phone || null,
       invoiceData.orderId,
       invoiceData,
       pdfBuffer

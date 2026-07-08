@@ -3,7 +3,8 @@
  * Purpose: Handles the business logic and request processing for auth operations.
  */
 import User from '../models/User.js';
-import { sendOTPEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../utils/mailer.js';
+import { sendWelcomeEmail, sendPasswordResetEmail } from '../utils/mailer.js';
+import { sendOTPNotification } from '../utils/NotificationService.js';
 
 // @desc    Register user (triggers OTP)
 // @route   POST /api/auth/register
@@ -44,8 +45,8 @@ export const register = async (req, res) => {
       otpExpires,
     });
 
-    // Send OTP Email
-    await sendOTPEmail(email, name, otpCode);
+    // Send OTP Email and WhatsApp
+    await sendOTPNotification(email, user.phone, name, otpCode);
 
     res.status(201).json({
       success: true,
@@ -145,7 +146,7 @@ export const login = async (req, res) => {
       user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
       await user.save();
       
-      await sendOTPEmail(user.email, user.name, otpCode);
+      await sendOTPNotification(user.email, user.phone, user.name, otpCode);
 
       return res.status(403).json({
         success: false,
@@ -327,8 +328,8 @@ export const resendOtp = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     await user.save();
 
-    // Send OTP Email
-    await sendOTPEmail(user.email, user.name, otpCode);
+    // Send OTP Email and WhatsApp
+    await sendOTPNotification(user.email, user.phone, user.name, otpCode);
 
     res.status(200).json({
       success: true,

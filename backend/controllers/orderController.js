@@ -7,7 +7,8 @@ import Product from '../models/Product.js';
 import Quote from '../models/Quote.js';
 import User from '../models/User.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
-import { sendOrderConfirmationWithInvoice, sendShipmentUpdate } from '../utils/EmailService.js';
+import { sendShipmentUpdate } from '../utils/EmailService.js';
+import { sendOrderConfirmationNotification } from '../utils/NotificationService.js';
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -192,7 +193,7 @@ export const createOrder = async (req, res) => {
           shippingDate: populatedOrder.shippingDate,
           estimatedDeliveryDate: populatedOrder.estimatedDeliveryDate
         };
-        await sendOrderConfirmationWithInvoice(populatedOrder.user.email, order._id.toString(), orderSummary, pdfBuffer);
+        await sendOrderConfirmationNotification(populatedOrder.user.email, populatedOrder.user.phone, order._id.toString(), orderSummary, pdfBuffer);
       } catch (err) {
         console.error('Invoice generation or email failed for COD/Wire:', err);
       }

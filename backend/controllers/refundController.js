@@ -6,7 +6,7 @@ import Refund from '../models/Refund.js';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 import { processGatewayRefund } from '../utils/refundService.js';
-import { sendRefundNotificationEmail } from '../utils/EmailService.js';
+import { sendRefundNotification } from '../utils/NotificationService.js';
 
 // @desc    Request a refund
 // @route   POST /api/refunds/request
@@ -48,7 +48,7 @@ export const requestRefund = async (req, res) => {
     await payment.save();
 
     // Send email notification to user
-    await sendRefundNotificationEmail(req.user.email, 'requested', amount, 'INR', order._id);
+    await sendRefundNotification(req.user.email, req.user.phone, 'requested', amount, 'INR', order._id);
 
     res.status(201).json({ success: true, message: 'Refund requested successfully', data: refund });
   } catch (error) {
@@ -73,12 +73,12 @@ export const approveRefund = async (req, res) => {
     await refund.save();
 
     // Notify user of approval
-    await sendRefundNotificationEmail(refund.user.email, 'approved', refund.amount, 'INR', refund.order._id);
+    await sendRefundNotification(refund.user.email, refund.user.phone, 'approved', refund.amount, 'INR', refund.order._id);
 
     // Auto trigger refund processing immediately
     refund.status = 'initiated';
     await refund.save();
-    await sendRefundNotificationEmail(refund.user.email, 'initiated', refund.amount, 'INR', refund.order._id);
+    await sendRefundNotification(refund.user.email, refund.user.phone, 'initiated', refund.amount, 'INR', refund.order._id);
 
     const startTime = Date.now();
     const result = await processGatewayRefund(refund);
@@ -99,7 +99,7 @@ export const approveRefund = async (req, res) => {
       }
       await order.save();
 
-      await sendRefundNotificationEmail(refund.user.email, 'processed', refund.amount, 'INR', refund.order._id);
+      await sendRefundNotification(refund.user.email, refund.user.phone, 'processed', refund.amount, 'INR', refund.order._id);
       return res.status(200).json({ success: true, message: 'Refund processed successfully', data: refund });
     } else {
       refund.status = 'failed';
@@ -107,7 +107,7 @@ export const approveRefund = async (req, res) => {
       refund.retryCount += 1;
       await refund.save();
 
-      await sendRefundNotificationEmail(refund.user.email, 'failed', refund.amount, 'INR', refund.order._id);
+      await sendRefundNotification(refund.user.email, refund.user.phone, 'failed', refund.amount, 'INR', refund.order._id);
       return res.status(400).json({ success: false, message: 'Refund processing failed', error: result.error });
     }
   } catch (error) {
