@@ -127,12 +127,13 @@ const ProtectedRoute = ({ children }) => {
 // Guard for guest pages (redirects to dashboard if already logged in)
 const GuestRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const hasToken = !!localStorage.getItem('cocoveera_token');
   
   if (loading) {
     return <LoadingScreen />;
   }
   
-  if (user) {
+  if (user && hasToken) {
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -206,18 +207,35 @@ function AppContent() {
   useEffect(() => {
     const handlePageShow = (event) => {
       if (event.persisted) {
-        // If restored from bfcache, we can trigger a soft re-check if needed,
-        // but we strictly avoid window.location.reload() to prevent flashes.
-        const hasToken = !!localStorage.getItem('cocoveera_token');
-        const hasAdminToken = !!localStorage.getItem('adminToken');
+        // Synchronous JWT Decoder
+        const parseJwtSafe = (token) => {
+          try {
+            return JSON.parse(atob(token.split('.')[1]));
+          } catch (e) {
+            return null;
+          }
+        };
+
+        const isTokenValid = (token) => {
+          if (!token) return false;
+          const decoded = parseJwtSafe(token);
+          if (!decoded || !decoded.exp) return false;
+          return (decoded.exp * 1000) > Date.now();
+        };
+
+        const token = localStorage.getItem('cocoveera_token');
+        const adminToken = localStorage.getItem('adminToken');
+        
+        const hasValidUserToken = isTokenValid(token);
+        const hasValidAdminToken = isTokenValid(adminToken);
         
         const path = window.location.pathname;
         const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings');
         const isAdminProtected = path.startsWith('/admin');
         
-        if (isAdminProtected && !hasAdminToken) {
+        if (isAdminProtected && !hasValidAdminToken) {
           window.location.replace('/login');
-        } else if (isUserProtected && !hasToken) {
+        } else if (isUserProtected && !hasValidUserToken) {
           window.location.replace('/login');
         }
       }
@@ -246,7 +264,7 @@ function AppContent() {
           <Route path="/terms-conditions" element={<TermsConditions />} />
           
           {/* Auth Flow - Shared Layout to prevent flicker */}
-          <Route element={<AuthLayout />}>
+          <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
             <Route path="/verify-otp" element={<OTPForm />} />
