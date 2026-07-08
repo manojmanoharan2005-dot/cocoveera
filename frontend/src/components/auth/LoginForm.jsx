@@ -70,7 +70,7 @@ export const LoginForm = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      email: '',
+      phone: '',
       password: '',
       rememberMe: false,
     },
@@ -78,30 +78,26 @@ export const LoginForm = () => {
 
   // Pre-fill email if Remember Me was checked
   useEffect(() => {
-    const savedEmail = localStorage.getItem('cocoveera_auth_login_email');
-    if (savedEmail) {
-      // Prevent injected non-email/phone values (e.g. currency 'INR')
-      if (savedEmail.includes('@') || /^\+?[0-9]{7,15}$/.test(savedEmail)) {
-        setValue('email', savedEmail);
-        setValue('rememberMe', true);
-      } else {
-        localStorage.removeItem('cocoveera_auth_login_email');
-      }
+    const savedPhone = localStorage.getItem('cocoveera_auth_login_phone');
+    if (savedPhone) {
+      setValue('phone', savedPhone);
+      setValue('rememberMe', true);
     }
     // Clean up old buggy key
     localStorage.removeItem('cocoveera_remember_email');
+    localStorage.removeItem('cocoveera_auth_login_email');
   }, [setValue]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError(null);
     try {
-      const res = await login(data.email, data.password);
+      const res = await login(data.phone, data.password);
       
       if (data.rememberMe) {
-        localStorage.setItem('cocoveera_auth_login_email', data.email);
+        localStorage.setItem('cocoveera_auth_login_phone', data.phone);
       } else {
-        localStorage.removeItem('cocoveera_auth_login_email');
+        localStorage.removeItem('cocoveera_auth_login_phone');
       }
 
       if (res.requiresAdminVerification) {
@@ -115,9 +111,9 @@ export const LoginForm = () => {
       }
     } catch (err) {
       if (err.message.includes('not verified') || err.message.toLowerCase().includes('otp')) {
-        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
+        navigate(`/verify-otp?phone=${encodeURIComponent(data.phone)}`);
       } else {
-        setApiError(err.response?.data?.message || err.message || 'Incorrect email or password. Please try again.');
+        setApiError(err.response?.data?.message || err.message || 'Incorrect credentials. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -250,28 +246,28 @@ export const LoginForm = () => {
 
       {mode === 'login' && (
         <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Email or Phone */}
+          {/* Phone or Email */}
           <div>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
-              EMAIL / MOBILE NUMBER
+              PHONE NUMBER (OR EMAIL)
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
               <input
                 type="text"
-                autoComplete="username email"
-                {...register('email', {
-                  required: 'Email or Mobile Number is required',
+                autoComplete="username"
+                {...register('phone', {
+                  required: 'Phone Number or Email is required',
                 })}
                 className={`w-full bg-[#F3F6F8] border text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-400/80 ${
-                  errors.email ? 'border-red-300' : 'border-transparent'
+                  errors.phone ? 'border-red-300' : 'border-transparent'
                 }`}
-                placeholder="you@email.com or +123456..."
+                placeholder="+123456... or you@email.com"
               />
             </div>
-            {errors.email && (
+            {errors.phone && (
               <span className="text-[10px] font-bold text-red-500 mt-1 block">
-                {errors.email.message}
+                {errors.phone.message}
               </span>
             )}
           </div>

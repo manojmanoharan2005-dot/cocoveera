@@ -143,10 +143,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const verifyOtp = async (email, otp) => {
+  const verifyOtp = async (phone, otp) => {
     setError(null);
     try {
-      const res = await apiClient.post('/auth/verify-otp', { email, otp });
+      const res = await apiClient.post('/auth/verify-otp', { phone, otp });
       if (res.data.success) {
         localStorage.setItem('cocoveera_token', res.data.token);
         localStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));

@@ -33,7 +33,7 @@ export const RegisterForm = () => {
   
   // Inline OTP states
   const [otpSent, setOtpSent] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [registeredPhone, setRegisteredPhone] = useState('');
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -164,7 +164,7 @@ export const RegisterForm = () => {
         'N/A' // Send N/A for companyName automatically
       );
       if (res.success) {
-        setRegisteredEmail(data.email);
+        setRegisteredPhone(phone);
         setSuccessMsg('Registration request processed. Please enter the 6-digit OTP code sent to your email.');
         setOtpSent(true);
         setTimer(60);
@@ -224,7 +224,7 @@ export const RegisterForm = () => {
     setSuccessMsg(null);
 
     try {
-      const res = await verifyOtp(registeredEmail, fullOtp);
+      const res = await verifyOtp(registeredPhone, fullOtp);
       if (res.success) {
         localStorage.removeItem('cocoveera_register_cache');
         setSuccessMsg('Verification successful. Welcome to Cocoveera!');
@@ -248,7 +248,7 @@ export const RegisterForm = () => {
     setOtpValues(['', '', '', '', '', '']);
 
     try {
-      await authService.resendOTP(registeredEmail);
+      await authService.resendOTP(registeredPhone);
       setSuccessMsg('A new 6-digit OTP code has been sent successfully.');
     } catch (err) {
       setApiError(err.message || 'Failed to resend OTP.');

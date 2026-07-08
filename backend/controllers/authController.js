@@ -20,10 +20,10 @@ export const register = async (req, res) => {
       if (!userExists.isVerified) {
         await User.deleteOne({ _id: userExists._id });
       } else {
-        if (userExists.email === email) {
-          return res.status(400).json({ success: false, message: 'Email already registered' });
+        if (userExists.phone === phone) {
+          return res.status(400).json({ success: false, message: 'This phone number is already registered.' });
         } else {
-          return res.status(400).json({ success: false, message: 'Mobile number already registered' });
+          return res.status(400).json({ success: false, message: 'This email is already registered.' });
         }
       }
     }
@@ -62,10 +62,10 @@ export const register = async (req, res) => {
 // @route   POST /api/auth/verify-otp
 // @access  Public
 export const verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
+  const { phone, otp } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ phone });
 
     if (!user) {
       return res.status(400).json({ success: false, message: 'User not found' });
@@ -245,10 +245,10 @@ export const googleLogin = async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 export const forgotPassword = async (req, res) => {
-  const { email } = req.body;
+  const { phone } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ phone });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -277,11 +277,11 @@ export const forgotPassword = async (req, res) => {
 // @route   POST /api/auth/reset-password
 // @access  Public
 export const resetPassword = async (req, res) => {
-  const { email, token, password } = req.body;
+  const { phone, token, password } = req.body;
 
   try {
     const user = await User.findOne({
-      email,
+      phone,
       resetPasswordToken: token,
       resetPasswordExpire: { $gt: Date.now() },
     });
@@ -309,10 +309,10 @@ export const resetPassword = async (req, res) => {
 // @route   POST /api/auth/resend-otp
 // @access  Public
 export const resendOtp = async (req, res) => {
-  const { email } = req.body;
+  const { phone } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ phone });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });

@@ -216,17 +216,19 @@ const Settings = () => {
               <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5" /> Phone Number
               </label>
-              <PhoneInput
-                country={'us'}
-                value={formData.phone}
-                onChange={(phone) => setFormData({ ...formData, phone })}
-                enableSearch={true}
-                searchPlaceholder="Search country or code..."
-                inputClass="!w-full !bg-stone-50 !border-stone-200 !text-stone-900 !rounded-xl !h-[46px] !pl-12 !pr-4 !text-sm !font-semibold focus:!bg-white focus:!border-[#2E7D32] !outline-none !transition-all"
-                buttonClass="!bg-stone-50 !border-stone-200 !rounded-l-xl !pl-2"
-                dropdownClass="!rounded-xl !border-stone-200 !shadow-lg !text-sm !font-semibold"
-                searchClass="!bg-stone-50 !border-stone-200 !text-sm !font-semibold !rounded-lg !mb-2"
-              />
+              <div title="Phone number cannot be changed directly" className="cursor-not-allowed">
+                <PhoneInput
+                  country={'us'}
+                  value={formData.phone}
+                  onChange={(phone) => setFormData({ ...formData, phone })}
+                  disabled={true}
+                  enableSearch={true}
+                  searchPlaceholder="Search country or code..."
+                  inputClass="!w-full !bg-stone-100 !border-stone-200 !text-stone-500 !rounded-xl !h-[46px] !pl-12 !pr-4 !text-sm !font-semibold !cursor-not-allowed outline-none transition-all"
+                  buttonClass="!bg-stone-100 !border-stone-200 !rounded-l-xl !pl-2 !cursor-not-allowed"
+                  dropdownClass="!hidden"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">

@@ -48,27 +48,27 @@ export const authService = {
     return response.data;
   },
 
-  async verifyOTP(email, otp) {
-    const response = await apiClient.post('/auth/verify-otp', { email, otp });
+  async verifyOTP(phone, otp) {
+    const response = await apiClient.post('/auth/verify-otp', { phone, otp });
     if (response.data.success && response.data.token) {
       localStorage.setItem('cocoveera_token', response.data.token);
     }
     return response.data;
   },
 
-  async resendOTP(email) {
-    const response = await apiClient.post('/auth/resend-otp', { email });
+  async resendOTP(phone) {
+    const response = await apiClient.post('/auth/resend-otp', { phone });
     return response.data;
   },
 
-  async forgotPassword(email) {
-    const response = await apiClient.post('/auth/forgot-password', { email });
+  async forgotPassword(phone) {
+    const response = await apiClient.post('/auth/forgot-password', { phone });
     return response.data;
   },
 
-  async resetPassword(email, token, password) {
+  async resetPassword(phone, token, password) {
     const response = await apiClient.post('/auth/reset-password', {
-      email,
+      phone,
       token,
       password,
     });

@@ -15,9 +15,9 @@ export const OTPForm = () => {
   const { verifyOtp, register: authRegister } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const emailParam = searchParams.get('email') || '';
+  const phoneParam = searchParams.get('phone') || '';
 
-  const [email, setEmail] = useState(emailParam);
+  const [phone, setPhone] = useState(phoneParam);
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -31,10 +31,10 @@ export const OTPForm = () => {
   const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
   useEffect(() => {
-    if (emailParam) {
-      setEmail(emailParam);
+    if (phoneParam) {
+      setPhone(phoneParam);
     }
-  }, [emailParam]);
+  }, [phoneParam]);
 
   // Timer for OTP countdown
   useEffect(() => {
@@ -98,7 +98,7 @@ export const OTPForm = () => {
     setSuccessMsg(null);
 
     try {
-      const res = await verifyOtp(email, fullOtp);
+      const res = await verifyOtp(phone, fullOtp);
       if (res.success) {
         setSuccessMsg('Account verified successfully!');
         setUserRole(res.user?.role);
@@ -128,8 +128,8 @@ export const OTPForm = () => {
     setOtpValues(['', '', '', '', '', '']);
 
     try {
-      await authService.resendOTP(email);
-      setSuccessMsg('OTP code has been resent successfully. Please check your email.');
+      await authService.resendOTP(phone);
+      setSuccessMsg('OTP code has been resent successfully. Please check your SMS/Email.');
     } catch (err) {
       setApiError(err.message || 'Failed to resend verification code.');
       setCanResend(true);
@@ -224,7 +224,7 @@ export const OTPForm = () => {
             </h2>
             <p className="text-stone-400 text-xs mt-2 font-medium">
               Enter the 6-digit OTP verification code sent to: <br />
-              <strong className="text-white mt-1.5 inline-block">{email || 'your email'}</strong>
+              <strong className="text-white mt-1.5 inline-block">{phone || 'your phone number'}</strong>
             </p>
           </div>
 
