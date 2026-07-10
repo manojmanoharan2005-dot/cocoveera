@@ -207,6 +207,12 @@ export const LoginForm = () => {
       <SuccessAnimation 
         type="login" 
         onComplete={() => {
+          const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+          if (storedRedirect) {
+            sessionStorage.removeItem('postLoginRedirect');
+            navigate(storedRedirect, { replace: true });
+            return;
+          }
           const fromState = location.state?.from;
           const fromPath = fromState 
             ? `${fromState.pathname}${fromState.search || ''}` 

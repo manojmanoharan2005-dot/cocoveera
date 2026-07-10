@@ -118,6 +118,8 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user || !hasToken) {
+    const fullPath = location.pathname + location.search + location.hash;
+    sessionStorage.setItem('postLoginRedirect', fullPath);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -134,7 +136,9 @@ const GuestRoute = ({ children }) => {
   }
   
   if (user && hasToken) {
-    return <Navigate to="/dashboard" replace />;
+    // Read without removing during render phase to avoid React 18 Strict Mode bugs
+    const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+    return <Navigate to={storedRedirect || "/dashboard"} replace />;
   }
   
   return children;
@@ -188,6 +192,10 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
+    const pending = sessionStorage.getItem('postLoginRedirect');
+    if (pending && pathname === pending.split('?')[0]) {
+      sessionStorage.removeItem('postLoginRedirect');
+    }
   }, [pathname]);
   return null;
 };

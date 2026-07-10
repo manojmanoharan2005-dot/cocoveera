@@ -107,7 +107,13 @@ export const OTPForm = () => {
         } else {
           setIsSuccessAnimated(true);
           setTimeout(() => {
-            navigate(res.user.role === 'admin' ? '/admin' : '/address');
+            const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+            if (storedRedirect && res.user.role !== 'admin') {
+              sessionStorage.removeItem('postLoginRedirect');
+              navigate(storedRedirect, { replace: true });
+            } else {
+              navigate(res.user.role === 'admin' ? '/admin' : '/address');
+            }
           }, 2500);
         }
       }
@@ -143,7 +149,13 @@ export const OTPForm = () => {
     return (
       <RegistrationSuccessAnimation 
         onComplete={() => {
-          navigate(userRole === 'admin' ? '/admin' : '/address', { replace: true });
+          const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+          if (storedRedirect && userRole !== 'admin') {
+            sessionStorage.removeItem('postLoginRedirect');
+            navigate(storedRedirect, { replace: true });
+          } else {
+            navigate(userRole === 'admin' ? '/admin' : '/address', { replace: true });
+          }
         }} 
       />
     );

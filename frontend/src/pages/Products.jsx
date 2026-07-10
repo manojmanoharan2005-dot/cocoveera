@@ -325,12 +325,27 @@ const Products = () => {
           </button>
         </div>
         
-        {/* Sort Dropdown */}
-        <div className="flex">
-          <button className="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-200 rounded-full text-xs font-semibold text-gray-700 bg-white shadow-sm">
-            <span>Sort by: Featured</span>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-          </button>
+        {/* Category Dropdown */}
+        <div className="flex relative">
+          <select 
+            value={selectedCategory}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              if (e.target.value === 'All') {
+                navigate('/products');
+              } else {
+                navigate(`/products?category=${encodeURIComponent(e.target.value)}`);
+              }
+            }}
+            className="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-200 rounded-full text-xs font-semibold text-gray-700 bg-white shadow-sm appearance-none pr-8 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/50"
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>
+                {cat === 'All' ? 'All Categories' : cat}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-3 h-3 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
       </div>
 
@@ -357,7 +372,16 @@ const Products = () => {
                 product={prod}
                 isWishlisted={user?.wishlist?.some(item => (item._id || item) === prod._id)}
                 onWishlistToggle={handleAddToWishlist}
-                onCardClick={(p) => navigate(`/product/${p.slug || p._id}`)}
+                onCardClick={(p) => {
+                  const targetUrl = `/product/${p.slug || p._id}`;
+                  if (!user) {
+                    sessionStorage.setItem('postLoginRedirect', targetUrl);
+                    navigate('/login');
+                  } else {
+                    navigate(targetUrl);
+                  }
+                }}
+                hideWishlist={true}
               />
             ))}
           </AnimatePresence>

@@ -15,7 +15,8 @@ export const ProductCard = React.memo(({
   onWishlistToggle,
   onAddToCart,
   onBuyNow,
-  onCardClick
+  onCardClick,
+  hideWishlist
 }) => {
   const [addedToCart, setAddedToCart] = useState(false);
   const { user, isAuthenticated } = useAuth();
@@ -90,7 +91,7 @@ export const ProductCard = React.memo(({
           <h3 className="font-poppins font-bold text-stone-800 text-[13px] leading-snug line-clamp-2 break-words flex-grow">
             {product.name}
           </h3>
-          {isAuthenticated && (
+          {isAuthenticated && !hideWishlist && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
