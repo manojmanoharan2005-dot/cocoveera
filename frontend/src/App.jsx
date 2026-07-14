@@ -130,17 +130,25 @@ const ProtectedRoute = ({ children }) => {
 const GuestRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const hasToken = !!localStorage.getItem('cocoveera_token');
-  
+  const [shouldRedirect, setShouldRedirect] = React.useState(false);
+
+  useEffect(() => {
+    // Only intercept if they have a valid session on mount, preventing race conditions
+    // during the active login process where state updates before animation finishes.
+    if (user && hasToken) {
+      setShouldRedirect(true);
+    }
+  }, []); // Run only once on mount
+
   if (loading) {
     return <LoadingScreen />;
   }
-  
-  if (user && hasToken) {
-    // Read without removing during render phase to avoid React 18 Strict Mode bugs
+
+  if (shouldRedirect) {
     const storedRedirect = sessionStorage.getItem('postLoginRedirect');
     return <Navigate to={storedRedirect || "/dashboard"} replace />;
   }
-  
+
   return children;
 };
 
@@ -238,7 +246,7 @@ function AppContent() {
         const hasValidAdminToken = isTokenValid(adminToken);
         
         const path = window.location.pathname;
-        const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings');
+        const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/invoices') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved');
         const isAdminProtected = path.startsWith('/admin');
         
         if (isAdminProtected && !hasValidAdminToken) {

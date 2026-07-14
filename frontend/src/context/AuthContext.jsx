@@ -201,7 +201,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('cocoveera_token');
+    localStorage.removeItem('cocoveera_refresh_token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('cocoveera_user');
+    
     sessionStorage.clear();
     
     // Clear any potential cookies

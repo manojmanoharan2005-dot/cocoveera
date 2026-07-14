@@ -2,30 +2,7 @@
  * File: frontend/src/services/authService.js
  * Purpose: Service functions to make API requests to the backend.
  */
-import axios from 'axios';
-
-import { API_URL } from '../utils/config';
-
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Automatically inject JWT bearer token into requests
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('cocoveera_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import { apiClient } from '../context/AuthContext';
 
 export const authService = {
   async register(name, email, phone, password, country, currency) {

@@ -2,7 +2,7 @@
  * File: frontend/src/dashboards/Sidebar.jsx
  * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
  */
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -49,6 +49,36 @@ export const Sidebar = ({
     .toUpperCase()
     .slice(0, 2) || 'U';
 
+  const [indicatorStyle, setIndicatorStyle] = useState({ top: 0, height: 48, opacity: 0 });
+  const itemRefs = useRef({});
+
+  useEffect(() => {
+    const updatePosition = () => {
+      const activeEl = itemRefs.current[activeTab];
+      if (activeEl) {
+        setIndicatorStyle({
+          top: activeEl.offsetTop,
+          height: activeEl.offsetHeight,
+          opacity: 1
+        });
+      } else {
+        setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
+      }
+    };
+    
+    // Initial measurement
+    updatePosition();
+    
+    // Catch any layout shifts
+    const t = setTimeout(updatePosition, 50);
+    window.addEventListener('resize', updatePosition);
+    
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [activeTab, cartCount, wishlistCount]);
+
   return (
     <aside className="w-[256px] shrink-0 bg-white border border-stone-200/70 rounded-[28px] overflow-hidden h-fit sticky top-24 shadow-[0_8px_32px_rgba(0,0,0,0.07)] hidden md:flex flex-col">
       {/* Brand strip */}
@@ -66,21 +96,26 @@ export const Sidebar = ({
       </div>
 
       {/* Nav items */}
-      <nav className="flex flex-col px-3 py-2 gap-0.5">
+      <nav className="flex flex-col px-3 py-2 gap-0.5 relative z-0">
+        {/* Single persistent animated background */}
+        <motion.div
+          className="absolute left-3 right-3 bg-gradient-to-r from-[#2E7D32] to-[#43A047] rounded-[14px] shadow-md shadow-[#2E7D32]/20 pointer-events-none -z-10"
+          initial={false}
+          animate={{
+            y: indicatorStyle.top,
+            height: indicatorStyle.height,
+            opacity: indicatorStyle.opacity
+          }}
+          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+          style={{ top: 0 }}
+        />
+
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.name;
 
           const buttonContent = (
             <>
-              {isActive && (
-                <motion.div
-                  layoutId="activeSidebarBg"
-                  className="absolute inset-0 bg-gradient-to-r from-[#2E7D32] to-[#43A047] rounded-[14px] shadow-md shadow-[#2E7D32]/20 z-0"
-                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                />
-              )}
-
               <div className="flex items-center gap-3 relative z-10">
                 <div className={`w-7 h-7 rounded-[10px] flex items-center justify-center transition-all duration-200 ${
                   isActive
@@ -91,7 +126,7 @@ export const Sidebar = ({
                     isActive ? 'text-white' : 'text-[#6B7280] group-hover:text-[#2E7D32]'
                   }`} />
                 </div>
-                <span>{item.label}</span>
+                <span className="relative z-10">{item.label}</span>
               </div>
 
               {item.badge > 0 && (
@@ -118,6 +153,7 @@ export const Sidebar = ({
                 key={item.name}
                 to={item.path}
                 className={className}
+                ref={el => itemRefs.current[item.name] = el}
               >
                 {buttonContent}
               </Link>
@@ -129,6 +165,7 @@ export const Sidebar = ({
               key={item.name}
               onClick={() => setActiveTab(item.name)}
               className={className}
+              ref={el => itemRefs.current[item.name] = el}
             >
               {buttonContent}
             </button>

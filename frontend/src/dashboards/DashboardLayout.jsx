@@ -32,6 +32,7 @@ export const DashboardLayout = () => {
     if (path.includes('/orders')) return 'Orders';
     if (path.includes('/cart')) return 'Cart';
     if (path.includes('/saved') || path.includes('/wishlist')) return 'Wishlist';
+    if (path.includes('/testing-reports')) return 'Testing Reports';
     if (path.includes('/address')) return 'Addresses';
     if (path.includes('/support')) return 'Help & Support';
     if (path.includes('/settings')) return 'Settings';
