@@ -55,7 +55,7 @@ export const Header = ({
     .slice(0, 2) || 'U';
 
   return (
-    <header className="w-full h-16 bg-white/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-40 px-4 md:px-6 flex items-center justify-between gap-4 shadow-sm shadow-stone-100/80">
+    <header className="w-full h-16 bg-white/95 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-40 px-2.5 sm:px-4 md:px-6 flex items-center justify-between gap-2 sm:gap-4 shadow-sm shadow-stone-100/80 select-none">
       
       {/* Left: Brand Logo & Mobile Menu Toggle */}
       <div className="flex items-center gap-2 shrink-0">

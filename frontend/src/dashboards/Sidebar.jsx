@@ -179,7 +179,7 @@ export const Sidebar = ({
               </>
             );
 
-            const className = `w-full text-left py-2 px-3 rounded-[14px] transition-all duration-200 flex items-center justify-between relative group ${
+            const className = `w-full text-left py-2 px-3 min-h-[44px] rounded-[14px] transition-all duration-200 flex items-center justify-between relative group ${
               isActive
                 ? 'text-white'
                 : 'text-stone-700 hover:bg-[#EAF4EA]/70 hover:text-[#2E7D32]'
@@ -219,14 +219,17 @@ export const Sidebar = ({
       </div>
 
       {/* 3. Bottom Section (Pinned at bottom) */}
-      <div className="shrink-0 mt-auto p-3 pb-4 border-t border-stone-200/60 bg-white/50 backdrop-blur-sm flex flex-col gap-2.5">
+      <div 
+        className="shrink-0 mt-auto p-3 border-t border-stone-200/60 bg-white/50 backdrop-blur-sm flex flex-col gap-2.5"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         {/* Logout Button */}
         <button
           onClick={() => {
             if (onClose) onClose();
             onLogoutClick();
           }}
-          className="w-full text-left font-poppins text-[11.5px] font-bold py-2 px-3 rounded-[12px] text-red-500 hover:bg-red-50 transition-all flex items-center justify-between group border border-transparent hover:border-red-100"
+          className="w-full text-left font-poppins text-[11.5px] font-bold py-2 px-3 rounded-[12px] text-red-500 hover:bg-red-50 transition-all flex items-center justify-between group border border-transparent hover:border-red-100 min-h-[44px]"
         >
           <div className="flex items-center gap-2.5">
             <div className="w-6.5 h-6.5 rounded-lg bg-red-50 group-hover:bg-red-100 flex items-center justify-center transition-all">
@@ -244,20 +247,20 @@ export const Sidebar = ({
             </div>
             <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border-2 border-white" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-grow">
             <p className="text-[11.5px] font-extrabold text-stone-900 truncate leading-none mb-1">
               {displayName}
             </p>
             <div className="flex items-center gap-1 text-[9.5px] font-bold text-stone-400 uppercase tracking-wide">
-              <ShieldCheck className="w-3 h-3 text-[#2E7D32]" />
-              <span>Verified Buyer</span>
+              <ShieldCheck className="w-3 h-3 text-[#2E7D32] shrink-0" />
+              <span className="truncate">Verified Buyer</span>
             </div>
           </div>
         </div>
 
         {/* Footer Text */}
         <div className="text-center pt-0.5">
-          <p className="text-[11.5px] font-medium text-stone-400/90 leading-tight">
+          <p className="text-[11px] font-medium text-stone-400/90 leading-tight">
             🇮🇳 Proudly Made in India
           </p>
         </div>

@@ -225,20 +225,20 @@ export const Marketplace = () => {
       {selectedCollection === 'All' && !searchQuery ? (
         <div className="space-y-6">
           <h3 className="font-poppins font-extrabold text-xl text-stone-900">Browse by Category</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {loading && categoryCards.length === 0 ? (
               [...Array(4)].map((_, idx) => (
                 <div 
                   key={idx}
                   className="bg-white rounded-[24px] border border-stone-200 overflow-hidden flex flex-col animate-pulse"
                 >
-                  <div className="h-56 w-full bg-stone-100/80"></div>
-                  <div className="p-6 bg-white flex items-center justify-between">
-                    <div className="flex-1 pr-4">
-                      <div className="h-5 bg-stone-200 rounded-md w-2/3 mb-3"></div>
+                  <div className="h-48 sm:h-56 w-full bg-stone-100/80"></div>
+                  <div className="p-4 sm:p-6 bg-white flex items-center justify-between">
+                    <div className="flex-1 pr-3">
+                      <div className="h-5 bg-stone-200 rounded-md w-2/3 mb-2"></div>
                       <div className="h-3 bg-stone-100 rounded-md w-1/2"></div>
                     </div>
-                    <div className="w-10 h-10 shrink-0 rounded-full bg-stone-100"></div>
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full bg-stone-100"></div>
                   </div>
                 </div>
               ))
@@ -247,36 +247,36 @@ export const Marketplace = () => {
                 <div 
                   key={idx}
                   onClick={() => setSelectedCollection(cat.name)}
-                  className="group cursor-pointer bg-white rounded-[24px] border border-stone-200 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-500 flex flex-col"
+                  className="group cursor-pointer bg-white rounded-[24px] border border-stone-200 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-300 flex flex-col active:scale-[0.99]"
                 >
                   {/* Full bleed image area */}
-                  <div className="relative h-56 w-full overflow-hidden bg-stone-100 flex items-center justify-center p-3">
-                    <div className="h-full aspect-square rounded-[1.5rem] overflow-hidden flex items-center justify-center">
+                  <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-stone-100 flex items-center justify-center p-3">
+                    <div className="h-full aspect-square rounded-[1.25rem] sm:rounded-[1.5rem] overflow-hidden flex items-center justify-center">
                       <img 
                         src={cat.image} 
                         alt={cat.name} 
-                        className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                        className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] group-hover:scale-108 transition-transform duration-500 ease-out"
                       />
                     </div>
                     {/* Subtle dark overlay for premium feel */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-300 pointer-events-none"></div>
                     
                     {/* Item count badge floating top-left */}
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-white/95 backdrop-blur-md text-stone-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                    <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4">
+                      <span className="bg-white/95 backdrop-blur-md text-stone-800 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
                         {cat.count} Item{cat.count !== 1 ? 's' : ''}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="p-6 bg-white flex items-center justify-between">
-                    <div className="pr-4 flex-1">
-                      <h4 className="font-poppins font-extrabold text-stone-900 text-lg group-hover:text-[#2E7D32] transition-colors leading-tight">{cat.name}</h4>
-                      <p className="text-sm text-stone-500 font-medium mt-1">Explore collection</p>
+                  <div className="p-4 sm:p-5 bg-white flex items-center justify-between min-w-0">
+                    <div className="pr-3 flex-1 min-w-0">
+                      <h4 className="font-poppins font-extrabold text-stone-900 text-base sm:text-lg group-hover:text-[#2E7D32] transition-colors leading-tight truncate">{cat.name}</h4>
+                      <p className="text-xs sm:text-sm text-stone-500 font-medium mt-0.5 truncate">Explore collection</p>
                     </div>
                     {/* Action button */}
-                    <div className="w-10 h-10 shrink-0 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300 transform group-hover:translate-x-1 shadow-sm">
-                      <ChevronRight className="w-5 h-5" />
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300 transform group-hover:translate-x-0.5 shadow-sm">
+                      <ChevronRight className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                     </div>
                   </div>
                 </div>
