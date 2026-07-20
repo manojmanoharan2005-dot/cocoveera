@@ -20,7 +20,8 @@ export const authService = {
   async login(email, password) {
     const response = await apiClient.post('/auth/login', { email, password });
     if (response.data.success && response.data.token) {
-      localStorage.setItem('cocoveera_token', response.data.token);
+      sessionStorage.setItem('cocoveera_token', response.data.token);
+      localStorage.removeItem('cocoveera_token');
     }
     return response.data;
   },
@@ -28,7 +29,8 @@ export const authService = {
   async verifyOTP(phone, otp) {
     const response = await apiClient.post('/auth/verify-otp', { phone, otp });
     if (response.data.success && response.data.token) {
-      localStorage.setItem('cocoveera_token', response.data.token);
+      sessionStorage.setItem('cocoveera_token', response.data.token);
+      localStorage.removeItem('cocoveera_token');
     }
     return response.data;
   },
@@ -63,11 +65,12 @@ export const authService = {
   },
 
   logout() {
+    sessionStorage.removeItem('cocoveera_token');
     localStorage.removeItem('cocoveera_token');
   },
 
   getToken() {
-    return localStorage.getItem('cocoveera_token');
+    return sessionStorage.getItem('cocoveera_token');
   },
 };
 

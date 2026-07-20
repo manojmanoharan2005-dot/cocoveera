@@ -76,8 +76,14 @@ export const LoginForm = () => {
     },
   });
 
-  // Pre-fill email if Remember Me was checked
+  // Pre-fill email if Remember Me was checked & check for session expiration message
   useEffect(() => {
+    const sessionError = sessionStorage.getItem('auth_error_message') || location.state?.message;
+    if (sessionError) {
+      setApiError(sessionError);
+      sessionStorage.removeItem('auth_error_message');
+    }
+
     const savedPhone = localStorage.getItem('cocoveera_auth_login_phone');
     if (savedPhone) {
       setValue('phone', savedPhone);
@@ -86,7 +92,7 @@ export const LoginForm = () => {
     // Clean up old buggy key
     localStorage.removeItem('cocoveera_remember_email');
     localStorage.removeItem('cocoveera_auth_login_email');
-  }, [setValue]);
+  }, [setValue, location.state]);
 
   const onSubmit = async (data) => {
     setLoading(true);

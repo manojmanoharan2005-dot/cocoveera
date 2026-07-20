@@ -133,7 +133,7 @@ export const Header = ({
                       transition={{ duration: 0.15 }}
                       className="absolute top-[calc(100%+8px)] right-0 w-[160px] bg-white border border-stone-200/80 rounded-[14px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] py-1.5 z-50 overflow-hidden"
                     >
-                      {['Featured', 'Price: Low to High', 'Price: High to Low', 'Rating'].map((option) => (
+                      {['Featured', 'Rating'].map((option) => (
                         <button
                           key={option}
                           onClick={() => {
@@ -180,19 +180,7 @@ export const Header = ({
           )}
         </button>
 
-        {/* Cart */}
-        <button
-          onClick={() => navigate('/cart')}
-          className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all"
-          title="Cart"
-        >
-          <ShoppingCart className="w-4.5 h-4.5" />
-          {cartCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 bg-[#2E7D32] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-              {cartCount}
-            </span>
-          )}
-        </button>
+
 
         {/* Divider */}
         <div className="h-6 w-px bg-stone-200 mx-1" />

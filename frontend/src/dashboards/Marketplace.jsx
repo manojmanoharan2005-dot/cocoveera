@@ -41,7 +41,7 @@ export const Marketplace = () => {
 
   const onAddToCart = async (product) => {
     try {
-      const token = localStorage.getItem('cocoveera_token');
+      const token = sessionStorage.getItem('cocoveera_token');
       const res = await axios.post(`${API_URL}/users/cart`, { productId: product._id, quantity: 1, increment: true }, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) {
         await fetchProfile();

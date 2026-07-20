@@ -10,5 +10,6 @@ export const createLimiter = ({ windowMs = 60 * 60 * 1000, max = 100, message } 
 export const contactLimiter = createLimiter({ windowMs: 60 * 60 * 1000, max: 10, message: { success: false, message: 'Too many contact attempts, try later.' } });
 export const paymentInitiateLimiter = createLimiter({ windowMs: 10 * 60 * 1000, max: 5, message: { success: false, message: 'Too many payment attempts, try again later.' } });
 export const orderCreateLimiter = createLimiter({ windowMs: 60 * 60 * 1000, max: 30, message: { success: false, message: 'Too many order creations, try later.' } });
+export const quoteRequestLimiter = createLimiter({ windowMs: 60 * 60 * 1000, max: 15, message: { success: false, message: 'Too many quote request attempts, try again later.' } });
 
 export default { createLimiter };

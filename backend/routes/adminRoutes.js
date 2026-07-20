@@ -71,6 +71,16 @@ import {
   deleteInquiry,
 } from '../controllers/adminInquiryController.js';
 
+import {
+  getAdminQuoteRequests,
+  getAdminQuoteRequestById,
+  updateQuoteRequestStatus,
+  deleteQuoteRequest,
+  approveQuoteRequest,
+  rejectQuoteRequest,
+  requestInfoQuoteRequest,
+} from '../controllers/quoteRequestController.js';
+
 const router = express.Router();
 
 // ==================== ADMIN AUTH ROUTES ====================
@@ -142,6 +152,15 @@ router.get('/inquiries', protect, admin, getInquiries);
 router.get('/inquiries/:id', protect, admin, getInquiryById);
 router.patch('/inquiries/:id/status', protect, admin, updateInquiryStatus);
 router.delete('/inquiries/:id', protect, admin, deleteInquiry);
+
+// ==================== QUOTE REQUEST ROUTES ====================
+router.get('/quote-requests', protect, admin, getAdminQuoteRequests);
+router.get('/quote-requests/:id', protect, admin, getAdminQuoteRequestById);
+router.post('/quote-requests/:id/approve', protect, admin, upload.single('pdf'), approveQuoteRequest);
+router.post('/quote-requests/:id/reject', protect, admin, rejectQuoteRequest);
+router.post('/quote-requests/:id/request-info', protect, admin, requestInfoQuoteRequest);
+router.patch('/quote-requests/:id', protect, admin, updateQuoteRequestStatus);
+router.delete('/quote-requests/:id', protect, admin, deleteQuoteRequest);
 
 // ==================== SETTINGS ROUTES ====================
 // Note: Removed testing, discount, and settings routes/controllers per cleanup

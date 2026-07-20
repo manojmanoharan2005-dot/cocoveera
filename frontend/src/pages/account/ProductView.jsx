@@ -2,7 +2,7 @@
  * File: frontend/src/pages/account/ProductView.jsx
  * Purpose: React page component representing the ProductView view.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
@@ -15,6 +15,7 @@ import { convertCurrency } from '../../utils/currencyConverter';
 import { ContainerViewer3D } from '../../components/3d/ContainerViewer3D';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import SEO from '../../components/SEO';
+import RequestQuoteModal from '../../components/RequestQuoteModal';
 
 const ProductView = () => {
   const { id } = useParams();
@@ -46,6 +47,17 @@ const ProductView = () => {
   const [selectedTestingPackage, setSelectedTestingPackage] = useState(null);
   const [testingLoading, setTestingLoading] = useState(false);
   const [packagesLoading, setPackagesLoading] = useState(false);
+
+  // RFQ Modal state
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.scrollToRfq && product) {
+      // Clear location state to prevent reopening modal on reload
+      window.history.replaceState({}, document.title);
+      setIsQuoteModalOpen(true);
+    }
+  }, [location.state, product]);
 
   const fetchTestingPackages = async () => {
     setPackagesLoading(true);
@@ -671,33 +683,14 @@ const ProductView = () => {
 
               {/* INLINE CHECKOUT ACTIONS FOR CONFIGURATOR (Desktop Only) */}
               <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:block">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-black text-stone-900 uppercase tracking-wider">Total</span>
-                  <span className="text-xl font-poppins font-black text-[#2E7D32]">
-                    {subtotalData.formatted} {user?.currency?.toUpperCase() || 'INR'}
-                  </span>
-                </div>
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={handleAddToCart}
-                    disabled={actionLoading}
-                    className={`flex-1 bg-white border-2 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]`}
+                    onClick={() => setIsQuoteModalOpen(true)}
+                    className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black py-3.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group"
                   >
-                    {actionLoading ? 'ADDING...' : 'ADD TO CART'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleProceedToCheckout}
-                    disabled={actionLoading || !isWholeContainer}
-                    className={`flex-1 font-poppins text-xs font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group ${
-                      !isWholeContainer 
-                        ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
-                        : 'shadow-md bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
-                    }`}
-                  >
-                    {actionLoading && isWholeContainer ? 'PROCESSING...' : 'CHECKOUT'}
-                    <ChevronRight className="w-4 h-4" />
+                    REQUEST QUOTE
+                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                   </button>
                 </div>
               </div>
@@ -705,87 +698,33 @@ const ProductView = () => {
             </div>
             )}
 
-            {/* ORDER SUMMARY CARD (Hidden when configurator is open) */}
+            {/* QUOTE SUMMARY CARD */}
             {!showConfigurator && (
               <div className="hidden lg:block bg-white rounded-[20px] p-6 border border-stone-200/80 shadow-sm relative overflow-hidden space-y-4">
                 <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2.5 font-poppins">
-                Order Summary
-              </h3>
-              
-              <div className="space-y-3.5 text-xs font-bold text-stone-600">
-                <div className="flex justify-between items-center">
-                  <span>Total Containers</span>
-                  <span className="text-stone-900 font-bold">{totalQuantity.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Total Pieces</span>
-                  <span className="text-stone-900 font-bold">{Math.round(totalPieces).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Subtotal</span>
-                  <span className="text-stone-900 text-sm font-black font-poppins">{subtotalData.formatted}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Estimated Shipping</span>
-                  <span className="text-stone-400 italic font-semibold">Calculated at Checkout</span>
-                </div>
-              </div>
-              
-              <div className="border-t border-stone-100 pt-4 flex justify-between items-center">
-                <span className="text-xs font-black text-stone-900 uppercase tracking-wider">Total</span>
-                <span className="text-xl font-poppins font-black text-[#2E7D32]">
-                  {subtotalData.formatted} {user?.currency?.toUpperCase() || 'INR'}
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-2.5 mt-4">
-                <div className="flex gap-2.5">
+                  Export Enquiry
+                </h3>
+                <p className="text-xs font-semibold text-stone-500 leading-relaxed">
+                  Submit a Request for Quote (RFQ) to receive customized B2B bulk pricing, packing details, and shipping logistics options from our commercial desk.
+                </p>
+                <div className="flex flex-col gap-2.5 mt-4">
                   <button
                     type="button"
-                    onClick={handleAddToCart}
-                    disabled={actionLoading}
-                    className={`flex-1 bg-white border-2 font-poppins text-[10px] font-black py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 group border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32]`}
+                    onClick={() => setIsQuoteModalOpen(true)}
+                    className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 group"
                   >
-                    {actionLoading ? 'ADDING...' : 'ADD TO CART'}
-                    <ShoppingBag className={`w-3.5 h-3.5 transition-transform group-hover:scale-110`} />
+                    REQUEST QUOTE
+                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                   </button>
-
-                  {(!showConfigurator || isWholeContainer) && (
-                    <button
-                      type="button"
-                      onClick={() => showConfigurator ? handleProceedToCheckout() : setShowConfigurator(true)}
-                      disabled={actionLoading || (showConfigurator && isOverCapacity)}
-                      className={`flex-1 font-poppins text-[10px] font-black py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 group ${
-                        showConfigurator && isOverCapacity 
-                          ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
-                          : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-[#2E7D32]/10'
-                      }`}
-                    >
-                      {actionLoading ? 'WAIT...' : (showConfigurator ? 'CHECKOUT' : 'BUY NOW')}
-                      <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showConfigurator && isOverCapacity ? '' : 'group-hover:translate-x-0.5'}`} />
-                    </button>
-                  )}
-                </div>
-
-                {!showConfigurator && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsTestingModalOpen(true);
-                      fetchTestingPackages();
-                    }}
-                    className="w-full bg-[#2E7D32]/10 hover:bg-[#2E7D32]/20 text-[#2E7D32] font-poppins text-[10px] font-black py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"
+                    onClick={() => setShowConfigurator(true)}
+                    className="w-full bg-white border border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32] font-poppins text-xs font-black py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5"
                   >
-                    TEST NOW
-                    <Beaker className="w-3.5 h-3.5" />
+                    CONFIGURE CONTAINER VOLUME
                   </button>
-                )}
+                </div>
               </div>
-              
-              <p className="text-[9px] font-extrabold text-stone-400 text-center uppercase tracking-widest pt-1">
-                Secure SSL Encrypted Checkout
-              </p>
-            </div>
             )}
 
             {/* Spec Sheet Table */}
@@ -913,6 +852,15 @@ const ProductView = () => {
 
       </div>
 
+      {/* Request Quote Modal */}
+      <RequestQuoteModal
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
+        product={product}
+        user={user}
+        initialContainerSize={containerType === '40FT' ? '40 FT' : '20 FT'}
+      />
+
       {/* Related Products Carousel */}
       {relatedProducts.length > 0 && (
         <div className="space-y-5">
@@ -947,8 +895,8 @@ const ProductView = () => {
                     </h3>
                   </div>
                   <div className="mt-4 sm:mt-5 flex items-center justify-between border-t border-stone-100 pt-3 sm:pt-4">
-                    <span className="text-sm sm:text-base text-[#2E7D32] font-poppins font-extrabold">
-                      {itemPrice.formatted}
+                    <span className="text-[10px] sm:text-xs text-[#2E7D32] font-bold">
+                      Premium Substrate
                     </span>
                     <span className="text-[10px] sm:text-xs text-stone-400 font-bold group-hover:text-[#2E7D32] transition-colors">
                       View details
@@ -962,48 +910,33 @@ const ProductView = () => {
       )}
 
       {/* Mobile Sticky Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 items-center backdrop-blur-md bg-white/95">
-        <div className="w-full sm:flex-1 flex sm:flex-col justify-between sm:justify-center items-center sm:items-start px-1 sm:px-0">
-          <span className="text-stone-500 text-[9px] font-extrabold uppercase tracking-wider block sm:mb-0.5">Subtotal</span>
-          <span className="text-sm font-poppins font-black text-[#2E7D32] leading-none">{subtotalData.formatted}</span>
-        </div>
-        <div className="flex gap-2 w-full sm:flex-[2]">
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={actionLoading || isOverCapacity}
-            className="flex-1 bg-white border-2 border-[#2E7D32] text-[#2E7D32] font-poppins text-[10px] font-black py-2.5 sm:py-3 rounded-xl flex items-center justify-center shadow-sm disabled:opacity-50 disabled:border-stone-300 disabled:text-stone-400"
-          >
-            <ShoppingBag className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-            <span className="truncate">CART</span>
-          </button>
+      <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-2 items-center backdrop-blur-md bg-white/95">
+        <button
+          type="button"
+          onClick={() => setIsQuoteModalOpen(true)}
+          className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black py-3 rounded-xl flex items-center justify-center shadow-md gap-1"
+        >
+          REQUEST QUOTE
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        {!showConfigurator && (
           <button
             type="button"
             onClick={() => {
-              if (showConfigurator) {
-                handleProceedToCheckout();
-              } else {
-                setShowConfigurator(true);
-                setTimeout(() => {
-                  const el = document.getElementById('container-configurator');
-                  if (el) {
-                    const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                  }
-                }, 100);
-              }
+              setShowConfigurator(true);
+              setTimeout(() => {
+                const el = document.getElementById('container-configurator');
+                if (el) {
+                  const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                  window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+              }, 100);
             }}
-            disabled={actionLoading || (showConfigurator && !isWholeContainer)}
-            className={`flex-1 font-poppins text-[10px] font-black py-2.5 sm:py-3 rounded-xl flex items-center justify-center transition-colors ${
-              showConfigurator && !isWholeContainer
-                ? 'bg-stone-300 text-stone-500 opacity-50 blur-[1px] cursor-not-allowed'
-                : 'bg-[#2E7D32] hover:bg-[#1B5E20] text-white shadow-md shadow-[#2E7D32]/20 disabled:opacity-50 disabled:bg-stone-300 disabled:shadow-none'
-            }`}
+            className="flex-1 bg-white border-2 border-[#2E7D32] text-[#2E7D32] font-poppins text-xs font-black py-2.5 rounded-xl flex items-center justify-center shadow-sm"
           >
-            <span className="truncate">{showConfigurator ? 'CHECKOUT' : 'BUY'}</span>
-            <ChevronRight className="w-3.5 h-3.5 ml-0.5 shrink-0" />
+            CONFIGURE VOLUME
           </button>
-        </div>
+        )}
       </div>
 
       {/* Testing Modal */}

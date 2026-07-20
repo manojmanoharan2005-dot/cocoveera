@@ -47,6 +47,8 @@ const AdminCurrencyManagement = lazy(() => import('./pages/AdminCurrencyManageme
 const AdminShippingManagement = lazy(() => import('./pages/AdminShippingManagement'));
 const AdminDiscounts = lazy(() => import('./pages/AdminDiscounts'));
 const ContainerViewerDemo = lazy(() => import('./pages/ContainerViewerDemo'));
+const AdminQuoteRequests = lazy(() => import('./pages/admin/AdminQuoteRequests'));
+const AdminQuoteRequestDetails = lazy(() => import('./pages/admin/AdminQuoteRequestDetails'));
 
 // User Protected Route
 const Marketplace = lazy(() => import('./dashboards/Marketplace'));
@@ -105,19 +107,36 @@ const LoadingScreen = () => (
   </div>
 );
 
+// Utility to safely parse JWT
+const parseJwtSafe = (token) => {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+};
+
+const isTokenValid = (token) => {
+  if (!token) return false;
+  const decoded = parseJwtSafe(token);
+  if (!decoded || !decoded.exp) return false;
+  return (decoded.exp * 1000) > Date.now();
+};
+
 // Guard for user authenticated pages
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // STRICT BROWSER HISTORY SECURITY: Verify token directly
-  const hasToken = !!localStorage.getItem('cocoveera_token');
+  // STRICT BROWSER HISTORY SECURITY: Verify token directly in sessionStorage
+  const token = sessionStorage.getItem('cocoveera_token');
+  const hasValidToken = isTokenValid(token);
 
   if (loading) {
     return <LoadingScreen />;
   }
 
-  if (!user || !hasToken) {
+  if (!user || !hasValidToken) {
     const fullPath = location.pathname + location.search + location.hash;
     sessionStorage.setItem('postLoginRedirect', fullPath);
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -129,13 +148,14 @@ const ProtectedRoute = ({ children }) => {
 // Guard for guest pages (redirects to dashboard if already logged in)
 const GuestRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  const hasToken = !!localStorage.getItem('cocoveera_token');
+  const token = sessionStorage.getItem('cocoveera_token');
+  const hasValidToken = isTokenValid(token);
   const [shouldRedirect, setShouldRedirect] = React.useState(false);
 
   useEffect(() => {
     // Only intercept if they have a valid session on mount, preventing race conditions
     // during the active login process where state updates before animation finishes.
-    if (user && hasToken) {
+    if (user && hasValidToken) {
       setShouldRedirect(true);
     }
   }, []); // Run only once on mount
@@ -156,28 +176,26 @@ const GuestRoute = ({ children }) => {
 const AdminProtectedRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
 
-  // STRICT BROWSER HISTORY SECURITY: Verify token directly
-  const hasToken = !!localStorage.getItem('adminToken');
+  // STRICT BROWSER HISTORY SECURITY: Verify token directly in sessionStorage
+  const adminToken = sessionStorage.getItem('adminToken');
+  const hasValidToken = isTokenValid(adminToken);
 
   if (loading) {
     return <LoadingScreen />;
   }
 
-  if (!admin || !hasToken) {
+  if (!admin || !hasValidToken) {
     return <Navigate to="/login" replace />;
   }
 
   return children;
 };
 
-
-
 const PublicLayout = () => {
   const location = useLocation();
   
   const authPaths = ['/login', '/register', '/verify-otp'];
   const hideFooter = authPaths.includes(location.pathname);
-  const animationKey = authPaths.includes(location.pathname) ? 'auth-flow' : location.pathname;
 
   return (
     <div 
@@ -219,45 +237,41 @@ const DynamicLayout = () => {
 };
 
 function AppContent() {
-  // Security: Handle bfcache without forcing a full page reload
+  // Security: Handle back button and bfcache navigation without allowing cached protected pages
   useEffect(() => {
-    const handlePageShow = (event) => {
-      if (event.persisted) {
-        // Synchronous JWT Decoder
-        const parseJwtSafe = (token) => {
-          try {
-            return JSON.parse(atob(token.split('.')[1]));
-          } catch (e) {
-            return null;
-          }
-        };
-
-        const isTokenValid = (token) => {
-          if (!token) return false;
-          const decoded = parseJwtSafe(token);
-          if (!decoded || !decoded.exp) return false;
-          return (decoded.exp * 1000) > Date.now();
-        };
-
-        const token = localStorage.getItem('cocoveera_token');
-        const adminToken = localStorage.getItem('adminToken');
-        
-        const hasValidUserToken = isTokenValid(token);
-        const hasValidAdminToken = isTokenValid(adminToken);
-        
-        const path = window.location.pathname;
-        const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/invoices') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved');
-        const isAdminProtected = path.startsWith('/admin');
-        
-        if (isAdminProtected && !hasValidAdminToken) {
-          window.location.replace('/login');
-        } else if (isUserProtected && !hasValidUserToken) {
-          window.location.replace('/login');
-        }
+    const verifySecurityState = () => {
+      const token = sessionStorage.getItem('cocoveera_token');
+      const adminToken = sessionStorage.getItem('adminToken');
+      
+      const hasValidUserToken = isTokenValid(token);
+      const hasValidAdminToken = isTokenValid(adminToken);
+      
+      const path = window.location.pathname;
+      const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/invoices') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved');
+      const isAdminProtected = path.startsWith('/admin');
+      
+      if (isAdminProtected && !hasValidAdminToken) {
+        window.location.replace('/login');
+      } else if (isUserProtected && !hasValidUserToken) {
+        window.location.replace('/login');
       }
     };
+
+    const handlePageShow = (event) => {
+      verifySecurityState();
+    };
+
+    const handlePopState = () => {
+      verifySecurityState();
+    };
+
     window.addEventListener('pageshow', handlePageShow);
-    return () => window.removeEventListener('pageshow', handlePageShow);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, []);
 
   return (
@@ -344,6 +358,22 @@ function AppContent() {
           element={
             <AdminProtectedRoute>
               <AdminInquiries />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/quote-requests"
+          element={
+            <AdminProtectedRoute>
+              <AdminQuoteRequests />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/quote-requests/:id"
+          element={
+            <AdminProtectedRoute>
+              <AdminQuoteRequestDetails />
             </AdminProtectedRoute>
           }
         />

@@ -150,15 +150,15 @@ const SavedCart = () => {
               
               <div className="p-5 flex-grow flex flex-col">
                 <h3 className="font-extrabold text-stone-900 text-base mb-1 line-clamp-2">{item.name}</h3>
-                <p className="text-[#2E7D32] font-black text-lg mb-4">{convertCurrency(item.price, user?.currency).formatted} <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">/ Pallet</span></p>
+                <p className="text-[#2E7D32] font-black text-xs mb-4 uppercase tracking-wider">Export Grade</p>
                 
                 <div className="mt-auto pt-4 border-t border-stone-100 flex items-center justify-between">
                   <span className="text-[10px] text-stone-400 font-bold">Added {new Date(item.addedDate).toLocaleDateString()}</span>
                   <button 
-                    onClick={() => moveToCart(item.id)}
+                    onClick={() => navigate(`/product/${item.id}`, { state: { scrollToRfq: true } })}
                     className="px-4 py-2 bg-[#F0FAF0] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white text-xs font-black uppercase tracking-wider rounded-lg transition-colors flex items-center gap-1.5"
                   >
-                    <ShoppingCart className="w-3.5 h-3.5" /> Move to Cart
+                    Request Quote
                   </button>
                 </div>
               </div>

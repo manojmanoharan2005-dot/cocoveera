@@ -74,42 +74,7 @@ export const FilterPanel = ({
         </div>
       </div>
 
-      <hr className="border-stone-100" />
 
-      {/* 2. Price Range Filter */}
-      <form onSubmit={handleApply} className="space-y-3">
-        <h4 className="text-[10px] font-bold text-stone-900 uppercase tracking-wider">
-          Price (INR)
-        </h4>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div>
-            <label className="text-[9px] text-[#6B7280] font-semibold block mb-1">Min Price</label>
-            <input
-              type="number"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2 font-semibold text-stone-850 focus:outline-none focus:border-[#2E7D32]"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="text-[9px] text-[#6B7280] font-semibold block mb-1">Max Price</label>
-            <input
-              type="number"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2 font-semibold text-stone-850 focus:outline-none focus:border-[#2E7D32]"
-              placeholder="5000"
-            />
-          </div>
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white py-2 rounded-lg text-xs font-bold transition-all shadow-sm"
-        >
-          Apply Price Filter
-        </button>
-      </form>
 
       <hr className="border-stone-100" />
 

@@ -21,7 +21,11 @@ import {
   getAdminNotificationTemplate,
   getMarketingCampaignTemplate,
   getContactInquiryTemplate,
-  getInquiryConfirmationTemplate
+  getInquiryConfirmationTemplate,
+  getAdminQuoteRequestTemplate,
+  getRFQApprovalTemplate,
+  getRFQRejectionTemplate,
+  getRFQInfoRequestedTemplate,
 } from './emailTemplates/index.js';
 
 dotenv.config();
@@ -33,7 +37,15 @@ apiKey.apiKey = process.env.BREVO_API_KEY;
 
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-const sendEmail = async (subject, htmlContent, to, senderName = 'Cocoveera', senderEmail = 'adminteam@cocoveera.com', attachment = null) => {
+const sendEmail = async (
+  subject,
+  htmlContent,
+  to,
+  senderName = 'Cocoveera',
+  senderEmail = 'adminteam@cocoveera.com',
+  attachment = null,
+  replyTo = null
+) => {
   if (!process.env.BREVO_API_KEY || process.env.BREVO_API_KEY.startsWith('mock_')) {
     console.error(`[Brevo] API Key missing or mocked. Skipping email dispatch.`);
     return { mock: true };
@@ -41,29 +53,44 @@ const sendEmail = async (subject, htmlContent, to, senderName = 'Cocoveera', sen
 
   try {
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    
+
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = htmlContent;
     sendSmtpEmail.sender = { name: senderName, email: senderEmail };
-    sendSmtpEmail.to = to.map(t => ({ email: t.email, name: t.name || t.email }));
-    
+    sendSmtpEmail.to = to.map((t) => ({ email: t.email, name: t.name || t.email }));
+
+    // ALWAYS configure Reply-To so customer replies go directly to Admin Email (coirsystemadmin@gmail.com)
+    const adminReplyEmail = process.env.ADMIN_EMAIL || 'coirsystemadmin@gmail.com';
+    if (replyTo) {
+      sendSmtpEmail.replyTo = typeof replyTo === 'string'
+        ? { email: replyTo, name: 'Cocoveera Admin' }
+        : { email: replyTo.email || adminReplyEmail, name: replyTo.name || 'Cocoveera Admin' };
+    } else {
+      sendSmtpEmail.replyTo = { email: adminReplyEmail, name: 'Cocoveera Export Team' };
+    }
+
     if (attachment) {
-      sendSmtpEmail.attachment = [
-        {
-          name: attachment.name,
-          content: attachment.content // Ensure this is base64
-        }
-      ];
+      sendSmtpEmail.attachment = Array.isArray(attachment)
+        ? attachment
+        : [
+            {
+              name: attachment.name,
+              content: attachment.content, // Ensure Base64 string
+            },
+          ];
     }
 
     const info = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log(`Email successfully sent to ${to[0].email} via Brevo from ${senderEmail} (MessageId: ${info.messageId})`);
+    console.log(
+      `Email successfully sent to ${to[0].email} via Brevo from ${senderEmail} (Reply-To: ${sendSmtpEmail.replyTo.email}, MessageId: ${info.messageId})`
+    );
     return info;
   } catch (error) {
     console.error(`Error sending email via Brevo API: ${error.message}`);
     if (error.response && error.response.text) {
       console.error('Brevo API Error Details:', error.response.text);
     }
+    throw error;
   }
 };
 
@@ -198,5 +225,63 @@ export const sendInquiryConfirmationEmail = async (inquiry) => {
     [{ email: inquiry.email, name: inquiry.name }],
     'COCOVEERA Export Desk',
     'supportdesk@cocoveera.com'
+  );
+};
+
+export const sendAdminQuoteRequestEmail = async (enquiry) => {
+  const htmlContent = getAdminQuoteRequestTemplate(enquiry);
+  const adminEmail = process.env.SENDER_EMAIL || 'supportdesk@cocoveera.com';
+  return sendEmail(
+    'New Quote Request Received',
+    htmlContent,
+    [{ email: adminEmail, name: 'Cocoveera Admin' }],
+    'COCOVEERA Export Desk',
+    'supportdesk@cocoveera.com'
+  );
+};
+
+export const sendRFQApprovalEmail = async (toEmail, toName, approvalData, pdfAttachment = null) => {
+  const htmlContent = getRFQApprovalTemplate(toName, approvalData);
+  const subject = approvalData.subject || 'Your Quote Request Has Been Approved - Cocoveera Export';
+  const adminReplyEmail = process.env.ADMIN_EMAIL || 'coirsystemadmin@gmail.com';
+  
+  return sendEmail(
+    subject,
+    htmlContent,
+    [{ email: toEmail, name: toName }],
+    'COCOVEERA Export Desk',
+    'supportdesk@cocoveera.com',
+    pdfAttachment,
+    { email: adminReplyEmail, name: 'Cocoveera Export Team' }
+  );
+};
+
+export const sendRFQRejectionEmail = async (toEmail, toName, productName, reason) => {
+  const htmlContent = getRFQRejectionTemplate(toName, productName, reason);
+  const adminReplyEmail = process.env.ADMIN_EMAIL || 'coirsystemadmin@gmail.com';
+
+  return sendEmail(
+    'Update Regarding Your Quotation Request - Cocoveera',
+    htmlContent,
+    [{ email: toEmail, name: toName }],
+    'COCOVEERA Export Desk',
+    'supportdesk@cocoveera.com',
+    null,
+    { email: adminReplyEmail, name: 'Cocoveera Export Team' }
+  );
+};
+
+export const sendRFQInfoRequestedEmail = async (toEmail, toName, productName, message) => {
+  const htmlContent = getRFQInfoRequestedTemplate(toName, productName, message);
+  const adminReplyEmail = process.env.ADMIN_EMAIL || 'coirsystemadmin@gmail.com';
+
+  return sendEmail(
+    'Information Requested for Your Quote Request - Cocoveera',
+    htmlContent,
+    [{ email: toEmail, name: toName }],
+    'COCOVEERA Export Desk',
+    'supportdesk@cocoveera.com',
+    null,
+    { email: adminReplyEmail, name: 'Cocoveera Export Team' }
   );
 };

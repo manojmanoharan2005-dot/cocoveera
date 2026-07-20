@@ -29,9 +29,7 @@ export const Sidebar = ({
 }) => {
   const menuItems = [
     { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
-    { name: 'Orders', label: 'Orders', icon: ShoppingBag, path: '/orders' },
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/wishlist' },
-    { name: 'Cart', label: 'Cart', icon: ShoppingCart, badge: cartCount, path: '/cart' },
     { name: 'Testing Reports', label: 'Quality Testing', icon: FileText, path: '/testing-reports' },
     { name: 'Addresses', label: 'Address', icon: MapPin, path: '/address' },
     { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/support' },

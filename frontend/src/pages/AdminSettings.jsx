@@ -64,7 +64,7 @@ export default function AdminSettings() {
 
   const getHeaders = () => {
     return {
-      Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+      Authorization: `Bearer ${sessionStorage.getItem('adminToken')}`,
     };
   };
 

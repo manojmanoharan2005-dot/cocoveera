@@ -18,7 +18,7 @@ export const apiClient = axios.create({
 
 // Add request interceptor to attach JWT token
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('cocoveera_token');
+  const token = sessionStorage.getItem('cocoveera_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -41,6 +41,7 @@ apiClient.interceptors.response.use(
       );
       
       if (!isAuthAction) {
+        sessionStorage.setItem('auth_error_message', 'Session expired. Please login again.');
         window.dispatchEvent(new Event('auth:unauthorized'));
       }
     }
@@ -51,10 +52,10 @@ apiClient.interceptors.response.use(
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('cocoveera_token'));
+  const [token, setToken] = useState(sessionStorage.getItem('cocoveera_token'));
   
   // Explicitly track auth loading state
-  const [loading, setLoading] = useState(!!localStorage.getItem('cocoveera_token'));
+  const [loading, setLoading] = useState(!!sessionStorage.getItem('cocoveera_token'));
   
   // Derived state for strict authentication checks
   const isAuthenticated = !!user && !!token;
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
       const timeRemaining = expirationTimeMs - Date.now();
       if (timeRemaining <= 0) {
         console.warn('Session automatically expired due to token lifetime.');
-        logout();
+        logout('Session expired. Please login again.');
       } else {
         // Cap the delay to 24 hours (86400000 ms) to prevent 32-bit signed integer overflow in setTimeout
         const delay = Math.min(timeRemaining, 86400000);
@@ -101,7 +102,7 @@ export const AuthProvider = ({ children }) => {
   // Global unauthorized listener
   useEffect(() => {
     const handleUnauthorized = () => {
-      logout();
+      logout('Session expired. Please login again.');
     };
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
@@ -113,15 +114,15 @@ export const AuthProvider = ({ children }) => {
         const res = await apiClient.get('/users/profile');
         if (res.data.success) {
           setUser(res.data.data);
-          localStorage.setItem('cocoveera_user', JSON.stringify(res.data.data));
+          sessionStorage.setItem('cocoveera_user', JSON.stringify(res.data.data));
           setLoading(false);
           return res.data.data;
         } else {
-          logout();
+          logout('Session expired. Please login again.');
         }
       } catch (err) {
         console.error('Session expired or connection failed:', err.message);
-        logout();
+        logout('Session expired. Please login again.');
       }
     }
     setLoading(false);
@@ -148,8 +149,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await apiClient.post('/auth/verify-otp', { phone, otp });
       if (res.data.success) {
-        localStorage.setItem('cocoveera_token', res.data.token);
-        localStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
+        sessionStorage.setItem('cocoveera_token', res.data.token);
+        sessionStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
+        localStorage.removeItem('cocoveera_token');
+        localStorage.removeItem('cocoveera_user');
         setToken(res.data.token);
         setUser(res.data.user);
       }
@@ -167,8 +170,10 @@ export const AuthProvider = ({ children }) => {
       const res = await apiClient.post('/auth/login', { email, password });
       if (res.data.success) {
         if (!res.data.requiresAdminVerification) {
-          localStorage.setItem('cocoveera_token', res.data.token);
-          localStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
+          sessionStorage.setItem('cocoveera_token', res.data.token);
+          sessionStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
+          localStorage.removeItem('cocoveera_token');
+          localStorage.removeItem('cocoveera_user');
           setToken(res.data.token);
           setUser(res.data.user);
         }
@@ -186,8 +191,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await apiClient.post('/auth/google', { email, name, googleId });
       if (res.data.success) {
-        localStorage.setItem('cocoveera_token', res.data.token);
-        localStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
+        sessionStorage.setItem('cocoveera_token', res.data.token);
+        sessionStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));
+        localStorage.removeItem('cocoveera_token');
+        localStorage.removeItem('cocoveera_user');
         setToken(res.data.token);
         setUser(res.data.user);
       }
@@ -199,13 +206,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = (sessionExpiredMessage = null) => {
+    if (sessionExpiredMessage) {
+      sessionStorage.clear();
+      sessionStorage.setItem('auth_error_message', sessionExpiredMessage);
+    } else {
+      sessionStorage.clear();
+    }
+
     localStorage.removeItem('cocoveera_token');
     localStorage.removeItem('cocoveera_refresh_token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('cocoveera_user');
-    
-    sessionStorage.clear();
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminRefreshToken');
     
     // Clear any potential cookies
     document.cookie.split(";").forEach((c) => {

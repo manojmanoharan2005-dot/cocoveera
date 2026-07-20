@@ -7,7 +7,7 @@ import axios from 'axios';
 import { API_URL } from '../utils/config';
 import imageCompression from 'browser-image-compression';
 
-const getToken = () => localStorage.getItem('adminToken');
+const getToken = () => sessionStorage.getItem('adminToken');
 
 const getHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
@@ -428,6 +428,89 @@ export const adminInquiryService = {
     const response = await axios.delete(`${API_URL}/admin/inquiries/${id}`, {
       headers: getHeaders(),
     });
+    return response.data;
+  },
+};
+
+// ==================== QUOTE REQUESTS ====================
+export const adminQuoteRequestService = {
+  getAll: async (page = 1, limit = 10, search = '', status = '', country = '', product = '', date = '') => {
+    const response = await axios.get(`${API_URL}/admin/quote-requests`, {
+      params: { page, limit, search, status, country, product, date },
+      headers: getHeaders(),
+    });
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await axios.get(`${API_URL}/admin/quote-requests/${id}`, {
+      headers: getHeaders(),
+    });
+    return response.data;
+  },
+
+  updateStatus: async (id, status) => {
+    const response = await axios.patch(
+      `${API_URL}/admin/quote-requests/${id}`,
+      { status },
+      { headers: getHeaders() }
+    );
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await axios.delete(`${API_URL}/admin/quote-requests/${id}`, {
+      headers: getHeaders(),
+    });
+    return response.data;
+  },
+
+  approve: async (id, data, pdfFile = null) => {
+    if (pdfFile) {
+      const formData = new FormData();
+      Object.keys(data).forEach((key) => {
+        if (data[key] !== undefined && data[key] !== null) {
+          formData.append(key, data[key]);
+        }
+      });
+      formData.append('pdf', pdfFile);
+
+      const response = await axios.post(
+        `${API_URL}/admin/quote-requests/${id}/approve`,
+        formData,
+        {
+          headers: {
+            ...getHeaders(),
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } else {
+      const response = await axios.post(
+        `${API_URL}/admin/quote-requests/${id}/approve`,
+        data,
+        { headers: getHeaders() }
+      );
+      return response.data;
+    }
+  },
+
+  reject: async (id, reason) => {
+    const response = await axios.post(
+      `${API_URL}/admin/quote-requests/${id}/reject`,
+      { reason },
+      { headers: getHeaders() }
+    );
+    return response.data;
+  },
+
+  requestInfo: async (id, message) => {
+    const response = await axios.post(
+      `${API_URL}/admin/quote-requests/${id}/request-info`,
+      { message },
+      { headers: getHeaders() }
+    );
     return response.data;
   },
 };

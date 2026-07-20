@@ -17,6 +17,7 @@ import {
   Tags,
   RefreshCw,
   MessageSquare,
+  FileText,
 } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
@@ -36,6 +37,7 @@ export default function AdminLayout({ children }) {
     { name: 'Orders', icon: ShoppingCart, path: '/admin/orders' },
     { name: 'Refunds', icon: RefreshCw, path: '/admin/refunds' },
     { name: 'Inquiries', icon: MessageSquare, path: '/admin/inquiries' },
+    { name: 'Quote Requests', icon: FileText, path: '/admin/quote-requests' },
     { name: 'Users', icon: Users, path: '/admin/users' },
     { name: 'Reports', icon: BarChart3, path: '/admin/reports' },
     { name: 'Discounts', icon: Tag, path: '/admin/discounts' },

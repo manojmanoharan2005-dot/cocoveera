@@ -237,3 +237,181 @@ export const getInquiryConfirmationTemplate = (inquiry) => {
   return baseTemplate({ title: `Thank You for Contacting Cocoveera | Inquiry Received Successfully`, preheader: 'We have received your inquiry. View details inside.', content });
 };
 
+export const getAdminQuoteRequestTemplate = (enquiry) => {
+  const content = `
+    <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #1E5B2E; margin-top: 0; font-weight: normal; margin-bottom: 20px;">Hello Admin,</h3>
+    <p style="margin-bottom: 20px;">A new export Quote Request (RFQ) has been received on Cocoveera.</p>
+    
+    <div style="background-color: #FCFBF9; border: 1px solid #E2DCD0; border-radius: 6px; padding: 20px; margin-bottom: 30px;">
+      <h4 style="margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: #1E5B2E; border-bottom: 1px solid #E2DCD0; padding-bottom: 8px;">Enquiry Details</h4>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #2C2C2C;">
+        <tr><td style="padding: 6px 0; width: 35%; color: #666;"><strong>Category:</strong></td><td>${enquiry.category}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Product:</strong></td><td><strong>${enquiry.productName}</strong></td></tr>
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Container Size:</strong></td><td>${enquiry.containerSize}</td></tr>
+        ${enquiry.quantity ? `<tr><td style="padding: 6px 0; color: #666;"><strong>Quantity:</strong></td><td>${enquiry.quantity}</td></tr>` : ''}
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Expected Delivery:</strong></td><td>${enquiry.expectedDeliveryDate ? new Date(enquiry.expectedDeliveryDate).toLocaleDateString() : 'N/A'}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Submission Time:</strong></td><td>${new Date(enquiry.createdAt || Date.now()).toLocaleString()}</td></tr>
+      </table>
+
+      <h4 style="margin: 20px 0 15px 0; font-size: 14px; text-transform: uppercase; color: #1E5B2E; border-bottom: 1px solid #E2DCD0; padding-bottom: 8px;">Customer Contact Information</h4>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #2C2C2C;">
+        <tr><td style="padding: 6px 0; width: 35%; color: #666;"><strong>Contact Person:</strong></td><td>${enquiry.contactPerson}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Company Name:</strong></td><td>${enquiry.companyName || 'N/A'}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Email:</strong></td><td><a href="mailto:${enquiry.email}" style="color: #1E5B2E; text-decoration: none;">${enquiry.email}</a></td></tr>
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Phone / WhatsApp:</strong></td><td>${enquiry.phone}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Country:</strong></td><td>${enquiry.country}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;"><strong>Delivery Address:</strong></td><td>${enquiry.address || 'N/A'}</td></tr>
+      </table>
+
+      <h4 style="margin: 20px 0 10px 0; font-size: 14px; text-transform: uppercase; color: #1E5B2E; border-bottom: 1px solid #E2DCD0; padding-bottom: 8px;">Requirement Notes</h4>
+      <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #1E5B2E; border-radius: 4px; font-size: 13px; line-height: 1.6; color: #4A4A4A; white-space: pre-wrap;">${enquiry.requirementNote}</div>
+    </div>
+    
+    <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 35px auto;">
+      <tr>
+        <td align="center" bgcolor="#1E5B2E" style="border-radius: 6px; box-shadow: 0 4px 12px rgba(30, 91, 46, 0.25);">
+          <a href="${process.env.FRONTEND_URL || 'https://cocoveera.com'}/admin/quote-requests" target="_blank" style="padding: 16px 36px; display: inline-block; font-family: Georgia, 'Times New Roman', Times, serif; font-size: 15px; color: #FFFFFF; text-decoration: none; font-weight: bold; letter-spacing: 1px; border: 1px solid #1E5B2E; border-radius: 6px;">
+            Manage Quote Requests
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
+  return baseTemplate({ title: 'New Quote Request Received', content });
+};
+
+export const getRFQApprovalTemplate = (customerName, details) => {
+  const {
+    category,
+    productName,
+    containerSize,
+    price,
+    currency = 'USD',
+    shippingTerms,
+    validity = 15,
+    deliveryDate,
+    emailBody,
+    additionalNotes,
+  } = details;
+
+  const content = `
+    <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #1E5B2E; margin-top: 0; font-weight: normal; margin-bottom: 20px;">Dear ${customerName},</h3>
+    <p style="margin-bottom: 15px; color: #4A4A4A; font-size: 14px; line-height: 1.6;">Thank you for contacting Cocoveera.</p>
+    <p style="margin-bottom: 25px; color: #4A4A4A; font-size: 14px; line-height: 1.6;">We are pleased to inform you that your quotation request has been reviewed and approved by our export team.</p>
+
+    ${
+      emailBody
+        ? `
+    <div style="background-color: #F4F7F4; border-left: 4px solid #1E5B2E; padding: 18px 20px; border-radius: 6px; margin-bottom: 25px; color: #2C2C2C; font-size: 14px; line-height: 1.6;">
+      ${emailBody.replace(/\n/g, '<br/>')}
+    </div>
+    `
+        : ''
+    }
+
+    <div style="background-color: #FCFBF9; border: 1px solid #E2DCD0; border-radius: 8px; padding: 22px; margin-bottom: 30px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+      <h4 style="margin: 0 0 15px 0; font-family: Georgia, serif; font-size: 16px; color: #1E5B2E; border-bottom: 1px solid #E2DCD0; padding-bottom: 8px;">Approved Quotation Details</h4>
+      
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px; color: #333333;">
+        <tr style="border-bottom: 1px solid #EEEEEE;">
+          <td style="padding: 10px 0; font-weight: bold; color: #777777; width: 40%;">Category:</td>
+          <td style="padding: 10px 0; font-weight: bold; color: #111111;">${category || 'N/A'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #EEEEEE;">
+          <td style="padding: 10px 0; font-weight: bold; color: #777777;">Product:</td>
+          <td style="padding: 10px 0; font-weight: bold; color: #111111;">${productName || 'N/A'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #EEEEEE;">
+          <td style="padding: 10px 0; font-weight: bold; color: #777777;">Container Size:</td>
+          <td style="padding: 10px 0; font-weight: bold; color: #111111;">${containerSize || 'N/A'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #EEEEEE;">
+          <td style="padding: 10px 0; font-weight: bold; color: #777777;">Estimated Price:</td>
+          <td style="padding: 10px 0; font-weight: bold; color: #1E5B2E; font-size: 16px;">${currency} ${price ? parseFloat(price).toLocaleString() : 'N/A'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #EEEEEE;">
+          <td style="padding: 10px 0; font-weight: bold; color: #777777;">Shipping Terms:</td>
+          <td style="padding: 10px 0; font-weight: bold; color: #111111;">${shippingTerms || 'FOB'}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #EEEEEE;">
+          <td style="padding: 10px 0; font-weight: bold; color: #777777;">Quotation Validity:</td>
+          <td style="padding: 10px 0; font-weight: bold; color: #111111;">${validity} Days</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #EEEEEE;">
+          <td style="padding: 10px 0; font-weight: bold; color: #777777;">Expected Delivery:</td>
+          <td style="padding: 10px 0; font-weight: bold; color: #111111;">${deliveryDate || 'As agreed'}</td>
+        </tr>
+      </table>
+
+      ${
+        additionalNotes
+          ? `
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #E2DCD0;">
+        <span style="font-weight: bold; color: #9E7E53; font-size: 12px; text-transform: uppercase;">Additional Notes:</span>
+        <p style="margin: 5px 0 0 0; font-size: 13px; color: #555555; line-height: 1.5;">${additionalNotes}</p>
+      </div>
+      `
+          : ''
+      }
+    </div>
+
+    <p style="color: #666666; font-size: 13px; margin-bottom: 20px;">The quotation PDF is attached to this email for your official records.</p>
+    <p style="color: #4A4A4A; font-size: 14px; margin-bottom: 25px;">If you have any questions, simply reply directly to this email.</p>
+
+    <div style="border-top: 1px solid #E2DCD0; padding-top: 20px; margin-top: 30px; font-size: 13px; color: #555555;">
+      <p style="margin: 0; font-weight: bold; color: #1E5B2E;">Regards,</p>
+      <p style="margin: 3px 0 0 0; font-weight: bold; color: #2C2C2C;">Cocoveera Export Team</p>
+      <p style="margin: 3px 0 0 0; color: #777777; font-size: 12px;">Email: <a href="mailto:coirsystemadmin@gmail.com" style="color: #1E5B2E;">coirsystemadmin@gmail.com</a></p>
+    </div>
+  `;
+  return baseTemplate({ title: 'Quote Request Approved - Cocoveera Export', content });
+};
+
+export const getRFQRejectionTemplate = (customerName, productName, reason) => {
+  const content = `
+    <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #8B0000; margin-top: 0; font-weight: normal; margin-bottom: 20px;">Dear ${customerName},</h3>
+    <p style="margin-bottom: 20px; color: #4A4A4A; font-size: 14px; line-height: 1.6;">Thank you for your interest in Cocoveera products.</p>
+    <p style="margin-bottom: 20px; color: #4A4A4A; font-size: 14px; line-height: 1.6;">Regarding your quotation request for <strong>${productName}</strong>, after careful review by our export desk, we regret to inform you that we are unable to process this quote at the moment.</p>
+
+    ${
+      reason
+        ? `
+    <div style="background-color: #FFF5F5; border-left: 4px solid #8B0000; padding: 15px 20px; border-radius: 6px; margin-bottom: 25px; color: #555555; font-size: 13px;">
+      <strong>Reason / Note:</strong>
+      <p style="margin: 5px 0 0 0; color: #333333;">${reason}</p>
+    </div>
+    `
+        : ''
+    }
+
+    <p style="color: #4A4A4A; font-size: 14px; margin-bottom: 25px;">If you have alternative specifications or questions, please feel free to reach out to us by replying to this email.</p>
+
+    <div style="border-top: 1px solid #E2DCD0; padding-top: 20px; margin-top: 30px; font-size: 13px; color: #555555;">
+      <p style="margin: 0; font-weight: bold; color: #1E5B2E;">Regards,</p>
+      <p style="margin: 3px 0 0 0; font-weight: bold; color: #2C2C2C;">Cocoveera Export Team</p>
+    </div>
+  `;
+  return baseTemplate({ title: 'Update Regarding Your Quotation Request', content });
+};
+
+export const getRFQInfoRequestedTemplate = (customerName, productName, message) => {
+  const content = `
+    <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #1E5B2E; margin-top: 0; font-weight: normal; margin-bottom: 20px;">Dear ${customerName},</h3>
+    <p style="margin-bottom: 20px; color: #4A4A4A; font-size: 14px; line-height: 1.6;">Thank you for your quotation request regarding <strong>${productName}</strong>.</p>
+    <p style="margin-bottom: 20px; color: #4A4A4A; font-size: 14px; line-height: 1.6;">To prepare the most competitive and accurate quotation for your requirements, our export desk requires additional information:</p>
+
+    <div style="background-color: #FFFBEB; border-left: 4px solid #D97706; padding: 18px 20px; border-radius: 6px; margin-bottom: 25px; color: #92400E; font-size: 14px; line-height: 1.6;">
+      <strong>Message from Export Team:</strong>
+      <p style="margin: 8px 0 0 0; color: #1F2937;">${message.replace(/\n/g, '<br/>')}</p>
+    </div>
+
+    <p style="color: #4A4A4A; font-size: 14px; margin-bottom: 25px;">Please reply directly to this email with the requested details so we can finalize your quotation promptly.</p>
+
+    <div style="border-top: 1px solid #E2DCD0; padding-top: 20px; margin-top: 30px; font-size: 13px; color: #555555;">
+      <p style="margin: 0; font-weight: bold; color: #1E5B2E;">Regards,</p>
+      <p style="margin: 3px 0 0 0; font-weight: bold; color: #2C2C2C;">Cocoveera Export Team</p>
+    </div>
+  `;
+  return baseTemplate({ title: 'Information Requested for Your Quote Request', content });
+};
+

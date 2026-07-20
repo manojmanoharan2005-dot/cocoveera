@@ -103,34 +103,7 @@ export const FilterDrawer = ({
                 </div>
               </div>
 
-              <hr className="border-stone-100" />
 
-              {/* Price Range Fields */}
-              <div className="space-y-3.5">
-                <h4 className="text-[10px] font-extrabold text-[#6B7280] uppercase tracking-wider block">
-                  Price Range (INR / metric ton)
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[9px] text-[#6B7280] font-bold block mb-1">Min Price</label>
-                    <input
-                      type="number"
-                      value={localPrice.min}
-                      onChange={(e) => setLocalPrice({ ...localPrice, min: Number(e.target.value) })}
-                      className="w-full bg-[#F7F9F7] border border-stone-200 rounded-[12px] py-2 px-3 focus:outline-none focus:border-[#2E7D32] font-semibold text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[9px] text-[#6B7280] font-bold block mb-1">Max Price</label>
-                    <input
-                      type="number"
-                      value={localPrice.max}
-                      onChange={(e) => setLocalPrice({ ...localPrice, max: Number(e.target.value) })}
-                      className="w-full bg-[#F7F9F7] border border-stone-200 rounded-[12px] py-2 px-3 focus:outline-none focus:border-[#2E7D32] font-semibold text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
 
               <hr className="border-stone-100" />
 

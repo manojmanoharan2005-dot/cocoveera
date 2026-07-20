@@ -12,7 +12,7 @@ const AdminAuthContext = createContext();
 export const AdminAuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const [admin, setAdmin] = useState(null);
-  const [loading, setLoading] = useState(!!localStorage.getItem('adminToken'));
+  const [loading, setLoading] = useState(!!sessionStorage.getItem('adminToken'));
   const [error, setError] = useState(null);
   
   // Utility to decode JWT without external library
@@ -24,7 +24,7 @@ export const AdminAuthProvider = ({ children }) => {
     }
   };
 
-  const adminToken = localStorage.getItem('adminToken');
+  const adminToken = sessionStorage.getItem('adminToken');
 
   // JWT Auto-Logout based on expiry
   useEffect(() => {
@@ -51,10 +51,12 @@ export const AdminAuthProvider = ({ children }) => {
     checkExpiration();
 
     return () => clearTimeout(timeoutId);
-  }, [adminToken]);  // Check if admin is logged in
+  }, [adminToken]);
+
+  // Check if admin is logged in
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('adminToken');
+      const token = sessionStorage.getItem('adminToken');
       if (token) {
         try {
           const response = await axios.get(`${API_URL}/admin/auth/me`, {
@@ -62,6 +64,8 @@ export const AdminAuthProvider = ({ children }) => {
           });
           setAdmin(response.data.data);
         } catch (err) {
+          sessionStorage.removeItem('adminToken');
+          sessionStorage.removeItem('adminRefreshToken');
           localStorage.removeItem('adminToken');
           localStorage.removeItem('adminRefreshToken');
           setAdmin(null);
@@ -106,8 +110,10 @@ export const AdminAuthProvider = ({ children }) => {
 
       const { accessToken, refreshToken, user } = response.data;
 
-      localStorage.setItem('adminToken', accessToken);
-      localStorage.setItem('adminRefreshToken', refreshToken);
+      sessionStorage.setItem('adminToken', accessToken);
+      sessionStorage.setItem('adminRefreshToken', refreshToken);
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminRefreshToken');
 
       setAdmin(user);
       return { success: true, user };
@@ -120,13 +126,24 @@ export const AdminAuthProvider = ({ children }) => {
 
   const logout = () => {
     // Optionally call backend logout
-    axios.post(`${API_URL}/admin/auth/logout`, {}, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-    }).catch(() => {});
+    const currentToken = sessionStorage.getItem('adminToken');
+    if (currentToken) {
+      axios.post(`${API_URL}/admin/auth/logout`, {}, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      }).catch(() => {});
+    }
     
+    sessionStorage.clear();
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminRefreshToken');
-    sessionStorage.clear();
+    localStorage.removeItem('cocoveera_token');
+    localStorage.removeItem('cocoveera_user');
+    
+    // Clear cookies if present
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
     setAdmin(null);
     setLoading(false);
     navigate('/login', { replace: true });
@@ -134,9 +151,12 @@ export const AdminAuthProvider = ({ children }) => {
 
   const logoutAllDevices = async () => {
     try {
-      await axios.post(`${API_URL}/admin/auth/logout-all`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-      });
+      const currentToken = sessionStorage.getItem('adminToken');
+      if (currentToken) {
+        await axios.post(`${API_URL}/admin/auth/logout-all`, {}, {
+          headers: { Authorization: `Bearer ${currentToken}` }
+        });
+      }
       logout();
     } catch (err) {
       console.error('Logout all devices failed', err);
@@ -145,7 +165,7 @@ export const AdminAuthProvider = ({ children }) => {
 
   const refreshToken = async () => {
     try {
-      const refreshTokenValue = localStorage.getItem('adminRefreshToken');
+      const refreshTokenValue = sessionStorage.getItem('adminRefreshToken');
       if (!refreshTokenValue) throw new Error('No refresh token');
 
       const response = await axios.post(`${API_URL}/admin/auth/refresh`, {
@@ -153,7 +173,7 @@ export const AdminAuthProvider = ({ children }) => {
       });
 
       const { accessToken } = response.data;
-      localStorage.setItem('adminToken', accessToken);
+      sessionStorage.setItem('adminToken', accessToken);
 
       return accessToken;
     } catch (err) {
