@@ -88,6 +88,10 @@ const ProductSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -95,7 +99,7 @@ const ProductSchema = new mongoose.Schema(
 );
 
 // Indexes for fast querying
-ProductSchema.index({ category: 1 });
+ProductSchema.index({ category: 1, displayOrder: 1 });
 ProductSchema.index({ isPublished: 1 });
 
 // Auto-generate slug before saving

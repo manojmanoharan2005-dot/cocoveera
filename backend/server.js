@@ -7,6 +7,7 @@ import compression from 'compression';
 import { securitySanitizers } from './middleware/sanitize.js';
 
 import { connectDB } from './config/db.js';
+import { initCategoryOrdering } from './utils/initCategoryOrdering.js';
 import mongoose from 'mongoose';
 
 // Route imports
@@ -204,6 +205,7 @@ const PORT = process.env.PORT || 5000;
 // Connect to Database & Boot Server
 const startServer = async () => {
   await connectDB();
+  await initCategoryOrdering();
   
   app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);

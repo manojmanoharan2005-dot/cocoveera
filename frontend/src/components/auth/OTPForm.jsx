@@ -242,7 +242,7 @@ export const OTPForm = () => {
 
           {apiError && (
             <div className="bg-red-950/40 text-red-400 text-xs p-3.5 rounded-xl border border-red-900/50 mb-5 font-semibold text-center animate-fade-in">
-              {apiError}
+              {typeof apiError === 'string' ? apiError : (apiError?.message || 'OTP verification error. Please try again.')}
             </div>
           )}
 

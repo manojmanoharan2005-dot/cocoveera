@@ -7,7 +7,8 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
   Droplet, Wind, ShieldCheck, FileText, ChevronRight,
-  Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2, Home, Beaker
+  Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2, Home, Beaker,
+  Share2, MoreVertical, HelpCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
@@ -36,6 +37,55 @@ const ProductView = () => {
   const [containerType, setContainerType] = useState('20FT');
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [extraItems, setExtraItems] = useState([]);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  const handleBackNav = () => {
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleShareProduct = async () => {
+    if (navigator.share && window.innerWidth < 768) {
+      try {
+        await navigator.share({
+          title: product?.name || 'Cocoveera Product',
+          text: product?.description?.substring(0, 100) || '',
+          url: window.location.href,
+        });
+      } catch (e) {
+        setIsShareModalOpen(true);
+      }
+    } else {
+      setIsShareModalOpen(true);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setAddedMessage('Product link copied to clipboard!');
+      setTimeout(() => setCopiedLink(false), 2000);
+      setTimeout(() => setAddedMessage(''), 3000);
+    } catch (e) {
+      const input = document.createElement('input');
+      input.value = window.location.href;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      setCopiedLink(true);
+      setAddedMessage('Product link copied to clipboard!');
+      setTimeout(() => setCopiedLink(false), 2000);
+      setTimeout(() => setAddedMessage(''), 3000);
+    }
+  };
 
   // Debounced viewer state to prevent UI freezing (hanging) when quantity changes rapidly
   const [viewerQuantity, setViewerQuantity] = useState(0.25);
@@ -353,7 +403,7 @@ const ProductView = () => {
   ];
 
   return (
-    <div className="max-w-6xl space-y-8 pb-28 lg:pb-16">
+    <div className="max-w-6xl space-y-4 sm:space-y-5 pb-24 lg:pb-16">
       <SEO 
         title={product.name}
         description={product.description?.substring(0, 160) || `Buy premium ${product.name} at Cocoveera.`}
@@ -361,6 +411,8 @@ const ProductView = () => {
         image={product.images?.[0]?.url || product.image}
       />
       
+
+
       {/* Toast Notification */}
       <AnimatePresence>
         {addedMessage && (
@@ -431,12 +483,22 @@ const ProductView = () => {
                 alt={product.name} 
                 className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 hover:scale-105" 
               />
-              <button 
-                onClick={handleWishlistToggle}
-                className="absolute top-4 right-4 bg-white/90 hover:bg-white text-stone-600 hover:text-red-500 p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center"
-              >
-                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
-              </button>
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <button 
+                  onClick={handleShareProduct}
+                  className="bg-white/90 hover:bg-white text-stone-700 hover:text-[#2E7D32] p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center active:scale-95"
+                  title="Share Product Link"
+                >
+                  <Share2 className="w-4.5 h-4.5" />
+                </button>
+                <button 
+                  onClick={handleWishlistToggle}
+                  className="bg-white/90 hover:bg-white text-stone-700 hover:text-red-500 p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center active:scale-95"
+                  title="Wishlist Product"
+                >
+                  <Heart className={`w-4.5 h-4.5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+                </button>
+              </div>
             </div>
             
             {/* Gallery Thumbs */}
@@ -459,6 +521,86 @@ const ProductView = () => {
                 ))}
               </div>
             )}
+
+            {/* Action Row below Product Images: Wishlist | Share | More */}
+            <div className="flex items-center justify-around py-3 px-4 bg-[#F7F9F7] rounded-2xl border border-stone-200/60 my-4 shadow-sm relative">
+              {/* Wishlist */}
+              <button
+                onClick={handleWishlistToggle}
+                className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-red-500 transition-colors py-1 px-3 rounded-xl active:scale-95"
+              >
+                <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-stone-600'}`} />
+                <span>{isWishlisted ? 'Wishlisted' : 'Wishlist'}</span>
+              </button>
+
+              <div className="h-4 w-px bg-stone-300/60" />
+
+              {/* Share */}
+              <button
+                onClick={handleShareProduct}
+                className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
+              >
+                <Share2 className="w-4 h-4 text-stone-600" />
+                <span>Share</span>
+              </button>
+
+              <div className="h-4 w-px bg-stone-300/60" />
+
+              {/* More Options */}
+              <button
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
+              >
+                <MoreVertical className="w-4 h-4 text-stone-600" />
+                <span>More</span>
+              </button>
+
+              {/* More Options Menu Popup */}
+              <AnimatePresence>
+                {showMoreMenu && (
+                  <>
+                    <div className="fixed inset-0 bg-transparent z-40" onClick={() => setShowMoreMenu(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                      className="absolute bottom-full right-4 mb-2 z-50 bg-white rounded-2xl shadow-xl border border-stone-200/80 p-2 w-56 text-stone-800 space-y-1"
+                    >
+                      <button
+                        onClick={() => {
+                          setShowMoreMenu(false);
+                          setIsQuoteModalOpen(true);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
+                      >
+                        <FileText className="w-4 h-4 text-[#2E7D32]" />
+                        <span>Request Wholesale Quote</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMoreMenu(false);
+                          setIsTestingModalOpen(true);
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-[#2E7D32]" />
+                        <span>Quality & Lab Testing</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMoreMenu(false);
+                          navigate('/help-center');
+                        }}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
+                      >
+                        <HelpCircle className="w-4 h-4 text-[#2E7D32]" />
+                        <span>Help & Support</span>
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Certifications and special notes */}
             <div className={`grid grid-cols-2 gap-3 text-xs font-bold text-stone-600 bg-stone-50 border border-stone-100 p-4 rounded-[20px] mt-6 ${showConfigurator ? 'hidden lg:grid' : ''}`}>
@@ -1074,6 +1216,125 @@ const ProductView = () => {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Share Link Modal (Mobile & Laptop View) */}
+      <AnimatePresence>
+        {isShareModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-[24px] shadow-2xl border border-stone-200 w-full max-w-md p-6 relative overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-stone-100 mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center">
+                    <Share2 className="w-5 h-5 stroke-[2.2]" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-poppins font-black text-base text-stone-900 leading-tight">
+                      Share Product
+                    </h3>
+                    <p className="text-xs text-stone-500 font-medium truncate max-w-[220px]">
+                      {product?.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsShareModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:text-stone-900 flex items-center justify-center transition-colors font-bold text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Copy Link Input Section */}
+              <div className="space-y-2 mb-6">
+                <label className="text-xs font-bold text-stone-700 block">
+                  Direct Product Link
+                </label>
+                <div className="flex items-center gap-2 bg-[#F7F9F7] border border-stone-200 rounded-[14px] p-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={window.location.href}
+                    className="bg-transparent border-none text-xs font-mono text-stone-700 flex-1 px-2 focus:outline-none truncate"
+                  />
+                  <button
+                    onClick={handleCopyLink}
+                    className={`px-4 py-2 rounded-[10px] text-xs font-extrabold transition-all flex items-center gap-1.5 shrink-0 ${
+                      copiedLink
+                        ? 'bg-[#2E7D32] text-white shadow-sm'
+                        : 'bg-stone-900 hover:bg-stone-800 text-white shadow-sm active:scale-95'
+                    }`}
+                  >
+                    {copiedLink ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <span>Copy Link</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Social Share Options */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-700 block">
+                  Share via
+                </label>
+                <div className="grid grid-cols-4 gap-2.5">
+                  {/* WhatsApp */}
+                  <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out ${product?.name} on Cocoveera: ${window.location.href}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-[16px] bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#2E7D32] transition-colors"
+                  >
+                    <span className="text-xl">💬</span>
+                    <span className="text-[10.5px] font-bold">WhatsApp</span>
+                  </a>
+
+                  {/* Email */}
+                  <a
+                    href={`mailto:?subject=${encodeURIComponent(product?.name || 'Cocoveera Product')}&body=${encodeURIComponent(`Check out this product on Cocoveera: ${window.location.href}`)}`}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-[16px] bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors"
+                  >
+                    <span className="text-xl">✉️</span>
+                    <span className="text-[10.5px] font-bold">Email</span>
+                  </a>
+
+                  {/* LinkedIn */}
+                  <a
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-[16px] bg-sky-50 hover:bg-sky-100 text-sky-700 transition-colors"
+                  >
+                    <span className="text-xl">💼</span>
+                    <span className="text-[10.5px] font-bold">LinkedIn</span>
+                  </a>
+
+                  {/* Twitter/X */}
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${product?.name} on Cocoveera:`)}&url=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-[16px] bg-stone-100 hover:bg-stone-200 text-stone-800 transition-colors"
+                  >
+                    <span className="text-xl">𝕏</span>
+                    <span className="text-[10.5px] font-bold">Twitter</span>
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User, Check, Menu, Heart } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHorizontal, User, Check, Menu, Heart, Package, ArrowLeft, MoreVertical, Share2, HelpCircle, FileText, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,11 +26,14 @@ export const Header = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const wishlistCount = user?.wishlist?.length || 0;
+  const isProductPage = location.pathname.includes('/product/') || location.pathname.includes('/productview/');
 
   React.useEffect(() => {
     setDropdownOpen(false);
     setSortDropdownOpen(false);
+    setMoreMenuOpen(false);
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -52,16 +55,18 @@ export const Header = ({
     .slice(0, 2) || 'U';
 
   return (
-    <header className="w-full min-h-[68px] bg-white/80 backdrop-blur-xl border-b border-stone-200/50 sticky top-0 z-40 px-4 md:px-6 py-3 md:py-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 shadow-sm shadow-stone-100/80">
+    <header className="w-full h-16 bg-white/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-40 px-4 md:px-6 flex items-center justify-between gap-4 shadow-sm shadow-stone-100/80">
       
-      {/* Left: Brand Logo */}
-      <div className="flex items-center gap-2.5 select-none shrink-0 group order-1">
-
-
+      {/* Left: Brand Logo (Always visible on all pages, tapping navigates to Dashboard) */}
+      <div 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2.5 select-none shrink-0 group cursor-pointer"
+        title="Cocoveera Home"
+      >
         <img
           src="/logo.webp"
           alt="Cocoveera Logo"
-          className="w-10 h-10 object-contain rounded-[10px] transition-transform duration-300 group-hover:scale-105"
+          className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-[10px] transition-transform duration-300 group-hover:scale-105"
         />
         <div className="hidden sm:block">
           <span className="font-poppins font-black text-[15px] tracking-wide block leading-none">
@@ -70,8 +75,8 @@ export const Header = ({
         </div>
       </div>
 
-      {/* Center: Marketplace Search + Filter Controls */}
-      <AnimatePresence>
+      {/* Center: Marketplace Search + Filter Controls OR Internal Page Title */}
+      <AnimatePresence mode="wait">
         {showSearchAndFilters ? (
           <motion.div
             key="search-bar"
@@ -79,7 +84,7 @@ export const Header = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2 }}
-            className="flex items-center gap-2 flex-grow w-full md:w-auto max-w-full md:max-w-[580px] order-3 md:order-2 mx-auto"
+            className="flex items-center gap-2 flex-grow max-w-full md:max-w-[580px] mx-auto"
           >
             {/* Search Input */}
             <div className={`relative flex-grow transition-all duration-300 ${searchFocused ? 'flex-grow' : ''}`}>
@@ -157,19 +162,28 @@ export const Header = ({
             </div>
           </motion.div>
         ) : (
-          <div className="hidden md:block flex-grow order-3 md:order-2" />
+          <motion.div
+            key="internal-header"
+            initial={{ opacity: 0, x: -5 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -5 }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center flex-grow max-w-full px-2 sm:px-4"
+          >
+            <h1 className="font-poppins font-extrabold text-sm sm:text-base text-stone-900 tracking-tight truncate">
+              {activeTab}
+            </h1>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-2 shrink-0 order-2 md:order-3">
-
-
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
         {/* Wishlist */}
         <button
           onClick={() => navigate('/wishlist')}
-          className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all"
+          className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all active:scale-95"
           title="Wishlist"
         >
           <Heart className="w-4.5 h-4.5" />
@@ -180,10 +194,17 @@ export const Header = ({
           )}
         </button>
 
-
+        {/* Orders */}
+        <button
+          onClick={() => navigate('/orders')}
+          className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all active:scale-95"
+          title="My Orders"
+        >
+          <Package className="w-4.5 h-4.5" />
+        </button>
 
         {/* Divider */}
-        <div className="h-6 w-px bg-stone-200 mx-1" />
+        <div className="h-6 w-px bg-stone-200 mx-0.5 sm:mx-1" />
 
         {/* Profile Dropdown */}
         <div className="relative">
@@ -195,7 +216,7 @@ export const Header = ({
                 setDropdownOpen(!dropdownOpen);
               }
             }}
-            className="flex items-center gap-2.5 pl-1 focus:outline-none group"
+            className="flex items-center gap-2 pl-1 focus:outline-none group"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#43A047] text-white flex items-center justify-center font-poppins font-black text-xs shadow-md shadow-[#2E7D32]/20 transition-transform duration-300 group-hover:scale-105">
               {userInitials}
@@ -205,7 +226,7 @@ export const Header = ({
                 {displayName}
               </h4>
             </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-stone-400 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Premium Dropdown (Desktop Only) */}

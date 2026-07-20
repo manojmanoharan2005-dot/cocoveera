@@ -92,6 +92,10 @@ export const createAdminProduct = async (req, res) => {
       images = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
     }
 
+    // Auto-assign next displayOrder within the category
+    const maxProd = await Product.findOne({ category }).sort({ displayOrder: -1 });
+    const displayOrder = maxProd && maxProd.displayOrder ? maxProd.displayOrder + 1 : 1;
+
     const product = await Product.create({
       name,
       description,
@@ -104,6 +108,7 @@ export const createAdminProduct = async (req, res) => {
       benefits: Array.isArray(benefits) ? benefits : [],
       applications: Array.isArray(applications) ? applications : [],
       isPublished: isPublished || false,
+      displayOrder,
     });
 
     clearCache('/api/products');

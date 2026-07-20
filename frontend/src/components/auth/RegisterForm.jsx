@@ -271,13 +271,13 @@ export const RegisterForm = () => {
 
       {apiError && (
         <div className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center animate-fade-in">
-          {apiError}
+          {typeof apiError === 'string' ? apiError : (apiError?.message || 'Registration error. Please try again.')}
         </div>
       )}
 
       {successMsg && (
         <div className="bg-green-50 text-green-700 text-xs p-3.5 rounded-xl border border-green-100 mb-5 font-semibold text-center animate-fade-in">
-          {successMsg}
+          {typeof successMsg === 'string' ? successMsg : 'Success'}
         </div>
       )}
 

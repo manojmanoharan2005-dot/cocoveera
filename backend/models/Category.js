@@ -25,6 +25,10 @@ const CategorySchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -32,7 +36,7 @@ const CategorySchema = new mongoose.Schema(
 );
 
 // Indexes for fast querying
-CategorySchema.index({ name: 1, createdAt: -1 });
+CategorySchema.index({ displayOrder: 1, name: 1 });
 
 // Auto-generate slug before saving
 CategorySchema.pre('save', function(next) {

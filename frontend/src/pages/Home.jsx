@@ -276,24 +276,7 @@ const Home = () => {
     { revalidateOnFocus: false, dedupingInterval: 600000 }
   );
 
-  const getCategoryPriority = (name) => {
-    if (!name) return 999;
-    const lower = name.toLowerCase();
-    if (lower.includes('cube')) return 1;
-    if (lower.includes('fiber bale')) return 2;
-    if (lower.includes('substrate bag')) return 3;
-    if (lower.includes('mat') || lower.includes('blanket')) return 6;
-    if (lower.includes('erosion control') || lower.includes('log') || lower.includes('net')) return 4;
-    if (lower.includes('disc') || lower === 'disck') return 5;
-    return 999;
-  };
-
-  const sortedCategories = [...dbCategories].sort((a, b) => {
-    const priorityA = getCategoryPriority(a.name);
-    const priorityB = getCategoryPriority(b.name);
-    if (priorityA !== priorityB) return priorityA - priorityB;
-    return 0; // Maintain stable sort if same priority
-  });
+  const sortedCategories = dbCategories;
 
 
 

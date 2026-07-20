@@ -22,6 +22,15 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
+const parseErrorMessage = (err, fallback = 'An error occurred. Please try again.') => {
+  if (!err) return fallback;
+  if (typeof err === 'string') return err;
+  if (err.response?.data?.message && typeof err.response.data.message === 'string') return err.response.data.message;
+  if (err.response?.data?.error && typeof err.response.data.error === 'string') return err.response.data.error;
+  if (err.message && typeof err.message === 'string') return err.message;
+  return fallback;
+};
+
 export const LoginForm = () => {
   const { login } = useAuth();
   const { verifyAdminKey } = useAdminAuth();
@@ -80,7 +89,7 @@ export const LoginForm = () => {
   useEffect(() => {
     const sessionError = sessionStorage.getItem('auth_error_message') || location.state?.message;
     if (sessionError) {
-      setApiError(sessionError);
+      setApiError(parseErrorMessage(sessionError, 'Session expired. Please login again.'));
       sessionStorage.removeItem('auth_error_message');
     }
 
@@ -116,10 +125,11 @@ export const LoginForm = () => {
         setShowAnimation(true);
       }
     } catch (err) {
-      if (err.message.includes('not verified') || err.message.toLowerCase().includes('otp')) {
+      const errorMsg = parseErrorMessage(err, 'Incorrect credentials. Please try again.');
+      if (errorMsg.toLowerCase().includes('not verified') || errorMsg.toLowerCase().includes('otp')) {
         navigate(`/verify-otp?phone=${encodeURIComponent(data.phone)}`);
       } else {
-        setApiError(err.response?.data?.message || err.message || 'Incorrect credentials. Please try again.');
+        setApiError(errorMsg);
       }
     } finally {
       setLoading(false);
@@ -140,7 +150,7 @@ export const LoginForm = () => {
         setMode('reset');
       }
     } catch (err) {
-      setApiError(err.response?.data?.message || err.message || 'Failed to send reset code. Please try again.');
+      setApiError(parseErrorMessage(err, 'Failed to send reset code. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -178,7 +188,7 @@ export const LoginForm = () => {
         setIsOtpVerified(false);
       }
     } catch (err) {
-      setApiError(err.response?.data?.message || err.message || 'Failed to reset password. Please check the code and try again.');
+      setApiError(parseErrorMessage(err, 'Failed to reset password. Please check the code and try again.'));
     } finally {
       setLoading(false);
     }
@@ -198,7 +208,7 @@ export const LoginForm = () => {
         navigate('/admin/dashboard', { replace: true });
       }
     } catch (err) {
-      setApiError(err.response?.data?.message || err.message || 'Verification failed.');
+      setApiError(parseErrorMessage(err, 'Verification failed.'));
       // If session expired or token invalid, reset to login
       if (err.response?.status === 401 && !err.response?.data?.message?.includes('Invalid')) {
         setMode('login');
@@ -246,7 +256,7 @@ export const LoginForm = () => {
 
       {apiError && (
         <div className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center animate-fade-in">
-          {apiError}
+          {typeof apiError === 'string' ? apiError : (apiError?.message || 'Authentication error. Please try again.')}
         </div>
       )}
 

@@ -16,13 +16,7 @@ const Navbar = () => {
   const [langDropdown, setLangDropdown] = useState(false);
   const [language, setLanguage] = useState('EN');
 
-  useEffect(() => {
-    // Temporary debug logs requested by the user
-    console.log("Loading:", loading);
-    console.log("User:", user);
-    console.log("Token:", token);
-    console.log("Authenticated:", isAuthenticated);
-  }, [loading, user, token, isAuthenticated]);
+
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 40);

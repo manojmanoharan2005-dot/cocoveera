@@ -20,7 +20,7 @@ export const getAdminCategories = async (req, res) => {
 
     const total = await Category.countDocuments(query);
     const categories = await Category.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ displayOrder: 1, _id: 1 })
       .skip(skip)
       .limit(parseInt(limit));
 
@@ -52,7 +52,11 @@ export const createAdminCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Category already exists' });
     }
 
-    const category = await Category.create({ name, description, image });
+    // Auto-assign next highest displayOrder to append after DEMO / existing categories
+    const maxCat = await Category.findOne().sort({ displayOrder: -1 });
+    const displayOrder = maxCat && maxCat.displayOrder ? maxCat.displayOrder + 1 : 1;
+
+    const category = await Category.create({ name, description, image, displayOrder });
     clearCache('/categories');
     res.status(201).json({ success: true, data: category });
   } catch (error) {

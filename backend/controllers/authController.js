@@ -115,31 +115,26 @@ export const login = async (req, res) => {
 
   try {
     const identifier = email.toLowerCase().trim();
-    console.log(`[User Auth] Attempting login for: ${identifier}`);
 
     const user = await User.findOne({ 
       $or: [{ email: identifier }, { phone: identifier }] 
     }).select('+password');
 
     if (!user) {
-      console.log(`[User Auth] User not found for identifier ${identifier}`);
       return res.status(401).json({ success: false, message: 'Invalid credentials. User not found.' });
     }
 
     if (user.isBlocked) {
-      console.log(`[User Auth] Account blocked for ${email}`);
       return res.status(403).json({ success: false, message: 'Your account is blocked.' });
     }
 
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-      console.log(`[User Auth] Password mismatch for ${email}`);
       return res.status(401).json({ success: false, message: 'Invalid credentials. Password mismatch.' });
     }
 
     if (!user.isVerified) {
-      console.log(`[User Auth] User ${email} is not verified. Sending OTP.`);
       // Regenerate OTP
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       user.otpCode = otpCode;
@@ -174,8 +169,6 @@ export const login = async (req, res) => {
         message: 'Admin verification required',
       });
     }
-
-    console.log(`[User Auth] Successful login for ${email}`);
 
     res.status(200).json({
       success: true,
