@@ -57,21 +57,33 @@ export const Header = ({
   return (
     <header className="w-full h-16 bg-white/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-40 px-4 md:px-6 flex items-center justify-between gap-4 shadow-sm shadow-stone-100/80">
       
-      {/* Left: Brand Logo (Always visible on all pages, tapping navigates to Dashboard) */}
-      <div 
-        onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2.5 select-none shrink-0 group cursor-pointer"
-        title="Cocoveera Home"
-      >
-        <img
-          src="/logo.webp"
-          alt="Cocoveera Logo"
-          className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-[10px] transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="hidden sm:block">
-          <span className="font-poppins font-black text-[15px] tracking-wide block leading-none">
-            <span className="text-[#7B4F1E]">COCO</span><span className="text-[#2E7D32]">VEERA</span>
-          </span>
+      {/* Left: Brand Logo & Mobile Menu Toggle */}
+      <div className="flex items-center gap-2 shrink-0">
+        {onMenuClick && (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            className="md:hidden p-1.5 -ml-1 text-stone-700 hover:bg-stone-100 rounded-xl transition-colors shrink-0"
+            aria-label="Open Navigation Menu"
+          >
+            <Menu className="w-5.5 h-5.5 text-stone-700" />
+          </button>
+        )}
+        <div 
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2.5 select-none shrink-0 group cursor-pointer"
+          title="Cocoveera Home"
+        >
+          <img
+            src="/logo.webp"
+            alt="Cocoveera Logo"
+            className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-[10px] transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="hidden sm:block">
+            <span className="font-poppins font-black text-[15px] tracking-wide block leading-none">
+              <span className="text-[#7B4F1E]">COCO</span><span className="text-[#2E7D32]">VEERA</span>
+            </span>
+          </div>
         </div>
       </div>
 

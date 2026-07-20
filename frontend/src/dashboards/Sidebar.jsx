@@ -14,7 +14,8 @@ import {
   LogOut,
   FileText,
   HelpCircle,
-  ShieldCheck
+  ShieldCheck,
+  X
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -22,7 +23,9 @@ export const Sidebar = ({
   activeTab,
   cartCount,
   wishlistCount,
-  onLogoutClick
+  onLogoutClick,
+  isMobileDrawer = false,
+  onClose
 }) => {
   const menuItems = [
     { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
@@ -73,7 +76,7 @@ export const Sidebar = ({
   }, [activeTab, cartCount, wishlistCount]);
 
   return (
-    <aside className="w-full md:w-[272px] shrink-0 bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] border border-stone-200/80 rounded-[28px] overflow-hidden sticky top-20 md:top-24 h-full md:h-[calc(100vh-115px)] max-h-[100dvh] shadow-[0_10px_35px_rgba(46,125,50,0.08)] flex flex-col justify-between select-none">
+    <aside className={isMobileDrawer ? "w-full h-full bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] flex flex-col justify-between select-none overflow-hidden" : "hidden md:flex w-[272px] shrink-0 bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] border border-stone-200/80 rounded-[28px] overflow-hidden sticky top-20 md:top-24 h-full md:h-[calc(100vh-115px)] max-h-[100dvh] shadow-[0_10px_35px_rgba(46,125,50,0.08)] flex-col justify-between select-none"}>
       {/* 1. Header (Fixed at top) */}
       <div className="bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#388E3C] px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
@@ -91,7 +94,19 @@ export const Sidebar = ({
             </span>
           </div>
         </div>
-        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="System Online" />
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="System Online" />
+          {isMobileDrawer && onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors ml-1"
+              aria-label="Close Drawer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 2. Navigation (flex-grow: 1, scrollable if needed) */}
@@ -176,6 +191,9 @@ export const Sidebar = ({
                   key={item.name}
                   to={item.path}
                   className={className}
+                  onClick={() => {
+                    if (onClose) onClose();
+                  }}
                   ref={el => itemRefs.current[item.name] = el}
                 >
                   {buttonContent}
@@ -186,7 +204,10 @@ export const Sidebar = ({
             return (
               <button
                 key={item.name}
-                onClick={() => setActiveTab(item.name)}
+                onClick={() => {
+                  setActiveTab(item.name);
+                  if (onClose) onClose();
+                }}
                 className={className}
                 ref={el => itemRefs.current[item.name] = el}
               >
@@ -201,7 +222,10 @@ export const Sidebar = ({
       <div className="shrink-0 mt-auto p-3 pb-4 border-t border-stone-200/60 bg-white/50 backdrop-blur-sm flex flex-col gap-2.5">
         {/* Logout Button */}
         <button
-          onClick={onLogoutClick}
+          onClick={() => {
+            if (onClose) onClose();
+            onLogoutClick();
+          }}
           className="w-full text-left font-poppins text-[11.5px] font-bold py-2 px-3 rounded-[12px] text-red-500 hover:bg-red-50 transition-all flex items-center justify-between group border border-transparent hover:border-red-100"
         >
           <div className="flex items-center gap-2.5">

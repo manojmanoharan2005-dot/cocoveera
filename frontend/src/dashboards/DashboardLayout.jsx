@@ -24,6 +24,17 @@ export const DashboardLayout = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   const cartCount = user?.cart?.length || 0;
   const wishlistCount = user?.wishlist?.length || 0;
 
@@ -98,14 +109,15 @@ export const DashboardLayout = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 lg:hidden cursor-pointer"
+              className="fixed inset-0 z-[10000] md:hidden cursor-pointer"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}
             />
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-[280px] sm:w-[300px] h-[100dvh] bg-white lg:hidden p-2 shadow-2xl flex flex-col"
+              className="fixed top-0 left-0 bottom-0 z-[10001] w-[85%] max-w-[360px] h-screen h-[100vh] h-[100dvh] bg-[#F7FAF7] md:hidden shadow-2xl flex flex-col overflow-hidden"
             >
               <Sidebar
                 user={user}
@@ -113,6 +125,8 @@ export const DashboardLayout = () => {
                 cartCount={cartCount}
                 wishlistCount={wishlistCount}
                 onLogoutClick={logout}
+                isMobileDrawer={true}
+                onClose={() => setMobileMenuOpen(false)}
               />
             </motion.div>
           </>
