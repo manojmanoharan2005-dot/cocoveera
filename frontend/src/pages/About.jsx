@@ -36,7 +36,7 @@ const About = () => {
               A Decade of High-Quality Coir Manufacturing
             </h2>
             <p className="text-stone-500 text-xs leading-relaxed font-medium">
-              Established in Cochin, India, Cocoveera began as an organic coir fiber processing unit. Recognizing the international agricultural transition toward hydroponics, we scaled our facilities to provide standardized substrates. Today, we operate two distinct divisions to cater to bulk import and grower specifications:
+              Established in Coimbatore, India, Cocoveera began as an organic coir fiber processing unit. Recognizing the international agricultural transition toward hydroponics, we scaled our facilities to provide standardized substrates. Today, we operate two distinct divisions to cater to bulk import and grower specifications:
             </p>
 
             <div className="space-y-4 pt-2">
@@ -149,15 +149,15 @@ const About = () => {
               Strategic Proximity to Raw Materials
             </h2>
             <p className="text-xs text-stone-500 mt-3 leading-relaxed font-medium">
-              Our factories are situated within the major coconut farming belts of Cochin and Pollachi in South India, guaranteeing continuous supply.
+              Our factories are situated within the major coconut farming belts of Coimbatore and Pollachi in South India, guaranteeing continuous supply.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                title: 'Cochin Export Facility',
-                desc: 'Located adjacent to the seaport, this unit handles high-volume container cargo formatting, loading, and logistics clearance.',
+                title: 'Coimbatore Export Facility',
+                desc: 'Located adjacent to primary export transit routes, this unit handles high-volume container cargo formatting, loading, and logistics clearance.',
                 icon: Factory,
               },
               {

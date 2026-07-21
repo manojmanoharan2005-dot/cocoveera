@@ -428,36 +428,41 @@ const Contact = () => {
             <div className="p-8 space-y-8">
               
               <div className="space-y-6">
-                {/* Sales Support */}
+                {/* Office Address */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-[#F0FAF0] flex items-center justify-center flex-shrink-0">
+                    <Building className="w-4 h-4 text-[#2E7D32]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Office Address</p>
+                    <p className="text-stone-900 font-medium text-xs leading-relaxed">
+                      96/1, Vikas Layout, Kalluri Nagar,<br />
+                      Anna Nagar, Peelamedu, Coimbatore,<br />
+                      Tamil Nadu – 641004, India
+                    </p>
+                  </div>
+                </div>
+
+                {/* Customer Support Email */}
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-[#F0FAF0] flex items-center justify-center flex-shrink-0">
                     <Mail className="w-4 h-4 text-[#2E7D32]" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Sales Support</p>
+                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Customer Support</p>
                     <a href="mailto:supportdesk@cocoveera.com" className="text-stone-900 font-medium hover:text-[#2E7D32] transition">supportdesk@cocoveera.com</a>
                   </div>
                 </div>
 
-                {/* Export Department */}
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#F0FAF0] flex items-center justify-center flex-shrink-0">
-                    <Ship className="w-4 h-4 text-[#2E7D32]" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Export Department</p>
-                    <a href="mailto:exports@cocoveera.com" className="text-stone-900 font-medium hover:text-[#2E7D32] transition">exports@cocoveera.com</a>
-                  </div>
-                </div>
-
-                {/* Phone */}
+                {/* Contact Phone Numbers */}
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-[#F0FAF0] flex items-center justify-center flex-shrink-0">
                     <Phone className="w-4 h-4 text-[#2E7D32]" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Direct Phone</p>
-                    <a href="tel:+919876543210" className="text-stone-900 font-medium hover:text-[#2E7D32] transition">+91 98765 43210</a>
+                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Office Contact Numbers</p>
+                    <a href="tel:+916383469877" className="block text-stone-900 font-medium hover:text-[#2E7D32] transition">+91 63834 69877</a>
+                    <a href="tel:+919597293490" className="block text-stone-900 font-medium hover:text-[#2E7D32] transition">+91 95972 93490</a>
                   </div>
                 </div>
               </div>

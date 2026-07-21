@@ -15,7 +15,7 @@ const GlobalMap = () => {
 
   // Accurate [longitude, latitude] coordinates for all ports
   const ports = [
-    { id: 'origin', name: 'Cocoveera Cochin Port', coordinates: [76.2673, 9.9312], isOrigin: true, type: 'Manufacturing HQ & Export Hub', country: 'India' },
+    { id: 'origin', name: 'Cocoveera Coimbatore Hub', coordinates: [76.9558, 11.0168], isOrigin: true, type: 'Manufacturing HQ & Export Hub', country: 'India' },
     
     // Japan
     { id: 'jp-tyo', name: 'Port of Tokyo', coordinates: [139.6917, 35.6895], country: 'Japan', transit: '18 Days', volume: 'High' },

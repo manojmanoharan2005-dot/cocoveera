@@ -148,7 +148,7 @@ export default function HelpCenter() {
         return `You can download the invoice for Order #${contextOrder._id.substring(0,8).toUpperCase()} directly from your 'My Orders' dashboard.`;
       }
       if (text.includes('modify')) {
-        return `To modify Order #${contextOrder._id.substring(0,8).toUpperCase()}, please select the 'Talk to Human' option or email support@cocoveera.com as modifications depend on the current packing status.`;
+        return `To modify Order #${contextOrder._id.substring(0,8).toUpperCase()}, please select the 'Talk to Human' option or email supportdesk@cocoveera.com as modifications depend on the current packing status.`;
       }
       if (text.includes('logistics') || text.includes('export document')) {
         return `For Order #${contextOrder._id.substring(0,8).toUpperCase()}, export documents (Bill of Lading, Phytosanitary Certificate, etc.) will be uploaded to your portal once the container is loaded and cleared.`;
@@ -357,23 +357,23 @@ export default function HelpCenter() {
               </div>
             </a>
             
-            <a href="mailto:support@cocoveera.com" className="flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100/50 group">
+            <a href="mailto:supportdesk@cocoveera.com" className="flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100/50 group">
               <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                 <Mail className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-0.5">Email Support</p>
-                <p className="text-xs font-semibold text-stone-700">support@cocoveera.com</p>
+                <p className="text-xs font-semibold text-stone-700">supportdesk@cocoveera.com</p>
               </div>
             </a>
 
-            <a href="tel:+911234567890" className="flex items-center gap-3 p-3 bg-stone-50 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200/50 group">
+            <a href="tel:+916383469877" className="flex items-center gap-3 p-3 bg-stone-50 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200/50 group">
               <div className="w-8 h-8 rounded-full bg-stone-600 text-white flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                 <Phone className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-stone-600 uppercase tracking-wider mb-0.5">Phone Support</p>
-                <p className="text-xs font-semibold text-stone-700">+91 123 456 7890</p>
+                <p className="text-xs font-semibold text-stone-700">+91 63834 69877</p>
               </div>
             </a>
           </div>

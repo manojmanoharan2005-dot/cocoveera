@@ -43,7 +43,7 @@ const PrivacyPolicy = () => {
     {
       icon: <Mail className="w-6 h-6 text-[#2E7D32]" />,
       title: "5. Contact Us",
-      content: "If you have questions or comments about this notice, you may email us at privacy@cocoveera.com or by post to: Cocoveera Private Limited, Industrial Port Zone, Cochin, India."
+      content: "If you have questions or comments about this notice, you may email us at supportdesk@cocoveera.com or by post to: Cocoveera Private Limited, 96/1, Vikas Layout, Kalluri Nagar, Anna Nagar, Peelamedu, Coimbatore, Tamil Nadu - 641004, India."
     }
   ];
 

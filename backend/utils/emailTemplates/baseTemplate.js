@@ -70,7 +70,7 @@ export const baseTemplate = ({ title, preheader, content }) => {
       <tr>
         <td class="footer-cell" align="center" style="background-color: #F9FAFB; padding: 30px 20px; border-top: 1px solid #E5E7EB; font-size: 11px; color: #6B7280; line-height: 1.8;">
           <p style="margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1.5px; font-weight: bold; color: #1E5B2E; font-size: 12px;">Cocoveera Manufacturing & Exports</p>
-          <p style="margin: 0 0 15px 0; font-style: italic;">Cochin Export Yard • Hamburg Desk • Los Angeles Distribution Hub</p>
+          <p style="margin: 0 0 15px 0; font-style: italic;">Coimbatore Export Yard • Hamburg Desk • Los Angeles Distribution Hub</p>
           <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
             <tr>
               <td style="padding: 0 8px; border-right: 1px solid #DCD5C9; font-weight: bold; color: #9E7E53;">OMRI Certified</td>

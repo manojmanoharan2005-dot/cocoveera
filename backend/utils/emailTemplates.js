@@ -113,14 +113,14 @@ export const getInquiryConfirmationTemplate = (inquiry) => {
         </div>
 
         <p style="color: #555; line-height: 1.6; font-size: 14px; text-align: left;">
-          For urgent queries, please reach out to our Export Department directly at <a href="mailto:exports@cocoveera.com" style="color: #2E7D32;">exports@cocoveera.com</a>.
+          For urgent queries, please reach out to our Customer Support Desk directly at <a href="mailto:supportdesk@cocoveera.com" style="color: #2E7D32;">supportdesk@cocoveera.com</a>.
         </p>
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
         
         <p style="color: #999; font-size: 12px;">
           © ${new Date().getFullYear()} Cocoveera Private Limited. All rights reserved.<br/>
-          Cocoveera Plaza, Industrial Port Zone, Cochin, India.
+          96/1, Vikas Layout, Kalluri Nagar, Anna Nagar, Peelamedu, Coimbatore, Tamil Nadu - 641004, India.
         </p>
       </div>
     </div>

@@ -16,7 +16,7 @@ const CoconutSubstrates = () => {
     india: {
       title: 'India (Export Hub)',
       countries: ['India'],
-      ports: 'Cochin Port',
+      ports: 'Coimbatore Export Hub',
       transit: 'Origin Point',
       docs: 'Export documentation, Phytosanitary certificates, Fumigation compliance.'
     },

@@ -124,50 +124,53 @@ function generateHeader(doc, logoBuffer, invoice) {
     doc.fillColor(THEME.primary).fontSize(20).font('Helvetica-Bold').text('COCOVEERA', 40, 40);
   }
 
-  doc.fillColor(THEME.primary).fontSize(16).font('Helvetica-Bold').text('COCOVEERA', 100, 45);
-  doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica').text('Premium Coconut Growing Media Exporters', 100, 65);
+  doc.fillColor(THEME.primary).fontSize(22).font('Helvetica-Bold').text('Cocoveera', 100, 40);
+  doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica-Oblique').text('Premium Coir substrates exports\nand Quality testing', 100, 65);
 
   // Top Right: TAX INVOICE
-  doc.fillColor(THEME.primary).fontSize(22).font('Helvetica-Bold').text('TAX INVOICE', 0, 45, { align: 'right' });
+  doc.fillColor(THEME.primary).fontSize(22).font('Helvetica-Bold').text('TAX INVOICE', 0, 40, { align: 'right' });
   
   doc.fillColor(THEME.textMain).fontSize(9).font('Helvetica-Bold');
-  doc.text('Invoice Number:', 360, 75);
-  doc.font('Helvetica').text(invoice.invoiceNumber, 440, 75, { width: 115, align: 'right' });
+  doc.text('Invoice Number:', 360, 70);
+  doc.font('Helvetica').text(invoice.invoiceNumber, 440, 70, { width: 115, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Invoice Date:', 360, 95);
-  doc.font('Helvetica').text(invoice.invoiceDate || formatDate(new Date()), 440, 95, { width: 115, align: 'right' });
+  doc.font('Helvetica-Bold').text('Invoice Date:', 360, 88);
+  doc.font('Helvetica').text(invoice.invoiceDate || formatDate(new Date()), 440, 88, { width: 115, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Order Number:', 360, 115);
-  doc.font('Helvetica').text(invoice.orderId, 440, 115, { width: 115, align: 'right' });
+  doc.font('Helvetica-Bold').text('Order Number:', 360, 106);
+  doc.font('Helvetica').text(invoice.orderId, 440, 106, { width: 115, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Status:', 360, 135);
+  doc.font('Helvetica-Bold').text('Status:', 360, 124);
   const rawStatus = invoice.status || invoice.paymentStatus || 'PAID';
   const statusStr = ['paid', 'confirmed', 'production', 'packed', 'loaded', 'shipped', 'delivered'].includes(rawStatus.toLowerCase()) ? 'PAID' : (rawStatus.toUpperCase());
   const statusColor = (statusStr === 'PENDING' || statusStr === 'UNPAID') ? '#D32F2F' : THEME.primary;
-  doc.fillColor(statusColor).font('Helvetica-Bold').text(statusStr, 440, 135, { width: 115, align: 'right' });
+  doc.fillColor(statusColor).font('Helvetica-Bold').text(statusStr, 440, 124, { width: 115, align: 'right' });
 
-  generateHr(doc, 155, THEME.primary, 2);
+  generateHr(doc, 150, THEME.primary, 2);
 }
 
 function generateCompanyAndCustomerInfo(doc, invoice) {
-  const top = 175;
+  const top = 162;
 
   // Company Info (Left)
   doc.fillColor(THEME.primary).fontSize(11).font('Helvetica-Bold').text('FROM:', 40, top);
   doc.fillColor(THEME.textMain).fontSize(10).font('Helvetica-Bold').text('COCOVEERA', 40, top + 15);
   
   const companyLines = [
-    '123 Export Trade Center',
-    'Mumbai Port Zone, MH 400001, India',
-    'GST: 27AABCT1234D1Z2',
-    'IEC: 0312345678',
+    '96/1, Vikas Layout,',
+    'Kalluri Nagar,',
+    'Anna Nagar,',
+    'Peelamedu,',
+    'Coimbatore,',
+    'Tamil Nadu – 641004\n',
+    'GST: 33OOTPK6234P1ZV',
+    'Contact: +91 63834 69877, +91 95972 93490',
     'Email: servicedesk@cocoveera.com',
-    'Phone: +91 98765 43210',
     'Web: www.cocoveera.com'
   ];
 
-  doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica')
-     .text(companyLines.join('\n'), 40, top + 30, { width: 240 });
+  doc.fillColor(THEME.textLight).fontSize(8.5).font('Helvetica')
+     .text(companyLines.join('\n'), 40, top + 28, { width: 240 });
 
   // Customer Info (Right)
   doc.fillColor(THEME.primary).fontSize(11).font('Helvetica-Bold').text('BILL TO / SHIP TO:', 300, top);
@@ -180,28 +183,23 @@ function generateCompanyAndCustomerInfo(doc, invoice) {
   const cityStateZip = [cityState, zip].filter(Boolean).join(' ');
 
   const customerLines = [
-    invoice.customerEmail,
-    invoice.customerPhone,
     address.street || address.addressLine || 'Address not provided',
     cityStateZip,
-    address.country
+    address.country,
+    invoice.customerEmail,
+    invoice.customerPhone
   ].filter(Boolean);
 
-  doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica')
-     .text(customerLines.join('\n'), 300, top + 30, { width: 240 });
+  doc.fillColor(THEME.textLight).fontSize(8.5).font('Helvetica')
+     .text(customerLines.join('\n'), 300, top + 28, { width: 240 });
 
-  // Generate HR dynamically based on the tallest block
-  // Default hr is at top + 120, we can just keep it there unless address is extremely long
-  generateHr(doc, top + 120, THEME.border, 1);
+  generateHr(doc, top + 138, THEME.border, 1);
 }
 
 function generateOrderAndLogisticsInfo(doc, invoice) {
-  const top = 305;
+  const top = 310;
 
   const usedCap = invoice.totalContainers || 0;
-  const isWhole = Number.isInteger(usedCap);
-  const remainingCap = isWhole ? 0 : (1 - (usedCap % 1));
-  const utilization = isWhole ? 100 : Math.round((usedCap % 1) * 100);
 
   // Box 1: Export Logistics
   doc.rect(40, top, 240, 110).fillAndStroke(THEME.accent, THEME.border);
@@ -209,8 +207,9 @@ function generateOrderAndLogisticsInfo(doc, invoice) {
   doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
   
   doc.text('Container Type:', 50, top + 30).font('Helvetica').text(invoice.containerType || 'N/A', 140, top + 30);
-  doc.font('Helvetica-Bold').text('Total Containers:', 50, top + 45).font('Helvetica').text(usedCap.toFixed(2), 140, top + 45);
-  doc.font('Helvetica-Bold').text('Total Pieces:', 50, top + 60).font('Helvetica').text(Math.round(invoice.totalPieces || 0).toLocaleString(), 140, top + 60);
+  doc.font('Helvetica-Bold').text('Total Containers:', 50, top + 45).font('Helvetica').text(usedCap ? usedCap.toFixed(2) : '1.00', 140, top + 45);
+  const totalPieces = invoice.totalPieces || (invoice.items || []).reduce((acc, item) => acc + (item.pieces || item.quantity || 0), 0);
+  doc.font('Helvetica-Bold').text('Total Pieces:', 50, top + 60).font('Helvetica').text(Math.round(totalPieces).toLocaleString(), 140, top + 60);
   doc.font('Helvetica-Bold').text('Estimated Weight:', 50, top + 75).font('Helvetica').text(`${(invoice.estimatedWeight || 0).toLocaleString()} KG`, 140, top + 75);
   doc.font('Helvetica-Bold').text('Estimated Volume:', 50, top + 90).font('Helvetica').text(`${(invoice.estimatedVolume || 0).toFixed(2)} CBM`, 140, top + 90);
 
@@ -249,8 +248,7 @@ function generateProductTable(doc, invoice) {
   for (i = 0; i < (invoice.items || []).length; i++) {
     const item = invoice.items[i];
     
-    if (position > 700) {
-      // Add new page and redraw header
+    if (position > 680) {
       generateFooter(doc);
       doc.addPage();
       generatePageHeader(doc, invoice);
@@ -265,10 +263,10 @@ function generateProductTable(doc, invoice) {
     
     doc.text(item.productName, 50, position + 10, { width: 140 });
     doc.text(item.sku || 'N/A', 190, position + 10, { width: 60 });
-    doc.text(item.quantity.toFixed(2), 250, position + 10, { width: 55, align: 'center' });
-    doc.text(Math.round(item.pieces || 0).toLocaleString(), 310, position + 10, { width: 50, align: 'right' });
+    doc.text((item.quantity || 1).toFixed(2), 250, position + 10, { width: 55, align: 'center' });
+    doc.text(Math.round(item.pieces || item.quantity || 0).toLocaleString(), 310, position + 10, { width: 50, align: 'right' });
     doc.text(`${curr}${(item.unitPrice || 0).toFixed(2)}`, 370, position + 10, { width: 70, align: 'right' });
-    doc.text(`${curr}${(item.unitPrice * (item.pieces || 0)).toFixed(2)}`, 450, position + 10, { width: 95, align: 'right' });
+    doc.text(`${curr}${((item.unitPrice || 0) * (item.pieces || item.quantity || 1)).toFixed(2)}`, 450, position + 10, { width: 95, align: 'right' });
 
     position += 30;
   }
@@ -280,8 +278,7 @@ function generateProductTable(doc, invoice) {
 function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
   const curr = getCurrencySymbol(invoice.currency);
   
-  // Check if we need a new page for summaries
-  if (finalY > 550) {
+  if (finalY > 540) {
     generateFooter(doc);
     doc.addPage();
     generatePageHeader(doc, invoice);
@@ -290,63 +287,56 @@ function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
 
   const summaryTop = finalY + 15;
   
-  const subtotal = invoice.subtotal || invoice.items.reduce((acc, item) => acc + (item.unitPrice * (item.pieces || 0)), 0);
+  const subtotal = invoice.subtotal || invoice.items.reduce((acc, item) => acc + ((item.unitPrice || 0) * (item.pieces || item.quantity || 1)), 0);
   const discount = invoice.discount || 0;
   const shipping = invoice.shippingCharge || 0;
   const tax = invoice.tax || 0;
   const total = invoice.totalAmount || (subtotal - discount + shipping + tax);
+
   // Right Column: Grand Total Summary
   doc.font('Helvetica-Bold').fontSize(9).fillColor(THEME.textMain);
-  doc.text('Items Total:', 350, summaryTop + 20, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${subtotal.toFixed(2)}`, 460, summaryTop + 20, { width: 85, align: 'right' });
+  doc.text('Items Total:', 350, summaryTop + 10, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}${subtotal.toFixed(2)}`, 460, summaryTop + 10, { width: 85, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Discount:', 350, summaryTop + 35, { width: 100, align: 'right' })
-     .font('Helvetica').fillColor(THEME.primary).text(`${curr}${discount.toFixed(2)}`, 460, summaryTop + 35, { width: 85, align: 'right' });
+  doc.font('Helvetica-Bold').text('Discount:', 350, summaryTop + 25, { width: 100, align: 'right' })
+     .font('Helvetica').fillColor(THEME.primary).text(`${curr}${discount.toFixed(2)}`, 460, summaryTop + 25, { width: 85, align: 'right' });
 
-  doc.fillColor(THEME.textMain).font('Helvetica-Bold').text('Delivery Charges:', 350, summaryTop + 50, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${shipping.toFixed(2)}`, 460, summaryTop + 50, { width: 85, align: 'right' });
+  doc.fillColor(THEME.textMain).font('Helvetica-Bold').text('Delivery Charges:', 350, summaryTop + 40, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}${shipping.toFixed(2)}`, 460, summaryTop + 40, { width: 85, align: 'right' });
      
-  doc.font('Helvetica-Bold').text('Handling Charges:', 350, summaryTop + 65, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}0.00`, 460, summaryTop + 65, { width: 85, align: 'right' });
+  doc.font('Helvetica-Bold').text('Handling Charges:', 350, summaryTop + 55, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}0.00`, 460, summaryTop + 55, { width: 85, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Tax / GST:', 350, summaryTop + 80, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${tax.toFixed(2)}`, 460, summaryTop + 80, { width: 85, align: 'right' });
+  doc.font('Helvetica-Bold').text('Tax / GST:', 350, summaryTop + 70, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}${tax.toFixed(2)}`, 460, summaryTop + 70, { width: 85, align: 'right' });
 
-  generateHr(doc, summaryTop + 90, THEME.border, 1);
+  generateHr(doc, summaryTop + 85, THEME.border, 1);
 
-  doc.fillColor(THEME.primary).font('Helvetica-Bold').fontSize(14)
-     .text('GRAND TOTAL:', 250, summaryTop + 105, { width: 170, align: 'right' })
-     .text(`${curr}${total.toFixed(2)}`, 425, summaryTop + 105, { width: 120, align: 'right' });
+  doc.fillColor(THEME.primary).font('Helvetica-Bold').fontSize(12)
+     .text('GRAND TOTAL:', 250, summaryTop + 95, { width: 170, align: 'right' })
+     .text(`${curr}${total.toFixed(2)}`, 425, summaryTop + 95, { width: 120, align: 'right' });
 
-  const bottomY = Math.max(summaryTop + 140, 650);
-
-  // QR Code
-  doc.image(qrBuffer, 40, bottomY, { width: 70 });
-  doc.fillColor(THEME.textLight).fontSize(7).font('Helvetica')
-     .text('Scan to verify authentic', 40, bottomY + 75)
-     .text('Cocoveera export document.', 40, bottomY + 85);
+  const bottomY = Math.max(summaryTop + 125, 640);
 
   // Payment Info
-  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('PAYMENT INFORMATION', 150, bottomY);
+  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('PAYMENT INFORMATION', 40, bottomY);
   doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
-  doc.text('Method:', 150, bottomY + 15).font('Helvetica').text(invoice.paymentMethod || 'Not specified', 230, bottomY + 15);
-  doc.font('Helvetica-Bold').text('Transaction Ref:', 150, bottomY + 30).font('Helvetica').text(invoice.transactionId || 'N/A', 230, bottomY + 30);
-  doc.font('Helvetica-Bold').text('Paid Date:', 150, bottomY + 45).font('Helvetica').text(invoice.paymentDate || formatDate(new Date()), 230, bottomY + 45);
+  doc.text('Method:', 40, bottomY + 15).font('Helvetica').text(invoice.paymentMethod || 'Not specified', 130, bottomY + 15);
+  doc.font('Helvetica-Bold').text('Transaction Ref:', 40, bottomY + 30).font('Helvetica').text(invoice.transactionId || 'N/A', 130, bottomY + 30);
+  doc.font('Helvetica-Bold').text('Paid Date:', 40, bottomY + 45).font('Helvetica').text(invoice.paymentDate || formatDate(new Date()), 130, bottomY + 45);
   const paymentStatus = (invoice.paymentStatus || 'PENDING').toUpperCase();
-  const paymentStatusColor = paymentStatus === 'PENDING' || paymentStatus === 'UNPAID' ? '#D32F2F' : THEME.primary;
-  doc.font('Helvetica-Bold').text('Status:', 150, bottomY + 60).fillColor(paymentStatusColor).font('Helvetica-Bold').text(paymentStatus, 230, bottomY + 60);
+  const paymentStatusColor = (paymentStatus === 'PENDING' || paymentStatus === 'UNPAID') ? '#D32F2F' : THEME.primary;
+  doc.font('Helvetica-Bold').text('Status:', 40, bottomY + 60).fillColor(paymentStatusColor).font('Helvetica-Bold').text(paymentStatus, 130, bottomY + 60);
 
   // Digital Signature
-  doc.fillColor(THEME.textMain).fontSize(10).font('Helvetica-Bold').text('AUTHORIZED SIGNATURE', 380, bottomY, { align: 'center', width: 150 });
+  doc.fillColor(THEME.textMain).fontSize(10).font('Helvetica-Bold').text('AUTHORIZED SIGNATURE', 380, bottomY, { align: 'center', width: 175 });
   
-  // Fake Signature Line
-  doc.moveTo(380, bottomY + 50).lineTo(530, bottomY + 50).lineWidth(1).strokeColor(THEME.border).stroke();
+  // Signature Line
+  doc.moveTo(395, bottomY + 45).lineTo(540, bottomY + 45).lineWidth(1).strokeColor(THEME.border).stroke();
   
-  doc.fillColor(THEME.primary).fontSize(16).font('Helvetica-Bold').text('Cocoveera', 380, bottomY + 25, { align: 'center', width: 150 });
-  
-  doc.fillColor(THEME.textLight).fontSize(7).font('Helvetica')
-     .text('Company Seal', 380, bottomY + 55, { align: 'center', width: 150 })
-     .text('Generated By Cocoveera ERP System', 380, bottomY + 65, { align: 'center', width: 150 });
+  doc.fillColor(THEME.textLight).fontSize(8).font('Helvetica')
+     .text('Company Seal', 380, bottomY + 50, { align: 'center', width: 175 })
+     .text('Generated By Cocoveera ERP System', 380, bottomY + 62, { align: 'center', width: 175 });
      
   generateFooter(doc);
 }

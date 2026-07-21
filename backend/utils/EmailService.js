@@ -87,7 +87,8 @@ export const sendRegistrationOTP = async (to, otp) => {
 
 export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary, pdfBuffer) => {
   const shortOrderId = orderId.toString().slice(-8).toUpperCase();
-  const subject = `Order Confirmation & Invoice - Order #${shortOrderId}`;
+  const invoiceNum = orderSummary.invoiceNumber || `INV-${shortOrderId}`;
+  const subject = `Tax Invoice & Order Confirmation - ${invoiceNum}`;
   
   const orderDate = orderSummary.orderDate || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   
@@ -96,142 +97,232 @@ export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary
     const diff = formattedPhone.length - 10;
     formattedPhone = '+' + formattedPhone.substring(0, diff) + ' ' + formattedPhone.substring(diff);
   }
+
+  const curr = orderSummary.currency === 'INR' ? '₹' : (orderSummary.currency === 'EUR' ? '€' : (orderSummary.currency === 'GBP' ? '£' : '$'));
   
   let itemsHtml = '';
   if (orderSummary.items && orderSummary.items.length > 0) {
-    itemsHtml = orderSummary.items.map(item => `
-      <tr>
-        <td style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #374151; font-size: 11px; font-weight: 500;">
-          ${item.productName || 'Product'}
+    itemsHtml = orderSummary.items.map((item, idx) => `
+      <tr style="background-color: ${idx % 2 === 0 ? '#F9FAFB' : '#FFFFFF'};">
+        <td style="padding: 10px 12px; font-size: 11px; color: #374151; font-weight: 500; border-bottom: 1px solid #E5E7EB;">
+          ${item.productName || item.name || 'Product'}
         </td>
-        <td align="center" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #6B7280; font-size: 11px;">${Math.round(item.pieces || item.quantity)}</td>
-        <td align="right" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #6B7280; font-size: 11px;">₹${(item.unitPrice || 0).toFixed(2)}</td>
-        <td align="right" style="padding: 15px 0; border-bottom: 1px solid #E5E7EB; color: #111827; font-size: 11px; font-weight: bold;">₹${((item.unitPrice || 0) * (item.pieces || item.quantity)).toFixed(2)}</td>
+        <td style="padding: 10px 12px; font-size: 11px; color: #6B7280; border-bottom: 1px solid #E5E7EB;">
+          ${item.sku || 'COCO-ITEM'}
+        </td>
+        <td align="center" style="padding: 10px 12px; font-size: 11px; color: #6B7280; border-bottom: 1px solid #E5E7EB;">
+          ${(item.quantity || 1).toFixed ? (item.quantity || 1).toFixed(2) : (item.quantity || 1)}
+        </td>
+        <td align="right" style="padding: 10px 12px; font-size: 11px; color: #6B7280; border-bottom: 1px solid #E5E7EB;">
+          ${Math.round(item.pieces || item.quantity || 0).toLocaleString()}
+        </td>
+        <td align="right" style="padding: 10px 12px; font-size: 11px; color: #6B7280; border-bottom: 1px solid #E5E7EB;">
+          ${curr}${(item.unitPrice || item.price || 0).toFixed(2)}
+        </td>
+        <td align="right" style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #111827; border-bottom: 1px solid #E5E7EB;">
+          ${curr}${((item.unitPrice || item.price || 0) * (item.pieces || item.quantity || 1)).toFixed(2)}
+        </td>
       </tr>
     `).join('');
   }
 
+  const subtotal = orderSummary.subtotal || (orderSummary.items || []).reduce((acc, i) => acc + ((i.unitPrice || i.price || 0) * (i.pieces || i.quantity || 1)), 0);
+  const discount = orderSummary.discount || 0;
+  const shippingCharge = orderSummary.shippingCharge || 0;
+  const tax = orderSummary.tax || 0;
+  const totalAmount = orderSummary.totalAmount || (subtotal - discount + shippingCharge + tax);
+
   const htmlContent = `
     <!DOCTYPE html>
     <html>
-      <body style="font-family: 'Inter', Arial, sans-serif; background-color: #F4F6F8; padding: 20px; margin: 0;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+      <body style="font-family: Arial, Helvetica, sans-serif; background-color: #F3F4F6; padding: 20px; margin: 0; color: #374151;">
+        <div style="max-width: 700px; margin: 0 auto; background-color: #FFFFFF; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); padding: 25px;">
           
-          <!-- Header section -->
-          <div style="background-color: #ffffff; padding: 30px; text-align: center; border-top: 5px solid #2E7D32;">
-            <img src="https://res.cloudinary.com/dyrfiop7d/image/upload/v1780933359/cocoveera_assets/logo.png" alt="COCOVEERA Logo" style="max-height: 60px; margin: 0 auto; display: block;" />
-            <h1 style="color: #2E7D32; font-family: 'Times New Roman', Times, serif; font-size: 28px; margin: 10px 0 0 0; letter-spacing: 2px;">COCOVEERA</h1>
-            <div style="width: 40px; height: 3px; background-color: #D4AF37; margin: 8px auto;"></div>
-            <p style="color: #D4AF37; font-style: italic; font-size: 12px; margin: 5px 0 0 0; font-family: 'Times New Roman', Times, serif;">Premium Coconut Substrates & Lab Quality Testing</p>
-          </div>
-          
-          <hr style="border: 0; border-top: 1px solid #eaeaea; margin-top: 0; margin-bottom: 10px;">
-          
-          <!-- Status Banner Box -->
-          <div style="background-color: #05966915; border: 1px solid #05966940; border-radius: 8px; padding: 20px; margin: 20px;">
-            <h2 style="color: #059669; font-size: 18px; margin: 0 0 10px 0;">✅ Order Confirmed!</h2>
-            <p style="color: #4B5563; font-size: 12px; margin: 0; line-height: 1.5;">Dear ${orderSummary.customerName || 'Customer'}, your order status has been updated. We are preparing it for shipment.</p>
-          </div>
-          
-          <!-- 3 Info Cards -->
-          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding: 0 20px; margin-bottom: 30px;">
+          <!-- Header Section -->
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 15px;">
             <tr>
-              <td width="31%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
-                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">ORDER ID</div>
-                <div style="font-size: 12px; font-weight: bold; color: #111827;">#${shortOrderId}</div>
+              <td width="60%" valign="top">
+                <table border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td valign="middle" style="padding-right: 12px;">
+                      <img src="https://res.cloudinary.com/dyrfiop7d/image/upload/v1780933359/cocoveera_assets/logo.png" alt="COCOVEERA Logo" style="max-height: 55px; display: block;" />
+                    </td>
+                    <td valign="middle">
+                      <h1 style="color: #2E7D32; font-size: 24px; font-weight: bold; margin: 0; line-height: 1.1;">Cocoveera</h1>
+                      <p style="color: #6B7280; font-style: italic; font-size: 11px; margin: 4px 0 0 0;">Premium Coir substrates exports and Quality testing</p>
+                    </td>
+                  </tr>
+                </table>
               </td>
-              <td width="3%"></td>
-              <td width="31%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
-                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">ORDER DATE</div>
-                <div style="font-size: 11px; font-weight: bold; color: #111827;">${orderDate}</div>
-              </td>
-              <td width="3%"></td>
-              <td width="32%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
-                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">PAYMENT</div>
-                <div style="font-size: 12px; font-weight: bold; color: #111827;">${orderSummary.paymentMethod || 'COD'}</div>
+              <td width="40%" align="right" valign="top">
+                <h2 style="color: #2E7D32; font-size: 22px; font-weight: bold; margin: 0 0 8px 0; text-transform: uppercase;">TAX INVOICE</h2>
+                <table border="0" cellpadding="2" cellspacing="0" style="font-size: 11px; color: #374151;">
+                  <tr>
+                    <td align="right" style="font-weight: bold; padding-right: 5px;">Invoice Number:</td>
+                    <td align="right" style="color: #111827;">${invoiceNum}</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="font-weight: bold; padding-right: 5px;">Invoice Date:</td>
+                    <td align="right" style="color: #111827;">${orderDate}</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="font-weight: bold; padding-right: 5px;">Order Number:</td>
+                    <td align="right" style="color: #111827;">${shortOrderId}</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="font-weight: bold; padding-right: 5px;">Status:</td>
+                    <td align="right" style="color: #2E7D32; font-weight: bold;">${(orderSummary.paymentStatus || 'PAID').toUpperCase()}</td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>
           
-          <!-- Shipping Dates Cards -->
-          ${(orderSummary.shippingDate || orderSummary.estimatedDeliveryDate) ? `
-          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="padding: 0 20px; margin-bottom: 30px;">
+          <div style="border-top: 2px solid #2E7D32; margin-bottom: 20px;"></div>
+          
+          <!-- Company & Customer Info Section -->
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; font-size: 11px;">
             <tr>
-              <td width="48%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
-                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">SHIPPING DATE</div>
-                <div style="font-size: 12px; font-weight: bold; color: #111827;">${orderSummary.shippingDate ? new Date(orderSummary.shippingDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBD'}</div>
+              <td width="48%" valign="top">
+                <h3 style="color: #2E7D32; font-size: 12px; font-weight: bold; margin: 0 0 6px 0; text-transform: uppercase;">FROM:</h3>
+                <div style="font-weight: bold; color: #111827; font-size: 12px; margin-bottom: 4px;">COCOVEERA</div>
+                <div style="color: #4B5563; line-height: 1.5;">
+                  96/1, Vikas Layout, Kalluri Nagar,<br>
+                  Anna Nagar, Peelamedu,<br>
+                  Coimbatore, Tamil Nadu – 641004<br><br>
+                  <strong>GST:</strong> 33OOTPK6234P1ZV<br>
+                  <strong>Contact:</strong> +91 63834 69877, +91 95972 93490<br>
+                  <strong>Email:</strong> servicedesk@cocoveera.com<br>
+                  <strong>Web:</strong> www.cocoveera.com
+                </div>
               </td>
               <td width="4%"></td>
-              <td width="48%" style="border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px; background: #FAFAFA;">
-                <div style="font-size: 9px; font-weight: bold; color: #6B7280; margin-bottom: 4px; text-transform: uppercase;">EST. DELIVERY</div>
-                <div style="font-size: 12px; font-weight: bold; color: #111827;">${orderSummary.estimatedDeliveryDate ? new Date(orderSummary.estimatedDeliveryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBD'}</div>
+              <td width="48%" valign="top">
+                <h3 style="color: #2E7D32; font-size: 12px; font-weight: bold; margin: 0 0 6px 0; text-transform: uppercase;">BILL TO / SHIP TO:</h3>
+                <div style="font-weight: bold; color: #111827; font-size: 12px; margin-bottom: 4px;">${orderSummary.customerName || 'Customer'}</div>
+                <div style="color: #4B5563; line-height: 1.5;">
+                  ${orderSummary.shippingAddress?.street || orderSummary.shippingAddress?.addressLine || 'Address not provided'}<br>
+                  ${orderSummary.shippingAddress?.city || ''}${orderSummary.shippingAddress?.state ? `, ${orderSummary.shippingAddress.state}` : ''} ${orderSummary.shippingAddress?.zip || orderSummary.shippingAddress?.postalCode || ''}<br>
+                  ${orderSummary.shippingAddress?.country || ''}<br><br>
+                  ${orderSummary.customerEmail ? `<strong>Email:</strong> ${orderSummary.customerEmail}<br>` : ''}
+                  ${formattedPhone ? `<strong>Contact:</strong> ${formattedPhone}` : ''}
+                </div>
               </td>
             </tr>
           </table>
-          ` : ''}
           
-          <!-- Order Details Table -->
-          <div style="padding: 0 20px;">
-            <h3 style="font-size: 15px; color: #111827; margin: 0 0 15px 0;">Order Details</h3>
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 0;">
-              <thead>
-                <tr>
-                  <th align="left" style="font-size: 10px; font-weight: bold; color: #6B7280; text-transform: uppercase; padding: 10px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB;">PRODUCT</th>
-                  <th align="center" style="font-size: 10px; font-weight: bold; color: #6B7280; text-transform: uppercase; padding: 10px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB;">QTY</th>
-                  <th align="right" style="font-size: 10px; font-weight: bold; color: #6B7280; text-transform: uppercase; padding: 10px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB;">PRICE</th>
-                  <th align="right" style="font-size: 10px; font-weight: bold; color: #6B7280; text-transform: uppercase; padding: 10px 0; border-top: 1px solid #E5E7EB; border-bottom: 1px solid #E5E7EB;">SUBTOTAL</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsHtml}
-              </tbody>
-            </table>
-            <div style="background-color: #F9FAFB; padding: 15px; text-align: right; border-radius: 0 0 6px 6px; margin-bottom: 30px;">
-              <span style="font-size: 12px; font-weight: bold; color: #4B5563; margin-right: 15px;">Grand Total:</span>
-              <span style="font-size: 16px; font-weight: 900; color: #059669;">₹${(orderSummary.totalAmount || 0).toFixed(2)}</span>
-            </div>
-          </div>
+          <div style="border-top: 1px solid #E5E7EB; margin-bottom: 20px;"></div>
           
-          <!-- Shipping and Seal -->
-          <div style="padding: 0 20px; margin-bottom: 30px;">
-            <table border="0" cellpadding="0" cellspacing="0" width="100%">
-              <tr>
-                <td width="55%" valign="top">
-                  <h3 style="font-size: 14px; color: #111827; margin: 0 0 10px 0;">Shipping Destination</h3>
-                  <div style="border: 1px solid #E5E7EB; border-radius: 8px; padding: 15px; background: #FAFAFA;">
-                    <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #111827;">${orderSummary.customerName || 'Customer'}</p>
-                    <p style="margin: 0 0 8px 0; font-size: 11px; color: #6B7280; line-height: 1.5;">
-                      ${orderSummary.shippingAddress?.street || orderSummary.shippingAddress?.addressLine || 'Address not provided'}<br>
-                      ${orderSummary.shippingAddress?.city || ''}, ${orderSummary.shippingAddress?.state || ''} - ${orderSummary.shippingAddress?.zip || orderSummary.shippingAddress?.postalCode || ''}<br>
-                      ${orderSummary.shippingAddress?.country || ''}
-                    </p>
-                    ${formattedPhone ? `<p style="margin: 0; font-size: 11px; color: #4B5563; font-weight: 500;">📞 ${formattedPhone}</p>` : ''}
-                  </div>
-                </td>
-                <td width="5%"></td>
-                <td width="40%" valign="middle" align="center">
-                  <!-- Dynamic Seal with Double Border -->
-                  <table align="right" border="0" cellpadding="0" cellspacing="0" style="margin-top: 10px;">
-                    <tr>
-                      <td style="border: 3px solid #059669; border-radius: 50%; padding: 4px;">
-                        <table border="0" cellpadding="0" cellspacing="0" style="border: 2px dashed #059669; border-radius: 50%; width: 130px; height: 130px;">
-                          <tr>
-                            <td align="center" valign="middle">
-                              <div style="color: #059669; font-size: 14px; letter-spacing: 4px; line-height: 1; margin-bottom: 8px;">★ ★ ★</div>
-                              <div style="color: #059669; font-weight: 900; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-family: Arial, sans-serif; margin-bottom: 5px;">CONFIRMED</div>
-                              <div style="color: #059669; font-size: 8px; font-weight: bold; font-family: Arial, sans-serif; margin-bottom: 8px; letter-spacing: 0.5px;">${orderDate.toUpperCase()}</div>
-                              <div style="color: #059669; font-size: 14px; letter-spacing: 4px; line-height: 1;">★ ★ ★</div>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
+          <!-- Logistics & Shipping Boxes -->
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 25px;">
+            <tr>
+              <td width="48%" valign="top" style="background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 4px; padding: 12px;">
+                <h4 style="color: #2E7D32; font-size: 11px; font-weight: bold; margin: 0 0 8px 0; text-transform: uppercase;">EXPORT LOGISTICS</h4>
+                <table border="0" cellpadding="2" cellspacing="0" width="100%" style="font-size: 10px; color: #4B5563;">
+                  <tr><td><strong>Container Type:</strong></td><td align="right">${orderSummary.containerType || '20 ft'}</td></tr>
+                  <tr><td><strong>Total Containers:</strong></td><td align="right">${(orderSummary.totalContainers || 1).toFixed ? (orderSummary.totalContainers || 1).toFixed(2) : 1}</td></tr>
+                  <tr><td><strong>Total Pieces:</strong></td><td align="right">${Math.round(orderSummary.totalPieces || 0).toLocaleString()}</td></tr>
+                  <tr><td><strong>Estimated Weight:</strong></td><td align="right">${(orderSummary.estimatedWeight || 0).toLocaleString()} KG</td></tr>
+                  <tr><td><strong>Estimated Volume:</strong></td><td align="right">${(orderSummary.estimatedVolume || 0).toFixed(2)} CBM</td></tr>
+                </table>
+              </td>
+              <td width="4%"></td>
+              <td width="48%" valign="top" style="background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 4px; padding: 12px;">
+                <h4 style="color: #2E7D32; font-size: 11px; font-weight: bold; margin: 0 0 8px 0; text-transform: uppercase;">SHIPPING INFORMATION</h4>
+                <table border="0" cellpadding="2" cellspacing="0" width="100%" style="font-size: 10px; color: #4B5563;">
+                  <tr><td><strong>Shipping Method:</strong></td><td align="right">${orderSummary.shippingMethod || 'Sea Freight'}</td></tr>
+                  <tr><td><strong>Origin Port:</strong></td><td align="right">${orderSummary.portOfLoading || 'Origin Port'}</td></tr>
+                  <tr><td><strong>Destination Port:</strong></td><td align="right">${orderSummary.portOfDischarge || 'Destination Port'}</td></tr>
+                  <tr><td><strong>Incoterms:</strong></td><td align="right">${orderSummary.incoterms || 'FOB'}</td></tr>
+                  <tr><td><strong>Transit Time:</strong></td><td align="right">${orderSummary.transitTime || 'Standard ETA'}</td></tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+          
+          <!-- Product Table -->
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #2E7D32; color: #FFFFFF; font-size: 10px; text-transform: uppercase;">
+                <th align="left" style="padding: 8px 12px;">Product Name</th>
+                <th align="left" style="padding: 8px 12px;">SKU</th>
+                <th align="center" style="padding: 8px 12px;">Containers</th>
+                <th align="right" style="padding: 8px 12px;">Total Pieces</th>
+                <th align="right" style="padding: 8px 12px;">Unit Price</th>
+                <th align="right" style="padding: 8px 12px;">Subtotal</th>
               </tr>
-            </table>
-          </div>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
           
+          <!-- Summary Section -->
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 25px;">
+            <tr>
+              <td width="50%"></td>
+              <td width="50%" align="right">
+                <table border="0" cellpadding="4" cellspacing="0" width="100%" style="font-size: 11px; color: #374151;">
+                  <tr>
+                    <td align="right" style="font-weight: bold;">Items Total:</td>
+                    <td align="right" width="100">${curr}${subtotal.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="font-weight: bold;">Discount:</td>
+                    <td align="right" style="color: #2E7D32;">${curr}${discount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="font-weight: bold;">Delivery Charges:</td>
+                    <td align="right">${curr}${shippingCharge.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="font-weight: bold;">Handling Charges:</td>
+                    <td align="right">${curr}0.00</td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="font-weight: bold;">Tax / GST:</td>
+                    <td align="right">${curr}${tax.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="border-top: 1px solid #E5E7EB; padding: 2px 0;"></td>
+                  </tr>
+                  <tr>
+                    <td align="right" style="font-size: 13px; font-weight: bold; color: #2E7D32;">GRAND TOTAL:</td>
+                    <td align="right" style="font-size: 13px; font-weight: bold; color: #2E7D32;">${curr}${totalAmount.toFixed(2)}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+          
+          <!-- Payment Info & Signature -->
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 25px; font-size: 11px;">
+            <tr>
+              <td width="50%" valign="top">
+                <h4 style="color: #2E7D32; font-size: 11px; font-weight: bold; margin: 0 0 8px 0; text-transform: uppercase;">PAYMENT INFORMATION</h4>
+                <table border="0" cellpadding="2" cellspacing="0" style="color: #4B5563; font-size: 10px;">
+                  <tr><td><strong>Method:</strong></td><td style="padding-left: 10px;">${orderSummary.paymentMethod || 'Card / Wire'}</td></tr>
+                  <tr><td><strong>Transaction Ref:</strong></td><td style="padding-left: 10px;">${orderSummary.transactionId || 'N/A'}</td></tr>
+                  <tr><td><strong>Paid Date:</strong></td><td style="padding-left: 10px;">${orderSummary.paymentDate || orderDate}</td></tr>
+                  <tr><td><strong>Status:</strong></td><td style="padding-left: 10px; color: #2E7D32; font-weight: bold;">${(orderSummary.paymentStatus || 'PAID').toUpperCase()}</td></tr>
+                </table>
+              </td>
+              <td width="50%" align="center" valign="top">
+                <h4 style="color: #374151; font-size: 11px; font-weight: bold; margin: 0 0 25px 0; text-transform: uppercase;">AUTHORIZED SIGNATURE</h4>
+                <div style="border-bottom: 1px solid #D1D5DB; width: 180px; margin: 0 auto 6px auto;"></div>
+                <div style="font-size: 9px; color: #6B7280;">Company Seal</div>
+                <div style="font-size: 9px; color: #6B7280; font-style: italic;">Generated By Cocoveera ERP System</div>
+              </td>
+            </tr>
+          </table>
+          
+          <!-- Footer Bar -->
+          <div style="border-top: 2px solid #2E7D32; padding-top: 12px; text-align: center; font-size: 10px;">
+            <div style="color: #2E7D32; font-weight: bold; font-size: 12px; margin-bottom: 4px;">Thank You For Choosing Cocoveera</div>
+            <div style="color: #6B7280; margin-bottom: 2px;">Verification: team@cocoveera.com | Support: servicedesk@cocoveera.com</div>
+            <div style="color: #6B7280;">Website: www.cocoveera.com</div>
+          </div>
+
         </div>
       </body>
     </html>

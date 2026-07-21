@@ -43,7 +43,7 @@ const TermsConditions = () => {
     {
       icon: <HelpCircle className="w-6 h-6 text-[#D4A843]" />,
       title: "5. Contact Us",
-      content: "In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at support@cocoveera.com."
+      content: "In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at supportdesk@cocoveera.com."
     }
   ];
 

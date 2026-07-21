@@ -125,7 +125,7 @@ const generateInvoicePdf = (order, user) => {
       doc
         .fillColor('#666666')
         .fontSize(10)
-        .text('Thank you for your business. For any queries, please contact support@cocoveera.com', 50, doc.y, { align: 'center' });
+        .text('Thank you for your business. For any queries, please contact servicedesk@cocoveera.com', 50, doc.y, { align: 'center' });
 
       doc.end();
     } catch (error) {

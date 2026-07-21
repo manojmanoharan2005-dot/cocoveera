@@ -213,7 +213,7 @@ const productionSteps = [
     num: '06',
     icon: Truck,
     title: 'Export',
-    desc: 'Containerized shipments dispatched from Cochin port to 50+ countries worldwide.',
+    desc: 'Containerized shipments dispatched from Coimbatore to 50+ countries worldwide.',
   },
 ];
 
@@ -329,7 +329,7 @@ const Home = () => {
     "description": "Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export.",
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+91-94420-74766",
+      "telephone": "+91-63834-69877",
       "contactType": "Customer Service"
     }
   };

@@ -56,7 +56,7 @@ export default function AdminSettings() {
   // Platform Settings State
   const [settingsData, setSettingsData] = useState({
     siteName: 'Cocoveera Trade Platform',
-    supportEmail: 'support@cocoveera.com',
+    supportEmail: 'supportdesk@cocoveera.com',
     allowRegistrations: true,
     maintenanceMode: false,
     currency: 'USD',

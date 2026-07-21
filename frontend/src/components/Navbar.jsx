@@ -54,13 +54,13 @@ const Navbar = () => {
       >
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex justify-between items-center h-full">
           <div className="flex items-center gap-3 sm:gap-6 flex-wrap justify-center w-full sm:w-auto">
-            <a href="mailto:export@cocoveera.com" className="flex items-center gap-1.5 hover:text-green-200 transition-colors">
+            <a href="mailto:supportdesk@cocoveera.com" className="flex items-center gap-1.5 hover:text-green-200 transition-colors">
               <Mail className="w-3 h-3" />
-              export@cocoveera.com
+              supportdesk@cocoveera.com
             </a>
-            <a href="tel:+914842869900" className="flex items-center gap-1.5 hover:text-green-200 transition-colors">
+            <a href="tel:+916383469877" className="flex items-center gap-1.5 hover:text-green-200 transition-colors">
               <Phone className="w-3 h-3" />
-              +91 484 286 9900
+              +91 63834 69877
             </a>
           </div>
           <div className="hidden sm:flex items-center gap-1.5">
