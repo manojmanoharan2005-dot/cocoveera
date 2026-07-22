@@ -16,7 +16,8 @@ import {
   FileText,
   LogOut,
   ChevronRight,
-  Edit2
+  Edit2,
+  MessageSquare
 } from 'lucide-react';
 
 const MobileAccount = () => {
@@ -50,6 +51,7 @@ const MobileAccount = () => {
 
   const menuItems = [
     { name: 'My Orders', icon: Package, path: '/orders' },
+    { name: 'My Quotes', icon: MessageSquare, path: '/quotes' },
     { name: 'Shipping Address', icon: MapPin, path: '/address' },
 
     { name: 'Notifications', icon: Bell, path: '/notifications' },

@@ -68,6 +68,7 @@ const Profile = lazy(() => import('./pages/account/Profile'));
 import ProductView from './pages/account/ProductView';
 const Invoices = lazy(() => import('./pages/account/Invoices'));
 const Quotes = lazy(() => import('./pages/account/Quotes'));
+const QuoteDetails = lazy(() => import('./pages/account/QuoteDetails'));
 const Notifications = lazy(() => import('./pages/account/Notifications'));
 const PaymentHistory = lazy(() => import('./pages/account/PaymentHistory'));
 const CustomerTestingReports = lazy(() => import('./pages/account/CustomerTestingReports'));
@@ -319,6 +320,7 @@ function AppContent() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/quotes" element={<Quotes />} />
+          <Route path="/quotes/:id" element={<QuoteDetails />} />
           <Route path="/payments" element={<PaymentHistory />} />
           <Route path="/testing-reports" element={<CustomerTestingReports />} />
           <Route path="/notifications" element={<Notifications />} />

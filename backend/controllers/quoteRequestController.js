@@ -4,6 +4,11 @@
  */
 import QuoteRequest from '../models/QuoteRequest.js';
 import Product from '../models/Product.js';
+import Quote from '../models/Quote.js';
+import User from '../models/User.js';
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
 import {
   sendAdminQuoteRequestEmail,
   sendRFQApprovalEmail,
@@ -50,6 +55,63 @@ export const submitQuoteRequest = async (req, res) => {
       address: address || '',
       quantity: quantity || '',
       status: 'NEW',
+    });
+
+    // Create corresponding Quote
+    let userId = null;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        userId = decoded.id;
+      } catch (err) {
+        // Ignore JWT verification errors for public route
+      }
+    }
+    
+    if (!userId && email) {
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (user) {
+        userId = user._id;
+      }
+    }
+
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const day = String(new Date().getDate()).padStart(2, '0');
+    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+    const quoteNumber = `QT-${year}${month}${day}-${randomSuffix}`;
+
+    await Quote.create({
+      quoteNumber,
+      rfq: quoteRequest._id,
+      user: userId || null,
+      email: email ? email.toLowerCase() : '',
+      status: 'RFQ Submitted',
+      quoteDate: new Date(),
+      productDetails: {
+        productId: productId,
+        name: productObj.name,
+        quantity: quantity || '',
+        unitType: 'Tons',
+        specifications: {
+          ph: '',
+          ec: '',
+          moisture: '',
+          notes: requirementNote || '',
+        },
+      },
+      containerDetails: {
+        containerSize: containerSize || '20 FT',
+        quantity: 1,
+      },
+      currency: 'USD',
+      exchangeRate: 83.33,
+      convertedAmount: 0,
+      originalInrAmount: 0,
+      shippingTerms: '',
+      estimatedProductionTime: '',
+      commercialNotes: requirementNote || '',
     });
 
     // Send email to admin
@@ -178,6 +240,15 @@ export const updateQuoteRequestStatus = async (req, res) => {
     quoteRequest.status = status;
     await quoteRequest.save();
 
+    // Update matching Quote status if state transitions
+    let quoteStatus = 'Pending Review';
+    if (status === 'CLOSED') {
+      quoteStatus = 'Quote Rejected';
+    } else if (status === 'NEW') {
+      quoteStatus = 'RFQ Submitted';
+    }
+    await Quote.updateOne({ rfq: quoteRequest._id }, { status: quoteStatus });
+
     res.status(200).json({
       success: true,
       message: 'Status updated successfully.',
@@ -303,6 +374,80 @@ export const approveQuoteRequest = async (req, res) => {
 
     await quoteRequest.save();
 
+    // 1. Save PDF file if attached
+    let pdfFilePath = '';
+    let savedPdfName = '';
+    if (pdfAttachment && pdfAttachment.content) {
+      try {
+        const uploadDir = path.join('uploads', 'quotes');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        savedPdfName = `quote_${quoteRequest._id}_${Date.now()}.pdf`;
+        pdfFilePath = path.join(uploadDir, savedPdfName);
+        fs.writeFileSync(pdfFilePath, Buffer.from(pdfAttachment.content, 'base64'));
+      } catch (pdfErr) {
+        console.error('Failed to save PDF on server:', pdfErr);
+      }
+    }
+
+    // 2. Find or create Quote in database
+    let quote = await Quote.findOne({ rfq: quoteRequest._id });
+    if (!quote) {
+      // Find User by email
+      const user = await User.findOne({ email: quoteRequest.email.toLowerCase() });
+      const year = new Date().getFullYear();
+      const month = String(new Date().getMonth() + 1).padStart(2, '0');
+      const day = String(new Date().getDate()).padStart(2, '0');
+      const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+      const quoteNumber = `QT-${year}${month}${day}-${randomSuffix}`;
+      
+      quote = new Quote({
+        quoteNumber,
+        rfq: quoteRequest._id,
+        user: user ? user._id : null,
+        email: quoteRequest.email.toLowerCase(),
+        productDetails: {
+          productId: quoteRequest.product,
+          name: quoteRequest.product?.name || 'Coco Substrates',
+          quantity: quoteRequest.quantity || '',
+          unitType: 'Tons',
+          specifications: {
+            ph: '',
+            ec: '',
+            moisture: '',
+            notes: quoteRequest.requirementNote || '',
+          },
+        },
+        containerDetails: {
+          containerSize: quoteRequest.containerSize || '20 FT',
+          quantity: 1,
+        },
+      });
+    }
+
+    // 3. Calculate INR base values
+    const rates = { INR: 1, USD: 0.012, EUR: 0.011, GBP: 0.0094 };
+    const rateToInr = 1 / (rates[currency] || 1);
+    const calculatedInrAmount = Number(price) * rateToInr;
+
+    quote.status = 'Quote Approved';
+    quote.quoteDate = new Date();
+    quote.validUntil = new Date(Date.now() + (Number(validity) || 15) * 24 * 60 * 60 * 1000);
+    quote.currency = currency;
+    quote.exchangeRate = rateToInr;
+    quote.convertedAmount = Number(price);
+    quote.originalInrAmount = calculatedInrAmount;
+    quote.shippingTerms = shippingTerms;
+    quote.estimatedProductionTime = deliveryDate || '';
+    quote.commercialNotes = additionalNotes || '';
+    if (pdfFilePath) {
+      quote.pdfPath = pdfFilePath;
+      quote.pdfUrl = `/api/quotes/${quote._id}/view-pdf`;
+    }
+
+    await quote.save();
+
     res.status(200).json({
       success: true,
       message: 'Quote approved successfully and email sent.',
@@ -341,6 +486,7 @@ export const rejectQuoteRequest = async (req, res) => {
       updatedBy: req.user?._id,
     });
 
+    await Quote.updateOne({ rfq: quoteRequest._id }, { status: 'Quote Rejected' });
     await quoteRequest.save();
 
     res.status(200).json({
@@ -384,6 +530,7 @@ export const requestInfoQuoteRequest = async (req, res) => {
       updatedBy: req.user?._id,
     });
 
+    await Quote.updateOne({ rfq: quoteRequest._id }, { status: 'Pending Review' });
     await quoteRequest.save();
 
     res.status(200).json({

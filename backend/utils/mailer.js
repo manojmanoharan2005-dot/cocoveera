@@ -285,3 +285,27 @@ export const sendRFQInfoRequestedEmail = async (toEmail, toName, productName, me
     { email: adminReplyEmail, name: 'Cocoveera Export Team' }
   );
 };
+
+export const sendQuoteRevisionRequestEmail = async (customerEmail, customerName, quoteNumber, comment) => {
+  const adminEmail = process.env.ADMIN_EMAIL || 'coirsystemadmin@gmail.com';
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+      <h2 style="color: #2E7D32;">Revision Requested for Quote #${quoteNumber}</h2>
+      <p>Customer <strong>${customerName}</strong> (${customerEmail}) has submitted a revision request for quotation <strong>#${quoteNumber}</strong>.</p>
+      <div style="background-color: #f5f5f5; border-left: 4px solid #2E7D32; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <strong style="display: block; margin-bottom: 5px;">Customer Comments:</strong>
+        <p style="margin: 0; white-space: pre-wrap; font-style: italic;">"${comment}"</p>
+      </div>
+      <p>Please review these feedback notes and submit an updated proposal/PDF via the admin portal.</p>
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
+      <p style="font-size: 11px; color: #888;">This is an automated system notification from Cocoveera Export Portal.</p>
+    </div>
+  `;
+  return sendEmail(
+    `[Revision Requested] Quote #${quoteNumber}`,
+    htmlContent,
+    [{ email: adminEmail, name: 'Cocoveera Admin' }],
+    'COCOVEERA Export Desk',
+    'supportdesk@cocoveera.com'
+  );
+};

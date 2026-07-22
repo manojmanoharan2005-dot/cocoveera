@@ -15,7 +15,8 @@ import {
   FileText,
   HelpCircle,
   ShieldCheck,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -30,6 +31,7 @@ export const Sidebar = ({
   const menuItems = [
     { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
     { name: 'Orders', label: 'My Orders', icon: Package, path: '/orders' },
+    { name: 'Quotes', label: 'My Quotes', icon: MessageSquare, path: '/quotes' },
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/wishlist' },
     { name: 'Testing Reports', label: 'Quality Testing', icon: FileText, path: '/testing-reports', isSoon: true },
     { name: 'Addresses', label: 'Address', icon: MapPin, path: '/address' },

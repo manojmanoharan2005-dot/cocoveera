@@ -1,18 +1,443 @@
-/**
- * File: frontend/src/pages/account/Quotes.jsx
- * Purpose: React page component representing the Quotes view.
- */
-import React from 'react';
-import { MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Eye, Download, FileText, MessageSquare, X, Package, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Quotes() {
+import { apiClient, useAuth } from '../../context/AuthContext';
+import { convertCurrency } from '../../utils/currencyConverter';
+import SEO from '../../components/SEO';
+
+// Inline PDF Modal Viewer Component
+const PDFModal = ({ isOpen, onClose, pdfUrl, quoteNumber }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 h-full">
-      <div className="flex items-center space-x-3 mb-6">
-        <MessageSquare className="w-8 h-8 text-[#2E7D32]" />
-        <h1 className="text-2xl font-bold text-stone-900">B2B Quotes</h1>
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+        />
+        {/* Content */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col border border-stone-200 overflow-hidden relative z-10"
+        >
+          {/* Header */}
+          <div className="bg-stone-50 border-b border-stone-200 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="text-[#2E7D32] w-5 h-5" />
+              <h3 className="font-extrabold text-stone-900 text-sm sm:text-base">
+                Quotation Viewer - #{quoteNumber}
+              </h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-stone-400 hover:text-stone-600 transition-colors p-1.5 rounded-full hover:bg-stone-100 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          {/* Iframe */}
+          <div className="flex-grow bg-stone-100 relative">
+            <iframe
+              src={pdfUrl}
+              className="w-full h-full border-none"
+              title={`Quote_${quoteNumber}`}
+            />
+          </div>
+        </motion.div>
       </div>
-      <p className="text-stone-500">Your requested quotes will appear here. (Coming soon in Phase 2)</p>
+    </AnimatePresence>
+  );
+};
+
+const Quotes = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // State Management
+  const [quotes, setQuotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Filtering and Searching
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(5);
+
+  // PDF Viewer Modal
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [activePdfUrl, setActivePdfUrl] = useState('');
+  const [activeQuoteNum, setActiveQuoteNum] = useState('');
+
+  const fetchQuotes = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await apiClient.get('/quotes/myquotes', {
+        params: {
+          page: currentPage,
+          limit,
+          search: searchQuery,
+          status: statusFilter,
+          dateFilter,
+        },
+      });
+
+      if (res.data.success) {
+        setQuotes(res.data.data);
+        setTotalPages(res.data.pagination.pages || 1);
+      }
+    } catch (err) {
+      console.error('Failed to load quotes:', err);
+      setError(err.response?.data?.message || 'Failed to load your quotations. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuotes();
+  }, [currentPage, statusFilter, dateFilter]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    fetchQuotes();
+  };
+
+  const handleDownloadPDF = async (quoteId, quoteNumber) => {
+    try {
+      const res = await apiClient.get(`/quotes/${quoteId}/download-pdf`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Quotation_${quoteNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      console.error('Failed to download PDF:', err);
+      alert('Could not download PDF file. Please verify with admin.');
+    }
+  };
+
+  const handleViewPDF = (quoteId, quoteNumber) => {
+    // Generate secure inline view URL
+    const token = sessionStorage.getItem('cocoveera_token');
+    const viewUrl = `${apiClient.defaults.baseURL}/quotes/${quoteId}/view-pdf?token=${token}`;
+    setActivePdfUrl(viewUrl);
+    setActiveQuoteNum(quoteNumber);
+    setPdfModalOpen(true);
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'Quote Approved':
+        return 'bg-green-100 text-green-800 border border-green-200';
+      case 'Quote Rejected':
+        return 'bg-red-100 text-red-800 border border-red-200';
+      case 'Quote Expired':
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+      case 'Quote Accepted':
+        return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'Pending Review':
+        return 'bg-orange-100 text-orange-800 border border-orange-200';
+      case 'RFQ Submitted':
+      default:
+        return 'bg-amber-100 text-amber-800 border border-amber-200';
+    }
+  };
+
+  return (
+    <div className="w-full space-y-6 pb-20">
+      <SEO title="Your Quotations - Cocoveera" />
+      
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-extrabold text-stone-900 mb-2 font-poppins">My Quotes</h1>
+          <p className="text-stone-500 font-semibold text-sm">View, track, and accept your export quotations.</p>
+        </div>
+
+        {/* Filters Controls */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          {/* Date Filter */}
+          <select
+            value={dateFilter}
+            onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(1); }}
+            className="bg-white border border-stone-300 rounded-lg py-2 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] cursor-pointer"
+          >
+            <option value="all">All Time</option>
+            <option value="30">Last 30 Days</option>
+            <option value="180">Past 6 Months</option>
+            <option value="365">Past Year</option>
+          </select>
+
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            className="bg-white border border-stone-300 rounded-lg py-2 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] cursor-pointer"
+          >
+            <option value="">All Statuses</option>
+            <option value="RFQ Submitted">RFQ Submitted</option>
+            <option value="Pending Review">Pending Review</option>
+            <option value="Quote Approved">Quote Approved</option>
+            <option value="Quote Rejected">Quote Rejected</option>
+            <option value="Quote Expired">Quote Expired</option>
+            <option value="Quote Accepted">Quote Accepted</option>
+          </select>
+
+          {/* Search Box */}
+          <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search quotes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-stone-300 rounded-lg py-2 pl-9 pr-4 text-sm font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] transition-all"
+            />
+          </form>
+        </div>
+      </div>
+
+      {/* Loading Spinner */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center min-h-[50vh] bg-white/90 backdrop-blur-md rounded-[24px] border border-stone-200 shadow-sm max-w-5xl mx-auto">
+          <div className="w-12 h-12 border-4 border-stone-200 border-t-[#2E7D32] rounded-full animate-spin mb-4"></div>
+          <p className="text-stone-700 font-bold font-poppins text-lg">Loading your quotes...</p>
+        </div>
+      ) : error ? (
+        <div className="p-6 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3 text-red-700 max-w-5xl mx-auto shadow-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-extrabold text-sm uppercase tracking-wider mb-1">API Error</h4>
+            <p className="text-sm font-semibold">{error}</p>
+            <button
+              onClick={fetchQuotes}
+              className="mt-3 bg-red-100 hover:bg-red-200 text-red-800 font-bold text-xs px-3 py-1.5 rounded-lg border border-red-200 transition"
+            >
+              Retry Connection
+            </button>
+          </div>
+        </div>
+      ) : quotes.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full bg-white rounded-[24px] p-16 md:p-24 text-center border border-stone-200 shadow-sm flex flex-col items-center justify-center min-h-[300px]"
+        >
+          <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-100">
+            <FileText className="w-10 h-10 text-[#2E7D32]" />
+          </div>
+          <h3 className="text-2xl font-extrabold text-stone-900 mb-2 font-poppins">No quotations available.</h3>
+          <p className="text-stone-500 font-semibold mb-6">
+            {searchQuery || statusFilter || dateFilter !== 'all'
+              ? "We couldn't find any quotes matching your query filters."
+              : "You haven't requested any quotations yet."}
+          </p>
+          {(searchQuery || statusFilter || dateFilter !== 'all') && (
+            <button
+              onClick={() => { setSearchQuery(''); setStatusFilter(''); setDateFilter('all'); setCurrentPage(1); }}
+              className="px-8 py-3.5 bg-white text-[#2E7D32] border border-[#2E7D32] font-bold rounded-xl hover:bg-stone-50 transition-all cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
+        </motion.div>
+      ) : (
+        /* Quotes Card List */
+        <div className="space-y-6">
+          {quotes.map((quote, idx) => {
+            const hasPdf = !!quote.pdfUrl;
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                key={quote._id}
+                className="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              >
+                {/* Header (Flipkart/Amazon style) */}
+                <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3.5 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
+                  <div className="flex flex-wrap gap-6 md:gap-12">
+                    <div className="flex flex-col">
+                      <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Quoted On</span>
+                      <span className="font-bold text-stone-700">
+                        {new Date(quote.quoteDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Price Quoted</span>
+                      <span className="font-black text-stone-900 text-sm sm:text-base">
+                        {quote.convertedAmount > 0
+                          ? convertCurrency(quote.originalInrAmount, quote.currency || user?.currency || 'USD').formatted
+                          : 'Under Review'}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Ship To</span>
+                      <span className="font-bold text-stone-700">{user?.name || 'Customer'}</span>
+                    </div>
+
+                    {quote.validUntil && quote.status === 'Quote Approved' && (
+                      <div className="flex flex-col">
+                        <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Valid Until</span>
+                        <span className="font-bold text-red-600">
+                          {new Date(quote.validUntil).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col md:items-end justify-center">
+                    <span className="uppercase text-[9px] font-black text-stone-400 tracking-widest mb-0.5">Quote #{quote.quoteNumber}</span>
+                    <div className="flex gap-2.5 text-[#007185] font-semibold mt-0.5 text-xs">
+                      <span
+                        className="hover:text-[#C45500] hover:underline cursor-pointer"
+                        onClick={() => navigate(`/quotes/${quote._id}`)}
+                      >
+                        View Details
+                      </span>
+                      {hasPdf && (
+                        <>
+                          <span className="text-stone-300">|</span>
+                          <span
+                            className="hover:text-[#C45500] hover:underline cursor-pointer"
+                            onClick={() => handleViewPDF(quote._id, quote.quoteNumber)}
+                          >
+                            View PDF
+                          </span>
+                          <span className="text-stone-300">|</span>
+                          <span
+                            className="hover:text-[#C45500] hover:underline cursor-pointer"
+                            onClick={() => handleDownloadPDF(quote._id, quote.quoteNumber)}
+                          >
+                            Download PDF
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div className="flex gap-5">
+                    {/* Icon container */}
+                    <div className="w-16 h-16 bg-[#2E7D32]/5 rounded-xl border border-[#2E7D32]/10 flex items-center justify-center shrink-0">
+                      <FileText className="w-7 h-7 text-[#2E7D32]" />
+                    </div>
+                    {/* Product Summary details */}
+                    <div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${getStatusBadgeClass(quote.status)}`}>
+                        {quote.status}
+                      </span>
+                      <h4 className="text-base font-extrabold text-stone-800 mt-2">
+                        {quote.productDetails?.name || 'Coco Coir Export Substrate'}
+                      </h4>
+                      <p className="text-xs text-stone-500 font-semibold mt-1">
+                        Quantity: {quote.productDetails?.quantity || quote.containerDetails?.quantity || 'N/A'} {quote.productDetails?.unitType || 'Tons'} &bull; Container: {quote.containerDetails?.containerSize || '20 FT FCL'}
+                      </p>
+                      {quote.shippingTerms && (
+                        <p className="text-[11px] text-stone-400 mt-0.5">Shipping Terms: <strong className="text-stone-600">{quote.shippingTerms}</strong></p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions buttons column */}
+                  <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto">
+                    <button
+                      onClick={() => navigate(`/quotes/${quote._id}`)}
+                      className="px-5 py-2.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] text-white text-xs font-black rounded-xl border border-transparent shadow-sm hover:shadow-md transition-all cursor-pointer text-center w-full md:w-44 flex items-center justify-center gap-1.5"
+                    >
+                      <Eye className="w-4 h-4" /> View Details
+                    </button>
+                    {hasPdf && (
+                      <div className="flex gap-2 w-full">
+                        <button
+                          onClick={() => handleViewPDF(quote._id, quote.quoteNumber)}
+                          className="flex-1 px-3 py-2 bg-white hover:bg-stone-50 text-stone-800 text-xs font-bold rounded-xl border border-stone-300 shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-stone-500" /> View PDF
+                        </button>
+                        <button
+                          onClick={() => handleDownloadPDF(quote._id, quote.quoteNumber)}
+                          className="flex-1 px-3 py-2 bg-white hover:bg-stone-50 text-stone-800 text-xs font-bold rounded-xl border border-stone-300 shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Download className="w-3.5 h-3.5 text-stone-500" /> Download
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center space-x-2 pt-4">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 disabled:opacity-50 hover:bg-stone-50 cursor-pointer"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="text-sm font-bold text-stone-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 disabled:opacity-50 hover:bg-stone-50 cursor-pointer"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* PDF Modal Container */}
+      <PDFModal
+        isOpen={pdfModalOpen}
+        onClose={() => setPdfModalOpen(false)}
+        pdfUrl={activePdfUrl}
+        quoteNumber={activeQuoteNum}
+      />
     </div>
   );
-}
+};
+
+export default Quotes;
