@@ -15,9 +15,9 @@ import { sendQuoteRevisionRequestEmail, sendQuoteResponseEmail } from '../utils/
 // Helper to check and update quote expiration status dynamically
 const checkQuoteExpiration = async (quote) => {
   const now = new Date();
-  if (quote.status === 'Quote Approved' && quote.validUntil && quote.validUntil < now) {
+  if (quote.status === 'Quote Approved' && quote.validUntil && new Date(quote.validUntil) < now) {
+    await Quote.updateOne({ _id: quote._id }, { status: 'Quote Expired' });
     quote.status = 'Quote Expired';
-    await quote.save();
   }
   return quote;
 };
@@ -75,18 +75,25 @@ export const getMyQuotes = async (req, res) => {
       }
     }
 
-    // Process auto-expiration checks for all matching documents first
-    const quotesToCheck = await Quote.find(query);
-    for (const q of quotesToCheck) {
-      await checkQuoteExpiration(q);
-    }
+    // Process auto-expiration checks for all matching documents in a single query
+    const now = new Date();
+    await Quote.updateMany(
+      {
+        ...query,
+        status: 'Quote Approved',
+        validUntil: { $lt: now }
+      },
+      { status: 'Quote Expired' }
+    );
 
     const total = await Quote.countDocuments(query);
     const quotes = await Quote.find(query)
+      .select('quoteNumber rfq user email status rejectionReason quoteDate validUntil currency exchangeRate originalInrAmount convertedAmount shippingTerms estimatedProductionTime commercialNotes pdfUrl productDetails containerDetails shippingAddress')
       .populate('productDetails.productId', 'name images price slug')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -111,7 +118,8 @@ export const getQuoteDetails = async (req, res) => {
   try {
     const quote = await Quote.findById(req.params.id)
       .populate('productDetails.productId', 'name images price slug description')
-      .populate('rfq');
+      .populate('rfq')
+      .lean();
 
     if (!quote) {
       return res.status(404).json({ success: false, message: 'Quotation not found.' });

@@ -11,6 +11,19 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import axios from 'axios';
 import { API_URL } from './utils/config';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Configure QueryClient with the optimized performance settings requested
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,      // 5 minutes stale time
+      cacheTime: 15 * 60 * 1000,     // 15 minutes cache time
+      refetchOnWindowFocus: false,   // Disable refetching on window focus
+      keepPreviousData: true,        // Show cached data while loading new
+    },
+  },
+});
 
 // Prefetching removed for optimization
 import Home from './pages/Home';
@@ -476,15 +489,17 @@ function AppContent() {
 
 function App() {
   return (
-    <HelmetProvider>
-      <Router>
-        <AuthProvider>
-          <AdminAuthProvider>
-            <AppContent />
-          </AdminAuthProvider>
-        </AuthProvider>
-      </Router>
-    </HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <Router>
+          <AuthProvider>
+            <AdminAuthProvider>
+              <AppContent />
+            </AdminAuthProvider>
+          </AuthProvider>
+        </Router>
+      </HelmetProvider>
+    </QueryClientProvider>
   );
 }
 

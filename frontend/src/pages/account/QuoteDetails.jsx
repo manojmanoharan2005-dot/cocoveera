@@ -1,73 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, Download, MessageSquare, MapPin, CheckCircle, Package, FileText, AlertCircle, RefreshCw, X, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Eye, Download, MessageSquare, MapPin, CheckCircle, Package, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import SEO from '../../components/SEO';
 
-// Inline PDF Modal Viewer Component
-const PDFModal = ({ isOpen, onClose, pdfUrl, quoteNumber }) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
-        />
-        {/* Content */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col border border-stone-200 overflow-hidden relative z-10"
-        >
-          {/* Header */}
-          <div className="bg-stone-50 border-b border-stone-200 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="text-[#2E7D32] w-5 h-5" />
-              <h3 className="font-extrabold text-stone-900 text-sm sm:text-base">
-                Quotation Document - #{quoteNumber}
-              </h3>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-stone-400 hover:text-stone-600 transition-colors p-1.5 rounded-full hover:bg-stone-100 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          {/* Iframe */}
-          <div className="flex-grow bg-stone-100 relative">
-            <iframe
-              src={pdfUrl}
-              className="w-full h-full border-none"
-              title={`Quote_${quoteNumber}`}
-            />
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
-};
+// Lazy loaded components
+const PDFModal = React.lazy(() => import('../../components/common/PDFModal'));
+const HistoryTimeline = React.lazy(() => import('../../components/common/HistoryTimeline'));
 
 // Success Creation Modal
 const SuccessModal = ({ isOpen, orderId, onClose }) => {
@@ -78,7 +20,7 @@ const SuccessModal = ({ isOpen, orderId, onClose }) => {
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[210] flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 text-center animate-slide-up space-y-6">
         <div className="w-16 h-16 bg-green-50 text-[#2E7D32] rounded-full flex items-center justify-center mx-auto shadow-inner">
-          <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
+          <CheckCircle size={32} className="stroke-[2.5]" />
         </div>
         <div className="space-y-2">
           <h3 className="text-lg font-poppins font-black text-stone-900 leading-tight">Quotation Accepted Successfully!</h3>
@@ -118,44 +60,39 @@ const QuoteDetails = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // State Management
-  const [quote, setQuote] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
-
-  // Modals
+  // Modals & Action loading
   const [revisionModalOpen, setRevisionModalOpen] = useState(false);
   const [revisionComment, setRevisionComment] = useState('');
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
 
-  // Accept & Reject Modals
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState('');
 
-  const fetchQuoteDetails = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const res = await apiClient.get(`/quotes/${id}`);
-      if (res.data.success) {
-        setQuote(res.data.data);
-      }
-    } catch (err) {
-      console.error('Failed to load quote details:', err);
-      setError(err.response?.data?.message || 'Failed to fetch quote details.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [actionLoading, setActionLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorState, setErrorState] = useState('');
 
-  useEffect(() => {
-    fetchQuoteDetails();
-  }, [id]);
+  // React Query Fetch (Automatic cache, staleTime 5m, cacheTime 15m)
+  const { data: quote, isLoading, error, refetch } = useQuery(
+    ['quote', id],
+    async () => {
+      setErrorState('');
+      const res = await apiClient.get(`/quotes/${id}`);
+      return res.data.data;
+    },
+    {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 15 * 60 * 1000,
+      onError: (err) => {
+        console.error('Failed to load quote details:', err);
+        setErrorState(err.response?.data?.message || 'Failed to fetch quote details.');
+      }
+    }
+  );
 
   const handleDownloadPDF = async () => {
     if (!quote?._id) return;
@@ -178,8 +115,6 @@ const QuoteDetails = () => {
 
   const handleViewPDF = () => {
     if (!quote?._id) return;
-    const token = sessionStorage.getItem('cocoveera_token');
-    const viewUrl = `${apiClient.defaults.baseURL}/quotes/${quote._id}/view-pdf?token=${token}`;
     setPdfModalOpen(true);
   };
 
@@ -187,7 +122,7 @@ const QuoteDetails = () => {
     e.preventDefault();
     try {
       setActionLoading(true);
-      setError('');
+      setErrorState('');
       setSuccessMsg('');
       const res = await apiClient.put(`/quotes/${id}/reject`, {
         rejectionReason: rejectReason.trim(),
@@ -195,11 +130,11 @@ const QuoteDetails = () => {
       if (res.data.success) {
         setRejectModalOpen(false);
         setSuccessMsg('Quotation rejected successfully.');
-        fetchQuoteDetails();
+        refetch();
       }
     } catch (err) {
       console.error('Failed to reject quote:', err);
-      setError(err.response?.data?.message || 'Failed to reject quotation.');
+      setErrorState(err.response?.data?.message || 'Failed to reject quotation.');
     } finally {
       setActionLoading(false);
     }
@@ -208,18 +143,18 @@ const QuoteDetails = () => {
   const handleAcceptSubmit = async () => {
     try {
       setActionLoading(true);
-      setError('');
+      setErrorState('');
       setSuccessMsg('');
       const res = await apiClient.put(`/quotes/${id}/accept`);
       if (res.data.success) {
         setSuccessOrderId(res.data.orderId);
         setAcceptModalOpen(false);
         setSuccessModalOpen(true);
-        fetchQuoteDetails();
+        refetch();
       }
     } catch (err) {
       console.error('Failed to accept quote:', err);
-      setError(err.response?.data?.message || 'Failed to accept quotation.');
+      setErrorState(err.response?.data?.message || 'Failed to accept quotation.');
       setAcceptModalOpen(false);
     } finally {
       setActionLoading(false);
@@ -235,7 +170,7 @@ const QuoteDetails = () => {
 
     try {
       setActionLoading(true);
-      setError('');
+      setErrorState('');
       setSuccessMsg('');
       const res = await apiClient.post(`/quotes/${id}/revision`, {
         comment: revisionComment.trim(),
@@ -244,11 +179,11 @@ const QuoteDetails = () => {
         setSuccessMsg('✅ Revision request submitted. Our team has been notified.');
         setRevisionModalOpen(false);
         setRevisionComment('');
-        fetchQuoteDetails();
+        refetch();
       }
     } catch (err) {
       console.error('Failed to request revision:', err);
-      setError(err.response?.data?.message || 'Failed to submit revision request.');
+      setErrorState(err.response?.data?.message || 'Failed to submit revision request.');
     } finally {
       setActionLoading(false);
     }
@@ -273,7 +208,7 @@ const QuoteDetails = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] bg-white rounded-2xl border border-stone-200 shadow-sm p-12 max-w-5xl mx-auto">
         <div className="w-12 h-12 border-4 border-stone-200 border-t-[#2E7D32] rounded-full animate-spin mb-4"></div>
@@ -282,13 +217,13 @@ const QuoteDetails = () => {
     );
   }
 
-  if (error && !quote) {
+  if (errorState && !quote) {
     return (
       <div className="p-6 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3 text-red-700 max-w-5xl mx-auto shadow-sm">
         <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
         <div>
           <h4 className="font-extrabold text-sm uppercase tracking-wider mb-1">Error Loading Quote</h4>
-          <p className="text-sm font-semibold">{error}</p>
+          <p className="text-sm font-semibold">{errorState}</p>
           <button
             onClick={() => navigate('/quotes')}
             className="mt-3 bg-white text-stone-700 font-bold text-xs px-3 py-1.5 rounded-lg border border-stone-300 transition hover:bg-stone-50"
@@ -342,10 +277,10 @@ const QuoteDetails = () => {
         </div>
       )}
 
-      {error && (
+      {errorState && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2 text-red-800 text-xs font-bold shadow-sm">
           <AlertCircle size={18} className="text-red-600 shrink-0" />
-          <span>{error}</span>
+          <span>{errorState}</span>
         </div>
       )}
 
@@ -497,17 +432,13 @@ const QuoteDetails = () => {
               <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">
                 Revision History
               </h3>
-              <div className="space-y-3.5">
-                {quote.revisionRequests.map((rev, idx) => (
-                  <div key={idx} className="bg-stone-50 p-3.5 rounded-xl border border-stone-150 text-xs">
-                    <div className="flex justify-between font-bold text-stone-400 mb-1">
-                      <span>Revision #{idx + 1}</span>
-                      <span>{new Date(rev.requestedAt).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-stone-700 italic font-semibold">"{rev.comment}"</p>
-                  </div>
-                ))}
-              </div>
+              
+              <Suspense fallback={<div className="h-20 bg-stone-100 rounded-xl animate-pulse" />}>
+                <HistoryTimeline 
+                  type="revisions" 
+                  data={quote.revisionRequests} 
+                />
+              </Suspense>
             </div>
           )}
 
@@ -592,7 +523,7 @@ const QuoteDetails = () => {
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-stone-200 animate-slide-up">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-stone-900">Request Revision</h2>
-              <button onClick={() => setRevisionModalOpen(false)} className="text-stone-400 hover:text-stone-600 p-1 rounded-full">
+              <button onClick={() => setRevisionModalOpen(false)} className="text-stone-400 hover:text-stone-655 p-1 rounded-full">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -635,7 +566,7 @@ const QuoteDetails = () => {
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-stone-200 animate-slide-up">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-extrabold text-stone-900">Reject Quotation Proposal</h3>
-              <button onClick={() => setRejectModalOpen(false)} className="text-stone-400 hover:text-stone-650 p-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
+              <button onClick={() => setRejectModalOpen(false)} className="text-stone-400 hover:text-stone-655 p-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -679,7 +610,7 @@ const QuoteDetails = () => {
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-stone-200 animate-slide-up space-y-4">
             <div className="flex justify-between items-center mb-1">
               <h3 className="text-base font-extrabold text-stone-900">Accept Quotation Proposal</h3>
-              <button onClick={() => setAcceptModalOpen(false)} className="text-stone-400 hover:text-stone-650 p-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
+              <button onClick={() => setAcceptModalOpen(false)} className="text-stone-400 hover:text-stone-655 p-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -730,12 +661,15 @@ const QuoteDetails = () => {
       )}
 
       {/* PDF Modal Viewer Container */}
-      <PDFModal
-        isOpen={pdfModalOpen}
-        onClose={() => setPdfModalOpen(false)}
-        pdfUrl={pdfViewUrl}
-        quoteNumber={quote.quoteNumber}
-      />
+      <Suspense fallback={null}>
+        <PDFModal
+          isOpen={pdfModalOpen}
+          onClose={() => setPdfModalOpen(false)}
+          pdfUrl={pdfViewUrl}
+          quoteNumber={quote.quoteNumber}
+          title="Quotation Viewer"
+        />
+      </Suspense>
 
       {/* SUCCESS ORDER REDIRECT MODAL */}
       <SuccessModal

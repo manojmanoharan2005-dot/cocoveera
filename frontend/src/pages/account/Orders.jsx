@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Eye, Download, Truck, RotateCcw, XCircle, Package } from 'lucide-react';
+import { Search, Eye, Download, Truck, RotateCcw, Package, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { FixedSizeList as List } from 'react-window';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
@@ -9,17 +11,77 @@ import ImageWithFallback from '../../components/common/ImageWithFallback';
 import RecommendedProducts from '../../components/common/RecommendedProducts';
 import SEO from '../../components/SEO';
 
+// Lazy load common PDFModal component for inline invoice preview
+const PDFModal = React.lazy(() => import('../../components/common/PDFModal'));
+
+// Animated skeleton screen for perceived performance
+const OrdersSkeleton = () => (
+  <div className="space-y-6">
+    {[...Array(3)].map((_, idx) => (
+      <div key={idx} className="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm animate-pulse border-l-4 border-l-stone-200">
+        {/* Skeleton Header */}
+        <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-4 flex flex-col md:flex-row justify-between gap-4">
+          <div className="flex gap-6 md:gap-12">
+            <div className="flex flex-col space-y-1.5">
+              <div className="h-2 bg-stone-200 rounded w-16" />
+              <div className="h-3.5 bg-stone-300 rounded w-24" />
+            </div>
+            <div className="flex flex-col space-y-1.5">
+              <div className="h-2 bg-stone-200 rounded w-10" />
+              <div className="h-3.5 bg-stone-300 rounded w-20" />
+            </div>
+            <div className="flex flex-col space-y-1.5">
+              <div className="h-2 bg-stone-200 rounded w-12" />
+              <div className="h-3.5 bg-stone-300 rounded w-24" />
+            </div>
+          </div>
+          <div className="flex flex-col space-y-1.5 md:items-end">
+            <div className="h-2 bg-stone-200 rounded w-24" />
+            <div className="h-3.5 bg-stone-300 rounded w-32" />
+          </div>
+        </div>
+        {/* Skeleton Body */}
+        <div className="p-4 md:p-6 space-y-6">
+          <div className="h-5 bg-stone-300 rounded w-1/4" />
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-200 rounded-lg" />
+            <div className="flex-grow space-y-2.5">
+              <div className="h-4 bg-stone-300 rounded w-3/4" />
+              <div className="h-3 bg-stone-200 rounded w-1/4" />
+              <div className="h-8.5 bg-stone-200 rounded-full w-32 mt-4" />
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 const Orders = () => {
   const navigate = useNavigate();
   const { user, fetchProfile } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filtering & Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState('all');
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [limit] = useState(5);
+
+  // Search input & debounce
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Cancel Modal State
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelCustomReason, setCancelCustomReason] = useState('');
+
+  // Inline PDF invoice preview state
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [activePdfUrl, setActivePdfUrl] = useState('');
+  const [activeOrderNum, setActiveOrderNum] = useState('');
+  
+  const [errorState, setErrorState] = useState('');
 
   const cancellationReasons = [
     'Ordered by mistake',
@@ -31,29 +93,68 @@ const Orders = () => {
     'Other'
   ];
 
-  const fetchOrders = async () => {
-    try {
-      const resOrders = await apiClient.get('/orders/myorders');
-      if (resOrders.data.success) setOrders(resOrders.data.data);
-    } catch (err) {
-      console.error('Failed to fetch data:', err);
-    } finally {
-      setLoading(false);
+  // 300ms Debounce search input
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setCurrentPage(1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
+
+  // React Query Fetch (Automatic cache, staleTime 5m, cacheTime 15m)
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    ['orders', currentPage, dateFilter, debouncedSearch],
+    async () => {
+      setErrorState('');
+      const res = await apiClient.get('/orders/myorders', {
+        params: {
+          page: currentPage,
+          limit,
+          search: debouncedSearch,
+          dateFilter,
+        }
+      });
+      return res.data;
+    },
+    {
+      keepPreviousData: true,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 15 * 60 * 1000,
+      onError: (err) => {
+        console.error('Failed to fetch orders:', err);
+        setErrorState(err.response?.data?.message || 'Failed to load your orders.');
+      }
     }
+  );
+
+  const orders = data?.data || [];
+  const totalPages = data?.pagination?.pages || 1;
+
+  const handlePreviewInvoice = (orderId, orderNumber) => {
+    if (!orderId) return;
+    const token = sessionStorage.getItem('cocoveera_token');
+    const viewUrl = `${apiClient.defaults.baseURL}/orders/${orderId}/invoice?token=${token}`;
+    setActivePdfUrl(viewUrl);
+    setActiveOrderNum(orderNumber);
+    setPdfModalOpen(true);
   };
 
-  React.useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const handleDownloadInvoice = async (orderId) => {
+  const handleDownloadInvoice = async (orderId, orderNumber) => {
     if (!orderId) return;
     try {
       const response = await apiClient.get(`/orders/${orderId}/invoice`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      window.open(url, '_blank');
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Invoice_${orderNumber || orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
     } catch (error) {
       console.error('Failed to download invoice:', error);
       alert('Failed to download invoice. Please try again later.');
@@ -87,7 +188,7 @@ const Orders = () => {
       if (res.data.success) {
         setIsCancelModalOpen(false);
         setOrderToCancel(null);
-        fetchOrders();
+        refetch();
       }
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to cancel order');
@@ -110,39 +211,178 @@ const Orders = () => {
     }
   };
 
-  const filteredOrders = orders.filter(order => {
-    const search = searchQuery.toLowerCase();
-    const matchId = order._id.toLowerCase().includes(search);
-    const matchProduct = order.items.some(item => 
-      (item.product?.name || '').toLowerCase().includes(search)
-    );
-    const matchesSearch = matchId || matchProduct;
-
-    let matchesDate = true;
-    if (dateFilter !== 'all') {
-      const orderDate = new Date(order.createdAt || Date.now());
-      const diffTime = Math.abs(new Date() - orderDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      matchesDate = diffDays <= parseInt(dateFilter);
+  // Reusable Single Order Card Item
+  const OrderCardItem = React.memo(({ order, idx }) => {
+    const status = order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Pending';
+    let displayStatus = status;
+    if (status === 'Cancelled' && order.paymentStatus === 'failed') {
+      displayStatus = 'Cancelled (Payment Failed)';
     }
 
-    return matchesSearch && matchesDate;
+    const shortOrderId = (order.orderNumber || order._id).slice(-8).toUpperCase();
+
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: idx * 0.05 }}
+        className={`bg-white rounded-xl border overflow-hidden relative shadow-sm hover:shadow-md transition-shadow ${
+          status === 'Delivered' ? 'border-l-4 border-l-[#067D62] border-stone-200' : 
+          status === 'Cancelled' ? 'border-l-4 border-l-red-500 border-stone-200' : 
+          'border-l-4 border-l-[#F59E0B] border-stone-200'
+        }`}
+      >
+        {/* Card Header (Amazon/Flipkart Style) */}
+        <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
+          <div className="flex gap-6 md:gap-12">
+            <div className="flex flex-col">
+              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order placed</span>
+              <span className="font-semibold text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Total</span>
+              <span className="font-semibold text-stone-700">{convertCurrency((order.totalAmount || order.total || 0), user?.currency || 'INR').formatted}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Ship to</span>
+              <span className="font-semibold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">{user?.name || 'Customer'}</span>
+            </div>
+          </div>
+          <div className="flex flex-col md:items-end">
+            <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order # {shortOrderId}</span>
+            <div className="flex gap-2 text-[#007185] font-semibold mt-0.5 text-xs">
+              <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => navigate(`/orders/${order._id}`)}>Order details</span>
+              <span className="text-stone-300">|</span>
+              <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}>Invoice Preview</span>
+              <span className="text-stone-300">|</span>
+              <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => handleDownloadInvoice(order._id, order.orderNumber || order._id)}>Download</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card Body - Products List */}
+        <div className="p-4 md:p-6 space-y-6">
+          {/* Status Banner */}
+          <div className="flex items-center gap-2">
+            <h3 className={`text-lg md:text-xl font-bold ${status === 'Delivered' ? 'text-[#067D62]' : status === 'Cancelled' ? 'text-red-700' : 'text-stone-900'}`}>
+              {displayStatus}
+            </h3>
+          </div>
+
+          {order.items.map((item, itemIdx) => (
+            <div key={itemIdx} className="flex flex-col md:flex-row gap-6">
+              {/* Product Image */}
+              <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
+                {item.product?.images?.[0] ? (
+                  <div className="w-full h-full relative p-1 overflow-hidden group">
+                    <ImageWithFallback src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" />
+                  </div>
+                ) : (
+                  <Package className="w-8 h-8 text-stone-300" />
+                )}
+              </div>
+              
+              {/* Product Details */}
+              <div className="flex-grow flex flex-col justify-start">
+                <h4 
+                  className="text-base font-bold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer line-clamp-2"
+                  onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}
+                >
+                  {item.product?.name || 'Unknown Product'}
+                </h4>
+                <div className="text-xs text-stone-500 mt-1 mb-2">Containers: {item.quantity}</div>
+                
+                <div className="mt-auto flex flex-wrap gap-2">
+                  {status !== 'Pending' && status !== 'Cancelled' && (
+                    <button onClick={() => navigate(`/track/${order._id}`)} className="px-3 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-semibold rounded-full border border-[#FCD200] shadow-sm transition-colors w-fit">
+                      Track package
+                    </button>
+                  )}
+                  
+                  {(status === 'Delivered' || status === 'Cancelled') && (
+                    <button onClick={() => handleReorder(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-800 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit flex items-center gap-1.5">
+                      <RotateCcw className="w-3.5 h-3.5" /> {status === 'Cancelled' ? 'Reorder' : 'Buy it again'}
+                    </button>
+                  )}
+                  
+                  {['Pending', 'Confirmed', 'Packed', 'Loaded'].includes(status) && (
+                    <button onClick={() => handleCancelClick(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-red-650 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit">
+                      Cancel items
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    );
   });
 
+  // Render Virtualized or Standard Orders List
+  const RenderOrdersList = () => {
+    if (orders.length === 0) {
+      return (
+        <div className="w-full bg-white rounded-[24px] p-16 md:p-24 text-center border border-stone-200 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+          <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-100">
+            <Package className="w-10 h-10 text-[#2E7D32]" />
+          </div>
+          <h3 className="text-2xl font-extrabold text-stone-900 mb-2">No Orders Found</h3>
+          <p className="text-stone-500 font-semibold mb-6">
+            {searchInput !== '' || dateFilter !== 'all' ? "We couldn't find any orders matching your criteria." : "You haven't placed any orders yet."}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 mt-2">
+            {(searchInput !== '' || dateFilter !== 'all') && (
+              <button 
+                onClick={() => { setSearchInput(''); setDateFilter('all'); }}
+                className="px-8 py-3.5 bg-white text-[#2E7D32] border border-[#2E7D32] font-bold rounded-xl hover:bg-stone-50 transition-all"
+              >
+                Clear Filters
+              </button>
+            )}
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="px-8 py-3.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-bold rounded-xl border border-transparent hover:shadow-lg hover:shadow-[#2E7D32]/30 transition-all"
+            >
+              Browse Marketplace
+            </button>
+          </div>
+        </div>
+      );
+    }
 
+    if (orders.length > 20) {
+      return (
+        <List
+          height={650}
+          itemCount={orders.length}
+          itemSize={360}
+          width="100%"
+        >
+          {({ index, style }) => (
+            <div style={{ ...style, paddingBottom: '20px' }}>
+              <OrderCardItem order={orders[index]} idx={index} />
+            </div>
+          )}
+        </List>
+      );
+    }
 
-  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-white/90 backdrop-blur-md rounded-[24px] border border-stone-200 shadow-sm max-w-5xl mx-auto">
-        <div className="w-12 h-12 border-4 border-stone-200 border-t-[#2E7D32] rounded-full animate-spin mb-4"></div>
-        <p className="text-stone-700 font-bold font-poppins text-lg">Loading your orders...</p>
+      <div className="space-y-6">
+        {orders.map((order, idx) => (
+          <OrderCardItem key={order._id} order={order} idx={idx} />
+        ))}
       </div>
     );
-  }
+  };
+
+  const showSkeleton = isLoading && orders.length === 0;
 
   return (
     <div className="w-full space-y-6 pb-20">
       <SEO title="Your Orders - Cocoveera" />
+      
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
         <div>
@@ -153,8 +393,8 @@ const Orders = () => {
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <select 
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="bg-white border border-stone-300 rounded-lg py-2 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] appearance-none cursor-pointer"
+            onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(1); }}
+            className="bg-white border border-stone-300 rounded-lg py-2 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] cursor-pointer"
           >
             <option value="all">All Time</option>
             <option value="30">Last 30 Days</option>
@@ -167,8 +407,8 @@ const Orders = () => {
             <input 
               type="text" 
               placeholder="Search all orders..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full bg-white border border-stone-300 rounded-lg py-2 pl-9 pr-4 text-sm font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] transition-all"
             />
           </div>
@@ -191,7 +431,7 @@ const Orders = () => {
                     value={reason} 
                     checked={cancelReason === reason} 
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="accent-red-600 w-4 h-4"
+                    className="accent-red-650 w-4 h-4"
                   />
                   <span className="text-sm text-stone-800 font-medium">{reason}</span>
                 </label>
@@ -228,152 +468,62 @@ const Orders = () => {
         </div>
       )}
 
+      {/* Orders List Area */}
+      {showSkeleton ? (
+        <OrdersSkeleton />
+      ) : errorState ? (
+        <div className="p-6 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3 text-red-700 max-w-5xl mx-auto shadow-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-extrabold text-sm uppercase tracking-wider mb-1">API Error</h4>
+            <p className="text-sm font-semibold">{errorState}</p>
+            <button
+              onClick={() => refetch()}
+              className="mt-3 bg-red-100 hover:bg-red-200 text-red-800 font-bold text-xs px-3 py-1.5 rounded-lg border border-red-200 transition"
+            >
+              Retry Connection
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <RenderOrdersList />
 
-
-      {/* Orders List */}
-      <div className="space-y-6">
-        {filteredOrders.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
-          >
-            <div className="w-full bg-white rounded-[24px] p-16 md:p-24 text-center border border-stone-200 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
-              <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-100">
-                <Package className="w-10 h-10 text-[#2E7D32]" />
-              </div>
-              <h3 className="text-2xl font-extrabold text-stone-900 mb-2">No Orders Found</h3>
-              <p className="text-stone-500 font-semibold mb-6">
-                {orders.length === 0 ? "You haven't placed any orders yet." : "We couldn't find any orders matching your criteria."}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mt-2">
-                {orders.length > 0 && (searchQuery !== '' || dateFilter !== 'all') && (
-                  <button 
-                    onClick={() => { setSearchQuery(''); setDateFilter('all'); }}
-                    className="px-8 py-3.5 bg-white text-[#2E7D32] border border-[#2E7D32] font-bold rounded-xl hover:bg-stone-50 transition-all hover:-translate-y-0.5"
-                  >
-                    Clear Filters
-                  </button>
-                )}
-                <button 
-                  onClick={() => navigate('/dashboard')}
-                  className="px-8 py-3.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] text-white font-bold rounded-xl border border-transparent hover:shadow-lg hover:shadow-[#2E7D32]/30 transition-all hover:-translate-y-0.5"
-                >
-                  Browse Marketplace
-                </button>
-              </div>
-            </div>
-            
-            <RecommendedProducts />
-          </motion.div>
-        ) : (
-          filteredOrders.map((order, idx) => {
-            const status = order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Pending';
-            let displayStatus = status;
-            if (status === 'Cancelled' && order.paymentStatus === 'failed') {
-              displayStatus = 'Cancelled (Payment Failed)';
-            }
-            
-            return (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                key={order._id} 
-                className={`bg-white rounded-xl border overflow-hidden relative shadow-sm hover:shadow-md transition-shadow ${
-                  status === 'Delivered' ? 'border-l-4 border-l-[#067D62] border-stone-200' : 
-                  status === 'Cancelled' ? 'border-l-4 border-l-red-500 border-stone-200' : 
-                  'border-l-4 border-l-[#F59E0B] border-stone-200'
-                }`}
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center space-x-2 pt-4">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 disabled:opacity-50 hover:bg-stone-50 cursor-pointer"
               >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="text-sm font-bold text-stone-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 disabled:opacity-50 hover:bg-stone-50 cursor-pointer"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
-
-                {/* Card Header (Amazon/Flipkart Style) */}
-                <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
-                  <div className="flex gap-6 md:gap-12">
-                    <div className="flex flex-col">
-                      <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order placed</span>
-                      <span className="font-semibold text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Total</span>
-                      <span className="font-semibold text-stone-700">{convertCurrency((order.totalAmount || order.total || 0), user?.currency || 'INR').formatted}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Ship to</span>
-                      <span className="font-semibold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">{user?.name || 'Customer'}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col md:items-end">
-                    <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order # {order._id.slice(-8).toUpperCase()}</span>
-                    <div className="flex gap-2 text-[#007185] font-semibold mt-0.5 text-xs">
-                      <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => navigate(`/orders/${order._id}`)}>Order details</span>
-                      <span className="text-stone-300">|</span>
-                      <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => handleDownloadInvoice(order._id)}>Invoice</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Body - Products List */}
-                <div className="p-4 md:p-6 space-y-6">
-                  {/* Status Banner */}
-                  <div className="flex items-center gap-2">
-                    <h3 className={`text-lg md:text-xl font-bold ${status === 'Delivered' ? 'text-[#067D62]' : status === 'Cancelled' ? 'text-red-700' : 'text-stone-900'}`}>
-                      {displayStatus}
-                    </h3>
-                  </div>
-
-                  {order.items.map((item, itemIdx) => (
-                    <div key={itemIdx} className="flex flex-col md:flex-row gap-6">
-                      {/* Product Image */}
-                      <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
-                        {item.product?.images?.[0] ? (
-                          <div className="w-full h-full relative p-1 overflow-hidden group">
-                            <ImageWithFallback src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" />
-                          </div>
-                        ) : (
-                          <Package className="w-8 h-8 text-stone-300" />
-                        )}
-                      </div>
-                      
-                      {/* Product Details */}
-                      <div className="flex-grow flex flex-col justify-start">
-                        <h4 
-                          className="text-base font-bold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer line-clamp-2"
-                          onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}
-                        >
-                          {item.product?.name || 'Unknown Product'}
-                        </h4>
-                        <div className="text-xs text-stone-500 mt-1 mb-2">Containers: {item.quantity}</div>
-                        
-                        <div className="mt-auto flex flex-wrap gap-2">
-                          {status !== 'Pending' && status !== 'Cancelled' && (
-                            <button onClick={() => navigate(`/track/${order._id}`)} className="px-3 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-semibold rounded-full border border-[#FCD200] shadow-sm transition-colors w-fit">
-                              Track package
-                            </button>
-                          )}
-                          
-                          {(status === 'Delivered' || status === 'Cancelled') && (
-                            <button onClick={() => handleReorder(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-800 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit flex items-center gap-1.5">
-                              <RotateCcw className="w-3.5 h-3.5" /> {status === 'Cancelled' ? 'Reorder' : 'Buy it again'}
-                            </button>
-                          )}
-                          
-                          {['Pending', 'Confirmed', 'Packed', 'Loaded'].includes(status) && (
-                            <button onClick={() => handleCancelClick(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-red-600 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit">
-                              Cancel items
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            );
-          })
-        )}
-      </div>
+      {/* Lazy Invoice PDF Viewer Modal */}
+      <Suspense fallback={null}>
+        <PDFModal
+          isOpen={pdfModalOpen}
+          onClose={() => setPdfModalOpen(false)}
+          pdfUrl={activePdfUrl}
+          quoteNumber={activeOrderNum}
+          title="Invoice Preview"
+        />
+      </Suspense>
 
       <div className="mt-16">
         <RecommendedProducts />

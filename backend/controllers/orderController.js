@@ -211,10 +211,50 @@ export const createOrder = async (req, res) => {
 // @access  Private
 export const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user.id })
-      .populate('items.product', 'name category price images')
-      .sort('-createdAt');
-    res.status(200).json({ success: true, count: orders.length, data: orders });
+    const { page = 1, limit = 10, search = '', dateFilter = 'all' } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    let query = { user: req.user.id };
+
+    // Apply search filter (orderNumber or productName)
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { orderNumber: { $regex: searchRegex } },
+        { 'items.productName': { $regex: searchRegex } }
+      ];
+    }
+
+    // Apply Date Range Filter
+    if (dateFilter && dateFilter !== 'all') {
+      const days = parseInt(dateFilter);
+      if (!isNaN(days)) {
+        const thresholdDate = new Date();
+        thresholdDate.setDate(thresholdDate.getDate() - days);
+        query.createdAt = { $gte: thresholdDate };
+      }
+    }
+
+    const total = await Order.countDocuments(query);
+    const orders = await Order.find(query)
+      .select('orderNumber items totalAmount currency paymentStatus orderStatus createdAt shippingAddress shippingDetails totalContainers totalPieces totalWeight totalVolume recommendedContainer')
+      .populate('items.product', 'name slug images price category')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      data: orders,
+      pagination: {
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+        currentPage: parseInt(page),
+        limit: parseInt(limit),
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -271,14 +311,16 @@ export const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email phone')
-      .populate('items.product', 'name category price images');
+      .populate('items.product', 'name category price images slug')
+      .lean();
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
     // Check if user is admin or the order belongs to the user
-    if (order.user._id.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'manager') {
+    const orderUserId = order.user?._id ? order.user._id.toString() : order.user?.toString();
+    if (orderUserId !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'manager') {
       return res.status(403).json({ success: false, message: 'Not authorized to view this order' });
     }
 

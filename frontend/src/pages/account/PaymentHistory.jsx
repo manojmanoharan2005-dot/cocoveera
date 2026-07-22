@@ -2,27 +2,26 @@
  * File: frontend/src/pages/account/PaymentHistory.jsx
  * Purpose: React page component representing the PaymentHistory view.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../context/AuthContext';
 
 export default function PaymentHistory() {
-  const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(null);
 
-  useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        const res = await apiClient.get('/payments/history');
-        if (res.data.success) setPayments(res.data.data);
-      } catch (err) {
-        console.error('Failed to fetch payments', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPayments();
-  }, []);
+  // React Query Fetch (Automatic cache, staleTime 5m, cacheTime 15m)
+  const { data: payments = [], isLoading: loading, refetch } = useQuery(
+    ['payments'],
+    async () => {
+      const res = await apiClient.get('/payments/history');
+      return res.data.data;
+    },
+    {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 15 * 60 * 1000,
+    }
+  );
 
   const requestRefund = async (paymentId) => {
     if (!confirm('Request refund for this payment?')) return;
@@ -30,7 +29,7 @@ export default function PaymentHistory() {
       setRequesting(paymentId);
       const res = await apiClient.post('/payments/refund', { paymentId, reason: 'Customer requested refund via UI' });
       if (res.data.success) {
-        setPayments(prev => prev.map(p => p._id === paymentId ? res.data.data : p));
+        refetch();
         alert('Refund requested');
       }
     } catch (err) {
@@ -41,11 +40,11 @@ export default function PaymentHistory() {
     }
   };
 
-  if (loading) return <div className="p-12 text-center text-stone-500 font-bold">Loading payments...</div>;
+  if (loading) return <div className="p-12 text-center text-stone-500 font-bold animate-pulse">Loading payments...</div>;
 
   return (
     <div className="w-full space-y-6">
-      <h1 className="text-2xl font-extrabold text-stone-900">Payment History</h1>
+      <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Payment History</h1>
       {payments.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 border border-stone-100 text-center text-stone-500 font-bold">No payments found</div>
       ) : (
