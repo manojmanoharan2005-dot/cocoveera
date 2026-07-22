@@ -55,7 +55,7 @@ export const Header = ({
     .slice(0, 2) || 'U';
 
   return (
-    <header className="w-full h-16 bg-white/95 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-40 px-2.5 sm:px-4 md:px-6 flex items-center justify-between gap-2 sm:gap-4 shadow-sm shadow-stone-100/80 select-none">
+    <header className="w-full h-16 bg-white/95 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-60 px-2.5 sm:px-4 md:px-6 flex items-center justify-between gap-2 sm:gap-4 shadow-sm shadow-stone-100/80 select-none">
       
       {/* Left: Brand Logo & Mobile Menu Toggle */}
       <div className="flex items-center gap-2 shrink-0">
@@ -63,7 +63,7 @@ export const Header = ({
           <button
             type="button"
             onClick={onMenuClick}
-            className="md:hidden p-1.5 -ml-1 text-stone-700 hover:bg-stone-100 rounded-xl transition-colors shrink-0"
+            className="lg:hidden p-1.5 -ml-1 text-stone-700 hover:bg-stone-100 rounded-xl transition-colors shrink-0"
             aria-label="Open Navigation Menu"
           >
             <Menu className="w-5.5 h-5.5 text-stone-700" />

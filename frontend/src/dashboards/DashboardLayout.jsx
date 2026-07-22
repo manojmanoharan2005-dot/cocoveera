@@ -2,10 +2,9 @@
  * File: frontend/src/dashboards/DashboardLayout.jsx
  * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import MobileBottomNav from '../components/MobileBottomNav';
@@ -15,17 +14,55 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('Featured');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
+  const drawerRef = useRef(null);
+  const lastActiveElement = useRef(null);
+
+  // Resize listener to close drawer and reset state
   useEffect(() => {
-    setMobileMenuOpen(false);
+    const handleResize = () => {
+      const desktop = window.innerWidth >= 1024;
+      setIsDesktop(desktop);
+      if (desktop) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close drawer on route change & browser back/forward
+  useEffect(() => {
+    setSidebarOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
-    if (mobileMenuOpen) {
+    const handlePopState = () => {
+      setSidebarOpen(false);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Escape key listener to close drawer
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Lock background scroll when drawer is open
+  useEffect(() => {
+    if (sidebarOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -33,7 +70,123 @@ export const DashboardLayout = () => {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [mobileMenuOpen]);
+  }, [sidebarOpen]);
+
+  // Accessibility focus restore & focus trap
+  useEffect(() => {
+    if (sidebarOpen) {
+      lastActiveElement.current = document.activeElement;
+      if (drawerRef.current) {
+        drawerRef.current.focus();
+      }
+    } else {
+      if (lastActiveElement.current) {
+        lastActiveElement.current.focus();
+      }
+    }
+  }, [sidebarOpen]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const handleFocusTrap = (e) => {
+      if (!drawerRef.current) return;
+      const focusableElements = drawerRef.current.querySelectorAll(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleFocusTrap);
+    return () => window.removeEventListener('keydown', handleFocusTrap);
+  }, [sidebarOpen]);
+
+  // Touch gesture support: Swipe left to close drawer
+  const touchStart = useRef({ x: 0, y: 0 });
+  const touchEnd = useRef({ x: 0, y: 0 });
+
+  const handleTouchStart = (e) => {
+    touchStart.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+    touchEnd.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+  };
+
+  const handleTouchMove = (e) => {
+    touchEnd.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+  };
+
+  const handleTouchEnd = () => {
+    const diffX = touchStart.current.x - touchEnd.current.x;
+    const diffY = touchStart.current.y - touchEnd.current.y;
+    // Swipe left (swipe from right to left to close the drawer)
+    if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+      setSidebarOpen(false);
+    }
+  };
+
+  // Edge swipe to open drawer from the left
+  useEffect(() => {
+    let edgeTouchStart = { x: 0, y: 0 };
+    let edgeTouchEnd = { x: 0, y: 0 };
+
+    const handleWindowTouchStart = (e) => {
+      if (sidebarOpen) return;
+      const touch = e.touches[0];
+      edgeTouchStart = { x: touch.clientX, y: touch.clientY };
+      edgeTouchEnd = { x: touch.clientX, y: touch.clientY };
+    };
+
+    const handleWindowTouchMove = (e) => {
+      if (sidebarOpen) return;
+      const touch = e.touches[0];
+      edgeTouchEnd = { x: touch.clientX, y: touch.clientY };
+    };
+
+    const handleWindowTouchEnd = () => {
+      if (sidebarOpen) return;
+      const diffX = edgeTouchEnd.x - edgeTouchStart.x;
+      const diffY = edgeTouchEnd.y - edgeTouchStart.y;
+      // Swipe right from screen edge (< 30px from left edge)
+      if (edgeTouchStart.x < 30 && diffX > 60 && Math.abs(diffX) > Math.abs(diffY)) {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('touchstart', handleWindowTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleWindowTouchMove, { passive: true });
+    window.addEventListener('touchend', handleWindowTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleWindowTouchStart);
+      window.removeEventListener('touchmove', handleWindowTouchMove);
+      window.removeEventListener('touchend', handleWindowTouchEnd);
+    };
+  }, [sidebarOpen]);
 
   const cartCount = user?.cart?.length || 0;
   const wishlistCount = user?.wishlist?.length || 0;
@@ -60,8 +213,22 @@ export const DashboardLayout = () => {
   const activeTab = getActiveTab();
 
   return (
-    <div className="min-h-screen text-[#1A1A1A] flex flex-col font-sans relative bg-stone-50">
-      <div className="relative z-10 flex flex-col flex-grow w-full">
+    <div className="h-screen flex text-[#1A1A1A] font-sans overflow-hidden bg-stone-50">
+      {/* Desktop Sidebar (Only rendered if on desktop breakpoint >= 1024px) */}
+      {isDesktop && (
+        <div className="p-4 sm:p-5 md:p-6 pr-0 shrink-0 h-screen flex flex-col justify-center">
+          <Sidebar
+            user={user}
+            activeTab={activeTab}
+            cartCount={cartCount}
+            wishlistCount={wishlistCount}
+            onLogoutClick={logout}
+          />
+        </div>
+      )}
+
+      {/* Main Right Side Area */}
+      <div className="flex-grow flex flex-col h-screen overflow-hidden min-w-0">
         <Header
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -72,66 +239,61 @@ export const DashboardLayout = () => {
           sortBy={sortBy}
           setSortBy={setSortBy}
           onFilterClick={() => setFilterDrawerOpen(true)}
-          onMenuClick={() => setMobileMenuOpen(true)}
+          onMenuClick={() => setSidebarOpen(true)}
         />
 
-        <div className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-5 md:py-6 flex gap-6 lg:gap-7 items-start relative">
-          <Sidebar
-            user={user}
-            activeTab={activeTab}
-            cartCount={cartCount}
-            wishlistCount={wishlistCount}
-            onLogoutClick={logout}
-          />
-
-          <main className="flex-grow w-full min-w-0 min-h-[70vh]">
-            <Outlet context={{
-              searchQuery,
-              setSearchQuery,
-              sortBy,
-              setSortBy,
-              filterDrawerOpen,
-              setFilterDrawerOpen,
-              user,
-              cartCount,
-              wishlistCount
-            }} />
-          </main>
-        </div>
+        <main className="flex-1 overflow-y-auto h-full px-4 sm:px-6 lg:px-8 py-4 sm:py-5 md:py-6">
+          <Outlet context={{
+            searchQuery,
+            setSearchQuery,
+            sortBy,
+            setSortBy,
+            filterDrawerOpen,
+            setFilterDrawerOpen,
+            user,
+            cartCount,
+            wishlistCount
+          }} />
+        </main>
       </div>
 
-      {/* Mobile Sidebar Overlay Drawer */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 z-[10000] md:hidden cursor-pointer"
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}
+      {/* Mobile Drawer (Only rendered if on mobile < 1024px) */}
+      {!isDesktop && (
+        <>
+          {/* Overlay */}
+          <div
+            className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ease-in-out ${
+              sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            }`}
+            onClick={() => setSidebarOpen(false)}
+          />
+
+          {/* Drawer Container */}
+          <div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation Menu"
+            tabIndex="-1"
+            className={`fixed top-0 left-0 h-screen w-80 max-w-[85vw] z-50 bg-[#F7FAF7] shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-in-out will-change-transform outline-none ${
+              sidebarOpen ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'
+            }`}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <Sidebar
+              user={user}
+              activeTab={activeTab}
+              cartCount={cartCount}
+              wishlistCount={wishlistCount}
+              onLogoutClick={logout}
+              isMobileDrawer={true}
+              onClose={() => setSidebarOpen(false)}
             />
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-              className="fixed top-0 left-0 bottom-0 z-[10001] w-[85%] max-w-[360px] h-screen h-[100vh] h-[100dvh] bg-[#F7FAF7] md:hidden shadow-2xl flex flex-col overflow-hidden"
-            >
-              <Sidebar
-                user={user}
-                activeTab={activeTab}
-                cartCount={cartCount}
-                wishlistCount={wishlistCount}
-                onLogoutClick={logout}
-                isMobileDrawer={true}
-                onClose={() => setMobileMenuOpen(false)}
-              />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          </div>
+        </>
+      )}
 
       <MobileBottomNav />
     </div>

@@ -34,7 +34,7 @@ export const Sidebar = ({
     { name: 'Quotes', label: 'My Quotes', icon: MessageSquare, path: '/quotes' },
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/wishlist' },
     { name: 'Testing Reports', label: 'Quality Testing', icon: FileText, path: '/testing-reports', isSoon: true },
-    { name: 'Addresses', label: 'Address', icon: MapPin, path: '/address' },
+    { name: 'Address Management', label: 'Address', icon: MapPin, path: '/address' },
     { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/support' },
     { name: 'Settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
@@ -78,7 +78,7 @@ export const Sidebar = ({
   }, [activeTab, cartCount, wishlistCount]);
 
   return (
-    <aside className={isMobileDrawer ? "w-full h-full bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] flex flex-col justify-between select-none overflow-hidden" : "hidden md:flex w-[272px] shrink-0 bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] border border-stone-200/80 rounded-[28px] overflow-hidden sticky top-20 md:top-24 h-full md:h-[calc(100vh-115px)] max-h-[100dvh] shadow-[0_10px_35px_rgba(46,125,50,0.08)] flex-col justify-between select-none"}>
+    <aside className={isMobileDrawer ? "w-full h-full bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] flex flex-col justify-between select-none overflow-hidden" : "hidden lg:flex w-[272px] shrink-0 bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] border border-stone-200/80 rounded-[28px] overflow-hidden h-full shadow-[0_10px_35px_rgba(46,125,50,0.08)] flex-col justify-between select-none"}>
       {/* 1. Header (Fixed at top) */}
       <div className="bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#388E3C] px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
