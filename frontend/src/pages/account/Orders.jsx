@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Eye, Download, Truck, RotateCcw, Package, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Search, Eye, Download, Truck, RotateCcw, Package, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { FixedSizeList as List } from 'react-window';
@@ -82,6 +82,9 @@ const Orders = () => {
   const [activeOrderNum, setActiveOrderNum] = useState('');
   
   const [errorState, setErrorState] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState('');
 
   const cancellationReasons = [
     'Ordered by mistake',
@@ -211,26 +214,306 @@ const Orders = () => {
     }
   };
 
+  const handlePayMilestone = async (orderId, milestoneIndex, orderNumber) => {
+    setIsProcessing(true);
+    setPaymentError('');
+    setPaymentSuccess('');
+
+    try {
+      const initRes = await apiClient.post('/payments/initiate', {
+        orderId,
+        gateway: 'razorpay',
+        milestoneIndex,
+      });
+
+      if (!initRes.data.success) {
+        throw new Error(initRes.data.message || 'Failed to initiate payment session');
+      }
+
+      const paymentData = initRes.data;
+
+      if (paymentData.gateway === 'razorpay') {
+        const isMock = !paymentData.key || paymentData.key.startsWith('mock_');
+
+        if (isMock) {
+          setTimeout(async () => {
+            try {
+              const confirmRes = await apiClient.post('/payments/confirm', {
+                orderId,
+                paymentId: 'mock_milestone_pay_' + Date.now(),
+                gateway: 'mock',
+                status: 'success',
+                milestoneIndex,
+              });
+
+              if (confirmRes.data.success) {
+                setPaymentSuccess('Payment successful! Next milestone unlocked.');
+                refetch();
+              } else {
+                throw new Error(confirmRes.data.message || 'Failed to confirm mock payment');
+              }
+            } catch (confirmErr) {
+              setPaymentError(confirmErr.message || 'Failed to process payment');
+            } finally {
+              setIsProcessing(false);
+            }
+          }, 1500);
+          return;
+        }
+
+        const options = {
+          key: paymentData.key,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          name: 'Cocoveera Export',
+          description: `Milestone ${milestoneIndex + 1} payment for Order #${orderNumber || orderId}`,
+          order_id: paymentData.id,
+          handler: async function (response) {
+            try {
+              const confirmRes = await apiClient.post('/payments/confirm', {
+                orderId,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                paymentId: response.razorpay_payment_id,
+                gateway: 'razorpay',
+                status: 'success',
+                milestoneIndex,
+              });
+
+              if (confirmRes.data.success) {
+                setPaymentSuccess('Payment completed successfully!');
+                refetch();
+              } else {
+                throw new Error(confirmRes.data.message || 'Verification failed');
+              }
+            } catch (err) {
+              setPaymentError(err.response?.data?.message || err.message || 'Verification failed.');
+            } finally {
+              setIsProcessing(false);
+            }
+          },
+          prefill: {
+            name: user?.name || '',
+            email: user?.email || '',
+            contact: user?.phone || '',
+          },
+          theme: { color: '#2E7D32' },
+          modal: {
+            ondismiss: function () {
+              setIsProcessing(false);
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          setPaymentError('Payment failed: ' + response.error.description);
+          setIsProcessing(false);
+        });
+        rzp.open();
+      }
+    } catch (err) {
+      setPaymentError(err.response?.data?.message || err.message || 'Could not connect to payment gateway.');
+      setIsProcessing(false);
+    }
+  };
+
   // Reusable Single Order Card Item
   const OrderCardItem = React.memo(({ order, idx }) => {
-    const status = order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Pending';
-    let displayStatus = status;
-    if (status === 'Cancelled' && order.paymentStatus === 'failed') {
-      displayStatus = 'Cancelled (Payment Failed)';
+    const rawStatus = order.orderStatus ? order.orderStatus.toLowerCase() : 'pending';
+    const progress = order.paymentProgress || 0;
+    
+    let displayStatusText = 'Pending';
+    let statusColorClass = 'text-stone-900';
+    let borderLeftColorClass = 'border-l-4 border-l-[#F59E0B] border-stone-200';
+
+    if (rawStatus === 'cancelled') {
+      displayStatusText = '🔴 Cancelled';
+      statusColorClass = 'text-red-700';
+      borderLeftColorClass = 'border-l-4 border-l-red-500 border-stone-200';
+    } else {
+      if (progress === 0) {
+        displayStatusText = '🟡 Awaiting Initial Payment';
+        statusColorClass = 'text-amber-600';
+        borderLeftColorClass = 'border-l-4 border-l-[#F59E0B] border-stone-200';
+      } else if (progress === 40) {
+        displayStatusText = '🟢 Production Started';
+        statusColorClass = 'text-[#067D62]';
+        borderLeftColorClass = 'border-l-4 border-l-[#067D62] border-stone-200';
+      } else if (progress === 60) {
+        displayStatusText = '🟢 Production Completed';
+        statusColorClass = 'text-[#067D62]';
+        borderLeftColorClass = 'border-l-4 border-l-[#067D62] border-stone-200';
+      } else if (progress === 80) {
+        displayStatusText = '🟢 Shipment Ready';
+        statusColorClass = 'text-[#067D62]';
+        borderLeftColorClass = 'border-l-4 border-l-[#067D62] border-stone-200';
+      } else if (progress === 100) {
+        displayStatusText = '🟢 Completed';
+        statusColorClass = 'text-[#067D62]';
+        borderLeftColorClass = 'border-l-4 border-l-[#067D62] border-stone-200';
+      }
     }
 
     const shortOrderId = (order.orderNumber || order._id).slice(-8).toUpperCase();
+
+    // Render B2B dynamic checklist icons
+    const renderProgressChecklist = () => {
+      const steps = [40, 60, 80, 100];
+      return (
+        <div className="flex flex-col gap-1 mt-2 text-xs font-bold text-stone-600">
+          {steps.map((step) => {
+            let marker = '🔒';
+            if (progress >= step) {
+              marker = '✔';
+            } else if (progress === 0 && step === 40) {
+              marker = '⭕';
+            } else if (progress === 40 && step === 60) {
+              marker = '⭕';
+            } else if (progress === 60 && step === 80) {
+              marker = '⭕';
+            } else if (progress === 80 && step === 100) {
+              marker = '⭕';
+            }
+            return (
+              <span key={step} className="flex items-center gap-1.5">
+                <span>{marker}</span>
+                <span className="font-poppins">{step}%</span>
+              </span>
+            );
+          })}
+        </div>
+      );
+    };
+
+    // Render B2B Card-Level Action Buttons
+    const renderCardActionButtons = () => {
+      if (rawStatus === 'cancelled') {
+        return (
+          <button 
+            onClick={() => handleReorder(order._id)} 
+            className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit flex items-center gap-1.5"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Reorder
+          </button>
+        );
+      }
+
+      if (progress === 0) {
+        return (
+          <>
+            <button
+              onClick={() => handlePayMilestone(order._id, 0, order.orderNumber || order._id)}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit disabled:opacity-50 animate-pulse"
+            >
+              Pay 40% Advance
+            </button>
+            <button
+              onClick={() => navigate(`/orders/${order._id}`)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+            >
+              View Order
+            </button>
+          </>
+        );
+      }
+
+      if (progress === 40) {
+        return (
+          <>
+            <button
+              onClick={() => handlePayMilestone(order._id, 1, order.orderNumber || order._id)}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit disabled:opacity-50"
+            >
+              Pay 60%
+            </button>
+            <button
+              onClick={() => navigate(`/track/${order._id}`)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+            >
+              Track Production
+            </button>
+          </>
+        );
+      }
+
+      if (progress === 60) {
+        return (
+          <>
+            <button
+              onClick={() => handlePayMilestone(order._id, 2, order.orderNumber || order._id)}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit disabled:opacity-50"
+            >
+              Pay 80%
+            </button>
+            <button
+              onClick={() => navigate(`/track/${order._id}`)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+            >
+              Track Order
+            </button>
+          </>
+        );
+      }
+
+      if (progress === 80) {
+        return (
+          <>
+            <button
+              onClick={() => handlePayMilestone(order._id, 3, order.orderNumber || order._id)}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit disabled:opacity-50"
+            >
+              Pay Final Amount
+            </button>
+            <button
+              onClick={() => navigate(`/track/${order._id}`)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+            >
+              Track Shipment
+            </button>
+          </>
+        );
+      }
+
+      if (progress === 100) {
+        return (
+          <>
+            <button
+              onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+            >
+              Invoice
+            </button>
+            <button
+              onClick={() => alert("Shipping documents (Bill of Lading, Packing List) are being prepared by the export officer. You will receive an email notification once finalized.")}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+            >
+              Shipping Documents
+            </button>
+            <button
+              onClick={() => navigate(`/track/${order._id}`)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+            >
+              Track Shipment
+            </button>
+          </>
+        );
+      }
+
+      return null;
+    };
 
     return (
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: idx * 0.05 }}
-        className={`bg-white rounded-xl border overflow-hidden relative shadow-sm hover:shadow-md transition-shadow ${
-          status === 'Delivered' ? 'border-l-4 border-l-[#067D62] border-stone-200' : 
-          status === 'Cancelled' ? 'border-l-4 border-l-red-500 border-stone-200' : 
-          'border-l-4 border-l-[#F59E0B] border-stone-200'
-        }`}
+        className={`bg-white rounded-xl border overflow-hidden relative shadow-sm hover:shadow-md transition-shadow ${borderLeftColorClass}`}
       >
         {/* Card Header (Amazon/Flipkart Style) */}
         <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
@@ -262,66 +545,33 @@ const Orders = () => {
 
         {/* Card Body - Products List */}
         <div className="p-4 md:p-6 space-y-6">
-          {/* Status Banner */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-100 pb-4 gap-4">
+          {/* Status & Milestones Column Layout */}
+          <div className="flex flex-col md:flex-row justify-between items-start border-b border-stone-100 pb-5 gap-6">
             <div>
-              <h3 className={`text-lg md:text-xl font-black ${status === 'Delivered' ? 'text-[#067D62]' : status === 'Cancelled' ? 'text-red-700' : 'text-stone-900'}`}>
-                {displayStatus}
+              <h3 className={`text-lg md:text-xl font-bold ${statusColorClass}`}>
+                {displayStatusText}
               </h3>
               
-              {/* Payment Milestones Progress Tracker */}
+              {/* Payment Progress Bar */}
               {order.paymentMilestones && order.paymentMilestones.length > 0 && (
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-40 sm:w-56 bg-stone-100 rounded-full h-2 border border-stone-200 overflow-hidden relative">
-                      <div 
-                        className="bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] h-full transition-all" 
-                        style={{ width: `${order.paymentProgress || 0}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-black text-stone-700">{order.paymentProgress || 0}% Paid</span>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="w-40 sm:w-56 bg-stone-100 rounded-full h-2 border border-stone-200 overflow-hidden relative">
+                    <div 
+                      className="bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] h-full transition-all" 
+                      style={{ width: `${progress}%` }}
+                    />
                   </div>
-
-                  {/* Horizontal visual status indicators */}
-                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs">
-                    <span className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">Milestone Progress:</span>
-                    <div className="flex items-center gap-2">
-                      {order.paymentMilestones.map((m, mIdx) => {
-                        const targetPct = mIdx === 0 ? 40 : mIdx === 1 ? 60 : mIdx === 2 ? 80 : 100;
-                        const isPaid = m.status === 'Paid';
-                        const isPending = m.status === 'Pending';
-                        return (
-                          <span key={mIdx} className="font-bold text-stone-600 flex items-center gap-0.5">
-                            {isPaid ? '✔' : isPending ? '⭕' : '🔒'} {targetPct}%
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Current Milestone & Remaining Amount details */}
-                  <div className="text-xs text-stone-500 font-medium space-y-0.5">
-                    {(order.paymentProgress || 0) < 100 ? (
-                      <>
-                        <p>Current Milestone: <strong className="text-stone-700">{order.paymentMilestones.find(m => m.status !== 'Paid')?.milestoneType || 'N/A'}</strong></p>
-                        <p>Remaining Balance: <strong className="text-stone-950 font-black">{convertCurrency(order.paymentMilestones.reduce((acc, m) => acc + (m.status !== 'Paid' ? m.amount : 0), 0), order.currency || 'USD').formatted}</strong></p>
-                      </>
-                    ) : (
-                      <p className="text-[#2E7D32] font-bold">✔ All milestones paid in full.</p>
-                    )}
-                  </div>
+                  <span className="text-xs font-black text-stone-700">{progress}% Paid</span>
                 </div>
               )}
             </div>
 
-            {/* Next Payment button */}
-            {order.paymentMilestones && order.paymentMilestones.find(m => m.status === 'Pending') && (
-              <button 
-                onClick={() => navigate(`/orders/payment/${order._id}`)}
-                className="px-5 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-black rounded-xl shadow-sm hover:shadow transition-all cursor-pointer w-full sm:w-auto text-center"
-              >
-                Pay Next Milestone
-              </button>
+            {/* Vertical milestones status tracker list */}
+            {order.paymentMilestones && order.paymentMilestones.length > 0 && (
+              <div className="bg-stone-50 border border-stone-200/50 rounded-xl p-3 shrink-0">
+                <span className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block mb-1">Payment Progress</span>
+                {renderProgressChecklist()}
+              </div>
             )}
           </div>
 
@@ -347,29 +597,14 @@ const Orders = () => {
                   {item.product?.name || 'Unknown Product'}
                 </h4>
                 <div className="text-xs text-stone-500 mt-1 mb-2">Containers: {item.quantity}</div>
-                
-                <div className="mt-auto flex flex-wrap gap-2">
-                  {status !== 'Pending' && status !== 'Cancelled' && (
-                    <button onClick={() => navigate(`/track/${order._id}`)} className="px-3 py-1.5 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-semibold rounded-full border border-[#FCD200] shadow-sm transition-colors w-fit">
-                      Track package
-                    </button>
-                  )}
-                  
-                  {(status === 'Delivered' || status === 'Cancelled') && (
-                    <button onClick={() => handleReorder(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-800 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit flex items-center gap-1.5">
-                      <RotateCcw className="w-3.5 h-3.5" /> {status === 'Cancelled' ? 'Reorder' : 'Buy it again'}
-                    </button>
-                  )}
-                  
-                  {['Pending', 'Confirmed', 'Packed', 'Loaded'].includes(status) && (
-                    <button onClick={() => handleCancelClick(order._id)} className="px-3 py-1.5 bg-white hover:bg-stone-50 text-red-650 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit">
-                      Cancel items
-                    </button>
-                  )}
-                </div>
               </div>
             </div>
           ))}
+
+          {/* Action buttons wrapper */}
+          <div className="flex flex-wrap gap-2 pt-4 border-t border-stone-100">
+            {renderCardActionButtons()}
+          </div>
         </div>
       </motion.div>
     );
@@ -438,6 +673,20 @@ const Orders = () => {
   return (
     <div className="w-full space-y-6 pb-20">
       <SEO title="Your Orders - Cocoveera" />
+      
+      {/* Dynamic payment feedback notifications */}
+      {paymentSuccess && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3 text-green-800 font-semibold text-sm shadow-inner animate-fade-in">
+          <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+          <span>{paymentSuccess}</span>
+        </div>
+      )}
+      {paymentError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-800 font-semibold text-sm shadow-inner animate-fade-in">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <span>{paymentError}</span>
+        </div>
+      )}
       
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">

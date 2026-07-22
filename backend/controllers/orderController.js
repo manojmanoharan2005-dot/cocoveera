@@ -214,10 +214,7 @@ export const getMyOrders = async (req, res) => {
     const { page = 1, limit = 10, search = '', dateFilter = 'all' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    let query = { 
-      user: req.user.id,
-      orderStatus: { $ne: 'Payment Pending' }
-    };
+    let query = { user: req.user.id };
 
     // Apply search filter (orderNumber or productName)
     if (search) {
