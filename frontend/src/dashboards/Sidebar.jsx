@@ -261,9 +261,9 @@ export const Sidebar = ({
         </div>
 
         {/* Footer Text */}
-        <div className="text-center pt-0.5">
-          <p className="text-[11px] font-medium text-stone-400/90 leading-tight">
-            🇮🇳 Proudly Made in India
+        <div className="text-center pt-1">
+          <p className="text-[10px] font-extrabold text-stone-400/80 leading-tight uppercase tracking-wider">
+            Proudly Made in India
           </p>
         </div>
       </div>
