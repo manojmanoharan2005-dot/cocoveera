@@ -1,8 +1,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Eye, Download, FileText, X, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Search, Eye, Download, FileText, X, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FixedSizeList as List } from 'react-window';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
@@ -121,6 +121,8 @@ const Quotes = () => {
   
   const [errorState, setErrorState] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const queryClient = useQueryClient();
 
   // 300ms Debounce search input
   useEffect(() => {
@@ -223,17 +225,34 @@ const Quotes = () => {
   };
 
   const handleAcceptSubmit = async () => {
-    if (!selectedQuote) return;
+    if (!selectedQuote || actionLoading) return;
 
     try {
       setActionLoading(true);
       setErrorState('');
       const res = await apiClient.put(`/quotes/${selectedQuote._id}/accept`);
       if (res.data.success) {
-        setSuccessOrderId(res.data.orderId);
         setAcceptModalOpen(false);
-        setSuccessModalOpen(true);
-        refetch();
+        setToastMessage('Quotation accepted successfully. Redirecting to Orders...');
+        
+        // Invalidate and refetch immediately
+        queryClient.invalidateQueries(['orders']);
+        queryClient.invalidateQueries(['quotes']);
+        queryClient.invalidateQueries(['dashboard']);
+        queryClient.invalidateQueries(['customer']);
+
+        // Update global profile/counts
+        try {
+          await fetchProfile();
+        } catch (authErr) {
+          console.error('Failed to fetch profile stats:', authErr);
+        }
+
+        // Wait 1 second and navigate
+        setTimeout(() => {
+          setToastMessage('');
+          navigate('/orders');
+        }, 1000);
       }
     } catch (err) {
       console.error('Failed to accept quote:', err);
@@ -483,6 +502,23 @@ const Quotes = () => {
   return (
     <div className="w-full space-y-6 pb-20">
       <SEO title="Your Quotations - Cocoveera" />
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 right-6 z-[250] bg-[#1A1A1A] text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border border-stone-850"
+          >
+            <div className="w-5 h-5 rounded-full bg-[#2E7D32] flex items-center justify-center text-white">
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
+            </div>
+            <span className="text-xs font-poppins font-bold">{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
@@ -673,9 +709,13 @@ const Quotes = () => {
               <button
                 onClick={handleAcceptSubmit}
                 disabled={actionLoading}
-                className="flex-1 px-4 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer border-none"
+                className="flex-1 px-4 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer border-none flex items-center justify-center min-h-[36px]"
               >
-                Accept Quote
+                {actionLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  'Accept Quote'
+                )}
               </button>
             </div>
           </div>
