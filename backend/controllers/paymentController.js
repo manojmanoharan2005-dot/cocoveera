@@ -493,7 +493,7 @@ export const rejectRefund = async (req, res) => {
 // @route   POST /api/payments/verify-payment
 // @access  Private
 export const verifyRazorpayPayment = async (req, res) => {
-  const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderId } = req.body;
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderId, milestoneIndex } = req.body;
 
   try {
     dotenv.config({ override: true });
@@ -522,51 +522,119 @@ export const verifyRazorpayPayment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // Prevent duplicate processing
-    if (order.paymentStatus === 'paid' && order.paymentVerified) {
-       return res.status(200).json({ success: true, orderId: order._id, paymentId: razorpay_payment_id, message: 'Already verified' });
-    }
+    const isMilestone = milestoneIndex !== undefined && milestoneIndex !== null;
 
-    order.paymentStatus = 'paid';
-    order.orderStatus = 'confirmed';
-    order.paymentId = razorpay_payment_id;
-    order.paymentGateway = 'razorpay';
-    order.paymentVerified = true;
-    await order.save();
-
-    // Create Payment Record
-    try {
-      await Payment.create({
-        order: order._id,
-        amount: order.totalAmount,
-        status: 'completed',
-        method: 'razorpay',
-        transactionId: razorpay_payment_id,
-        paymentDate: new Date(),
-        description: `Payment for order ${order._id}`,
-        user: order.user._id
-      });
-    } catch (payErr) {
-      console.error('Failed to create Payment record:', payErr);
-    }
-
-    // Clear user cart
-    try {
-      await User.findByIdAndUpdate(order.user._id, { cart: [] });
-    } catch(err) {
-      console.error('Failed to clear cart:', err);
-    }
-
-    // Reduce Inventory
-    try {
-      const Product = (await import('../models/Product.js')).default;
-      for (const item of order.items) {
-         if (item.product && item.product._id) {
-            await Product.findByIdAndUpdate(item.product._id, { $inc: { stock: -item.pieces } });
-         }
+    if (isMilestone) {
+      const idx = parseInt(milestoneIndex);
+      if (!order.paymentMilestones || !order.paymentMilestones[idx]) {
+        return res.status(400).json({ success: false, message: 'Invalid milestone index' });
       }
-    } catch(err) {
-      console.error('Failed to update inventory:', err);
+
+      // Check if already processed to prevent duplicate processing
+      if (order.paymentMilestones[idx].status === 'Paid') {
+        return res.status(200).json({ success: true, orderId: order._id, paymentId: razorpay_payment_id, message: 'Milestone already verified' });
+      }
+
+      const milestone = order.paymentMilestones[idx];
+      milestone.status = 'Paid';
+      milestone.paidAt = new Date();
+      milestone.paymentId = razorpay_payment_id;
+
+      if (idx === 0) {
+        order.paymentProgress = 40;
+        order.orderStatus = 'confirmed';
+        order.paymentStatus = 'partially_paid';
+      } else if (idx === 1) {
+        order.paymentProgress = 60;
+        order.orderStatus = 'packed';
+        order.paymentStatus = 'partially_paid';
+      } else if (idx === 2) {
+        order.paymentProgress = 80;
+        order.orderStatus = 'loaded';
+        order.paymentStatus = 'partially_paid';
+      } else if (idx === 3) {
+        order.paymentProgress = 100;
+        order.orderStatus = 'shipped';
+        order.paymentStatus = 'paid';
+      }
+
+      if (idx + 1 < order.paymentMilestones.length) {
+        order.paymentMilestones[idx + 1].status = 'Pending';
+      }
+
+      order.paymentId = razorpay_payment_id;
+      order.paymentGateway = 'razorpay';
+      order.paymentVerified = true;
+      await order.save();
+
+      // Create Payment Record
+      try {
+        await Payment.create({
+          order: order._id,
+          amount: milestone.amount,
+          status: 'completed',
+          method: 'razorpay',
+          transactionId: razorpay_payment_id,
+          paymentDate: new Date(),
+          description: `Milestone payment for ${milestone.milestoneType} (Order ${order._id})`,
+          user: order.user._id
+        });
+      } catch (payErr) {
+        console.error('Failed to create Payment record:', payErr);
+      }
+
+      if (order.quote && order.paymentProgress === 100) {
+        const Quote = (await import('../models/Quote.js')).default;
+        await Quote.findByIdAndUpdate(order.quote, { status: 'converted' });
+      }
+    } else {
+      // Prevent duplicate processing
+      if (order.paymentStatus === 'paid' && order.paymentVerified) {
+         return res.status(200).json({ success: true, orderId: order._id, paymentId: razorpay_payment_id, message: 'Already verified' });
+      }
+
+      order.paymentStatus = 'paid';
+      order.orderStatus = 'confirmed';
+      order.paymentId = razorpay_payment_id;
+      order.paymentGateway = 'razorpay';
+      order.paymentVerified = true;
+      order.paymentProgress = 100;
+      await order.save();
+
+      // Create Payment Record
+      try {
+        await Payment.create({
+          order: order._id,
+          amount: order.totalAmount,
+          status: 'completed',
+          method: 'razorpay',
+          transactionId: razorpay_payment_id,
+          paymentDate: new Date(),
+          description: `Payment for order ${order._id}`,
+          user: order.user._id
+        });
+      } catch (payErr) {
+        console.error('Failed to create Payment record:', payErr);
+      }
+
+      // Clear user cart
+      try {
+        await User.findByIdAndUpdate(order.user._id, { cart: [] });
+      } catch(err) {
+        console.error('Failed to clear cart:', err);
+      }
+
+      // Reduce Inventory
+      try {
+        const Product = (await import('../models/Product.js')).default;
+        for (const item of order.items) {
+           if (item.product && item.product._id) {
+              await Product.findByIdAndUpdate(item.product._id, { $inc: { stock: -item.pieces } });
+           }
+        }
+      } catch(err) {
+        console.error('Failed to update inventory:', err);
+      }
     }
 
     // Invoice & Email

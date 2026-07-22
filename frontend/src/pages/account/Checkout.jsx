@@ -29,6 +29,46 @@ const Checkout = () => {
   const [shippingLoading, setShippingLoading] = useState(false);
   
   const defaultAddr = user?.addresses?.find(a => a.isDefault) || user?.addresses?.[0];
+
+  const isMilestoneMode = !!location.state?.orderId && location.state?.milestoneIndex !== undefined;
+  const milestoneIndex = location.state?.milestoneIndex;
+  const [milestoneOrder, setMilestoneOrder] = useState(null);
+  const [milestoneLoading, setMilestoneLoading] = useState(false);
+
+  React.useEffect(() => {
+    const fetchMilestoneOrder = async () => {
+      if (location.state?.orderId) {
+        try {
+          setMilestoneLoading(true);
+          const res = await apiClient.get(`/orders/${location.state.orderId}`);
+          if (res.data.success) {
+            const ord = res.data.data;
+            setMilestoneOrder(ord);
+            setFormData(prev => ({
+              ...prev,
+              firstName: ord.user?.name?.split(' ')[0] || prev.firstName,
+              lastName: ord.user?.name?.split(' ')[1] || prev.lastName,
+              phone: ord.shippingAddress?.phone || ord.user?.phone || prev.phone,
+              address: ord.shippingAddress?.street || ord.shippingAddress?.addressLine1 || '',
+              city: ord.shippingAddress?.city || '',
+              state: ord.shippingAddress?.state || '',
+              zip: ord.shippingAddress?.zipCode || ord.shippingAddress?.postalCode || '',
+              country: ord.shippingAddress?.country || 'India',
+              countryCode: ord.shippingAddress?.country?.toLowerCase() === 'india' ? 'IN' : 'US',
+              shippingMethod: ord.shippingDetails?.shippingMethod || '',
+              containerType: ord.shippingDetails?.containerType || '',
+              port: ord.shippingDetails?.portOfDischarge || '',
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to load milestone order:", err);
+        } finally {
+          setMilestoneLoading(false);
+        }
+      }
+    };
+    fetchMilestoneOrder();
+  }, [location.state?.orderId]);
   const defaultCountryCode = defaultAddr?.countryCode || user?.countryCode || '';
   const defaultCountryName = defaultAddr?.country || user?.country || '';
 
@@ -75,7 +115,9 @@ const Checkout = () => {
     quantity: location.state.quantity,
   } : null;
 
-  const cartItems = directCheckoutItem ? [directCheckoutItem] : (user?.cart || []);
+  const cartItems = isMilestoneMode
+    ? (milestoneOrder?.items || [])
+    : (directCheckoutItem ? [directCheckoutItem] : (user?.cart || []));
   
   const getPiecesForContainer = (cType, palletCount = 300) => {
     if (!cType) return 10 * palletCount;
@@ -83,40 +125,61 @@ const Checkout = () => {
     return 10 * palletCount; // default 20FT
   };
 
-  let totalPieces = 0;
+  const totalContainerQuantity = isMilestoneMode
+    ? (milestoneOrder?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0)
+    : cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  const subtotal = cartItems.reduce((acc, item) => {
-    const cType = formData.containerType || item.containerType || '20FT FCL';
-    const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount);
-    totalPieces += pieces;
-    const price = item.product?.price || 0;
-    return acc + (price * pieces);
-  }, 0);
-  
-  const totalWeightKg = cartItems.reduce((acc, item) => {
-    const cType = formData.containerType || item.containerType || '20FT FCL';
-    const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount);
-    const weight = item.product?.weight || 0;
-    return acc + (weight * pieces);
-  }, 0);
+  const totalPieces = isMilestoneMode
+    ? (milestoneOrder?.items?.reduce((acc, item) => {
+        const cType = milestoneOrder.shippingDetails?.containerType || '20FT FCL';
+        return acc + (item.quantity * getPiecesForContainer(cType, item.product?.palletCount || 300));
+      }, 0) || 0)
+    : cartItems.reduce((acc, item) => {
+        const cType = formData.containerType || item.containerType || '20FT FCL';
+        return acc + (item.quantity * getPiecesForContainer(cType, item.product?.palletCount || 300));
+      }, 0);
 
-  const totalVolumeCBM = cartItems.reduce((acc, item) => {
-    const cType = formData.containerType || item.containerType || '20FT FCL';
-    const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount);
-    const volume = item.product?.volumeCBM || 0;
-    return acc + (volume * pieces);
-  }, 0);
+  const subtotal = isMilestoneMode
+    ? (milestoneOrder?.totalAmount || 0)
+    : cartItems.reduce((acc, item) => {
+        const cType = formData.containerType || item.containerType || '20FT FCL';
+        const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount || 300);
+        const price = item.product?.price || 0;
+        return acc + (price * pieces);
+      }, 0);
 
-  let recommendedContainer = '20FT Container';
-  if (totalWeightKg > 28000 || totalVolumeCBM > 33) {
-    if (totalWeightKg <= 26000 && totalVolumeCBM <= 67) {
-       recommendedContainer = '40FT Container';
-    } else {
-       recommendedContainer = 'Multiple Containers Required';
-    }
-  }
+  const totalWeightKg = isMilestoneMode
+    ? (milestoneOrder?.items?.reduce((acc, item) => {
+        const cType = milestoneOrder.shippingDetails?.containerType || '20FT FCL';
+        const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount || 300);
+        return acc + ((item.product?.weight || 0) * pieces);
+      }, 0) || 0)
+    : cartItems.reduce((acc, item) => {
+        const cType = formData.containerType || item.containerType || '20FT FCL';
+        const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount || 300);
+        const weight = item.product?.weight || 0;
+        return acc + (weight * pieces);
+      }, 0);
 
-  const totalContainerQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const totalVolumeCBM = isMilestoneMode
+    ? (milestoneOrder?.items?.reduce((acc, item) => {
+        const cType = milestoneOrder.shippingDetails?.containerType || '20FT FCL';
+        const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount || 300);
+        return acc + ((item.product?.volumeCBM || 0) * pieces);
+      }, 0) || 0)
+    : cartItems.reduce((acc, item) => {
+        const cType = formData.containerType || item.containerType || '20FT FCL';
+        const pieces = item.quantity * getPiecesForContainer(cType, item.product?.palletCount || 300);
+        const volume = item.product?.volumeCBM || 0;
+        return acc + (volume * pieces);
+      }, 0);
+
+  const recommendedContainer = isMilestoneMode
+    ? (milestoneOrder?.shippingDetails?.containerType || '20FT Container')
+    : (totalWeightKg > 28000 || totalVolumeCBM > 33
+        ? (totalWeightKg <= 26000 && totalVolumeCBM <= 67 ? '40FT Container' : 'Multiple Containers Required')
+        : '20FT Container');
+
   const isWholeContainer = Number.isInteger(totalContainerQuantity) && totalContainerQuantity >= 1;
   
   // [TESTING BYPASS] Allow checkout of partial/small quantities so we can test Razorpay with amounts under ₹1 Lakh (which enables the UPI option)
@@ -124,6 +187,7 @@ const Checkout = () => {
 
   // Fetch shipping rules
   React.useEffect(() => {
+    if (isMilestoneMode) return;
     const fetchRules = async () => {
       try {
         const res = await apiClient.get('/shipping/rules');
@@ -135,10 +199,16 @@ const Checkout = () => {
       }
     };
     fetchRules();
-  }, []);
+  }, [isMilestoneMode]);
 
   // Calculate shipping cost and live quote
   React.useEffect(() => {
+    if (isMilestoneMode) {
+      if (milestoneOrder) {
+        setShippingCharge(milestoneOrder.shippingCharge || 0);
+      }
+      return;
+    }
     const runQuote = async () => {
       if (!shippingRules?.countries?.length) return;
       const originCountry = shippingRules.countries.find((item) => item.code === 'IN' || item.name?.toLowerCase() === 'india');
@@ -169,11 +239,14 @@ const Checkout = () => {
       }
     };
     runQuote();
-  }, [formData.country, formData.port, formData.shippingMethod, formData.containerType, shippingRules, subtotal, totalWeightKg, user?.currency]);
+  }, [formData.country, formData.port, formData.shippingMethod, formData.containerType, shippingRules, subtotal, totalWeightKg, user?.currency, isMilestoneMode, milestoneOrder]);
 
-  // Dummy discount 15% for illustration as per reference
-  const discount = Math.round(subtotal * 0.15);
-  const total = subtotal - discount + shippingCharge;
+  const discount = isMilestoneMode ? (milestoneOrder?.discount || 0) : Math.round(subtotal * 0.15);
+  const activeMilestone = (isMilestoneMode && milestoneOrder?.paymentMilestones)
+    ? milestoneOrder.paymentMilestones[milestoneIndex]
+    : null;
+  const milestoneAmount = activeMilestone ? activeMilestone.amount : 0;
+  const total = isMilestoneMode ? milestoneAmount : (subtotal - discount + shippingCharge);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -262,108 +335,116 @@ const Checkout = () => {
       setActiveStep(1);
       return;
     }
-    if (!isValidOrderQuantity) {
+    if (!isMilestoneMode && !isValidOrderQuantity) {
       alert("Checkout is available only for full container quantities. Please complete the remaining container capacity.");
       return;
     }
     try {
       setIsProcessing(true);
-      const items = cartItems.map(c => ({
-        product: c.product._id,
-        quantity: c.quantity,
-        price: c.product.price
-      }));
+      let targetOrderId = null;
 
-      const shippingAddress = {
-        street: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zipCode: formData.zip,
-        country: formData.country
-      };
+      if (isMilestoneMode) {
+        targetOrderId = location.state.orderId;
+      } else {
+        const items = cartItems.map(c => ({
+          product: c.product._id,
+          quantity: c.quantity,
+          price: c.product.price
+        }));
 
-      // Get the container type selected by the user
-      const finalContainerType = formData.containerType || localStorage.getItem('preferredContainer') || recommendedContainer;
+        const shippingAddress = {
+          street: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zip,
+          country: formData.country
+        };
 
-      const shippingDetails = {
-        shippingMethod: shippingMode === 'domestic' ? 'road' : 'sea',
-        portOfLoading: formData.port || 'Origin Port',
-        portOfDischarge: formData.port || 'Destination Port',
-        incoterms: shippingMode === 'domestic' ? 'DAP' : 'FOB',
-        transitTime: 'TBD',
-        containerType: finalContainerType
-      };
+        const finalContainerType = formData.containerType || localStorage.getItem('preferredContainer') || recommendedContainer;
 
-      // 1. Create the order in DB
-      const orderRes = await apiClient.post('/orders', {
-        items,
-        shippingAddress,
-        paymentGateway: paymentMethod,
-        containerType: finalContainerType,
-        shippingCharge,
-        shippingDetails,
-        discount,
-        tax: 0
-      });
+        const shippingDetails = {
+          shippingMethod: shippingMode === 'domestic' ? 'road' : 'sea',
+          portOfLoading: formData.port || 'Origin Port',
+          portOfDischarge: formData.port || 'Destination Port',
+          incoterms: shippingMode === 'domestic' ? 'DAP' : 'FOB',
+          transitTime: 'TBD',
+          containerType: finalContainerType
+        };
 
-      if (!orderRes.data.success) throw new Error("Failed to create order");
-      const createdOrder = orderRes.data.data;
+        const orderRes = await apiClient.post('/orders', {
+          items,
+          shippingAddress,
+          paymentGateway: paymentMethod,
+          containerType: finalContainerType,
+          shippingCharge,
+          shippingDetails,
+          discount,
+          tax: 0
+        });
 
-      // Cart is now cleared on the backend ONLY upon successful payment verification.
+        if (!orderRes.data.success) throw new Error("Failed to create order");
+        targetOrderId = orderRes.data.data._id;
+      }
 
-      // 2. Handle specific payment gateways
       if (paymentMethod === 'cod' || paymentMethod === 'wire') {
-        // Simple completion for offline methods
-        try {
-          await apiClient.delete('/users/cart');
-          await fetchProfile();
-        } catch (err) {
-          console.error("Failed to clear cart:", err);
+        if (isMilestoneMode) {
+          await apiClient.post('/payments/confirm', {
+            orderId: targetOrderId,
+            gateway: paymentMethod,
+            status: 'success',
+            milestoneIndex,
+          });
+        } else {
+          try {
+            await apiClient.delete('/users/cart');
+            await fetchProfile();
+          } catch (err) {
+            console.error("Failed to clear cart:", err);
+          }
         }
         handleSuccess();
         return;
       }
 
       if (paymentMethod === 'razorpay') {
-        // Initiate Razorpay
         const initRes = await apiClient.post('/payments/initiate', {
-          orderId: createdOrder._id,
-          gateway: 'razorpay'
+          orderId: targetOrderId,
+          gateway: 'razorpay',
+          milestoneIndex: isMilestoneMode ? milestoneIndex : undefined
         });
 
         if (!initRes.data.success) throw new Error("Failed to initiate Razorpay");
 
         const options = {
-          key: initRes.data.key || import.meta.env.VITE_RAZORPAY_KEY || "rzp_live_SSGOmOhJxOiqbl", // Use backend key directly to prevent mismatches
+          key: initRes.data.key || import.meta.env.VITE_RAZORPAY_KEY || "rzp_live_SSGOmOhJxOiqbl",
           amount: initRes.data.amount,
           currency: initRes.data.currency,
           name: "Cocoveera",
-          description: "Premium Export Order",
+          description: isMilestoneMode ? `Milestone Payment #${milestoneIndex + 1}` : "Premium Export Order",
           image: "https://res.cloudinary.com/dyrfiop7d/image/upload/v1779801371/cocoveera/branding/ewo6ljdta2dklg9kvbrs.jpg",
           order_id: initRes.data.id,
           handler: async function (response) {
             try {
-              setIsProcessing(true); // Disable UI while verifying
+              setIsProcessing(true);
               
               const verifyRes = await apiClient.post('/payments/verify-payment', {
-                orderId: createdOrder._id,
+                orderId: targetOrderId,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature
+                razorpay_signature: response.razorpay_signature,
+                milestoneIndex: isMilestoneMode ? milestoneIndex : undefined
               });
 
               if (verifyRes.data.success) {
-                // Refresh profile since cart might be cleared
                 await fetchProfile();
                 
                 setPaymentSuccessData({
-                  orderId: createdOrder._id,
+                  orderId: targetOrderId,
                   paymentId: response.razorpay_payment_id,
                   amount: total
                 });
                 setShowSuccessAnimation(true);
                 
-                // Fire premium confetti
                 confetti({
                   particleCount: 150,
                   spread: 70,
@@ -371,15 +452,18 @@ const Checkout = () => {
                   colors: ['#2E7D32', '#4CAF50', '#81C784', '#FFD700']
                 });
 
-                // Auto redirect after 2.5s
                 setTimeout(() => {
-                  navigate('/order-success', {
-                    state: {
-                      orderId: createdOrder._id,
-                      paymentId: response.razorpay_payment_id,
-                      amount: total
-                    }
-                  });
+                  if (isMilestoneMode) {
+                    navigate('/orders');
+                  } else {
+                    navigate('/order-success', {
+                      state: {
+                        orderId: targetOrderId,
+                        paymentId: response.razorpay_payment_id,
+                        amount: total
+                      }
+                    });
+                  }
                 }, 2500);
               } else {
                 throw new Error(verifyRes.data.message || "Payment verification failed");
@@ -409,9 +493,10 @@ const Checkout = () => {
            alert("Payment failed: " + response.error.description);
            try {
              await apiClient.post('/payments/confirm', {
-               orderId: createdOrder._id,
+               orderId: targetOrderId,
                gateway: 'razorpay',
-               status: 'failed'
+               status: 'failed',
+               milestoneIndex: isMilestoneMode ? milestoneIndex : undefined
              });
              navigate('/orders');
            } catch (e) {
@@ -918,14 +1003,26 @@ const Checkout = () => {
                     <span className="text-stone-900 font-bold">{formatPrice(shippingCharge)}</span>
                   )}
                 </div>
+                {isMilestoneMode && activeMilestone && (
+                  <div className="flex justify-between items-center text-[#2E7D32] bg-[#E8F5E9] p-3 rounded-xl font-bold text-xs mt-4">
+                    <span>Payment Milestone</span>
+                    <span>{activeMilestone.milestoneType} ({activeMilestone.percentage}%)</span>
+                  </div>
+                )}
               </div>
 
               {/* Dashed Separator */}
               <div className="border-t-2 border-dashed border-stone-200 py-6 my-6">
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-stone-400 uppercase tracking-widest mb-2">Total Amount</span>
+                  <span className="text-xs font-black text-stone-400 uppercase tracking-widest mb-2">
+                    {isMilestoneMode ? 'Milestone Amount Payable' : 'Total Amount'}
+                  </span>
                   <span className="text-4xl font-black text-stone-900 tracking-tight">{formatPrice(total)}</span>
-                  <span className="text-xs font-bold text-[#2E7D32] mt-2 inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> YOU SAVE {formatPrice(discount)}</span>
+                  {!isMilestoneMode && (
+                    <span className="text-xs font-bold text-[#2E7D32] mt-2 inline-flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4" /> YOU SAVE {formatPrice(discount)}
+                    </span>
+                  )}
                 </div>
               </div>
 

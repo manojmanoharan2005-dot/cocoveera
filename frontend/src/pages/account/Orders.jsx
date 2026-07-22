@@ -404,9 +404,8 @@ const Orders = () => {
         return (
           <>
             <button
-              onClick={() => handlePayMilestone(order._id, 0, order.orderNumber || order._id)}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit disabled:opacity-50 animate-pulse"
+              onClick={() => navigate('/checkout', { state: { orderId: order._id, milestoneIndex: 0 } })}
+              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit animate-pulse"
             >
               Pay 40% Advance
             </button>
@@ -424,9 +423,8 @@ const Orders = () => {
         return (
           <>
             <button
-              onClick={() => handlePayMilestone(order._id, 1, order.orderNumber || order._id)}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit disabled:opacity-50"
+              onClick={() => navigate('/checkout', { state: { orderId: order._id, milestoneIndex: 1 } })}
+              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit"
             >
               Pay 60%
             </button>
@@ -444,9 +442,8 @@ const Orders = () => {
         return (
           <>
             <button
-              onClick={() => handlePayMilestone(order._id, 2, order.orderNumber || order._id)}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit disabled:opacity-50"
+              onClick={() => navigate('/checkout', { state: { orderId: order._id, milestoneIndex: 2 } })}
+              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit"
             >
               Pay 80%
             </button>
@@ -464,9 +461,8 @@ const Orders = () => {
         return (
           <>
             <button
-              onClick={() => handlePayMilestone(order._id, 3, order.orderNumber || order._id)}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit disabled:opacity-50"
+              onClick={() => navigate('/checkout', { state: { orderId: order._id, milestoneIndex: 3 } })}
+              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit"
             >
               Pay Final Amount
             </button>
