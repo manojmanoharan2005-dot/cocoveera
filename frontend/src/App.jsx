@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 import axios from 'axios';
 import { API_URL } from './utils/config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Configure QueryClient with the optimized performance settings requested
 const queryClient = new QueryClient({
@@ -218,9 +219,11 @@ const PublicLayout = () => {
       <div className="relative z-10 flex flex-col flex-grow w-full">
         <Navbar />
       <div className="flex-grow flex flex-col w-full">
-        <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-0 transition-opacity duration-300 delay-150"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
-          <Outlet />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-0 transition-opacity duration-300 delay-150"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </div>
       {!hideFooter && <Footer />}
       </div>

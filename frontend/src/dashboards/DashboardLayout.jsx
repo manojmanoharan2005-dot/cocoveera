@@ -2,12 +2,13 @@
  * File: frontend/src/dashboards/DashboardLayout.jsx
  * Purpose: Layout wrapper or sub-component specific to user/admin dashboards.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import MobileBottomNav from '../components/MobileBottomNav';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 export const DashboardLayout = () => {
   const { user, logout } = useAuth();
@@ -213,7 +214,7 @@ export const DashboardLayout = () => {
   const activeTab = getActiveTab();
 
   return (
-    <div className="h-screen flex text-[#1A1A1A] font-sans overflow-hidden bg-stone-50">
+    <div className="min-h-screen lg:h-screen flex flex-col lg:flex-row text-[#1A1A1A] font-sans overflow-x-hidden lg:overflow-hidden bg-stone-50">
       {/* Desktop Sidebar (Only rendered if on desktop breakpoint >= 1024px) */}
       {isDesktop && (
         <div className="p-4 sm:p-5 md:p-6 pr-0 shrink-0 h-screen flex flex-col justify-center">
@@ -228,7 +229,7 @@ export const DashboardLayout = () => {
       )}
 
       {/* Main Right Side Area */}
-      <div className="flex-grow flex flex-col h-screen overflow-hidden min-w-0">
+      <div className="flex-grow flex flex-col min-h-0 lg:h-screen lg:overflow-hidden min-w-0">
         <Header
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -242,18 +243,27 @@ export const DashboardLayout = () => {
           onMenuClick={() => setSidebarOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto h-full px-4 sm:px-6 lg:px-8 py-4 sm:py-5 md:py-6">
-          <Outlet context={{
-            searchQuery,
-            setSearchQuery,
-            sortBy,
-            setSortBy,
-            filterDrawerOpen,
-            setFilterDrawerOpen,
-            user,
-            cartCount,
-            wishlistCount
-          }} />
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 md:py-6">
+          <ErrorBoundary>
+            <Suspense fallback={
+              <div className="w-full h-full flex flex-col items-center justify-center py-12">
+                <div className="w-10 h-10 border-4 border-stone-200 border-t-[#2E7D32] rounded-full animate-spin" />
+                <p className="text-stone-400 text-xs font-bold mt-4 animate-pulse">Loading content...</p>
+              </div>
+            }>
+              <Outlet context={{
+                searchQuery,
+                setSearchQuery,
+                sortBy,
+                setSortBy,
+                filterDrawerOpen,
+                setFilterDrawerOpen,
+                user,
+                cartCount,
+                wishlistCount
+              }} />
+            </Suspense>
+          </ErrorBoundary>
         </main>
       </div>
 
