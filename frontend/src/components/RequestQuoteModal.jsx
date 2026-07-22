@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiClient } from '../context/AuthContext';
+import { apiClient, useAuth } from '../context/AuthContext';
 
 export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
+  const { fetchProfile } = useAuth();
   const [rfqSubmitted, setRfqSubmitted] = useState(false);
   const [rfqSubmitLoading, setRfqSubmitLoading] = useState(false);
   const [rfqError, setRfqError] = useState('');
@@ -16,6 +17,11 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
     contactPerson: '',
     email: '',
     phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    postalCode: '',
     country: '',
   });
 
@@ -25,13 +31,19 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
   // Load user profile details if available
   useEffect(() => {
     if (user) {
+      const addr = user.defaultShippingAddress || {};
       setRfqFormData(prev => ({
         ...prev,
         companyName: user.companyName || prev.companyName,
         contactPerson: user.name || prev.contactPerson,
         email: user.email || prev.email,
         phone: user.phone || prev.phone,
-        country: user.country || prev.country,
+        country: addr.country || user.country || prev.country || '',
+        addressLine1: addr.addressLine1 || '',
+        addressLine2: addr.addressLine2 || '',
+        city: addr.city || '',
+        state: addr.state || '',
+        postalCode: addr.postalCode || '',
       }));
     }
   }, [user]);
@@ -104,6 +116,19 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
       errors.phone = 'Please enter a valid phone number (8-20 digits)';
     }
 
+    // Shipping Address fields validation
+    if (!rfqFormData.addressLine1.trim()) {
+      errors.addressLine1 = 'Address Line 1 is required';
+    }
+    if (!rfqFormData.city.trim()) {
+      errors.city = 'City is required';
+    }
+    if (!rfqFormData.state.trim()) {
+      errors.state = 'State / Province is required';
+    }
+    if (!rfqFormData.postalCode.trim()) {
+      errors.postalCode = 'Postal / ZIP Code is required';
+    }
     if (!rfqFormData.country.trim()) {
       errors.country = 'Country is required';
     }
@@ -119,19 +144,40 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
     setRfqError('');
 
     try {
-      // Setup payload with optional fields defaulted as safety net
+      // Setup payload with structured shipping address
       const payload = {
         category: product.category,
         product: product._id,
-        ...rfqFormData,
+        requirementNote: rfqFormData.requirementNote,
+        containerSize: rfqFormData.containerSize,
+        quantity: rfqFormData.quantity,
+        companyName: rfqFormData.companyName,
+        contactPerson: rfqFormData.contactPerson,
+        email: rfqFormData.email,
+        phone: rfqFormData.phone,
+        country: rfqFormData.country,
+        shippingAddress: {
+          addressLine1: rfqFormData.addressLine1.trim(),
+          addressLine2: rfqFormData.addressLine2.trim(),
+          city: rfqFormData.city.trim(),
+          state: rfqFormData.state.trim(),
+          postalCode: rfqFormData.postalCode.trim(),
+          country: rfqFormData.country.trim(),
+        },
         expectedDeliveryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // default to 30 days out
-        address: 'Not specified',
       };
 
       const res = await apiClient.post('/quote-requests', payload);
 
       if (res.data.success) {
         setRfqSubmitted(true);
+        // Automatically sync the profile context defaults
+        try {
+          if (fetchProfile) await fetchProfile();
+        } catch (syncErr) {
+          console.error('Failed to sync profile after RFQ:', syncErr);
+        }
+
         // Automatically close modal after success and remain on the same page
         setTimeout(() => {
           setRfqSubmitted(false);
@@ -171,7 +217,7 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
             <button
               type="button"
               onClick={onClose}
-              className="absolute right-4 top-4 p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-850 transition-colors z-20"
+              className="absolute right-4 top-4 p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-850 transition-colors z-20 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -307,24 +353,23 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
                       )}
                     </div>
 
-                    {/* Email */}
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Email <span className="text-red-500">*</span></label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={rfqFormData.email}
-                        onChange={handleRfqChange}
-                        placeholder="you@company.com"
-                        className={`w-full bg-stone-50 border ${rfqValidationErrors.email ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
-                      />
-                      {rfqValidationErrors.email && (
-                        <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.email}</p>
-                      )}
-                    </div>
-
-                    {/* Phone & Country */}
+                    {/* Email & Phone */}
                     <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Email <span className="text-red-500">*</span></label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={rfqFormData.email}
+                          onChange={handleRfqChange}
+                          placeholder="you@company.com"
+                          className={`w-full bg-stone-50 border ${rfqValidationErrors.email ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
+                        />
+                        {rfqValidationErrors.email && (
+                          <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.email}</p>
+                        )}
+                      </div>
+
                       <div className="space-y-1">
                         <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Phone <span className="text-red-500">*</span></label>
                         <input
@@ -339,20 +384,101 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
                           <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.phone}</p>
                         )}
                       </div>
+                    </div>
 
+                    {/* Shipping Address Section */}
+                    <div className="border-t border-stone-100 pt-4 space-y-3">
+                      <h4 className="text-xs font-poppins font-black text-stone-900 uppercase tracking-wide">Shipping Address</h4>
+                      
                       <div className="space-y-1">
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Country <span className="text-red-500">*</span></label>
+                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Address Line 1 <span className="text-red-500">*</span></label>
                         <input
                           type="text"
-                          name="country"
-                          value={rfqFormData.country}
+                          name="addressLine1"
+                          value={rfqFormData.addressLine1}
                           onChange={handleRfqChange}
-                          placeholder="e.g. Netherlands"
-                          className={`w-full bg-stone-50 border ${rfqValidationErrors.country ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
+                          placeholder="Street name, P.O. box, company name"
+                          className={`w-full bg-stone-50 border ${rfqValidationErrors.addressLine1 ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
                         />
-                        {rfqValidationErrors.country && (
-                          <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.country}</p>
+                        {rfqValidationErrors.addressLine1 && (
+                          <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.addressLine1}</p>
                         )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Address Line 2 <span className="text-stone-400">(Optional)</span></label>
+                        <input
+                          type="text"
+                          name="addressLine2"
+                          value={rfqFormData.addressLine2}
+                          onChange={handleRfqChange}
+                          placeholder="Apartment, suite, unit, building, floor"
+                          className="w-full bg-stone-50 border border-stone-200 rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">City <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            name="city"
+                            value={rfqFormData.city}
+                            onChange={handleRfqChange}
+                            placeholder="e.g. Rotterdam"
+                            className={`w-full bg-stone-50 border ${rfqValidationErrors.city ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
+                          />
+                          {rfqValidationErrors.city && (
+                            <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.city}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">State / Province <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            name="state"
+                            value={rfqFormData.state}
+                            onChange={handleRfqChange}
+                            placeholder="e.g. South Holland"
+                            className={`w-full bg-stone-50 border ${rfqValidationErrors.state ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
+                          />
+                          {rfqValidationErrors.state && (
+                            <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.state}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Postal / ZIP Code <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            name="postalCode"
+                            value={rfqFormData.postalCode}
+                            onChange={handleRfqChange}
+                            placeholder="e.g. 3000"
+                            className={`w-full bg-stone-50 border ${rfqValidationErrors.postalCode ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
+                          />
+                          {rfqValidationErrors.postalCode && (
+                            <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.postalCode}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Country <span className="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            name="country"
+                            value={rfqFormData.country}
+                            onChange={handleRfqChange}
+                            placeholder="e.g. Netherlands"
+                            className={`w-full bg-stone-50 border ${rfqValidationErrors.country ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
+                          />
+                          {rfqValidationErrors.country && (
+                            <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.country}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
 

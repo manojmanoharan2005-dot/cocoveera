@@ -70,6 +70,14 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    defaultShippingAddress: {
+      addressLine1: { type: String, default: '' },
+      addressLine2: { type: String, default: '' },
+      city: { type: String, default: '' },
+      state: { type: String, default: '' },
+      postalCode: { type: String, default: '' },
+      country: { type: String, default: '' }
+    },
     addresses: [
       {
         name: String,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Eye, Download, FileText, MessageSquare, X, Package, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Search, Eye, Download, FileText, MessageSquare, X, Package, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
@@ -69,6 +69,38 @@ const PDFModal = ({ isOpen, onClose, pdfUrl, quoteNumber }) => {
   );
 };
 
+// Success Creation Modal
+const SuccessModal = ({ isOpen, orderId, onClose }) => {
+  const navigate = useNavigate();
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[210] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 text-center animate-slide-up space-y-6">
+        <div className="w-16 h-16 bg-green-50 text-[#2E7D32] rounded-full flex items-center justify-center mx-auto shadow-inner">
+          <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-lg font-poppins font-black text-stone-900 leading-tight">Quotation Accepted Successfully!</h3>
+          <p className="text-sm text-stone-500 font-semibold leading-relaxed">
+            Your export order has been successfully created. You can now proceed to the payment stage and view the timeline.
+          </p>
+        </div>
+        
+        <button
+          onClick={() => {
+            onClose();
+            navigate(`/orders/${orderId}`);
+          }}
+          className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-black py-3 rounded-xl shadow-md transition-colors cursor-pointer text-sm"
+        >
+          Go to My Orders
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Quotes = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -77,6 +109,7 @@ const Quotes = () => {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
   
   // Filtering and Searching
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,6 +125,14 @@ const Quotes = () => {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [activePdfUrl, setActivePdfUrl] = useState('');
   const [activeQuoteNum, setActiveQuoteNum] = useState('');
+
+  // Rejection & Acceptance Modals
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [acceptModalOpen, setAcceptModalOpen] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successOrderId, setSuccessOrderId] = useState('');
+  const [selectedQuote, setSelectedQuote] = useState(null);
 
   const fetchQuotes = async () => {
     try {
@@ -148,7 +189,6 @@ const Quotes = () => {
   };
 
   const handleViewPDF = (quoteId, quoteNumber) => {
-    // Generate secure inline view URL
     const token = sessionStorage.getItem('cocoveera_token');
     const viewUrl = `${apiClient.defaults.baseURL}/quotes/${quoteId}/view-pdf?token=${token}`;
     setActivePdfUrl(viewUrl);
@@ -156,11 +196,67 @@ const Quotes = () => {
     setPdfModalOpen(true);
   };
 
+  const handleOpenRejectModal = (quote) => {
+    setSelectedQuote(quote);
+    setRejectReason('');
+    setRejectModalOpen(true);
+  };
+
+  const handleOpenAcceptModal = (quote) => {
+    setSelectedQuote(quote);
+    setAcceptModalOpen(true);
+  };
+
+  const handleRejectSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedQuote) return;
+
+    try {
+      setActionLoading(true);
+      setError('');
+      const res = await apiClient.put(`/quotes/${selectedQuote._id}/reject`, {
+        rejectionReason: rejectReason.trim(),
+      });
+      if (res.data.success) {
+        setRejectModalOpen(false);
+        fetchQuotes();
+      }
+    } catch (err) {
+      console.error('Failed to reject quote:', err);
+      setError(err.response?.data?.message || 'Failed to reject quotation.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAcceptSubmit = async () => {
+    if (!selectedQuote) return;
+
+    try {
+      setActionLoading(true);
+      setError('');
+      const res = await apiClient.put(`/quotes/${selectedQuote._id}/accept`);
+      if (res.data.success) {
+        setSuccessOrderId(res.data.orderId);
+        setAcceptModalOpen(false);
+        setSuccessModalOpen(true);
+        fetchQuotes();
+      }
+    } catch (err) {
+      console.error('Failed to accept quote:', err);
+      setError(err.response?.data?.message || 'Failed to accept quotation.');
+      setAcceptModalOpen(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'Quote Approved':
         return 'bg-green-100 text-green-800 border border-green-200';
       case 'Quote Rejected':
+      case 'Rejected by Customer':
         return 'bg-red-100 text-red-800 border border-red-200';
       case 'Quote Expired':
         return 'bg-gray-100 text-gray-800 border border-gray-200';
@@ -172,6 +268,11 @@ const Quotes = () => {
       default:
         return 'bg-amber-100 text-amber-800 border border-amber-200';
     }
+  };
+
+  const renderCardAddress = (address) => {
+    if (!address || !address.addressLine1) return 'Standard FOB Destination Port';
+    return `${address.addressLine1}, ${address.city}, ${address.country}`;
   };
 
   return (
@@ -212,6 +313,7 @@ const Quotes = () => {
             <option value="Quote Rejected">Quote Rejected</option>
             <option value="Quote Expired">Quote Expired</option>
             <option value="Quote Accepted">Quote Accepted</option>
+            <option value="Rejected by Customer">Rejected by Customer</option>
           </select>
 
           {/* Search Box */}
@@ -368,6 +470,7 @@ const Quotes = () => {
                       <p className="text-xs text-stone-500 font-semibold mt-1">
                         Quantity: {quote.productDetails?.quantity || quote.containerDetails?.quantity || 'N/A'} {quote.productDetails?.unitType || 'Tons'} &bull; Container: {quote.containerDetails?.containerSize || '20 FT FCL'}
                       </p>
+                      <p className="text-[11px] text-stone-400 mt-0.5">Shipping Destination: <strong className="text-stone-600">{renderCardAddress(quote.shippingAddress)}</strong></p>
                       {quote.shippingTerms && (
                         <p className="text-[11px] text-stone-400 mt-0.5">Shipping Terms: <strong className="text-stone-600">{quote.shippingTerms}</strong></p>
                       )}
@@ -400,6 +503,26 @@ const Quotes = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Approve actions bar at the bottom of the card */}
+                {quote.status === 'Quote Approved' && (
+                  <div className="bg-stone-50 border-t border-stone-100 px-6 py-3.5 flex justify-end gap-3">
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => handleOpenRejectModal(quote)}
+                      className="px-5 py-2 bg-white hover:bg-stone-100 text-red-650 border border-red-200 text-xs font-extrabold rounded-xl transition-all cursor-pointer shadow-sm"
+                    >
+                      Reject Quote
+                    </button>
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => handleOpenAcceptModal(quote)}
+                      className="px-5 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-extrabold rounded-xl shadow-sm transition-all cursor-pointer"
+                    >
+                      Accept Quote
+                    </button>
+                  </div>
+                )}
               </motion.div>
             );
           })}
@@ -429,12 +552,119 @@ const Quotes = () => {
         </div>
       )}
 
+      {/* REJECTION REASON MODAL */}
+      {rejectModalOpen && selectedQuote && (
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[210] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-stone-200 animate-slide-up">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-extrabold text-stone-900">Reject Quotation Proposal</h3>
+              <button onClick={() => setRejectModalOpen(false)} className="text-stone-400 hover:text-stone-650 p-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleRejectSubmit} className="space-y-4">
+              <p className="text-xs text-stone-500 font-semibold leading-relaxed">
+                Provide an optional reason for rejecting quotation <strong>#{selectedQuote.quoteNumber}</strong>:
+              </p>
+              <textarea
+                placeholder="Specify rejection reason (optional)..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                className="w-full bg-white border border-stone-300 rounded-xl p-3 text-xs font-semibold text-stone-900 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all resize-none h-24"
+              />
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRejectModalOpen(false)}
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer border-none"
+                >
+                  Submit Rejection
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ACCEPT CONFIRMATION DIALOG */}
+      {acceptModalOpen && selectedQuote && (
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[210] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-stone-200 animate-slide-up space-y-4">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="text-base font-extrabold text-stone-900">Accept Quotation Proposal</h3>
+              <button onClick={() => setAcceptModalOpen(false)} className="text-stone-400 hover:text-stone-650 p-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Quote details */}
+            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100 text-xs font-semibold text-stone-600 space-y-2">
+              <div className="flex justify-between">
+                <span>Quote Reference</span>
+                <span className="text-stone-900 font-bold">#{selectedQuote.quoteNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Product Summary</span>
+                <span className="text-stone-900 font-bold">{selectedQuote.productDetails?.name || 'Coco Coir'}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-1 border-t border-stone-200">
+                <span className="font-extrabold text-stone-900">Total Price</span>
+                <span className="font-black text-[#2E7D32]">
+                  {selectedQuote.convertedAmount > 0
+                    ? convertCurrency(selectedQuote.originalInrAmount, selectedQuote.currency || user?.currency || 'USD').formatted
+                    : 'Awaiting Pricing'}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-stone-500 font-semibold leading-relaxed">
+              "You are about to accept this quotation. Once accepted, your order will be created and you will proceed to the payment stage."
+            </p>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setAcceptModalOpen(false)}
+                disabled={actionLoading}
+                className="flex-1 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAcceptSubmit}
+                disabled={actionLoading}
+                className="flex-1 px-4 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer border-none"
+              >
+                Accept Quote
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* PDF Modal Container */}
       <PDFModal
         isOpen={pdfModalOpen}
         onClose={() => setPdfModalOpen(false)}
         pdfUrl={activePdfUrl}
         quoteNumber={activeQuoteNum}
+      />
+
+      {/* SUCCESS ORDER REDIRECT MODAL */}
+      <SuccessModal
+        isOpen={successModalOpen}
+        orderId={successOrderId}
+        onClose={() => setSuccessModalOpen(false)}
       />
     </div>
   );

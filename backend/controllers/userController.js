@@ -77,6 +77,18 @@ export const updateUserProfile = async (req, res) => {
       user.otpExpires = null;
     }
 
+    if (req.body.defaultShippingAddress) {
+      const { addressLine1, addressLine2, city, state, postalCode, country } = req.body.defaultShippingAddress;
+      user.defaultShippingAddress = {
+        addressLine1: addressLine1 !== undefined ? addressLine1 : (user.defaultShippingAddress?.addressLine1 || ''),
+        addressLine2: addressLine2 !== undefined ? addressLine2 : (user.defaultShippingAddress?.addressLine2 || ''),
+        city: city !== undefined ? city : (user.defaultShippingAddress?.city || ''),
+        state: state !== undefined ? state : (user.defaultShippingAddress?.state || ''),
+        postalCode: postalCode !== undefined ? postalCode : (user.defaultShippingAddress?.postalCode || ''),
+        country: country !== undefined ? country : (user.defaultShippingAddress?.country || ''),
+      };
+    }
+
     const updatedUser = await user.save();
 
     res.status(200).json({
@@ -89,6 +101,7 @@ export const updateUserProfile = async (req, res) => {
         role: updatedUser.role,
         companyName: updatedUser.companyName,
         country: updatedUser.country,
+        defaultShippingAddress: updatedUser.defaultShippingAddress,
       },
     });
   } catch (error) {

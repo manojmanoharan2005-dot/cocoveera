@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import QuoteRequest from '../models/QuoteRequest.js';
 import User from '../models/User.js';
 import Product from '../models/Product.js';
+import Order from '../models/Order.js';
 import { sendQuoteRevisionRequestEmail, sendQuoteResponseEmail } from '../utils/mailer.js';
 
 // Helper to check and update quote expiration status dynamically
@@ -249,7 +250,150 @@ export const acceptQuote = async (req, res) => {
         rfq.timeline.push({
           status: 'CONFIRMED',
           title: 'Quote Accepted by Customer',
-          description: `Customer accepted quote proposal #${quote.quoteNumber}. Ready for converting to Order.`,
+          description: `Customer accepted quote proposal #${quote.quoteNumber}. Automatically converted to Order.`,
+          timestamp: new Date(),
+        });
+        await rfq.save();
+      }
+    }
+
+    // Generate unique B2B Order Number
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const day = String(new Date().getDate()).padStart(2, '0');
+    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+    const orderNumber = `ORD-${year}${month}${day}-${randomSuffix}`;
+
+    // Structure items array
+    const qty = parseInt(quote.productDetails?.quantity) || 1;
+    const totalAmt = quote.convertedAmount || 0;
+    const orderItems = [
+      {
+        product: quote.productDetails?.productId || null,
+        productName: quote.productDetails?.name || 'Coco Substrates',
+        quantity: qty,
+        pieces: 0,
+        unitPrice: qty > 0 ? (totalAmt / qty) : totalAmt,
+      }
+    ];
+
+    // Setup B2B payment milestones
+    const paymentMilestones = [
+      {
+        milestoneType: '40% Advance Payment',
+        percentage: 40,
+        amount: Math.round(totalAmt * 0.40 * 100) / 100,
+        currency: quote.currency || 'USD',
+        status: 'Pending',
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
+      },
+      {
+        milestoneType: '60% Payment Unlocked',
+        percentage: 20,
+        amount: Math.round(totalAmt * 0.20 * 100) / 100,
+        currency: quote.currency || 'USD',
+        status: 'Locked',
+      },
+      {
+        milestoneType: '80% Payment Unlocked',
+        percentage: 20,
+        amount: Math.round(totalAmt * 0.20 * 100) / 100,
+        currency: quote.currency || 'USD',
+        status: 'Locked',
+      },
+      {
+        milestoneType: '100% Final Payment',
+        percentage: 20,
+        amount: Math.round(totalAmt * 0.20 * 100) / 100,
+        currency: quote.currency || 'USD',
+        status: 'Locked',
+      },
+    ];
+
+    // Create the Order
+    const order = await Order.create({
+      orderNumber,
+      user: req.user._id,
+      quote: quote._id,
+      items: orderItems,
+      totalAmount: totalAmt,
+      currency: quote.currency || 'USD',
+      exchangeRate: quote.exchangeRate || 1.0,
+      commercialNotes: quote.commercialNotes || '',
+      paymentGateway: 'wire',
+      paymentStatus: 'pending',
+      orderStatus: 'confirmed',
+      shippingAddress: {
+        addressLine1: quote.shippingAddress?.addressLine1 || '',
+        addressLine2: quote.shippingAddress?.addressLine2 || '',
+        city: quote.shippingAddress?.city || '',
+        state: quote.shippingAddress?.state || '',
+        postalCode: quote.shippingAddress?.postalCode || '',
+        country: quote.shippingAddress?.country || '',
+      },
+      shippingDetails: {
+        shippingMethod: 'Sea Freight',
+        portOfLoading: 'Chennai, India',
+        portOfDischarge: 'Destination Port',
+        incoterms: quote.shippingTerms || 'FOB',
+        transitTime: '14 Days',
+        containerType: quote.containerDetails?.containerSize || '20 FT',
+      },
+      invoiceUrl: quote.pdfUrl || '',
+      paymentMilestones: paymentMilestones,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Quotation accepted successfully. Your order has been created.',
+      orderId: order._id,
+      data: quote,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Reject Quote from Customer
+// @route   PUT /api/quotes/:id/reject
+// @access  Private
+export const rejectQuote = async (req, res) => {
+  try {
+    const { rejectionReason } = req.body;
+    const quote = await Quote.findById(req.params.id);
+
+    if (!quote) {
+      return res.status(404).json({ success: false, message: 'Quotation not found.' });
+    }
+
+    // Authorization Check
+    const ownsQuote =
+      quote.user?.toString() === req.user._id.toString() ||
+      quote.email.toLowerCase() === req.user.email.toLowerCase();
+
+    if (!ownsQuote) {
+      return res.status(403).json({ success: false, message: 'Not authorized to perform this action.' });
+    }
+
+    // Check expiration
+    await checkQuoteExpiration(quote);
+    if (quote.status === 'Quote Expired') {
+      return res.status(400).json({ success: false, message: 'This quotation has expired and cannot be rejected.' });
+    }
+
+    quote.status = 'Rejected by Customer';
+    quote.rejectionReason = rejectionReason || '';
+    await quote.save();
+
+    // Sync RFQ timeline and status
+    if (quote.rfq) {
+      const rfq = await QuoteRequest.findById(quote.rfq);
+      if (rfq) {
+        rfq.status = 'REJECTED';
+        rfq.timeline.push({
+          status: 'REJECTED',
+          title: 'Quotation Rejected by Customer',
+          description: rejectionReason ? `Reason: ${rejectionReason}` : 'No reason provided.',
           timestamp: new Date(),
         });
         await rfq.save();
@@ -258,7 +402,7 @@ export const acceptQuote = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Quotation accepted successfully. It is ready to be converted into an order.',
+      message: 'Quotation rejected successfully.',
       data: quote,
     });
   } catch (error) {

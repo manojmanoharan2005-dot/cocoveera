@@ -69,6 +69,18 @@ const PDFModal = ({ isOpen, onClose, pdfUrl, quoteNumber }) => {
   );
 };
 
+const renderShippingAddress = (address) => {
+  if (!address || !address.addressLine1) return null;
+  return (
+    <div className="text-xs text-stone-600 space-y-0.5">
+      <p className="font-bold text-stone-900">{address.addressLine1}</p>
+      {address.addressLine2 && <p className="font-medium text-stone-700">{address.addressLine2}</p>}
+      <p className="font-semibold">{address.city}, {address.state} - {address.postalCode}</p>
+      <p className="font-black text-[#2E7D32] uppercase tracking-wider">{address.country}</p>
+    </div>
+  );
+};
+
 const QuoteDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -458,15 +470,23 @@ const QuoteDetails = () => {
           <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
               <MapPin className="w-4 h-4 text-stone-400" />
-              <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider">Destination Port / Country</h3>
+              <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider">Shipping Destination</h3>
             </div>
             
-            <div className="not-italic text-sm font-semibold text-stone-600 leading-relaxed bg-stone-50 p-3.5 rounded-xl border border-stone-100">
-              {quote.rfq?.country && (
-                <span className="block text-stone-900 font-bold mb-1">Target Country: {quote.rfq.country}</span>
-              )}
-              {quote.rfq?.address && (
-                <p className="text-xs text-stone-500 mt-1">{quote.rfq.address}</p>
+            <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-100">
+              {quote.shippingAddress && quote.shippingAddress.addressLine1 ? (
+                renderShippingAddress(quote.shippingAddress)
+              ) : quote.rfq?.shippingAddress && quote.rfq.shippingAddress.addressLine1 ? (
+                renderShippingAddress(quote.rfq.shippingAddress)
+              ) : (
+                <div className="not-italic text-sm font-semibold text-stone-600 leading-relaxed">
+                  {quote.rfq?.country && (
+                    <span className="block text-stone-900 font-bold mb-1">Target Country: {quote.rfq.country}</span>
+                  )}
+                  {quote.rfq?.address && (
+                    <p className="text-xs text-stone-500 mt-1">{quote.rfq.address}</p>
+                  )}
+                </div>
               )}
             </div>
           </div>

@@ -12,6 +12,7 @@ import {
   viewQuotePDF,
   downloadQuotePDF,
   acceptQuote,
+  rejectQuote,
   requestRevision,
 } from '../controllers/quoteController.js';
 import { protect, admin } from '../middleware/auth.js';
@@ -38,6 +39,9 @@ router.route('/:id/download-pdf')
 
 router.route('/:id/accept')
   .put(protect, validateIdParam, acceptQuote);
+
+router.route('/:id/reject')
+  .put(protect, validateIdParam, rejectQuote);
 
 router.route('/:id/revision')
   .post(protect, validateIdParam, requestRevision);

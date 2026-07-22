@@ -367,8 +367,19 @@ export default function AdminQuoteRequestDetails() {
                   <div className="text-xs text-gray-800 font-semibold leading-relaxed p-1 flex items-start gap-2">
                     <MapPin size={16} className="text-gray-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-extrabold text-sm">{request.country}</p>
-                      <p className="text-gray-600 mt-1">{request.address || 'Standard CIF/FOB Destination Port'}</p>
+                      {request.shippingAddress && request.shippingAddress.addressLine1 ? (
+                        <div className="space-y-0.5 text-xs text-stone-750">
+                          <p className="font-bold text-stone-900">{request.shippingAddress.addressLine1}</p>
+                          {request.shippingAddress.addressLine2 && <p className="font-medium text-stone-600">{request.shippingAddress.addressLine2}</p>}
+                          <p className="font-semibold">{request.shippingAddress.city}, {request.shippingAddress.state} - {request.shippingAddress.postalCode}</p>
+                          <p className="font-black text-[#2E7D32] uppercase tracking-wider mt-1">{request.shippingAddress.country}</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-extrabold text-sm">{request.country}</p>
+                          <p className="text-gray-600 mt-1">{request.address || 'Standard CIF/FOB Destination Port'}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

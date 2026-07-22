@@ -53,8 +53,13 @@ const QuoteSchema = new mongoose.Schema(
         'Quote Rejected',
         'Quote Expired',
         'Quote Accepted',
+        'Rejected by Customer',
       ],
       default: 'RFQ Submitted',
+    },
+    rejectionReason: {
+      type: String,
+      default: '',
     },
     quoteDate: {
       type: Date,
@@ -124,6 +129,14 @@ const QuoteSchema = new mongoose.Schema(
         type: Number,
         default: 1,
       },
+    },
+    shippingAddress: {
+      addressLine1: { type: String, default: '' },
+      addressLine2: { type: String, default: '' },
+      city: { type: String, default: '' },
+      state: { type: String, default: '' },
+      postalCode: { type: String, default: '' },
+      country: { type: String, default: '' }
     },
     revisionRequests: [RevisionRequestSchema],
   },

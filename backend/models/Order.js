@@ -16,6 +16,22 @@ const OrderSchema = new mongoose.Schema(
       ref: 'Quote',
       default: null,
     },
+    orderNumber: {
+      type: String,
+      unique: true,
+    },
+    currency: {
+      type: String,
+      default: 'USD',
+    },
+    exchangeRate: {
+      type: Number,
+      default: 1.0,
+    },
+    commercialNotes: {
+      type: String,
+      default: '',
+    },
     items: [
       {
         product: {
@@ -83,6 +99,18 @@ const OrderSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    paymentMilestones: [
+      {
+        milestoneType: { type: String, required: true },
+        percentage: { type: Number, required: true },
+        amount: { type: Number, required: true },
+        currency: { type: String, required: true },
+        status: { type: String, enum: ['Pending', 'Paid', 'Locked'], default: 'Locked' },
+        dueDate: { type: Date },
+        paidAt: { type: Date },
+        paymentId: { type: String, default: '' },
+      }
+    ],
     totalContainers: {
       type: Number,
       default: 0,
@@ -114,12 +142,14 @@ const OrderSchema = new mongoose.Schema(
     },
     shippingAddress: {
       addressLine: String, // Legacy
-      street: String,
-      city: String,
-      state: String,
-      country: String,
-      postalCode: String, // Legacy
-      zipCode: String,
+      street: String, // Legacy
+      zipCode: String, // Legacy
+      addressLine1: { type: String, default: '' },
+      addressLine2: { type: String, default: '' },
+      city: { type: String, default: '' },
+      state: { type: String, default: '' },
+      postalCode: { type: String, default: '' },
+      country: { type: String, default: '' }
     },
     shippingDetails: {
       shippingMethod: String,

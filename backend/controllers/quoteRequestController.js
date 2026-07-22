@@ -34,12 +34,29 @@ export const submitQuoteRequest = async (req, res) => {
       country,
       address,
       quantity,
+      shippingAddress,
     } = req.body;
+
+    // Validate structured shipping address
+    if (!shippingAddress) {
+      return res.status(400).json({ success: false, message: 'Shipping Address section is required.' });
+    }
+
+    const { addressLine1, addressLine2, city, state, postalCode, country: shippingCountry } = shippingAddress;
+    if (!addressLine1 || !city || !state || !postalCode || !shippingCountry) {
+      return res.status(400).json({
+        success: false,
+        message: 'Shipping Address is incomplete. Address Line 1, City, State/Province, Postal Code, and Country are required.',
+      });
+    }
 
     const productObj = await Product.findById(productId);
     if (!productObj) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
+
+    // Map address string for legacy admin fields compatibility
+    const compiledLegacyAddress = `${addressLine1}${addressLine2 ? ', ' + addressLine2 : ''}, ${city}, ${state}, ${postalCode}`;
 
     const quoteRequest = await QuoteRequest.create({
       category,
@@ -51,8 +68,16 @@ export const submitQuoteRequest = async (req, res) => {
       contactPerson,
       email,
       phone,
-      country,
-      address: address || '',
+      country: shippingCountry || country,
+      address: compiledLegacyAddress || address || '',
+      shippingAddress: {
+        addressLine1,
+        addressLine2: addressLine2 || '',
+        city,
+        state,
+        postalCode,
+        country: shippingCountry,
+      },
       quantity: quantity || '',
       status: 'NEW',
     });
@@ -73,6 +98,33 @@ export const submitQuoteRequest = async (req, res) => {
       const user = await User.findOne({ email: email.toLowerCase() });
       if (user) {
         userId = user._id;
+      }
+    }
+
+    // Automatically update Customer profile default shipping address if it differs
+    if (userId) {
+      const user = await User.findById(userId);
+      if (user) {
+        const currentAddr = user.defaultShippingAddress || {};
+        const isDifferent =
+          currentAddr.addressLine1 !== addressLine1 ||
+          currentAddr.addressLine2 !== (addressLine2 || '') ||
+          currentAddr.city !== city ||
+          currentAddr.state !== state ||
+          currentAddr.postalCode !== postalCode ||
+          currentAddr.country !== shippingCountry;
+
+        if (isDifferent) {
+          user.defaultShippingAddress = {
+            addressLine1,
+            addressLine2: addressLine2 || '',
+            city,
+            state,
+            postalCode,
+            country: shippingCountry,
+          };
+          await user.save();
+        }
       }
     }
 
@@ -104,6 +156,14 @@ export const submitQuoteRequest = async (req, res) => {
       containerDetails: {
         containerSize: containerSize || '20 FT',
         quantity: 1,
+      },
+      shippingAddress: {
+        addressLine1,
+        addressLine2: addressLine2 || '',
+        city,
+        state,
+        postalCode,
+        country: shippingCountry,
       },
       currency: 'USD',
       exchangeRate: 83.33,
@@ -441,6 +501,17 @@ export const approveQuoteRequest = async (req, res) => {
     quote.shippingTerms = shippingTerms;
     quote.estimatedProductionTime = deliveryDate || '';
     quote.commercialNotes = additionalNotes || '';
+    if (quoteRequest.shippingAddress) {
+      quote.shippingAddress = {
+        addressLine1: quoteRequest.shippingAddress.addressLine1 || '',
+        addressLine2: quoteRequest.shippingAddress.addressLine2 || '',
+        city: quoteRequest.shippingAddress.city || '',
+        state: quoteRequest.shippingAddress.state || '',
+        postalCode: quoteRequest.shippingAddress.postalCode || '',
+        country: quoteRequest.shippingAddress.country || '',
+      };
+    }
+
     if (pdfFilePath) {
       quote.pdfPath = pdfFilePath;
       quote.pdfUrl = `/api/quotes/${quote._id}/view-pdf`;

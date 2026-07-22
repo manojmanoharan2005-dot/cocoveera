@@ -80,11 +80,12 @@ const OrderDetails = () => {
     },
     shippingAddress: {
       name: backendOrder.user?.name || 'User',
-      street: backendOrder.shippingAddress?.addressLine || 'N/A',
+      addressLine1: backendOrder.shippingAddress?.addressLine1 || backendOrder.shippingAddress?.addressLine || 'N/A',
+      addressLine2: backendOrder.shippingAddress?.addressLine2 || '',
       city: backendOrder.shippingAddress?.city || 'N/A',
-      state: '',
+      state: backendOrder.shippingAddress?.state || '',
       country: backendOrder.shippingAddress?.country || 'N/A',
-      zip: backendOrder.shippingAddress?.postalCode || 'N/A'
+      zip: backendOrder.shippingAddress?.postalCode || backendOrder.shippingAddress?.zipCode || 'N/A'
     },
     customerNotes: '',
     paymentMethod: backendOrder.paymentGateway === 'cod' ? 'Cash on Delivery (COD)' :
@@ -104,7 +105,7 @@ const OrderDetails = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-extrabold text-stone-900">Order {order.id}</h1>
+          <h1 className="text-2xl font-extrabold text-stone-900">Order {backendOrder.orderNumber || order.id}</h1>
           <p className="text-stone-500 font-semibold text-sm">Placed on {new Date(order.date).toLocaleString()}</p>
           {(order.shippingDate || order.estimatedDeliveryDate) && (
             <p className="text-stone-500 font-semibold text-xs mt-1">
@@ -199,6 +200,68 @@ const OrderDetails = () => {
             </div>
           </div>
 
+          {/* B2B Payment Milestones Timeline */}
+          {backendOrder.paymentMilestones && backendOrder.paymentMilestones.length > 0 && (
+            <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
+              <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-6 border-b border-stone-100 pb-2">
+                B2B Payment Milestones
+              </h3>
+              
+              <div className="space-y-6 relative border-l-2 border-stone-150 pl-6 my-2">
+                {backendOrder.paymentMilestones.map((milestone, idx) => {
+                  const isPending = milestone.status === 'Pending';
+                  const isPaid = milestone.status === 'Paid';
+                  const isLocked = milestone.status === 'Locked';
+                  
+                  return (
+                    <div key={idx} className="relative">
+                      {/* Timeline Dot */}
+                      <div className={`absolute -left-[31px] top-1 w-4 h-4 rounded-full border-2 border-white shadow-sm flex items-center justify-center ${
+                        isPaid ? 'bg-[#2E7D32]' : isPending ? 'bg-amber-500 animate-pulse' : 'bg-stone-300'
+                      }`} />
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                        <div>
+                          <h4 className="text-xs font-black uppercase tracking-wider text-stone-900">{milestone.milestoneType}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-sm font-black text-[#2E7D32]">
+                              {convertCurrency(milestone.amount, milestone.currency).formatted}
+                            </span>
+                            <span className="text-[10px] text-stone-400 font-bold">({milestone.percentage}%)</span>
+                          </div>
+                          {milestone.dueDate && (
+                            <p className="text-[10px] text-stone-400 font-semibold mt-0.5">
+                              Due: {new Date(milestone.dueDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                            isPaid ? 'bg-green-100 text-green-800 border border-green-200' :
+                            isPending ? 'bg-amber-100 text-amber-800 border border-amber-250' :
+                            'bg-stone-200 text-stone-500 border border-stone-250'
+                          }`}>
+                            {milestone.status}
+                          </span>
+                          
+                          {isPending && (
+                            <button
+                              onClick={() => alert(`Payment portal integration will be unlocked in the next phase. Milestone amount: ${milestone.currency} ${milestone.amount.toLocaleString()}`)}
+                              className="px-4 py-1.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-extrabold text-xs rounded-lg shadow transition-colors cursor-pointer border-none"
+                            >
+                              Pay Now
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Right Column - Summaries */}
@@ -240,7 +303,8 @@ const OrderDetails = () => {
               </div>
               <address className="not-italic text-sm font-semibold text-stone-600 leading-relaxed bg-stone-50 p-3 rounded-xl border border-stone-100">
                 <span className="block text-stone-900 font-bold mb-1">{order.shippingAddress.name}</span>
-                {order.shippingAddress.street}<br/>
+                {order.shippingAddress.addressLine1}<br/>
+                {order.shippingAddress.addressLine2 && <>{order.shippingAddress.addressLine2}<br/></>}
                 {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}<br/>
                 {order.shippingAddress.country}
               </address>
