@@ -5,8 +5,10 @@ import { apiClient, useAuth } from '../context/AuthContext';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { getPhoneCountry } from '../utils/countryHelpers';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
+  const queryClient = useQueryClient();
   const { fetchProfile } = useAuth();
   const [rfqSubmitted, setRfqSubmitted] = useState(false);
   const [rfqSubmitLoading, setRfqSubmitLoading] = useState(false);
@@ -174,6 +176,9 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
 
       if (res.data.success) {
         setRfqSubmitted(true);
+        // Invalidate the quotes query cache so the "My Quotes" page fetches the new request immediately
+        queryClient.invalidateQueries(['quotes']);
+        
         // Automatically sync the profile context defaults
         try {
           if (fetchProfile) await fetchProfile();
