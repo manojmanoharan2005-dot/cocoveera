@@ -8,6 +8,7 @@ import { FixedSizeList as List } from 'react-window';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import SEO from '../../components/SEO';
+import ImageWithFallback from '../../components/common/ImageWithFallback';
 
 // Lazy load heavy PDF Modal
 const PDFModal = React.lazy(() => import('../../components/common/PDFModal'));
@@ -345,9 +346,13 @@ const Quotes = () => {
         {/* Card Body */}
         <div className="p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex gap-5">
-            {/* Icon container */}
-            <div className="w-16 h-16 bg-[#2E7D32]/5 rounded-xl border border-[#2E7D32]/10 flex items-center justify-center shrink-0">
-              <FileText className="w-7 h-7 text-[#2E7D32]" />
+            {/* Product image container */}
+            <div className="w-16 h-16 bg-stone-50 rounded-xl border border-stone-200 overflow-hidden flex items-center justify-center shrink-0 relative">
+              <ImageWithFallback
+                src={quote.productDetails?.productId?.images?.[0]}
+                alt={quote.productDetails?.name || 'Product'}
+                className="w-full h-full object-cover"
+              />
             </div>
             {/* Product Summary details */}
             <div>
