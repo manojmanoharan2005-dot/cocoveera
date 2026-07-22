@@ -34,11 +34,11 @@ const SuccessModal = ({ isOpen, orderId, onClose }) => {
         <button
           onClick={() => {
             onClose();
-            navigate(`/orders/${orderId}`);
+            navigate(`/orders/payment/${orderId}`);
           }}
           className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-black py-3 rounded-xl shadow-md transition-colors cursor-pointer text-sm"
         >
-          Go to My Orders
+          Go to Milestone Payments
         </button>
       </div>
     </div>

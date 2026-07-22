@@ -69,6 +69,7 @@ const Marketplace = lazy(() => import('./dashboards/Marketplace'));
 const DashboardLayout = lazy(() => import('./dashboards/DashboardLayout'));
 const Orders = lazy(() => import('./pages/account/Orders'));
 const OrderDetails = lazy(() => import('./pages/account/OrderDetails'));
+const OrderPaymentMilestones = lazy(() => import('./pages/account/OrderPaymentMilestones'));
 import Cart from './pages/account/Cart';
 const Checkout = lazy(() => import('./pages/account/Checkout'));
 const OrderSummary = lazy(() => import('./pages/account/OrderSummary'));
@@ -323,6 +324,7 @@ function AppContent() {
           <Route path="/dashboard" element={<Marketplace />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetails />} />
+          <Route path="/orders/payment/:id" element={<OrderPaymentMilestones />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-summary" element={<OrderSummary />} />

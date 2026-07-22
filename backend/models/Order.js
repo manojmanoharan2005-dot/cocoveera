@@ -72,7 +72,7 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
+      enum: ['pending', 'paid', 'failed', 'refunded', 'Awaiting Initial Payment', 'partially_paid'],
       default: 'pending',
     },
     paymentGateway: {
@@ -86,8 +86,12 @@ const OrderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ['pending', 'confirmed', 'packed', 'loaded', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'confirmed', 'packed', 'loaded', 'shipped', 'delivered', 'cancelled', 'Payment Pending'],
       default: 'pending',
+    },
+    paymentProgress: {
+      type: Number,
+      default: 0,
     },
     refunds: [
       {

@@ -263,10 +263,66 @@ const Orders = () => {
         {/* Card Body - Products List */}
         <div className="p-4 md:p-6 space-y-6">
           {/* Status Banner */}
-          <div className="flex items-center gap-2">
-            <h3 className={`text-lg md:text-xl font-bold ${status === 'Delivered' ? 'text-[#067D62]' : status === 'Cancelled' ? 'text-red-700' : 'text-stone-900'}`}>
-              {displayStatus}
-            </h3>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-100 pb-4 gap-4">
+            <div>
+              <h3 className={`text-lg md:text-xl font-black ${status === 'Delivered' ? 'text-[#067D62]' : status === 'Cancelled' ? 'text-red-700' : 'text-stone-900'}`}>
+                {displayStatus}
+              </h3>
+              
+              {/* Payment Milestones Progress Tracker */}
+              {order.paymentMilestones && order.paymentMilestones.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-40 sm:w-56 bg-stone-100 rounded-full h-2 border border-stone-200 overflow-hidden relative">
+                      <div 
+                        className="bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] h-full transition-all" 
+                        style={{ width: `${order.paymentProgress || 0}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-black text-stone-700">{order.paymentProgress || 0}% Paid</span>
+                  </div>
+
+                  {/* Horizontal visual status indicators */}
+                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs">
+                    <span className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">Milestone Progress:</span>
+                    <div className="flex items-center gap-2">
+                      {order.paymentMilestones.map((m, mIdx) => {
+                        const targetPct = mIdx === 0 ? 40 : mIdx === 1 ? 60 : mIdx === 2 ? 80 : 100;
+                        const isPaid = m.status === 'Paid';
+                        const isPending = m.status === 'Pending';
+                        return (
+                          <span key={mIdx} className="font-bold text-stone-600 flex items-center gap-0.5">
+                            {isPaid ? '✔' : isPending ? '⭕' : '🔒'} {targetPct}%
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Current Milestone & Remaining Amount details */}
+                  <div className="text-xs text-stone-500 font-medium space-y-0.5">
+                    {(order.paymentProgress || 0) < 100 ? (
+                      <>
+                        <p>Current Milestone: <strong className="text-stone-700">{order.paymentMilestones.find(m => m.status !== 'Paid')?.milestoneType || 'N/A'}</strong></p>
+                        <p>Remaining Balance: <strong className="text-stone-950 font-black">{convertCurrency(order.paymentMilestones.reduce((acc, m) => acc + (m.status !== 'Paid' ? m.amount : 0), 0), order.currency || 'USD').formatted}</strong></p>
+                      </>
+                    ) : (
+                      <p className="text-[#2E7D32] font-bold">✔ All milestones paid in full.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Next Payment button */}
+            {order.paymentMilestones && order.paymentMilestones.find(m => m.status === 'Pending') && (
+              <button 
+                onClick={() => navigate(`/orders/payment/${order._id}`)}
+                className="px-5 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-black rounded-xl shadow-sm hover:shadow transition-all cursor-pointer w-full sm:w-auto text-center"
+              >
+                Pay Next Milestone
+              </button>
+            )}
           </div>
 
           {order.items.map((item, itemIdx) => (

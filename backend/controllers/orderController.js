@@ -214,7 +214,10 @@ export const getMyOrders = async (req, res) => {
     const { page = 1, limit = 10, search = '', dateFilter = 'all' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    let query = { user: req.user.id };
+    let query = { 
+      user: req.user.id,
+      orderStatus: { $ne: 'Payment Pending' }
+    };
 
     // Apply search filter (orderNumber or productName)
     if (search) {
@@ -237,7 +240,7 @@ export const getMyOrders = async (req, res) => {
 
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
-      .select('orderNumber items totalAmount currency paymentStatus orderStatus createdAt shippingAddress shippingDetails totalContainers totalPieces totalWeight totalVolume recommendedContainer')
+      .select('orderNumber items totalAmount currency paymentStatus orderStatus createdAt shippingAddress shippingDetails totalContainers totalPieces totalWeight totalVolume recommendedContainer paymentProgress paymentMilestones')
       .populate('items.product', 'name slug images price category')
       .sort({ createdAt: -1 })
       .skip(skip)

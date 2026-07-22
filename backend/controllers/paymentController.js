@@ -21,7 +21,7 @@ export const initiatePayment = async (req, res) => {
   // Force reload environment variables to pick up latest keys without a restart
   dotenv.config({ override: true });
 
-  const { orderId, gateway } = req.body;
+  const { orderId, gateway, milestoneIndex } = req.body;
 
   try {
     const order = await Order.findById(orderId).populate('items.product', 'name');
@@ -30,10 +30,52 @@ export const initiatePayment = async (req, res) => {
     }
 
     if (order.paymentStatus === 'paid') {
-      return res.status(400).json({ success: false, message: 'Order has already been paid' });
+      return res.status(400).json({ success: false, message: 'Order has already been paid in full' });
     }
 
-    const amountInCentsStripe = Math.round(order.totalAmount * 0.012 * 100);
+    const isMilestone = milestoneIndex !== undefined && milestoneIndex !== null;
+    let paymentAmount = order.totalAmount;
+    let milestone = null;
+
+    if (isMilestone) {
+      const idx = parseInt(milestoneIndex);
+      if (!order.paymentMilestones || !order.paymentMilestones[idx]) {
+        return res.status(400).json({ success: false, message: 'Invalid milestone index' });
+      }
+      milestone = order.paymentMilestones[idx];
+      if (milestone.status === 'Paid') {
+        return res.status(400).json({ success: false, message: 'This milestone has already been paid' });
+      }
+      paymentAmount = milestone.amount;
+    }
+
+    const currency = milestone ? milestone.currency : (order.currency || 'USD');
+    const exchangeRate = order.exchangeRate || 83.33;
+
+    // Helper for gateway amount conversion
+    const getGatewayAmount = (amount, orderCurrency, currentGateway) => {
+      if (currentGateway === 'stripe') {
+        if (orderCurrency === 'INR') {
+          return Math.round(amount * 0.012 * 100);
+        }
+        return Math.round(amount * 100);
+      }
+      if (currentGateway === 'paypal') {
+        if (orderCurrency === 'INR') {
+          return (amount * 0.012).toFixed(2);
+        }
+        return amount.toFixed(2);
+      }
+      if (currentGateway === 'razorpay') {
+        if (orderCurrency !== 'INR') {
+          return Math.round(amount * exchangeRate * 100);
+        }
+        return Math.round(amount * 100);
+      }
+      return Math.round(amount);
+    };
+
+    const isPaypalMock = !process.env.PAYPAL_SECRET || process.env.PAYPAL_SECRET.startsWith('mock_');
 
     // 1. STRIPE GATEWAY
     if (gateway === 'stripe') {
@@ -44,22 +86,26 @@ export const initiatePayment = async (req, res) => {
           success: true,
           gateway: 'stripe',
           clientSecret: 'mock_stripe_client_secret_' + Date.now(),
-          amount: order.totalAmount,
+          amount: paymentAmount,
         });
       }
 
       const activeStripeInstance = new Stripe(process.env.STRIPE_SECRET);
+      const stripeAmount = getGatewayAmount(paymentAmount, currency, 'stripe');
       const paymentIntent = await activeStripeInstance.paymentIntents.create({
-        amount: amountInCentsStripe,
+        amount: stripeAmount,
         currency: 'usd',
-        metadata: { orderId: orderId.toString() },
+        metadata: { 
+          orderId: orderId.toString(),
+          milestoneIndex: isMilestone ? milestoneIndex.toString() : ''
+        },
       });
 
       return res.status(200).json({
         success: true,
         gateway: 'stripe',
         clientSecret: paymentIntent.client_secret,
-        amount: order.totalAmount,
+        amount: paymentAmount,
       });
     }
 
@@ -68,6 +114,7 @@ export const initiatePayment = async (req, res) => {
       const currentRzpKey = process.env.RAZORPAY_KEY;
       const currentRzpSecret = process.env.RAZORPAY_SECRET;
       const isRzpMock = !currentRzpKey || currentRzpKey.startsWith('mock_');
+      const rzpAmount = getGatewayAmount(paymentAmount, currency, 'razorpay');
 
       if (isRzpMock) {
         console.log(`[Razorpay Mock] Simulating order creation for order: ${orderId}`);
@@ -75,19 +122,17 @@ export const initiatePayment = async (req, res) => {
           success: true,
           gateway: 'razorpay',
           id: 'mock_rzp_order_' + Date.now(),
-          amount: Math.round(order.totalAmount * 100),
+          amount: rzpAmount,
           currency: 'INR',
         });
       }
 
-      // Initialize dynamically to use the latest key
       const activeRazorpayInstance = new Razorpay({
         key_id: currentRzpKey,
         key_secret: currentRzpSecret,
       });
 
-      // order.totalAmount is already in INR. Ensure minimum 1 INR (100 paise) for Razorpay.
-      let inrAmount = Math.max(100, Math.round(order.totalAmount * 100));
+      let inrAmount = Math.max(100, rzpAmount);
       const isLive = currentRzpKey.startsWith('rzp_live_');
       if (!isLive && inrAmount > 50000000) {
         console.warn(`[Razorpay] Test mode: Capping order amount from ${inrAmount} to 50000000 paise to prevent limit errors.`);
@@ -98,6 +143,10 @@ export const initiatePayment = async (req, res) => {
         amount: inrAmount,
         currency: 'INR',
         receipt: orderId.toString(),
+        notes: {
+          orderId: orderId.toString(),
+          milestoneIndex: isMilestone ? milestoneIndex.toString() : ''
+        }
       });
 
       return res.status(200).json({
@@ -106,12 +155,13 @@ export const initiatePayment = async (req, res) => {
         id: rzpOrder.id,
         amount: rzpOrder.amount,
         currency: rzpOrder.currency,
-        key: currentRzpKey, // Send the exact key used to create the order
+        key: currentRzpKey,
       });
     }
 
     // 3. PAYPAL GATEWAY
     if (gateway === 'paypal') {
+      const paypalAmount = getGatewayAmount(paymentAmount, currency, 'paypal');
       if (isPaypalMock) {
         console.log(`[PayPal Mock] Simulating authorization for order: ${orderId}`);
         return res.status(200).json({
@@ -122,7 +172,6 @@ export const initiatePayment = async (req, res) => {
         });
       }
 
-      // Live Paypal Client configuration
       const environment = new paypal.core.LiveEnvironment(
         process.env.VITE_PAYPAL_CLIENT_ID,
         process.env.PAYPAL_SECRET
@@ -138,7 +187,7 @@ export const initiatePayment = async (req, res) => {
             reference_id: orderId.toString(),
             amount: {
               currency_code: "USD",
-              value: (order.totalAmount * 0.012).toFixed(2),
+              value: paypalAmount,
             },
           },
         ],
@@ -157,13 +206,13 @@ export const initiatePayment = async (req, res) => {
       });
     }
 
-    // 4. MOCK DIRECT GATEWAY (always available for easy debugging)
+    // 4. MOCK DIRECT GATEWAY
     if (gateway === 'mock') {
       return res.status(200).json({
         success: true,
         gateway: 'mock',
         orderId: order._id,
-        amount: order.totalAmount,
+        amount: paymentAmount,
       });
     }
 
@@ -177,7 +226,7 @@ export const initiatePayment = async (req, res) => {
 // @route   POST /api/payments/confirm
 // @access  Private
 export const confirmPayment = async (req, res) => {
-  const { orderId, paymentId, gateway, status } = req.body;
+  const { orderId, paymentId, gateway, status, milestoneIndex } = req.body;
 
   try {
     const order = await Order.findById(orderId).populate('user', 'name email phone').populate('items.product', 'name');
@@ -185,31 +234,72 @@ export const confirmPayment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
+    const isMilestone = milestoneIndex !== undefined && milestoneIndex !== null;
+
     if (status === 'success' || status === 'paid') {
-      order.paymentStatus = 'paid';
-      order.orderStatus = 'confirmed';
+      let paidAmount = order.totalAmount;
+      let milestoneDescription = `Payment for order ${order._id}`;
+
+      if (isMilestone) {
+        const idx = parseInt(milestoneIndex);
+        if (!order.paymentMilestones || !order.paymentMilestones[idx]) {
+          return res.status(400).json({ success: false, message: 'Invalid milestone index' });
+        }
+        
+        const milestone = order.paymentMilestones[idx];
+        milestone.status = 'Paid';
+        milestone.paidAt = new Date();
+        milestone.paymentId = paymentId || 'pm_' + Math.random().toString(36).substring(7);
+        paidAmount = milestone.amount;
+        milestoneDescription = `Milestone payment for ${milestone.milestoneType} (Order ${order._id})`;
+
+        if (idx === 0) {
+          order.paymentProgress = 40;
+          order.orderStatus = 'confirmed';
+          order.paymentStatus = 'partially_paid';
+        } else if (idx === 1) {
+          order.paymentProgress = 60;
+          order.orderStatus = 'packed';
+          order.paymentStatus = 'partially_paid';
+        } else if (idx === 2) {
+          order.paymentProgress = 80;
+          order.orderStatus = 'loaded';
+          order.paymentStatus = 'partially_paid';
+        } else if (idx === 3) {
+          order.paymentProgress = 100;
+          order.orderStatus = 'shipped';
+          order.paymentStatus = 'paid';
+        }
+
+        if (idx + 1 < order.paymentMilestones.length) {
+          order.paymentMilestones[idx + 1].status = 'Pending';
+        }
+      } else {
+        order.paymentStatus = 'paid';
+        order.orderStatus = 'confirmed';
+        order.paymentProgress = 100;
+      }
+
       order.paymentId = paymentId || 'pm_' + Math.random().toString(36).substring(7);
       order.paymentGateway = gateway || 'mock';
       await order.save();
 
-      // Create a Payment record
       try {
         await Payment.create({
           order: order._id,
-          amount: order.totalAmount,
+          amount: paidAmount,
           status: 'completed',
           method: gateway || 'mock',
           transactionId: paymentId || order.paymentId,
           paymentDate: new Date(),
-          description: `Payment for order ${order._id}`,
+          description: milestoneDescription,
           user: order.user._id
         });
       } catch (payErr) {
         console.error('Failed to create Payment record:', payErr);
       }
 
-      // If this order is linked to a quote, convert quote status to "converted"
-      if (order.quote) {
+      if (order.quote && order.paymentProgress === 100) {
         await Quote.findByIdAndUpdate(order.quote, { status: 'converted' });
       }
 
@@ -244,10 +334,14 @@ export const confirmPayment = async (req, res) => {
 
       return res.status(200).json({ success: true, message: 'Payment confirmed successfully', data: order });
     } else {
-      order.paymentStatus = 'failed';
-      order.orderStatus = 'cancelled';
-      await order.save();
-      return res.status(400).json({ success: false, message: 'Payment status marked as failed', data: order });
+      if (isMilestone) {
+        return res.status(400).json({ success: false, message: 'Milestone payment failed', data: order });
+      } else {
+        order.paymentStatus = 'failed';
+        order.orderStatus = 'cancelled';
+        await order.save();
+        return res.status(400).json({ success: false, message: 'Payment status marked as failed', data: order });
+      }
     }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

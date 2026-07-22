@@ -336,8 +336,9 @@ export const acceptQuote = async (req, res) => {
       exchangeRate: quote.exchangeRate || 1.0,
       commercialNotes: quote.commercialNotes || '',
       paymentGateway: 'wire',
-      paymentStatus: 'pending',
-      orderStatus: 'confirmed',
+      paymentStatus: 'Awaiting Initial Payment',
+      orderStatus: 'Payment Pending',
+      paymentProgress: 0,
       shippingAddress: {
         addressLine1: quote.shippingAddress?.addressLine1 || '',
         addressLine2: quote.shippingAddress?.addressLine2 || '',
