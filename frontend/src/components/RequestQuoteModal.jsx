@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../context/AuthContext';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+import { getPhoneCountry } from '../utils/countryHelpers';
 
 export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
   const { fetchProfile } = useAuth();
@@ -372,13 +375,21 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
 
                       <div className="space-y-1">
                         <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Phone <span className="text-red-500">*</span></label>
-                        <input
-                          type="text"
-                          name="phone"
+                        <PhoneInput
+                          country={getPhoneCountry(rfqFormData.country) || 'us'}
                           value={rfqFormData.phone}
-                          onChange={handleRfqChange}
-                          placeholder="+1234567890"
-                          className={`w-full bg-stone-50 border ${rfqValidationErrors.phone ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
+                          onChange={phone => {
+                            setRfqFormData(prev => ({ ...prev, phone: phone.startsWith('+') ? phone : '+' + phone }));
+                            if (rfqValidationErrors.phone) {
+                              setRfqValidationErrors(prev => ({ ...prev, phone: '' }));
+                            }
+                          }}
+                          enableSearch={true}
+                          searchPlaceholder="Search country..."
+                          inputClass={`!w-full !bg-stone-50 !border ${rfqValidationErrors.phone ? '!border-red-400' : '!border-stone-200'} !text-stone-900 !rounded-[10px] !h-9.5 !pl-12 !pr-4 !text-xs !font-semibold focus:!outline-none focus:!border-[#2E7D32] focus:!bg-white transition-all`}
+                          buttonClass={`!bg-stone-50 !border ${rfqValidationErrors.phone ? '!border-red-400' : '!border-stone-200'} !rounded-l-[10px] !pl-2`}
+                          dropdownClass="!rounded-[10px] !border-stone-200/80 !text-xs !font-semibold"
+                          searchClass="!bg-stone-50 !border-transparent !text-xs !font-semibold !rounded-lg !mb-2"
                         />
                         {rfqValidationErrors.phone && (
                           <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.phone}</p>
