@@ -167,6 +167,13 @@ export const viewQuotePDF = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Quotation PDF file not found on server.' });
     }
 
+    // Allow framing for this specific PDF route (override Helmet's restrictive defaults)
+    res.removeHeader('X-Frame-Options');
+    res.setHeader(
+      'Content-Security-Policy',
+      "frame-ancestors 'self' https://cocoveera.com https://www.cocoveera.com https://cocoveera.vercel.app https://*.vercel.app http://localhost:5173 http://localhost:5174 http://localhost:5175"
+    );
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="Quotation_${quote.quoteNumber}.pdf"`);
 
