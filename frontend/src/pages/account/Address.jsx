@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, MapPin, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import PhoneInput from 'react-phone-input-2';
@@ -15,33 +16,36 @@ const Address = () => {
   const [addresses, setAddresses] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { fetchProfile } = useAuth();
+  const { fetchProfile, user } = useAuth();
+
+  const { data: profileData, isLoading: queryLoading } = useQuery(['profile'], async () => {
+    const res = await apiClient.get('/users/profile');
+    return res.data.data;
+  }, {
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    keepPreviousData: true,
+    initialData: user ? user : undefined
+  });
+
+  useEffect(() => {
+    if (profileData) {
+      const fetchedAddresses = profileData.addresses || [];
+      setAddresses(fetchedAddresses);
+      if (fetchedAddresses.length === 0) {
+        setIsEditing(true);
+      }
+      setLoading(false);
+    } else {
+      setLoading(queryLoading && !user);
+    }
+  }, [profileData, queryLoading, user]);
 
   const [formData, setFormData] = useState({
     name: '', phone: '', street: '', city: '', state: '', zip: '', country: 'United States', isDefault: false, tag: 'Home'
   });
 
   const mapPattern = `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232E7D32' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`;
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await apiClient.get('/users/profile');
-        if (res.data.success) {
-          const fetchedAddresses = res.data.data.addresses || [];
-          setAddresses(fetchedAddresses);
-          if (fetchedAddresses.length === 0) {
-            setIsEditing(true);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch addresses', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

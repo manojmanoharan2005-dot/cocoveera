@@ -1,8 +1,8 @@
 /**
  * File: frontend/src/components/auth/LoginForm.jsx
- * Purpose: Reusable React UI component for the frontend.
+ * Purpose: Reusable React UI component for the frontend with premium animations.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -12,14 +12,38 @@ import { authService } from '../../services/authService';
 import SuccessAnimation from './SuccessAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const formVariants = {
+// Premium Apple-style transitions
+const cardVariants = {
+  hidden: { 
+    opacity: 0, 
+    scale: 0.96, 
+    filter: 'blur(8px)' 
+  },
+  visible: { 
+    opacity: 1, 
+    scale: 1, 
+    filter: 'blur(0px)',
+    transition: { 
+      duration: 0.5, 
+      ease: [0.16, 1, 0.3, 1], // easeOutExpo
+      staggerChildren: 0.08
+    } 
+  }
+};
+
+const logoVariants = {
+  hidden: { opacity: 0, y: -15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+};
+
+const headerVariants = {
   hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.05 } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0 }
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
 
 const parseErrorMessage = (err, fallback = 'An error occurred. Please try again.') => {
@@ -55,8 +79,10 @@ export const LoginForm = () => {
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
 
-  // Animation State
-  const [showAnimation, setShowAnimation] = useState(false);
+  // Animation States
+  const [successStage, setSuccessStage] = useState('idle'); // 'idle' | 'morphing' | 'checkmark' | 'fadeCard'
+  const [failureActive, setFailureActive] = useState(false);
+  const passwordRef = useRef(null);
 
   const getPasswordStrength = (pass) => {
     if (!pass) return { score: 0, label: '', color: 'bg-stone-200', textColor: 'text-stone-500' };
@@ -85,6 +111,14 @@ export const LoginForm = () => {
     },
   });
 
+  const passwordRegister = register('password', {
+    required: 'Password is required',
+    minLength: {
+      value: 6,
+      message: 'Password must be at least 6 characters long',
+    },
+  });
+
   // Pre-fill email if Remember Me was checked & check for session expiration message
   useEffect(() => {
     const sessionError = sessionStorage.getItem('auth_error_message') || location.state?.message;
@@ -106,6 +140,7 @@ export const LoginForm = () => {
   const onSubmit = async (data) => {
     setLoading(true);
     setApiError(null);
+    setFailureActive(false);
     try {
       const res = await login(data.phone, data.password);
       
@@ -122,7 +157,27 @@ export const LoginForm = () => {
       }
 
       if (res.success) {
-        setShowAnimation(true);
+        // Trigger multi-stage inline button success morphing
+        setSuccessStage('morphing');
+        setTimeout(() => {
+          setSuccessStage('checkmark');
+        }, 600);
+        setTimeout(() => {
+          setSuccessStage('fadeCard');
+        }, 1100);
+        setTimeout(() => {
+          const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+          if (storedRedirect) {
+            sessionStorage.removeItem('postLoginRedirect');
+            navigate(storedRedirect, { replace: true });
+            return;
+          }
+          const fromState = location.state?.from;
+          const fromPath = fromState 
+            ? `${fromState.pathname}${fromState.search || ''}` 
+            : (redirect ? `/${redirect}` : '/dashboard');
+          navigate(fromPath, { replace: true });
+        }, 1450);
       }
     } catch (err) {
       const errorMsg = parseErrorMessage(err, 'Incorrect credentials. Please try again.');
@@ -130,6 +185,16 @@ export const LoginForm = () => {
         navigate(`/verify-otp?phone=${encodeURIComponent(data.phone)}`);
       } else {
         setApiError(errorMsg);
+        setFailureActive(true);
+        setTimeout(() => {
+          setFailureActive(false);
+        }, 1200);
+        
+        // Focus and select password text for quick re-typing
+        if (passwordRef.current) {
+          passwordRef.current.focus();
+          passwordRef.current.select();
+        }
       }
     } finally {
       setLoading(false);
@@ -218,47 +283,58 @@ export const LoginForm = () => {
     }
   };
 
-  if (showAnimation) {
-    return (
-      <SuccessAnimation 
-        type="login" 
-        onComplete={() => {
-          const storedRedirect = sessionStorage.getItem('postLoginRedirect');
-          if (storedRedirect) {
-            sessionStorage.removeItem('postLoginRedirect');
-            navigate(storedRedirect, { replace: true });
-            return;
-          }
-          const fromState = location.state?.from;
-          const fromPath = fromState 
-            ? `${fromState.pathname}${fromState.search || ''}` 
-            : (redirect ? `/${redirect}` : '/dashboard');
-          navigate(fromPath, { replace: true });
-        }} 
-      />
-    );
-  }
+  const isMorphing = successStage === 'morphing';
+  const isCheckmark = successStage === 'checkmark';
+  const isFadeCard = successStage === 'fadeCard';
+  const isAnimatingSuccess = isMorphing || isCheckmark || isFadeCard;
 
   return (
-    <div className="bg-white border border-stone-200/80 rounded-3xl p-8 shadow-soft text-stone-900 max-w-md w-full mx-auto">
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate={isFadeCard ? { opacity: 0, scale: 0.95, filter: 'blur(10px)', transition: { duration: 0.35 } } : "visible"}
+      className="bg-white border border-stone-200/80 rounded-3xl p-8 shadow-soft text-stone-900 max-w-md w-full mx-auto relative overflow-hidden"
+    >
       <div className="text-center mb-8">
-        <img src="/logo.webp" alt="Cocoveera Logo" className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" />
-        <span className="text-[#2E5E35] font-poppins text-[10px] font-bold uppercase tracking-widest">
+        <motion.img 
+          variants={logoVariants}
+          src="/logo.webp" 
+          alt="Cocoveera Logo" 
+          className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" 
+        />
+        <motion.span 
+          variants={headerVariants}
+          className="text-[#2E5E35] font-poppins text-[10px] font-bold uppercase tracking-widest"
+        >
           Secure Portal
-        </span>
-        <h2 className="text-2xl font-poppins font-extrabold text-stone-900 mt-1">
+        </motion.span>
+        <motion.h2 
+          variants={headerVariants}
+          className="text-2xl font-poppins font-extrabold text-stone-900 mt-1"
+        >
           Welcome Back
-        </h2>
-        <p className="text-stone-500 text-xs mt-1.5 font-medium">
+        </motion.h2>
+        <motion.p 
+          variants={headerVariants}
+          className="text-stone-500 text-xs mt-1.5 font-medium"
+        >
           Sign in to access your trade dashboard
-        </p>
+        </motion.p>
       </div>
 
-      {apiError && (
-        <div className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center animate-fade-in">
-          {typeof apiError === 'string' ? apiError : (apiError?.message || 'Authentication error. Please try again.')}
-        </div>
-      )}
+      <AnimatePresence>
+        {apiError && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center flex items-center justify-center gap-2"
+          >
+            <AlertCircle className="w-4 h-4 text-red-650 shrink-0" />
+            <span>{typeof apiError === 'string' ? apiError : (apiError?.message || 'Authentication error. Please try again.')}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {successMessage && (
         <div className="bg-green-50 text-green-700 text-xs p-3.5 rounded-xl border border-green-100 mb-5 font-semibold text-center animate-fade-in">
@@ -267,21 +343,25 @@ export const LoginForm = () => {
       )}
 
       {mode === 'login' && (
-        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <motion.form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Phone or Email */}
-          <div>
+          <motion.div 
+            variants={itemVariants}
+            animate={errors.phone ? { x: [0, -4, 4, -4, 4, 0] } : {}}
+            transition={{ duration: 0.4 }}
+          >
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               PHONE NUMBER (OR EMAIL)
             </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+            <div className="relative group">
+              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
               <input
                 type="text"
                 autoComplete="username"
                 {...register('phone', {
                   required: 'Phone Number or Email is required',
                 })}
-                className={`w-full bg-[#F3F6F8] border text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-400/80 ${
+                className={`w-full bg-[#F3F6F8] border text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-400/80 ${
                   errors.phone ? 'border-red-300' : 'border-transparent'
                 }`}
                 placeholder="+123456... or you@email.com"
@@ -292,26 +372,30 @@ export const LoginForm = () => {
                 {errors.phone.message}
               </span>
             )}
-          </div>
+          </motion.div>
 
           {/* Password */}
-          <div>
+          <motion.div 
+            variants={itemVariants}
+            animate={errors.password ? { x: [0, -4, 4, -4, 4, 0] } : {}}
+            transition={{ duration: 0.4 }}
+          >
             <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
               PASSWORD
             </label>
-            <div className="relative">
-              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+            <div className="relative group">
+              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: {
-                    value: 6,
-                    message: 'Password must be at least 6 characters long',
-                  },
-                })}
-                className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-primary/60 focus:bg-white transition-all placeholder:text-stone-450 ${
+                name={passwordRegister.name}
+                onChange={passwordRegister.onChange}
+                onBlur={passwordRegister.onBlur}
+                ref={(e) => {
+                  passwordRegister.ref(e);
+                  passwordRef.current = e;
+                }}
+                className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-450 ${
                   errors.password ? 'border-red-300' : 'border-transparent'
                 }`}
                 placeholder="••••••"
@@ -329,10 +413,10 @@ export const LoginForm = () => {
                 {errors.password.message}
               </span>
             )}
-          </div>
+          </motion.div>
 
           {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between pt-1">
+          <motion.div variants={itemVariants} className="flex items-center justify-between pt-1">
             <label className="flex items-center space-x-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -354,49 +438,125 @@ export const LoginForm = () => {
             >
               Forgot password?
             </button>
-          </div>
+          </motion.div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50"
-          >
-            {loading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <span>Access Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          {/* Submit Button Wrapper */}
+          <motion.div variants={itemVariants} className="flex justify-center pt-2 w-full">
+            <motion.button
+              layout
+              type="submit"
+              disabled={loading || isAnimatingSuccess}
+              style={{ borderRadius: isAnimatingSuccess ? '9999px' : '12px' }}
+              whileHover={!isAnimatingSuccess ? { 
+                scale: 1.03,
+                y: -2,
+                boxShadow: "0 10px 20px rgba(46, 94, 53, 0.15)",
+                background: "linear-gradient(135deg, #2E5E35 0%, #3B7A45 100%)"
+              } : {}}
+              whileTap={!isAnimatingSuccess ? { scale: 0.98 } : {}}
+              animate={
+                isCheckmark 
+                  ? { 
+                      width: '48px',
+                      height: '48px',
+                      backgroundColor: '#2E7D32',
+                      boxShadow: '0 0 20px rgba(46, 125, 50, 0.4)'
+                    }
+                  : isMorphing
+                  ? { 
+                      width: '48px',
+                      height: '48px',
+                      backgroundColor: '#2E5E35'
+                    }
+                  : failureActive
+                  ? {
+                      x: [0, -6, 6, -6, 6, 0],
+                      backgroundColor: '#DC2626',
+                      boxShadow: '0 0 15px rgba(220, 38, 38, 0.3)'
+                    }
+                  : {
+                      width: '100%',
+                      height: '48px',
+                      backgroundColor: '#2E5E35'
+                    }
+              }
+              transition={
+                failureActive
+                  ? { duration: 0.4 }
+                  : { type: 'spring', stiffness: 300, damping: 25 }
+              }
+              className="mx-auto text-white font-poppins text-xs font-bold py-3.5 shadow-md flex items-center justify-center space-x-1.5 disabled:opacity-50 cursor-pointer overflow-hidden outline-none border-none shrink-0"
+            >
+              {isMorphing && (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full shrink-0"
+                />
+              )}
+              {isCheckmark && (
+                <motion.svg
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                  className="w-5 h-5 text-white shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </motion.svg>
+              )}
+              {failureActive && (
+                <>
+                  <AlertCircle className="w-4 h-4 text-white shrink-0" />
+                  <span className="shrink-0">Authentication Failed</span>
+                </>
+              )}
+              {!isAnimatingSuccess && !failureActive && (
+                <>
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span>Access Dashboard</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </>
+              )}
+            </motion.button>
+          </motion.div>
         </motion.form>
       )}
 
       {mode === 'forgot' && (
-        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleForgotSubmit} className="space-y-4">
-          <div>
+        <motion.form onSubmit={handleForgotSubmit} className="space-y-4">
+          <motion.div variants={itemVariants}>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               EMAIL ADDRESS
             </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+            <div className="relative group">
+              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
               <input
                 type="email"
                 required
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
-                className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20 transition-all placeholder:text-stone-400"
+                className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
                 placeholder="you@email.com"
               />
             </div>
-          </div>
+          </motion.div>
 
-          <button
+          <motion.button
+            variants={itemVariants}
             type="submit"
             disabled={loading}
-            className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -406,9 +566,9 @@ export const LoginForm = () => {
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
-          </button>
+          </motion.button>
 
-          <div className="text-center pt-2">
+          <motion.div variants={itemVariants} className="text-center pt-2">
             <button
               type="button"
               onClick={() => {
@@ -416,22 +576,22 @@ export const LoginForm = () => {
                 setApiError(null);
                 setSuccessMessage(null);
               }}
-              className="text-xs text-stone-500 hover:text-stone-700 font-semibold focus:outline-none"
+              className="text-xs text-stone-500 hover:text-stone-700 font-semibold focus:outline-none bg-transparent border-none cursor-pointer"
             >
               Back to Login
             </button>
-          </div>
+          </motion.div>
         </motion.form>
       )}
 
       {mode === 'reset' && (
-        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode} className="space-y-4">
-          <div>
+        <motion.form onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode} className="space-y-4">
+          <motion.div variants={itemVariants}>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               RESET CODE (OTP)
             </label>
-            <div className="relative">
-              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+            <div className="relative group">
+              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
               <input
                 type="text"
                 required
@@ -439,19 +599,22 @@ export const LoginForm = () => {
                 disabled={isOtpVerified}
                 value={resetOtp}
                 onChange={(e) => setResetOtp(e.target.value)}
-                className={`w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20 transition-all placeholder:text-stone-400 ${
+                className={`w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400 ${
                   isOtpVerified ? 'opacity-65 cursor-not-allowed' : ''
                 }`}
                 placeholder="Enter 6-digit code"
               />
             </div>
-          </div>
+          </motion.div>
 
           {!isOtpVerified ? (
-            <button
+            <motion.button
+              variants={itemVariants}
               type="submit"
               disabled={loading}
-              className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -461,28 +624,28 @@ export const LoginForm = () => {
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
-            </button>
+            </motion.button>
           ) : (
             <>
-              <div>
+              <motion.div variants={itemVariants}>
                 <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
                   NEW PASSWORD
                 </label>
-                <div className="relative">
-                  <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                <div className="relative group">
+                  <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
                   <input
                     type={showNewPassword ? 'text' : 'password'}
                     required
                     minLength={6}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20 transition-all placeholder:text-stone-400"
+                    className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
                     placeholder="•••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none"
+                    className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none bg-transparent border-none cursor-pointer"
                   >
                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -495,26 +658,26 @@ export const LoginForm = () => {
                     <span className={`text-[10px] font-extrabold uppercase tracking-wide ${getPasswordStrength(newPassword).textColor}`}>{getPasswordStrength(newPassword).label}</span>
                   </div>
                 )}
-              </div>
+              </motion.div>
 
-              <div>
+              <motion.div variants={itemVariants}>
                 <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
                   CONFIRM NEW PASSWORD
                 </label>
-                <div className="relative">
-                  <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                <div className="relative group">
+                  <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
                   <input
                     type={showConfirmNewPassword ? 'text' : 'password'}
                     required
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20 transition-all placeholder:text-stone-400"
+                    className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
                     placeholder="•••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                    className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none"
+                    className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none bg-transparent border-none cursor-pointer"
                   >
                     {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -529,12 +692,15 @@ export const LoginForm = () => {
                     <AlertCircle className="w-3.5 h-3.5" /> Passwords do not match
                   </span>
                 )}
-              </div>
+              </motion.div>
 
-              <button
+              <motion.button
+                variants={itemVariants}
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -544,11 +710,11 @@ export const LoginForm = () => {
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
-              </button>
+              </motion.button>
             </>
           )}
 
-          <div className="text-center pt-2">
+          <motion.div variants={itemVariants} className="text-center pt-2">
             <button
               type="button"
               onClick={() => {
@@ -557,27 +723,27 @@ export const LoginForm = () => {
                 setSuccessMessage(null);
                 setIsOtpVerified(false);
               }}
-              className="text-xs text-stone-500 hover:text-stone-700 font-semibold focus:outline-none"
+              className="text-xs text-stone-500 hover:text-stone-700 font-semibold focus:outline-none bg-transparent border-none cursor-pointer"
             >
               Back to Login
             </button>
-          </div>
+          </motion.div>
         </motion.form>
       )}
 
       {mode === 'verifyAdmin' && (
-        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleVerifyAdmin} className="space-y-4">
+        <motion.form onSubmit={handleVerifyAdmin} className="space-y-4">
           <div className="text-center mb-6">
             <ShieldCheck className="w-12 h-12 text-[#2E5E35] mx-auto mb-3" />
             <h3 className="text-lg font-poppins font-extrabold text-stone-900">Admin Verification Required</h3>
             <p className="text-xs text-stone-500 mt-1 font-medium">Please enter your 2-Step Verification Key to continue.</p>
           </div>
-          <div>
+          <motion.div variants={itemVariants}>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               ADMIN VERIFICATION KEY
             </label>
-            <div className="relative">
-              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+            <div className="relative group">
+              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
@@ -589,17 +755,20 @@ export const LoginForm = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none"
+                className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none bg-transparent border-none cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-          </div>
+          </motion.div>
 
-          <button
+          <motion.button
+            variants={itemVariants}
             type="submit"
             disabled={loading}
-            className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -609,9 +778,9 @@ export const LoginForm = () => {
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
-          </button>
+          </motion.button>
 
-          <div className="text-center pt-2">
+          <motion.div variants={itemVariants} className="text-center pt-2">
             <button
               type="button"
               onClick={() => {
@@ -620,16 +789,16 @@ export const LoginForm = () => {
                 setAdminTempToken(null);
                 setVerificationKey('');
               }}
-              className="text-xs text-stone-500 hover:text-stone-700 font-semibold focus:outline-none"
+              className="text-xs text-stone-500 hover:text-stone-700 font-semibold focus:outline-none bg-transparent border-none cursor-pointer"
             >
               Back to Login
             </button>
-          </div>
+          </motion.div>
         </motion.form>
       )}
 
       {mode === 'login' && (
-        <p className="text-center text-xs text-stone-555 mt-6 font-semibold animate-fade-in">
+        <motion.p variants={itemVariants} className="text-center text-xs text-stone-555 mt-6 font-semibold animate-fade-in">
           New to Cocoveera?{' '}
           <span
             onClick={() => navigate('/register', { state: location.state })}
@@ -637,9 +806,9 @@ export const LoginForm = () => {
           >
             Register here
           </span>
-        </p>
+        </motion.p>
       )}
-    </div>
+    </motion.div>
   );
 };
 

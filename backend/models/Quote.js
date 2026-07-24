@@ -152,5 +152,7 @@ QuoteSchema.index({ quoteNumber: 1 });
 QuoteSchema.index({ email: 1 });
 QuoteSchema.index({ createdAt: -1 });
 QuoteSchema.index({ user: 1, createdAt: -1 });
+QuoteSchema.index({ user: 1, status: 1 });
+QuoteSchema.index({ user: 1, status: 1, createdAt: -1 });
 
 export default mongoose.model('Quote', QuoteSchema);

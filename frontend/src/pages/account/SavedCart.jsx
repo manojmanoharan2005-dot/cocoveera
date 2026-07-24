@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2, Heart, Trash } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
@@ -17,10 +18,21 @@ const SavedCart = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { data: profileData, isLoading: queryLoading } = useQuery(['profile'], async () => {
+    const res = await apiClient.get('/users/profile');
+    return res.data.data;
+  }, {
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    keepPreviousData: true,
+    initialData: user ? user : undefined
+  });
+
   // Sync with global user wishlist state
   useEffect(() => {
-    if (user && user.wishlist) {
-      const mappedItems = user.wishlist.map(p => {
+    const activeUser = profileData || user;
+    if (activeUser && activeUser.wishlist) {
+      const mappedItems = activeUser.wishlist.map(p => {
         // Handle case where p might be just a string ID
         const isString = typeof p === 'string';
         return {
@@ -33,36 +45,10 @@ const SavedCart = () => {
       }).filter(i => i.id);
       setItems(mappedItems);
       setLoading(false);
-    } else if (user) {
-      // User is loaded but no wishlist data is present yet
-      const fetchWishlist = async () => {
-        try {
-          const res = await apiClient.get('/users/profile');
-          if (res.data.success) {
-            const fetchedWishlist = res.data.data.wishlist || [];
-            const mappedItems = fetchedWishlist.map(p => {
-              const isString = typeof p === 'string';
-              return {
-                id: isString ? p : (p._id || p.id),
-                name: isString ? 'Saved Product' : (p.name || 'Saved Product'),
-                price: isString ? 0 : (p.price || 0),
-                image: isString ? 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available' : (p.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available'),
-                addedDate: new Date().toISOString()
-              };
-            }).filter(i => i.id);
-            setItems(mappedItems);
-          }
-        } catch (err) {
-          console.error('Failed to fetch wishlist', err);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchWishlist();
     } else {
-      setLoading(false);
+      setLoading(queryLoading && !activeUser);
     }
-  }, [user]);
+  }, [profileData, user, queryLoading]);
 
   const removeItem = async (id) => {
     toggleWishlist(id);

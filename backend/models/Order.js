@@ -203,5 +203,7 @@ OrderSchema.index({ paymentStatus: 1 });
 OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ user: 1, createdAt: -1 });
+OrderSchema.index({ user: 1, orderStatus: 1 });
+OrderSchema.index({ user: 1, orderStatus: 1, createdAt: -1 });
 
 export default mongoose.model('Order', OrderSchema);

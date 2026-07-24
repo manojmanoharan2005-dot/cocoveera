@@ -154,7 +154,7 @@ const Quotes = () => {
       keepPreviousData: true,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000,
-      cacheTime: 15 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
       onError: (err) => {
         console.error('Failed to load quotes:', err);
         setErrorState(err.response?.data?.message || 'Failed to load your quotations. Please try again later.');

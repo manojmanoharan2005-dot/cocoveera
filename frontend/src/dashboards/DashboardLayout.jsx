@@ -4,7 +4,8 @@
  */
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth, apiClient } from '../context/AuthContext';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import MobileBottomNav from '../components/MobileBottomNav';
@@ -14,6 +15,43 @@ export const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Prefetch dashboard data as soon as the user logs in / hits layout
+  useEffect(() => {
+    if (user) {
+      // 1. Prefetch profile (Addresses and wishlist)
+      queryClient.prefetchQuery(['profile'], async () => {
+        const res = await apiClient.get('/users/profile');
+        return res.data.data;
+      }, {
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 10 * 60 * 1000
+      });
+
+      // 2. Prefetch orders (Initial page)
+      queryClient.prefetchQuery(['orders', 1, 'all', ''], async () => {
+        const res = await apiClient.get('/orders/myorders', {
+          params: { page: 1, limit: 5, search: '', dateFilter: 'all' }
+        });
+        return res.data;
+      }, {
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 10 * 60 * 1000
+      });
+
+      // 3. Prefetch quotes (Initial page)
+      queryClient.prefetchQuery(['quotes', 1, '', 'all', ''], async () => {
+        const res = await apiClient.get('/quotes/myquotes', {
+          params: { page: 1, limit: 5, search: '', status: '', dateFilter: 'all' }
+        });
+        return res.data;
+      }, {
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 10 * 60 * 1000
+      });
+    }
+  }, [user, queryClient]);
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);

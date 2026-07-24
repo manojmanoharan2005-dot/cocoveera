@@ -195,4 +195,4 @@ export const FilterDrawer = ({
   );
 };
 
-export default FilterDrawer;
+export default React.memo(FilterDrawer);

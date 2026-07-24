@@ -8,11 +8,12 @@ import { FixedSizeList as List } from 'react-window';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
-import RecommendedProducts from '../../components/common/RecommendedProducts';
 import SEO from '../../components/SEO';
 
 // Lazy load common PDFModal component for inline invoice preview
 const PDFModal = React.lazy(() => import('../../components/common/PDFModal'));
+// Lazy load recommended products section to prevent blocking initial paint
+const RecommendedProducts = React.lazy(() => import('../../components/common/RecommendedProducts'));
 
 // Animated skeleton screen for perceived performance
 const OrdersSkeleton = () => (
@@ -125,7 +126,7 @@ const Orders = () => {
       keepPreviousData: true,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000,
-      cacheTime: 15 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
       onError: (err) => {
         console.error('Failed to fetch orders:', err);
         setErrorState(err.response?.data?.message || 'Failed to load your orders.');
@@ -826,9 +827,11 @@ const Orders = () => {
         />
       </Suspense>
 
-      <div className="mt-16">
-        <RecommendedProducts />
-      </div>
+      <Suspense fallback={<div className="h-10 animate-pulse bg-stone-100 rounded-xl" />}>
+        <div className="mt-16">
+          <RecommendedProducts />
+        </div>
+      </Suspense>
     </div>
   );
 };
