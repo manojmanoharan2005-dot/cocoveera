@@ -2,11 +2,9 @@
  * File: frontend/src/components/3d/ContainerViewer3D.jsx
  * Purpose: Premium B2B logistics visualization card with on-demand Canvas loading, bottom toolbar controls, and real-time cargo metrics.
  */
-import React, { Suspense, useState, useEffect, useRef, useMemo, lazy } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import containerPreviewImg from '../../assets/container_preview.png';
-
-// Lazy load the 3D Canvas component
-const ContainerViewer3DCanvas = lazy(() => import('./ContainerViewer3DCanvas'));
+import ContainerViewer3DCanvas from './ContainerViewer3DCanvas';
 
 // WebGL support check helper
 function isWebGLAvailable() {
@@ -39,6 +37,12 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
   const [isLowEnd, setIsLowEnd] = useState(false);
   const [fpsFailed, setFpsFailed] = useState(false);
 
+  // Loading progress, timeouts and error handlers
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [canvasLoading, setCanvasLoading] = useState(true);
+  const [loadTimeout, setLoadTimeout] = useState(false);
+  const [canvasError, setCanvasError] = useState(false);
+
   // Animation and camera positioning triggers
   const [resetTrigger, setResetTrigger] = useState(0);
   const [zoomInTrigger, setZoomInTrigger] = useState(0);
@@ -61,6 +65,19 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
   useEffect(() => {
     setIsWebGLSupported(isWebGLAvailable());
   }, []);
+
+  // Monitor loading timeout
+  useEffect(() => {
+    let timer;
+    if (isInteractive && canvasLoading && !canvasError) {
+      timer = setTimeout(() => {
+        setLoadTimeout(true);
+      }, 10000);
+    } else {
+      setLoadTimeout(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isInteractive, canvasLoading, canvasError]);
 
   // Memoize calculated pallet positions layout
   const pallets = useMemo(() => {
@@ -98,6 +115,19 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
 
   const handleFpsFail = () => {
     console.warn('FPS dropped below 30, switching to static fallback');
+    setFpsFailed(true);
+    setIsInteractive(false);
+  };
+
+  const handleProgress = (p) => {
+    setLoadingProgress(p);
+    if (p >= 100) {
+      setTimeout(() => setCanvasLoading(false), 500);
+    }
+  };
+
+  const handleRenderError = () => {
+    setCanvasError(true);
     setFpsFailed(true);
     setIsInteractive(false);
   };
@@ -177,7 +207,7 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
         )}
         
         {/* Sleek bottom controls toolbar inside viewport */}
-        {isWebGLSupported && isInteractive && !fpsFailed && totalQuantity > 0 && (
+        {isWebGLSupported && isInteractive && !fpsFailed && !canvasError && totalQuantity > 0 && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-md border border-stone-200/80 shadow-md rounded-full px-3 py-1.5 flex items-center gap-3.5 z-20 pointer-events-auto transition-all select-none">
             <button 
               onClick={(e) => { e.stopPropagation(); setIsTransparent(true); }}
@@ -238,8 +268,13 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
             <div className="h-4 w-px bg-stone-200" />
 
             <button 
-              onClick={(e) => { e.stopPropagation(); setIsInteractive(false); }}
-              className="px-2.5 py-1 rounded-full font-sans text-[10px] font-black uppercase tracking-wider text-red-650 hover:bg-red-50 transition-colors"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setIsInteractive(false); 
+                setCanvasLoading(true);
+                setLoadingProgress(0);
+              }}
+              className="px-2.5 py-1 rounded-full font-sans text-[10px] font-black uppercase tracking-wider text-red-655 hover:bg-red-50 transition-colors"
               title="Close and Destroy 3D Canvas"
             >
               ✕ Close
@@ -248,16 +283,66 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
         )}
 
         {/* WebGL Canvas / Fallback Router */}
-        {isWebGLSupported && isInteractive && !fpsFailed ? (
-          <Suspense
-            fallback={
-              <div className="w-full h-full flex items-center justify-center bg-stone-50">
-                <div className="text-xs font-bold text-stone-500 uppercase tracking-widest animate-pulse font-sans">
-                  Initializing 3D Canvas...
+        {isWebGLSupported && isInteractive && !fpsFailed && !canvasError ? (
+          <>
+            {/* Glowing Outline Skeleton Loader */}
+            {canvasLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-50/90 z-20 transition-opacity duration-300">
+                <div className="w-56 h-28 border-2 border-stone-300 border-dashed rounded-2xl animate-pulse relative flex items-center justify-center p-4">
+                  <div className="absolute left-3 top-3 bottom-3 w-14 border border-stone-200 border-dashed rounded bg-stone-200/20" />
+                  <div className="absolute left-20 top-3 bottom-3 w-14 border border-stone-200 border-dashed rounded bg-stone-200/20" />
+                  <div className="absolute left-36 top-3 bottom-3 w-14 border border-stone-200 border-dashed rounded bg-stone-200/20" />
+                  
+                  <div className="text-center space-y-2 z-10">
+                    <div className="w-5 h-5 border-2 border-stone-300 border-t-[#2E7D32] rounded-full animate-spin mx-auto" />
+                    <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest block font-sans">
+                      Loading Container...
+                    </span>
+                    <span className="text-[9px] font-bold text-stone-400 font-mono block">
+                      {loadingProgress}%
+                    </span>
+                  </div>
                 </div>
               </div>
-            }
-          >
+            )}
+
+            {/* Timeout Fallback Overlay */}
+            {loadTimeout && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 z-30 p-5 text-center space-y-4">
+                <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto border border-orange-200">
+                  <svg className="w-6 h-6 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-xs font-black text-stone-850 uppercase tracking-wider font-sans">Loading is taking too long</h4>
+                  <p className="text-[10px] text-stone-500 font-semibold">The 3D assets or WebGL context could not be initialized in time.</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => {
+                      setLoadTimeout(false);
+                      setLoadingProgress(0);
+                      setIsInteractive(false);
+                      setTimeout(() => setIsInteractive(true), 150);
+                    }}
+                    className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-black rounded-xl shadow-md transition-colors cursor-pointer"
+                  >
+                    Retry Loader
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsInteractive(false);
+                      setFpsFailed(true);
+                    }}
+                    className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-black rounded-xl transition-colors cursor-pointer"
+                  >
+                    Open Static Preview
+                  </button>
+                </div>
+              </div>
+            )}
+
             <ContainerViewer3DCanvas
               containerType={containerType}
               isTransparent={isTransparent}
@@ -266,14 +351,18 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
               resetTrigger={resetTrigger}
               zoomInTrigger={zoomInTrigger}
               zoomOutTrigger={zoomOutTrigger}
+              onProgress={handleProgress}
               onFpsFail={handleFpsFail}
+              onRenderError={handleRenderError}
             />
-          </Suspense>
+          </>
         ) : (
           /* Static container fallback image */
           <div 
             onClick={() => {
               if (isWebGLSupported && !fpsFailed) {
+                setCanvasLoading(true);
+                setLoadingProgress(0);
                 setIsInteractive(true);
               }
             }}
@@ -297,23 +386,25 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
               </div>
             )}
 
-            {fpsFailed && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-center p-4">
+            {(fpsFailed || canvasError) && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-center p-4 z-10">
                 <span className="text-white text-[10px] font-bold font-sans uppercase tracking-widest bg-red-600 px-3 py-1 rounded-full shadow select-none">
                   Interactive 3D Disabled
                 </span>
-                <p className="text-[10px] text-white/90 font-semibold mt-2.5 max-w-[200px] leading-relaxed select-none">
-                  Interactive 3D disabled for better performance.
+                <p className="text-[10px] text-white/90 font-semibold mt-2.5 max-w-[200px] leading-relaxed select-none font-sans">
+                  Interactive 3D temporarily unavailable.
                 </p>
               </div>
             )}
 
-            {isWebGLSupported && !isInteractive && !fpsFailed && (
+            {isWebGLSupported && !isInteractive && !fpsFailed && !canvasError && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 hover:bg-black/25 transition-colors duration-300 z-10">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
+                    setCanvasLoading(true);
+                    setLoadingProgress(0);
                     setIsInteractive(true);
                   }}
                   className="px-5 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full shadow-lg transition-all duration-300 flex items-center gap-2 transform hover:scale-105 active:scale-95 font-sans pointer-events-auto"
@@ -353,7 +444,7 @@ export const ContainerViewer3D = React.memo(({ containerType, totalQuantity, aut
           <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">
             Container
           </span>
-          <span className="text-xs font-black text-stone-800 uppercase mt-0.5 block">
+          <span className="text-xs font-black text-stone-880 uppercase mt-0.5 block">
             {containerType} FCL
           </span>
         </div>

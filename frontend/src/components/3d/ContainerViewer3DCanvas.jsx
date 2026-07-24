@@ -4,10 +4,11 @@
  */
 import React, { useRef, Suspense, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import { ContainerModel } from './ContainerModel';
 import { PalletModel } from './PalletModel';
+import { CanvasErrorBoundary } from './ContainerViewerCanvas';
 
 // FPS monitor to check performance
 function FPSMonitor({ onFail }) {
@@ -40,6 +41,19 @@ function FPSMonitor({ onFail }) {
       }
     }
   });
+
+  return null;
+}
+
+// Progress tracker that reports loading details up to the parent HTML wrapper
+function ProgressTracker({ onProgress }) {
+  const { progress } = useProgress();
+  
+  useEffect(() => {
+    if (onProgress) {
+      onProgress(Math.round(progress));
+    }
+  }, [progress, onProgress]);
 
   return null;
 }
@@ -130,7 +144,9 @@ export default function ContainerViewer3DCanvas({
   resetTrigger,
   zoomInTrigger,
   zoomOutTrigger,
-  onFpsFail
+  onProgress,
+  onFpsFail,
+  onRenderError
 }) {
   const controlsRef = useRef();
 
@@ -161,72 +177,75 @@ export default function ContainerViewer3DCanvas({
   }, [zoomOutTrigger]);
 
   return (
-    <Canvas
-      camera={{ position: [5, 3, 7], fov: 48, far: 1000, near: 0.1 }}
-      shadows={false}
-      dpr={lightweight ? 1 : [1, 1.5]}
-      performance={{ min: 0.5, max: 1 }}
-      frameloop="demand"
-      gl={{
-        powerPreference: 'high-performance',
-        antialias: false,
-        alpha: true,
-        stencil: false,
-        depth: true,
-        preserveDrawingBuffer: false
-      }}
-      style={{ width: '100%', height: '100%' }}
-    >
-      <FPSMonitor onFail={onFpsFail} />
-      <AutoFitCamera 
-        containerType={containerType} 
-        palletsCount={pallets.length} 
-        controlsRef={controlsRef} 
-        pallets={pallets} 
-        resetTrigger={resetTrigger} 
-      />
-      <color attach="background" args={['#F7F9F7']} />
-      
-      {/* High-quality lighting: Ambient + weak Hemisphere + strong Directional */}
-      <ambientLight intensity={0.9} />
-      <hemisphereLight skyColor="#ffffff" groundColor="#888888" intensity={0.3} />
-      <directionalLight position={[2, 12, 10]} intensity={1.3} />
-      
-      <Suspense fallback={null}>
-        <group name="container-group" position={[0, -0.5, 0]}>
-          <ContainerModel type={containerType} autoRotate={false} isTransparent={isTransparent} enableShadows={false} />
-          {pallets.map((p) => (
-            <PalletModel 
-              key={p.id} 
-              position={p.position} 
-              index={p.index} 
-              product={p.product} 
-              enableShadows={false}
-              lightweight={lightweight}
-            />
-          ))}
-        </group>
+    <CanvasErrorBoundary onCatch={onRenderError}>
+      <Canvas
+        camera={{ position: [5, 3, 7], fov: 48, far: 1000, near: 0.1 }}
+        shadows={false}
+        dpr={lightweight ? 1 : [1, 1.5]}
+        performance={{ min: 0.5, max: 1 }}
+        frameloop="demand"
+        gl={{
+          powerPreference: 'high-performance',
+          antialias: false,
+          alpha: true,
+          stencil: false,
+          depth: true,
+          preserveDrawingBuffer: false
+        }}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <ProgressTracker onProgress={onProgress} />
+        <FPSMonitor onFail={onFpsFail} />
+        <AutoFitCamera 
+          containerType={containerType} 
+          palletsCount={pallets.length} 
+          controlsRef={controlsRef} 
+          pallets={pallets} 
+          resetTrigger={resetTrigger} 
+        />
+        <color attach="background" args={['#F7F9F7']} />
         
-        {/* Realistic light gray warehouse floor */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.51, 0]}>
-          <planeGeometry args={[50, 50]} />
-          <meshStandardMaterial color="#E8ECE8" roughness={0.7} metalness={0.1} />
-        </mesh>
+        {/* High-quality lighting: Ambient + weak Hemisphere + strong Directional */}
+        <ambientLight intensity={0.9} />
+        <hemisphereLight skyColor="#ffffff" groundColor="#888888" intensity={0.3} />
+        <directionalLight position={[2, 12, 10]} intensity={1.3} />
         
-        {/* Technical/Engineering warehouse grid helper */}
-        <gridHelper args={[30, 30, '#888888', '#dcdcdc']} position={[0, -0.505, 0]} opacity={0.12} transparent />
-      </Suspense>
+        <Suspense fallback={null}>
+          <group name="container-group" position={[0, -0.5, 0]}>
+            <ContainerModel type={containerType} autoRotate={false} isTransparent={isTransparent} enableShadows={false} />
+            {pallets.map((p) => (
+              <PalletModel 
+                key={p.id} 
+                position={p.position} 
+                index={p.index} 
+                product={p.product} 
+                enableShadows={false}
+                lightweight={lightweight}
+              />
+            ))}
+          </group>
+          
+          {/* Realistic light gray warehouse floor */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.51, 0]}>
+            <planeGeometry args={[50, 50]} />
+            <meshStandardMaterial color="#E8ECE8" roughness={0.7} metalness={0.1} />
+          </mesh>
+          
+          {/* Technical/Engineering warehouse grid helper */}
+          <gridHelper args={[30, 30, '#888888', '#dcdcdc']} position={[0, -0.505, 0]} opacity={0.12} transparent />
+        </Suspense>
 
-      <OrbitControls 
-        ref={controlsRef}
-        enablePan={false}
-        minDistance={4}
-        maxDistance={35}
-        maxPolarAngle={Math.PI / 2 + 0.1}
-        autoRotate={false}
-        enableDamping={true}
-        dampingFactor={0.05}
-      />
-    </Canvas>
+        <OrbitControls 
+          ref={controlsRef}
+          enablePan={false}
+          minDistance={4}
+          maxDistance={35}
+          maxPolarAngle={Math.PI / 2 + 0.1}
+          autoRotate={false}
+          enableDamping={true}
+          dampingFactor={0.05}
+        />
+      </Canvas>
+    </CanvasErrorBoundary>
   );
 }
