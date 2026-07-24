@@ -1,6 +1,6 @@
 import React, { useState, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, Download, MessageSquare, MapPin, CheckCircle, Package, AlertCircle, RefreshCw, X, Check } from 'lucide-react';
+import { ArrowLeft, Eye, Download, MapPin, CheckCircle, Package, AlertCircle, RefreshCw, X, Check } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -229,6 +229,8 @@ const QuoteDetails = () => {
     }
   };
 
+  const queryError = errorState || (error ? (error.response?.data?.message || 'Failed to load quote details.') : '');
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] bg-white rounded-2xl border border-stone-200 shadow-sm p-12 max-w-5xl mx-auto">
@@ -238,13 +240,13 @@ const QuoteDetails = () => {
     );
   }
 
-  if (errorState && !quote) {
+  if (queryError && !quote) {
     return (
       <div className="p-6 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3 text-red-700 max-w-5xl mx-auto shadow-sm">
         <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
         <div>
           <h4 className="font-extrabold text-sm uppercase tracking-wider mb-1">Error Loading Quote</h4>
-          <p className="text-sm font-semibold">{errorState}</p>
+          <p className="text-sm font-semibold">{queryError}</p>
           <button
             onClick={() => navigate('/quotes')}
             className="mt-3 bg-white text-stone-700 font-bold text-xs px-3 py-1.5 rounded-lg border border-stone-300 transition hover:bg-stone-50"
@@ -264,12 +266,16 @@ const QuoteDetails = () => {
     );
   }
 
-  const hasPdf = !!quote.pdfUrl;
-  const isApproved = quote.status === 'Quote Approved';
+  const hasPdf = !!quote?.pdfUrl;
+  const isApproved = quote?.status === 'Quote Approved';
   const token = sessionStorage.getItem('cocoveera_token');
+  const pdfViewUrl = quote?._id 
+    ? `${apiClient.defaults.baseURL}/quotes/${quote._id}/view-pdf?token=${token}` 
+    : '';
+
   return (
     <div className="w-full space-y-6">
-      <SEO title={`Quote details #${quote.quoteNumber} - Cocoveera`} />
+      <SEO title={`Quote details #${quote?.quoteNumber || ''} - Cocoveera`} />
 
       {/* Toast Notification */}
       <AnimatePresence>
@@ -297,9 +303,9 @@ const QuoteDetails = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Quotation #{quote.quoteNumber}</h1>
-          <p className="text-stone-500 font-semibold text-sm">Submitted on {new Date(quote.quoteDate).toLocaleString()}</p>
-          {quote.validUntil && quote.status === 'Quote Approved' && (
+          <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Quotation #{quote?.quoteNumber}</h1>
+          <p className="text-stone-500 font-semibold text-sm">Submitted on {quote?.quoteDate ? new Date(quote.quoteDate).toLocaleString() : 'N/A'}</p>
+          {quote?.validUntil && quote?.status === 'Quote Approved' && (
             <p className="text-red-600 font-bold text-xs mt-1">Valid Until: {new Date(quote.validUntil).toLocaleDateString()}</p>
           )}
         </div>
@@ -328,8 +334,8 @@ const QuoteDetails = () => {
           {/* Quotation Status and Actions */}
           <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <span className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider ${getStatusBadgeClass(quote.status)}`}>
-                {quote.status}
+              <span className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider ${getStatusBadgeClass(quote?.status)}`}>
+                {quote?.status}
               </span>
             </div>
             
@@ -353,7 +359,7 @@ const QuoteDetails = () => {
                   </button>
                 </>
               )}
-              {['Quote Approved', 'Pending Review', 'RFQ Submitted'].includes(quote.status) && (
+              {['Quote Approved', 'Pending Review', 'RFQ Submitted'].includes(quote?.status) && (
                 <button
                   disabled={actionLoading}
                   onClick={() => setRevisionModalOpen(true)}
@@ -393,37 +399,37 @@ const QuoteDetails = () => {
               </div>
               <div className="flex-grow">
                 <h4 className="text-sm font-extrabold text-stone-900">
-                  {quote.productDetails?.name || 'Coco Coir Export Substrate'}
+                  {quote?.productDetails?.name || 'Coco Coir Export Substrate'}
                 </h4>
                 <p className="text-xs text-stone-500 font-bold mt-0.5">
-                  Quantity: {quote.productDetails?.quantity || 'N/A'} {quote.productDetails?.unitType || 'Tons'}
+                  Quantity: {quote?.productDetails?.quantity || 'N/A'} {quote?.productDetails?.unitType || 'Tons'}
                 </p>
               </div>
               <div className="text-right">
                 <span className="text-sm font-black text-[#2E7D32]">
-                  {quote.convertedAmount > 0
-                    ? convertCurrency(quote.originalInrAmount, quote.currency || user?.currency || 'USD').formatted
+                  {quote?.convertedAmount > 0
+                    ? convertCurrency(quote?.originalInrAmount || 0, quote?.currency || user?.currency || 'USD').formatted
                     : 'Awaiting Pricing'}
                 </span>
               </div>
             </div>
 
             {/* Technical Specifications */}
-            {quote.productDetails?.specifications && (
+            {quote?.productDetails?.specifications && (
               <div className="pt-2">
                 <h4 className="text-xs font-black text-stone-400 uppercase tracking-wider mb-2">Technical Specifications</h4>
                 <div className="grid grid-cols-3 gap-2 bg-stone-50 p-3 rounded-xl border border-stone-100 text-xs">
                   <div>
                     <span className="text-stone-400 block font-bold">EC Target</span>
-                    <span className="font-semibold text-stone-800">{quote.productDetails.specifications.ec || 'Standard'}</span>
+                    <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.ec || 'Standard'}</span>
                   </div>
                   <div>
                     <span className="text-stone-400 block font-bold">pH Target</span>
-                    <span className="font-semibold text-stone-800">{quote.productDetails.specifications.ph || 'Standard'}</span>
+                    <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.ph || 'Standard'}</span>
                   </div>
                   <div>
                     <span className="text-stone-400 block font-bold">Moisture</span>
-                    <span className="font-semibold text-stone-800">{quote.productDetails.specifications.moisture || 'Standard'}</span>
+                    <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.moisture || 'Standard'}</span>
                   </div>
                 </div>
               </div>
@@ -438,32 +444,32 @@ const QuoteDetails = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
               <div>
                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Container Size</p>
-                <p className="text-sm font-bold text-stone-900">{quote.containerDetails?.containerSize || '20 FT FCL'}</p>
+                <p className="text-sm font-bold text-stone-900">{quote?.containerDetails?.containerSize || '20 FT FCL'}</p>
               </div>
               <div>
                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Number of Containers</p>
-                <p className="text-sm font-bold text-stone-900">{quote.containerDetails?.quantity || 1}</p>
+                <p className="text-sm font-bold text-stone-900">{quote?.containerDetails?.quantity || 1}</p>
               </div>
               <div>
                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Estimated Production Time</p>
-                <p className="text-sm font-bold text-stone-900">{quote.estimatedProductionTime || 'TBD'}</p>
+                <p className="text-sm font-bold text-stone-900">{quote?.estimatedProductionTime || 'TBD'}</p>
               </div>
             </div>
           </div>
 
           {/* Rejection Reason display if rejected */}
-          {quote.status === 'Rejected by Customer' && quote.rejectionReason && (
+          {quote?.status === 'Rejected by Customer' && quote?.rejectionReason && (
             <div className="bg-red-50 border border-red-150 rounded-2xl p-6 shadow-sm space-y-2">
               <h3 className="text-sm font-black text-red-950 uppercase tracking-wider flex items-center gap-1.5">
                 <AlertCircle size={16} className="text-red-650" />
                 Customer Rejection Comments
               </h3>
-              <p className="text-xs font-semibold text-red-800 italic">"{quote.rejectionReason}"</p>
+              <p className="text-xs font-semibold text-red-800 italic">"{quote?.rejectionReason}"</p>
             </div>
           )}
 
           {/* Revision Comments History */}
-          {quote.revisionRequests && quote.revisionRequests.length > 0 && (
+          {quote?.revisionRequests && quote?.revisionRequests.length > 0 && (
             <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
               <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">
                 Revision History
@@ -472,7 +478,7 @@ const QuoteDetails = () => {
               <Suspense fallback={<div className="h-20 bg-stone-100 rounded-xl animate-pulse" />}>
                 <HistoryTimeline 
                   type="revisions" 
-                  data={quote.revisionRequests} 
+                  data={quote?.revisionRequests || []} 
                 />
               </Suspense>
             </div>
@@ -492,16 +498,16 @@ const QuoteDetails = () => {
             <div className="space-y-3 text-sm font-semibold text-stone-600 mb-4">
               <div className="flex justify-between">
                 <span>Shipping terms</span>
-                <span className="text-stone-900 font-bold">{quote.shippingTerms || 'FOB'}</span>
+                <span className="text-stone-900 font-bold">{quote?.shippingTerms || 'FOB'}</span>
               </div>
               <div className="flex justify-between">
                 <span>Currency</span>
-                <span className="text-stone-900 font-bold">{quote.currency || 'USD'}</span>
+                <span className="text-stone-900 font-bold">{quote?.currency || 'USD'}</span>
               </div>
-              {quote.exchangeRate && quote.currency && quote.currency !== 'INR' && (
+              {quote?.exchangeRate && quote?.currency && quote?.currency !== 'INR' && (
                 <div className="flex justify-between text-xs text-stone-400">
                   <span>Exchange rate</span>
-                  <span>1 {quote.currency} = {Number(quote.exchangeRate.toFixed(2))} INR</span>
+                  <span>1 {quote?.currency} = {Number(quote?.exchangeRate?.toFixed(2) || 0)} INR</span>
                 </div>
               )}
             </div>
@@ -509,8 +515,8 @@ const QuoteDetails = () => {
             <div className="border-t border-stone-100 pt-3 flex justify-between items-end">
               <span className="text-xs font-black text-stone-900 uppercase tracking-wider mb-0.5">Grand Total</span>
               <span className="text-xl font-black text-[#2E7D32]">
-                {quote.convertedAmount > 0
-                  ? convertCurrency(quote.originalInrAmount, quote.currency || user?.currency || 'USD').formatted
+                {quote?.convertedAmount > 0
+                  ? convertCurrency(quote?.originalInrAmount || 0, quote?.currency || user?.currency || 'USD').formatted
                   : 'Pending'}
               </span>
             </div>
@@ -524,17 +530,17 @@ const QuoteDetails = () => {
             </div>
             
             <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-100">
-              {quote.shippingAddress && quote.shippingAddress.addressLine1 ? (
-                renderShippingAddress(quote.shippingAddress)
-              ) : quote.rfq?.shippingAddress && quote.rfq.shippingAddress.addressLine1 ? (
-                renderShippingAddress(quote.rfq.shippingAddress)
+              {quote?.shippingAddress && quote?.shippingAddress.addressLine1 ? (
+                renderShippingAddress(quote?.shippingAddress)
+              ) : quote?.rfq?.shippingAddress && quote?.rfq?.shippingAddress?.addressLine1 ? (
+                renderShippingAddress(quote?.rfq?.shippingAddress)
               ) : (
                 <div className="not-italic text-sm font-semibold text-stone-600 leading-relaxed">
-                  {quote.rfq?.country && (
-                    <span className="block text-stone-900 font-bold mb-1">Target Country: {quote.rfq.country}</span>
+                  {quote?.rfq?.country && (
+                    <span className="block text-stone-900 font-bold mb-1">Target Country: {quote?.rfq?.country}</span>
                   )}
-                  {quote.rfq?.address && (
-                    <p className="text-xs text-stone-500 mt-1">{quote.rfq.address}</p>
+                  {quote?.rfq?.address && (
+                    <p className="text-xs text-stone-500 mt-1">{quote?.rfq?.address}</p>
                   )}
                 </div>
               )}
@@ -542,10 +548,10 @@ const QuoteDetails = () => {
           </div>
 
           {/* Commercial Notes Card */}
-          {quote.commercialNotes && (
+          {quote?.commercialNotes && (
             <div className="bg-stone-50 rounded-2xl p-5 border border-stone-200 shadow-sm">
               <h3 className="text-xs font-black text-stone-400 uppercase tracking-wider mb-2">Commercial Notes</h3>
-              <p className="text-xs font-medium text-stone-700 leading-relaxed whitespace-pre-wrap">{quote.commercialNotes}</p>
+              <p className="text-xs font-medium text-stone-700 leading-relaxed whitespace-pre-wrap">{quote?.commercialNotes}</p>
             </div>
           )}
 
@@ -609,7 +615,7 @@ const QuoteDetails = () => {
             
             <form onSubmit={handleRejectSubmit} className="space-y-4">
               <p className="text-xs text-stone-500 font-semibold leading-relaxed">
-                Provide an optional reason for rejecting quotation <strong>#{quote.quoteNumber}</strong>:
+                Provide an optional reason for rejecting quotation <strong>#{quote?.quoteNumber}</strong>:
               </p>
               <textarea
                 placeholder="Specify rejection reason (optional)..."
@@ -630,7 +636,7 @@ const QuoteDetails = () => {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer border-none"
+                  className="flex-1 px-4 py-2.5 bg-red-650 hover:bg-red-755 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer border-none"
                 >
                   Submit Rejection
                 </button>
@@ -655,17 +661,17 @@ const QuoteDetails = () => {
             <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100 text-xs font-semibold text-stone-600 space-y-2">
               <div className="flex justify-between">
                 <span>Quote Reference</span>
-                <span className="text-stone-900 font-bold">#{quote.quoteNumber}</span>
+                <span className="text-stone-900 font-bold">#{quote?.quoteNumber}</span>
               </div>
               <div className="flex justify-between">
                 <span>Product Summary</span>
-                <span className="text-stone-900 font-bold">{quote.productDetails?.name || 'Coco Coir'}</span>
+                <span className="text-stone-900 font-bold">{quote?.productDetails?.name || 'Coco Coir'}</span>
               </div>
               <div className="flex justify-between text-sm pt-1 border-t border-stone-200">
                 <span className="font-extrabold text-stone-900">Total Price</span>
                 <span className="font-black text-[#2E7D32]">
-                  {quote.convertedAmount > 0
-                    ? convertCurrency(quote.originalInrAmount, quote.currency || user?.currency || 'USD').formatted
+                  {quote?.convertedAmount > 0
+                    ? convertCurrency(quote?.originalInrAmount || 0, quote?.currency || user?.currency || 'USD').formatted
                     : 'Awaiting Pricing'}
                 </span>
               </div>
@@ -706,7 +712,7 @@ const QuoteDetails = () => {
           isOpen={pdfModalOpen}
           onClose={() => setPdfModalOpen(false)}
           pdfUrl={pdfViewUrl}
-          quoteNumber={quote.quoteNumber}
+          quoteNumber={quote?.quoteNumber || ''}
           title="Quotation Viewer"
         />
       </Suspense>
