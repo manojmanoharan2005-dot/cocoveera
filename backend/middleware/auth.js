@@ -14,6 +14,10 @@ const setNoCacheHeaders = (res) => {
 export const protect = async (req, res, next) => {
   setNoCacheHeaders(res);
   
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+  
   let token;
 
   if (

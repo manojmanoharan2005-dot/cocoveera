@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import { securitySanitizers } from './middleware/sanitize.js';
@@ -33,28 +34,9 @@ import User from './models/User.js';
 
 const app = express();
 
-// Global rate limiter
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// ==================== MIDDLEWARE ORDER ====================
 
-// Stricter limiter for auth endpoints
-const authLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 10, // limit each IP to 10 requests per windowMs
-  message: { success: false, message: 'Too many auth attempts, please try again later.' }
-});
-
-app.use(limiter);
-
-// Compression Middleware
-app.use(compression());
-
-// Security Middlewares
-// Helmet with stricter Content Security Policy
+// 1. Helmet Security Middleware (with strict CORS-friendly setup)
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -63,52 +45,85 @@ app.use(
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", process.env.FRONTEND_URL || 'http://localhost:5173', 'https:'],
-        frameAncestors: ["'none'"], // Stricter: completely deny framing
+        connectSrc: [
+          "'self'",
+          'https://www.cocoveera.com',
+          'https://cocoveera.com',
+          'http://localhost:5173',
+          'https:'
+        ],
+        frameAncestors: ["'none'"],
         objectSrc: ["'none'"],
       },
     },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     referrerPolicy: { policy: 'same-origin' },
-    xContentTypeOptions: true, // noSniff
-    frameguard: { action: 'deny' }, // X-Frame-Options DENY
-    xssFilter: true, // X-XSS-Protection
+    xContentTypeOptions: true,
+    frameguard: { action: 'deny' },
+    xssFilter: true,
   })
 );
+
+// 2. Production-Ready CORS Middleware & OPTIONS Preflight
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175',
-  'https://cocoveera.vercel.app',
-  'https://cocoveera-wwre.vercel.app'
+  'https://www.cocoveera.com',
+  'https://cocoveera.com',
+  'http://localhost:5173'
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
+    // Allow requests with no origin (like server-to-server, curl, postman, or self-ping)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    try {
-      const hostname = new URL(origin).hostname;
-      const isLocal = /^localhost$|^127\.\d+\.\d+\.\d+$|^192\.168\.\d+\.\d+$|^10\.\d+\.\d+\.\d+$|^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$|\.local$/i.test(hostname);
-      if (isLocal) {
-        return callback(null, true);
-      }
-    } catch (e) {}
-    callback(new Error('Not allowed by CORS'));
+    return callback(new Error('Not allowed by CORS'));
   },
-  credentials: true
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+    'Origin',
+    'X-Requested-With'
+  ],
+  optionsSuccessStatus: 204
+};
 
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
-
-// Body Parser
+// 3. Body Parser
 app.use(express.json({ limit: '100kb' }));
 
-// Sanitization against NoSQL injection and XSS
+// 4. Cookie Parser
+app.use(cookieParser());
+
+// 5. Global & Endpoint Rate Limiters (configured to skip preflight OPTIONS requests)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
+});
+
+const authLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: { success: false, message: 'Too many auth attempts, please try again later.' },
+  skip: (req) => req.method === 'OPTIONS',
+});
+
+app.use(limiter);
+
+// 6. Compression & Sanitization Middleware
+app.use(compression());
 securitySanitizers.forEach(mw => app.use(mw));
 
-// Request timeout protection (30 seconds)
+// 7. Timeout, DB Check, and Response Time Middleware
 app.use((req, res, next) => {
   req.setTimeout(30000, () => {
     res.status(408).json({
@@ -119,15 +134,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Database availability middleware
 app.use((req, res, next) => {
-  // Allow health check, ping routes, and root to pass through even if DB is down
   if (req.path === '/health' || req.path === '/api/ping' || req.path === '/') {
     return next();
   }
   
   const state = mongoose.connection.readyState;
-  // 1 = connected, 2 = connecting
   if (state !== 1 && state !== 2) {
     return res.status(503).json({
       success: false,
@@ -137,7 +149,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// API Response Time Monitoring Middleware
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
@@ -149,8 +160,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
-// Apply auth rate limiter to auth endpoints
+// 8. Routes
 app.use('/api/auth', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -161,24 +171,21 @@ app.use('/api/rfq', rfqRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/refunds', refundRoutes);
-// app.use('/api/shipping', shippingRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/testing', testingRoutes);
 
-// Root route
+// Root & Health routes
 app.get('/', (req, res) => {
   res.json({ message: 'Cocoveera API is running successfully' });
 });
 
-// Health ping route to keep Render awake
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ success: true, message: 'pong' });
 });
 
-// Health check route
 app.get('/health', (req, res) => {
   const state = mongoose.connection.readyState;
   const dbState = state === 1 ? 'connected' : 
@@ -191,7 +198,15 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Error handling middleware
+// 9. 404 Handler
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`
+  });
+});
+
+// 10. Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
