@@ -46,6 +46,16 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
 
+const formVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08
+    }
+  }
+};
+
 const parseErrorMessage = (err, fallback = 'An error occurred. Please try again.') => {
   if (!err) return fallback;
   if (typeof err === 'string') return err;
@@ -343,7 +353,14 @@ export const LoginForm = () => {
       )}
 
       {mode === 'login' && (
-        <motion.form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <motion.form
+          key="login"
+          variants={formVariants}
+          initial="hidden"
+          animate="visible"
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
           {/* Phone or Email */}
           <motion.div 
             variants={itemVariants}
@@ -532,7 +549,14 @@ export const LoginForm = () => {
       )}
 
       {mode === 'forgot' && (
-        <motion.form onSubmit={handleForgotSubmit} className="space-y-4">
+        <motion.form
+          key="forgot"
+          variants={formVariants}
+          initial="hidden"
+          animate="visible"
+          onSubmit={handleForgotSubmit}
+          className="space-y-4"
+        >
           <motion.div variants={itemVariants}>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               EMAIL ADDRESS
@@ -585,7 +609,14 @@ export const LoginForm = () => {
       )}
 
       {mode === 'reset' && (
-        <motion.form onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode} className="space-y-4">
+        <motion.form
+          key="reset"
+          variants={formVariants}
+          initial="hidden"
+          animate="visible"
+          onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode}
+          className="space-y-4"
+        >
           <motion.div variants={itemVariants}>
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               RESET CODE (OTP)
@@ -732,7 +763,14 @@ export const LoginForm = () => {
       )}
 
       {mode === 'verifyAdmin' && (
-        <motion.form onSubmit={handleVerifyAdmin} className="space-y-4">
+        <motion.form
+          key="verifyAdmin"
+          variants={formVariants}
+          initial="hidden"
+          animate="visible"
+          onSubmit={handleVerifyAdmin}
+          className="space-y-4"
+        >
           <div className="text-center mb-6">
             <ShieldCheck className="w-12 h-12 text-[#2E5E35] mx-auto mb-3" />
             <h3 className="text-lg font-poppins font-extrabold text-stone-900">Admin Verification Required</h3>
@@ -798,7 +836,13 @@ export const LoginForm = () => {
       )}
 
       {mode === 'login' && (
-        <motion.p variants={itemVariants} className="text-center text-xs text-stone-555 mt-6 font-semibold animate-fade-in">
+        <motion.p
+          key="register-link"
+          variants={itemVariants}
+          initial="hidden"
+          animate="visible"
+          className="text-center text-xs text-stone-555 mt-6 font-semibold animate-fade-in"
+        >
           New to Cocoveera?{' '}
           <span
             onClick={() => navigate('/register', { state: location.state })}
