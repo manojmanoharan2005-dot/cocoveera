@@ -50,8 +50,8 @@ const MobileAccount = () => {
   ];
 
   const menuItems = [
-    { name: 'My Orders', icon: Package, path: '/orders' },
     { name: 'My Quotes', icon: MessageSquare, path: '/quotes' },
+    { name: 'My Orders', icon: Package, path: '/orders' },
     { name: 'Shipping Address', icon: MapPin, path: '/address' },
 
     { name: 'Notifications', icon: Bell, path: '/notifications' },
