@@ -25,7 +25,7 @@ export const submitQuoteRequest = async (req, res) => {
       category,
       product: productId,
       requirementNote,
-      containerSize,
+      containerSize: initialContainerSize,
       expectedDeliveryDate,
       companyName,
       contactPerson,
@@ -50,17 +50,48 @@ export const submitQuoteRequest = async (req, res) => {
       });
     }
 
-    const productObj = await Product.findById(productId);
-    if (!productObj) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
+    let products = req.body.products;
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      if (productId) {
+        const productObj = await Product.findById(productId);
+        if (productObj) {
+          products = [{
+            product: productObj._id,
+            productName: productObj.name,
+            categoryName: productObj.category || category || 'Coco Substrates',
+            quantity: parseFloat(quantity) || 1.00
+          }];
+        }
+      }
     }
+
+    if (!products || products.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one product must be selected.' });
+    }
+
+    let containerSize = initialContainerSize || req.body.containerType;
+    if (containerSize) {
+      if (containerSize.includes('40')) {
+        containerSize = '40 FT';
+      } else {
+        containerSize = '20 FT';
+      }
+    } else {
+      containerSize = '20 FT';
+    }
+
+    const totalContainers = products.reduce((acc, p) => acc + (parseFloat(p.quantity) || 0), 0);
+    const quantityStr = `${totalContainers.toFixed(2)} Containers`;
+    const categoryFallback = products[0]?.categoryName || category || 'Coco Substrates';
+    const productFallback = products[0]?.product || productId || null;
 
     // Map address string for legacy admin fields compatibility
     const compiledLegacyAddress = `${addressLine1}${addressLine2 ? ', ' + addressLine2 : ''}, ${city}, ${state}, ${postalCode}`;
 
     const quoteRequest = await QuoteRequest.create({
-      category,
-      product: productId,
+      category: categoryFallback,
+      product: productFallback,
+      products,
       requirementNote,
       containerSize,
       expectedDeliveryDate: expectedDeliveryDate || null,
@@ -78,7 +109,7 @@ export const submitQuoteRequest = async (req, res) => {
         postalCode,
         country: shippingCountry,
       },
-      quantity: quantity || '',
+      quantity: quantityStr,
       status: 'NEW',
     });
 
@@ -142,10 +173,10 @@ export const submitQuoteRequest = async (req, res) => {
       status: 'RFQ Submitted',
       quoteDate: new Date(),
       productDetails: {
-        productId: productId,
-        name: productObj.name,
-        quantity: quantity || '',
-        unitType: 'Tons',
+        productId: productFallback,
+        name: products[0]?.productName || 'Coco Substrates',
+        quantity: quantityStr,
+        unitType: 'Containers',
         specifications: {
           ph: '',
           ec: '',
@@ -153,9 +184,10 @@ export const submitQuoteRequest = async (req, res) => {
           notes: requirementNote || '',
         },
       },
+      products,
       containerDetails: {
         containerSize: containerSize || '20 FT',
-        quantity: 1,
+        quantity: totalContainers || 1,
       },
       shippingAddress: {
         addressLine1,
@@ -177,8 +209,9 @@ export const submitQuoteRequest = async (req, res) => {
     // Send email to admin
     try {
       await sendAdminQuoteRequestEmail({
-        category,
-        productName: productObj.name,
+        category: categoryFallback,
+        productName: products[0]?.productName || 'Coco Substrates',
+        products,
         requirementNote,
         containerSize,
         expectedDeliveryDate: expectedDeliveryDate || null,
@@ -188,7 +221,7 @@ export const submitQuoteRequest = async (req, res) => {
         phone,
         country,
         address: address || '',
-        quantity: quantity || '',
+        quantity: quantityStr,
         createdAt: quoteRequest.createdAt,
       });
     } catch (mailErr) {
@@ -388,6 +421,7 @@ export const approveQuoteRequest = async (req, res) => {
       subject: subject || `Quote Request Approved - Cocoveera Export (Ref: #${quoteRequest._id.toString().slice(-6).toUpperCase()})`,
       category: quoteRequest.category,
       productName: quoteRequest.product?.name || 'Coco Substrates',
+      products: quoteRequest.products || [],
       containerSize: quoteRequest.containerSize,
       price,
       currency,
@@ -485,6 +519,8 @@ export const approveQuoteRequest = async (req, res) => {
         },
       });
     }
+
+    quote.products = quoteRequest.products || [];
 
     // 3. Calculate INR base values
     const rates = { INR: 1, USD: 0.012, EUR: 0.011, GBP: 0.0094 };

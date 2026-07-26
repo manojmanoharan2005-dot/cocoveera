@@ -89,8 +89,13 @@ export const validateIdParam = [
 ];
 
 export const validateQuoteRequest = [
-  body('category').notEmpty().withMessage('Category is required'),
-  body('product').isMongoId().withMessage('Valid Product ID is required'),
+  body('category').optional({ checkFalsy: true }),
+  body('product').optional({ checkFalsy: true }),
+  body('products').isArray({ min: 1 }).withMessage('At least one product must be selected'),
+  body('products.*.product').isMongoId().withMessage('Valid Product ID is required for all items'),
+  body('products.*.productName').notEmpty().withMessage('Product name is required for all items'),
+  body('products.*.categoryName').notEmpty().withMessage('Category name is required for all items'),
+  body('products.*.quantity').isFloat({ min: 0.01 }).withMessage('Quantity must be greater than zero for all items'),
   body('requirementNote')
     .isLength({ min: 1, max: 2000 })
     .withMessage('Requirement notes must be between 1 and 2000 characters'),

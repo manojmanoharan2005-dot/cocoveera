@@ -28,16 +28,32 @@ const ProductView = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [quantity, setQuantity] = useState(0.25);
+  const [quantity, setQuantity] = useState(0.00);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const isWishlisted = user?.wishlist?.some(item => (item._id || item) === product?._id) || false;
   const [actionLoading, setActionLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState('');
   const [containerType, setContainerType] = useState('20FT');
-  const [showConfigurator, setShowConfigurator] = useState(false);
+  const [showConfigurator, setShowConfigurator] = useState(true);
   const [extraItems, setExtraItems] = useState([]);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  const [categories, setCategories] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [expandedCategory, setExpandedCategory] = useState(null);
+
+  const groupedProducts = React.useMemo(() => {
+    const grouped = {};
+    allProducts.forEach(p => {
+      const catName = p.category;
+      if (!grouped[catName]) {
+        grouped[catName] = [];
+      }
+      grouped[catName].push(p);
+    });
+    return grouped;
+  }, [allProducts]);
 
   const handleBackNav = () => {
     if (window.history.length > 2) {
@@ -88,7 +104,7 @@ const ProductView = () => {
   };
 
   // Debounced viewer state to prevent UI freezing (hanging) when quantity changes rapidly
-  const [viewerQuantity, setViewerQuantity] = useState(0.25);
+  const [viewerQuantity, setViewerQuantity] = useState(0.00);
   const [viewerPallets, setViewerPallets] = useState([]);
 
   // Testing Feature States
@@ -128,14 +144,17 @@ const ProductView = () => {
       setLoading(true);
       setError(null);
       try {
-        const [prodRes, relatedRes] = await Promise.all([
+        const [prodRes, relatedRes, catRes, allProdsRes] = await Promise.all([
           apiClient.get(`/products/${id}`),
-          apiClient.get(`/products/related/${id}`)
+          apiClient.get(`/products/related/${id}`),
+          apiClient.get('/categories'),
+          apiClient.get('/products')
         ]);
 
         if (prodRes.data.success) {
           const fetchedProduct = prodRes.data.data;
           setProduct(fetchedProduct);
+          setExpandedCategory(fetchedProduct.category);
           
           if (relatedRes.data.success) {
             setRelatedProducts(relatedRes.data.data);
@@ -143,8 +162,16 @@ const ProductView = () => {
         } else {
           setError('Failed to load product details.');
         }
+
+        if (catRes.data.success) {
+          setCategories(catRes.data.data);
+        }
+
+        if (allProdsRes.data.success) {
+          setAllProducts(allProdsRes.data.data);
+        }
       } catch (err) {
-        console.error('Error fetching product:', err);
+        console.error('Error fetching product details:', err);
         setError(err.response?.data?.message || 'Error connecting to server. Please try again.');
       } finally {
         setLoading(false);
@@ -373,10 +400,11 @@ const ProductView = () => {
   const discount = 20;
 
   // Container & subtotal calculations
-  const totalQuantity = quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0);
-  const isWholeContainer = Number.isInteger(totalQuantity) && totalQuantity >= 1;
-  const capacityPercentage = isWholeContainer ? 100 : ((totalQuantity % 1) * 100);
-  const remainingForNextFull = isWholeContainer ? 0 : (1 - (totalQuantity % 1));
+  const totalQuantity = parseFloat((quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
+  const isWholeContainer = totalQuantity > 0 && Math.abs(totalQuantity - Math.round(totalQuantity)) < 0.001;
+  const capacityPercentage = totalQuantity === 0 ? 0 : Math.round(isWholeContainer ? 100 : ((totalQuantity % 1) * 100));
+  const remainingForNextFull = isWholeContainer ? 0 : parseFloat((1 - (totalQuantity % 1)).toFixed(2));
+  const isQuoteButtonDisabled = totalQuantity === 0 || !isWholeContainer;
   const isOverCapacity = false; // No longer applicable as they can order multiple containers
   const palletItems = [{ product, quantity }, ...extraItems];
 
@@ -603,7 +631,7 @@ const ProductView = () => {
             </div>
 
             {/* Certifications and special notes */}
-            <div className={`grid grid-cols-2 gap-3 text-xs font-bold text-stone-600 bg-stone-50 border border-stone-100 p-4 rounded-[20px] mt-6 ${showConfigurator ? 'hidden lg:grid' : ''}`}>
+            <div className="grid grid-cols-2 gap-3 text-xs font-bold text-stone-600 bg-stone-50 border border-stone-100 p-4 rounded-[20px] mt-6">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center shrink-0">
                   <Droplet className="w-3.5 h-3.5" />
@@ -617,10 +645,71 @@ const ProductView = () => {
                 <span>High Porosity</span>
               </div>
             </div>
+
+            {/* Quality Summary */}
+            <div className="bg-stone-50/50 border border-stone-200/60 rounded-[20px] p-5 mt-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5 text-[#EAB308]">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                  ))}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded-md">
+                  VERIFIED QUALITY
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="bg-[#2E7D32] text-white px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                  Export Grade
+                </span>
+                <span className="bg-white border border-stone-200 text-stone-700 px-2.5 py-1 rounded-xl text-[10px] font-bold flex items-center gap-1">
+                  <Beaker className="w-3 h-3 text-[#2E7D32]" />
+                  Laboratory Tested
+                </span>
+                <span className="bg-white border border-stone-200 text-stone-700 px-2.5 py-1 rounded-xl text-[10px] font-bold">
+                  7 Specs Verified
+                </span>
+              </div>
+            </div>
+
+            {/* Verified Specification Report */}
+            <div className="bg-white border border-stone-200/60 rounded-[20px] p-5 mt-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4">
+              <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
+                <div className="w-6 h-6 rounded-lg bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32]">
+                  <FileText className="w-3.5 h-3.5" />
+                </div>
+                <h3 className="font-poppins font-black text-xs uppercase tracking-wider text-stone-900">
+                  Verified Specification Report
+                </h3>
+              </div>
+              
+              <div className="space-y-3">
+                {[
+                  { label: 'EC Runoff', value: product.specifications?.ec || '< 0.5 mS/cm' },
+                  { label: 'pH Level', value: product.specifications?.ph || '5.5 - 6.5' },
+                  { label: 'Moisture Content', value: product.specifications?.moisture || '< 20%' },
+                  { label: 'Expansion Volume', value: product.specifications?.expansionVolume || '15 Liters/kg' },
+                  { label: 'Compression Ratio', value: product.specifications?.compressionRatio || '5:1' },
+                  { label: 'Fiber Length', value: product.specifications?.fiberLength || 'Under 2cm' },
+                  { label: 'Sand Content', value: product.specifications?.sandContent || '< 2%' },
+                ].map((spec, index) => (
+                  <div key={index} className="flex items-center justify-between gap-4 py-2 border-b border-stone-100 last:border-0 last:pb-0 text-xs">
+                    <span className="font-semibold text-stone-500">{spec.label}</span>
+                    <div className="flex items-center gap-4">
+                      <span className="font-black text-stone-900">{spec.value}</span>
+                      <span className="flex items-center gap-1 text-[10px] text-[#2E7D32] font-black bg-[#E8F5E9] px-2 py-0.5 rounded-full shrink-0">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                        <span>Verified</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Right: Product Details, Pricing, & Spec Sheet */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 lg:sticky lg:top-24 space-y-6">
             <div>
               <span className="text-[#2E7D32] text-[10px] font-extrabold uppercase tracking-widest bg-[#2E7D32]/10 py-1 px-3.5 rounded-full inline-block">
                 {product.category}
@@ -642,276 +731,297 @@ const ProductView = () => {
               <span className="text-xs font-semibold text-stone-500">18 Verified Technical Audits</span>
             </div>
 
-            {/* CONTAINER SELECTION CARD */}
-            {showConfigurator && (
-              <div id="container-configurator" className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden space-y-6 mb-6">
-                
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                  <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
-                    <Package className="w-4 h-4 text-[#2E7D32]" />
-                    Container Configuration
-                  </h3>
-                  <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
-                    Step 1
-                  </div>
-                </div>
+            {/* CONTAINER CONFIGURATOR */}
+            <div id="container-configurator" className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden space-y-6 mb-6">
               
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  {/* Container Type Selection */}
-                  <div className="space-y-2.5 flex flex-col justify-end">
-                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Select Size</span>
-                    <div className="flex gap-2 sm:gap-3 h-full max-h-[64px]">
-                      <button 
-                        type="button"
-                        onClick={() => setContainerType('20FT')}
-                        className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
-                          containerType === '20FT' 
-                            ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
-                            : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
-                        }`}
-                      >
-                        {containerType === '20FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
-                        <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '20FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>20FT FCL</span>
-                        <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">Standard</span>
-                      </button>
-                      
-                      <button 
-                        type="button"
-                        onClick={() => setContainerType('40FT')}
-                        className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
-                          containerType === '40FT' 
-                            ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
-                            : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
-                        }`}
-                      >
-                        {containerType === '40FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
-                        <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '40FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>40FT FCL</span>
-                        <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">High Vol</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Adjust Quantity Control */}
-                  <div className="space-y-2.5 flex flex-col justify-end">
-                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Fractional Quantity</span>
-                    <div className="flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-1.5 sm:p-2 shadow-sm h-full max-h-[64px]">
-                      <button 
-                        type="button"
-                        onClick={() => setQuantity(q => Math.max(0.25, q - 0.25))}
-                        className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 active:scale-95"
-                      >
-                        <Minus className="w-5 h-5" />
-                      </button>
-                      
-                      <div className="flex flex-col items-center justify-center px-4">
-                        <span className="text-2xl font-poppins font-black text-stone-900 tracking-tight leading-none">
-                          {quantity.toFixed(2)}
-                        </span>
-                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mt-1">Containers</span>
-                      </div>
-
-                      <button 
-                        type="button"
-                        onClick={() => setQuantity(q => q + 0.25)}
-                        className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] rounded-xl transition-all duration-200 active:scale-95"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
+                  <Package className="w-4 h-4 text-[#2E7D32]" />
+                  Container Configuration
+                </h3>
+                <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
+                  B2B Export Config
                 </div>
-
-                {/* Capacity Usage / Minimum Requirement Status */}
-                <div className={`p-4 rounded-2xl border-2 transition-colors duration-500 ${!isWholeContainer ? 'bg-orange-50/50 border-orange-100' : 'bg-green-50/50 border-green-100'}`}>
-                  <div className="flex justify-between items-end mb-3">
-                    <div>
-                      <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1.5 ${!isWholeContainer ? 'text-orange-600' : 'text-[#2E7D32]'}`}>
-                        {!isWholeContainer ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                        {!isWholeContainer ? 'Full Container Required' : 'Requirement Met'}
-                      </p>
-                      <p className="text-sm font-black text-stone-900 font-poppins">
-                        Current Total: {totalQuantity.toFixed(2)} <span className="text-xs text-stone-500 font-bold">Containers</span>
-                      </p>
-                    </div>
-                    <div className={`text-xl font-black font-poppins ${!isWholeContainer ? 'text-orange-500' : 'text-[#2E7D32]'}`}>
-                      {capacityPercentage.toFixed(0)}%
-                    </div>
-                  </div>
-
-                  <div className="relative w-full h-3 bg-stone-200/50 rounded-full overflow-hidden shadow-inner">
-                    <div 
-                      className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${
-                        !isWholeContainer ? 'bg-orange-500' : 'bg-gradient-to-r from-[#43A047] to-[#2E7D32] shadow-[0_0_10px_rgba(46,125,50,0.5)]'
-                      }`}
-                      style={{ width: `${capacityPercentage}%` }}
-                    />
-                  </div>
-                  {!isWholeContainer && (
-                    <div className="mt-3">
-                      <p className="text-[10px] font-bold text-orange-600 text-center">
-                        Add {remainingForNextFull.toFixed(2)} more container to complete the next full container.
-                      </p>
-                      <p className="text-[9px] font-semibold text-orange-500 text-center mt-0.5 opacity-80">
-                        Checkout is available only for full container quantities. Please complete the remaining container capacity.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-              {/* 3D Container Preview (Mobile Only) */}
-              <div className="lg:hidden relative w-full mt-4 border border-stone-200/50 rounded-2xl overflow-hidden shadow-sm">
-                <ContainerViewer3D containerType={containerType} totalQuantity={viewerQuantity} autoRotate={true} palletItems={viewerPallets} />
               </div>
 
-              {/* Mixed Load Section */}
-              <div className="mt-4 border-t border-stone-100 pt-4">
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2">Mix with other products</p>
-                <div className="space-y-2 lg:max-h-[160px] lg:overflow-y-auto lg:pr-1">
-                  {relatedProducts.map(relProduct => {
-                    const existingExtra = extraItems.find(item => item.product._id === relProduct._id);
-                    const relQuantity = existingExtra ? existingExtra.quantity : 0;
+              {/* Selection size & main quantity input */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                {/* Container Type Selection */}
+                <div className="space-y-2.5 flex flex-col justify-end">
+                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Select Container Size</span>
+                  <div className="flex gap-2 sm:gap-3 h-full max-h-[64px]">
+                    <button 
+                      type="button"
+                      onClick={() => setContainerType('20FT')}
+                      className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
+                        containerType === '20FT' 
+                          ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
+                          : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
+                      }`}
+                    >
+                      {containerType === '20FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
+                      <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '20FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>20FT FCL</span>
+                      <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">Standard</span>
+                    </button>
+                    
+                    <button 
+                      type="button"
+                      onClick={() => setContainerType('40FT')}
+                      className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
+                        containerType === '40FT' 
+                          ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
+                          : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
+                      }`}
+                    >
+                      {containerType === '40FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
+                      <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '40FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>40FT FCL</span>
+                      <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">High Vol</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Adjust Quantity Control */}
+                <div className="space-y-2.5 flex flex-col justify-end">
+                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Fractional Quantity</span>
+                  <div className="flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-1.5 sm:p-2 shadow-sm h-full max-h-[64px]">
+                    <button 
+                      type="button"
+                      onClick={() => setQuantity(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))))}
+                      className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 active:scale-95"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </button>
+                    
+                    <div className="flex flex-col items-center justify-center px-4">
+                      <input
+                        type="number"
+                        step="0.25"
+                        min="0.00"
+                        max="100.00"
+                        value={quantity === 0 ? "0.00" : quantity}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setQuantity(isNaN(val) ? 0.00 : Math.max(0.00, parseFloat(val.toFixed(2))));
+                        }}
+                        className="w-20 text-center text-2xl font-poppins font-black text-stone-900 focus:outline-none focus:ring-0 bg-transparent border-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mt-1">Containers</span>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={() => setQuantity(q => parseFloat((q + 0.25).toFixed(2)))}
+                      className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] rounded-xl transition-all duration-200 active:scale-95"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Accordion list */}
+              <div className="space-y-2 border-t border-stone-100 pt-4">
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2 block">
+                  Container Product Categories
+                </span>
+                
+                <div className="space-y-2.5">
+                  {categories.map((cat) => {
+                    const isExpanded = expandedCategory === cat.name;
+                    const catProducts = groupedProducts[cat.name] || [];
                     
                     return (
-                      <div key={relProduct._id} className="flex items-center justify-between bg-stone-50 border border-stone-200/60 rounded-xl p-2">
-                         <div className="flex items-center gap-2">
-                           <div className="w-8 h-8 rounded-lg overflow-hidden relative">
-                             <ImageWithFallback src={relProduct.images?.[0]} alt="" className="w-full h-full object-contain mix-blend-multiply" />
-                           </div>
-                           <span className="text-[11px] font-bold text-stone-700 max-w-[120px] truncate">{relProduct.name}</span>
-                         </div>
-                         <div className="flex items-center bg-white border border-stone-250 rounded-lg p-0.5">
-                           <button 
-                             type="button"
-                             onClick={() => {
-                               setExtraItems(prev => {
-                                 const existing = prev.find(p => p.product._id === relProduct._id);
-                                 if (existing && existing.quantity > 0.25) {
-                                   return prev.map(p => p.product._id === relProduct._id ? { ...p, quantity: p.quantity - 0.25 } : p);
-                                 } else {
-                                   return prev.filter(p => p.product._id !== relProduct._id);
-                                 }
-                               });
-                             }}
-                             className="w-6 h-6 flex items-center justify-center text-stone-500 hover:bg-stone-100 rounded-md"
-                           >
-                             <Minus className="w-3 h-3" />
-                           </button>
-                           <span className="w-6 text-center text-[10px] font-black">{relQuantity}</span>
-                           <button 
-                             type="button"
-                             onClick={() => {
-                               setExtraItems(prev => {
-                                 const existing = prev.find(p => p.product._id === relProduct._id);
-                                 if (existing) {
-                                   return prev.map(p => p.product._id === relProduct._id ? { ...p, quantity: p.quantity + 0.25 } : p);
-                                 } else {
-                                   return [...prev, { product: relProduct, quantity: 0.25 }];
-                                 }
-                               });
-                             }}
-                             className="w-6 h-6 flex items-center justify-center text-stone-500 hover:bg-stone-100 rounded-md"
-                           >
-                             <Plus className="w-3 h-3" />
-                           </button>
-                         </div>
+                      <div 
+                        key={cat._id} 
+                        className="bg-white border border-stone-200 rounded-[20px] overflow-hidden transition-all duration-300 shadow-sm"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setExpandedCategory(isExpanded ? null : cat.name)}
+                          className="w-full flex items-center justify-between p-4 bg-stone-50/50 hover:bg-stone-50 text-left font-poppins font-black text-xs sm:text-sm text-stone-850 transition-colors"
+                        >
+                          <span className="flex items-center gap-2">
+                            <span>{isExpanded ? '▼' : '►'}</span>
+                            {cat.name}
+                          </span>
+                          <span className="text-[10px] text-[#2E7D32] font-extrabold bg-[#E8F5E9] px-2 py-0.5 rounded-full">
+                            {catProducts.length} Products
+                          </span>
+                        </button>
+                        
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="p-3 border-t border-stone-100 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                {catProducts.length === 0 ? (
+                                  <p className="text-xs text-stone-400 font-semibold py-2">
+                                    No products in this category.
+                                  </p>
+                                ) : (
+                                  catProducts.map((p) => {
+                                    const isMainProduct = p._id === product._id;
+                                    const existingExtra = extraItems.find(item => item.product._id === p._id);
+                                    const currentQty = isMainProduct ? quantity : (existingExtra ? existingExtra.quantity : 0);
+                                    
+                                    return (
+                                      <div 
+                                        key={p._id} 
+                                        className="flex items-center justify-between gap-3 p-3 bg-stone-50 rounded-2xl border border-stone-200/60 hover:border-stone-300 transition-all text-xs"
+                                      >
+                                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                          <div className="w-10 h-10 bg-white rounded-xl overflow-hidden border border-stone-200 shrink-0 p-1 flex items-center justify-center">
+                                            <ImageWithFallback 
+                                              src={p.images?.[0]} 
+                                              alt={p.name} 
+                                              className="w-full h-full object-contain mix-blend-multiply" 
+                                            />
+                                          </div>
+                                          <div className="min-w-0 flex-1">
+                                            <h4 className="font-extrabold text-stone-850 truncate leading-snug">
+                                              {p.name}
+                                            </h4>
+                                            <p className="text-[9px] text-stone-500 font-semibold mt-0.5">
+                                              Dims: {p.length || 30}x{p.width || 30}x{p.height || 12} cm
+                                            </p>
+                                            <p className="text-[9px] text-[#2E7D32] font-black mt-0.5">
+                                              Capacity: {p.stock || 100} Containers
+                                            </p>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="flex items-center bg-white border border-stone-200 rounded-xl p-0.5 shrink-0">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (isMainProduct) {
+                                                setQuantity(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))));
+                                              } else {
+                                                setExtraItems(prev => {
+                                                  const existing = prev.find(item => item.product._id === p._id);
+                                                  if (existing) {
+                                                    if (existing.quantity > 0.25) {
+                                                      return prev.map(item => item.product._id === p._id ? { ...item, quantity: parseFloat((item.quantity - 0.25).toFixed(2)) } : item);
+                                                    } else {
+                                                      return prev.filter(item => item.product._id !== p._id);
+                                                    }
+                                                  }
+                                                  return prev;
+                                                });
+                                              }
+                                            }}
+                                            className="w-6 h-6 flex items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-red-650 rounded-lg transition-colors"
+                                          >
+                                            <Minus className="w-3 h-3" />
+                                          </button>
+                                          <span className="w-9 text-center font-black text-stone-800 text-[11px]">
+                                            {currentQty.toFixed(2)}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (isMainProduct) {
+                                                setQuantity(q => parseFloat((q + 0.25).toFixed(2)));
+                                              } else {
+                                                setExtraItems(prev => {
+                                                  const existing = prev.find(item => item.product._id === p._id);
+                                                  if (existing) {
+                                                    return prev.map(item => item.product._id === p._id ? { ...item, quantity: parseFloat((item.quantity + 0.25).toFixed(2)) } : item);
+                                                  } else {
+                                                    return [...prev, { product: p, quantity: 0.25 }];
+                                                  }
+                                                });
+                                              }
+                                            }}
+                                            className="w-6 h-6 flex items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-[#2E7D32] rounded-lg transition-colors"
+                                          >
+                                            <Plus className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               </div>
-              
 
+              {/* Progress bar */}
+              <div className={`p-4 rounded-2xl border-2 transition-colors duration-500 ${!isWholeContainer ? 'bg-orange-50/50 border-orange-100' : 'bg-green-50/50 border-green-100'}`}>
+                <div className="flex justify-between items-end mb-3">
+                  <div>
+                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1.5 ${!isWholeContainer ? 'text-orange-600' : 'text-[#2E7D32]'}`}>
+                      {!isWholeContainer ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      {!isWholeContainer ? 'Full Container Required' : 'Requirement Met'}
+                    </p>
+                    <p className="text-sm font-black text-stone-900 font-poppins">
+                      Current Total: {totalQuantity.toFixed(2)} <span className="text-xs text-stone-500 font-bold">Containers</span>
+                    </p>
+                  </div>
+                  <div className={`text-xl font-black font-poppins ${!isWholeContainer ? 'text-orange-500' : 'text-[#2E7D32]'}`}>
+                    {capacityPercentage}%
+                  </div>
+                </div>
 
-              {/* INLINE CHECKOUT ACTIONS FOR CONFIGURATOR (Desktop Only) */}
+                <div className="relative w-full h-3 bg-stone-200/50 rounded-full overflow-hidden shadow-inner">
+                  <div 
+                    className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${
+                      !isWholeContainer ? 'bg-orange-500' : 'bg-gradient-to-r from-[#43A047] to-[#2E7D32] shadow-[0_0_10px_rgba(46,125,50,0.5)]'
+                    }`}
+                    style={{ width: `${capacityPercentage}%` }}
+                  />
+                </div>
+                {!isWholeContainer && (
+                  <div className="mt-3">
+                    <p className="text-[10px] font-bold text-orange-600 text-center">
+                      Add {remainingForNextFull.toFixed(2)} more container to complete the next full container.
+                    </p>
+                    <p className="text-[9px] font-semibold text-orange-500 text-center mt-0.5 opacity-80">
+                      Checkout is available only for full container quantities. Please complete the remaining container capacity.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* 3D Container Preview (Mobile Only) */}
+              <div className="lg:hidden relative w-full mt-4 border border-stone-200/50 rounded-2xl overflow-hidden shadow-sm h-64 bg-[#F7F9F7]">
+                <ContainerViewer3D containerType={containerType} totalQuantity={viewerQuantity} autoRotate={true} palletItems={viewerPallets} />
+              </div>
+
+              {/* REQUEST QUOTE ACTIONS (Desktop Only) */}
               <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:block">
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsQuoteModalOpen(true)}
-                    className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black py-3.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group"
-                  >
-                    REQUEST QUOTE
-                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  disabled={isQuoteButtonDisabled}
+                  onClick={() => setIsQuoteModalOpen(true)}
+                  className="w-full bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group active:scale-[0.98]"
+                >
+                  {actionLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      REQUEST QUOTE
+                      <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                    </>
+                  )}
+                </button>
               </div>
 
             </div>
-            )}
 
-            {/* QUOTE SUMMARY CARD */}
-            {!showConfigurator && (
-              <div className="hidden lg:block bg-white rounded-[20px] p-6 border border-stone-200/80 shadow-sm relative overflow-hidden space-y-4">
-                <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2.5 font-poppins">
-                  Export Enquiry
-                </h3>
-                <p className="text-xs font-semibold text-stone-500 leading-relaxed">
-                  Submit a Request for Quote (RFQ) to receive customized B2B bulk pricing, packing details, and shipping logistics options from our commercial desk.
-                </p>
-                <div className="flex flex-col gap-2.5 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsQuoteModalOpen(true)}
-                    className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 group"
-                  >
-                    REQUEST QUOTE
-                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowConfigurator(true)}
-                    className="w-full bg-white border border-[#2E7D32] hover:bg-stone-50 text-[#2E7D32] font-poppins text-xs font-black py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5"
-                  >
-                    CONFIGURE CONTAINER VOLUME
-                  </button>
-                </div>
-              </div>
-            )}
 
-            {/* Spec Sheet Table */}
-            <div id="spec-sheet" className="space-y-3 pt-4 border-t border-stone-100">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#2E7D32]" />
-                <h3 className="font-poppins font-bold text-xs uppercase tracking-wider text-stone-800">
-                  Verified Specification Report
-                </h3>
-              </div>
-              <div className="bg-[#F7F9F7] border border-stone-200/50 rounded-2xl overflow-hidden shadow-inner">
-                <table className="w-full text-xs text-left border-collapse">
-                  <tbody>
-                    <tr className="border-b border-stone-200/40">
-                      <td className="px-4 py-3 font-semibold text-stone-500 w-1/3">EC Runoff</td>
-                      <td className="px-4 py-3 font-bold text-stone-900">{product.specifications?.ec || '< 0.5 mS/cm'}</td>
-                    </tr>
-                    <tr className="border-b border-stone-200/40 bg-stone-50/55">
-                      <td className="px-4 py-3 font-semibold text-stone-500">pH Level</td>
-                      <td className="px-4 py-3 font-bold text-stone-900">{product.specifications?.ph || '5.5 - 6.5'}</td>
-                    </tr>
-                    <tr className="border-b border-stone-200/40">
-                      <td className="px-4 py-3 font-semibold text-stone-500">Moisture Content</td>
-                      <td className="px-4 py-3 font-bold text-stone-900">{product.specifications?.moisture || '< 20%'}</td>
-                    </tr>
-                    <tr className="border-b border-stone-200/40 bg-stone-50/55">
-                      <td className="px-4 py-3 font-semibold text-stone-500">Expansion Volume</td>
-                      <td className="px-4 py-3 font-bold text-stone-900">{product.specifications?.expansionVolume || '15 Liters/kg'}</td>
-                    </tr>
-                    <tr className="border-b border-stone-200/40">
-                      <td className="px-4 py-3 font-semibold text-stone-500">Compression Ratio</td>
-                      <td className="px-4 py-3 font-bold text-stone-900">{product.specifications?.compressionRatio || '5:1'}</td>
-                    </tr>
-                    <tr className="border-b border-stone-200/40 bg-stone-50/55">
-                      <td className="px-4 py-3 font-semibold text-stone-500">Fiber Length</td>
-                      <td className="px-4 py-3 font-bold text-stone-900">{product.specifications?.fiberLength || 'Under 2cm'}</td>
-                    </tr>
-                    <tr className="bg-white">
-                      <td className="px-4 py-3 font-semibold text-stone-500">Sand Content</td>
-                      <td className="px-4 py-3 font-bold text-stone-900">{product.specifications?.sandContent || '< 2%'}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
 
           </div>
 
@@ -1000,7 +1110,11 @@ const ProductView = () => {
         onClose={() => setIsQuoteModalOpen(false)}
         product={product}
         user={user}
-        initialContainerSize={containerType === '40FT' ? '40 FT' : '20 FT'}
+        quantity={quantity}
+        extraItems={extraItems}
+        setQuantity={setQuantity}
+        setExtraItems={setExtraItems}
+        containerType={containerType}
       />
 
       {/* Related Products Carousel */}
@@ -1055,30 +1169,13 @@ const ProductView = () => {
       <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-2 items-center backdrop-blur-md bg-white/95">
         <button
           type="button"
+          disabled={isQuoteButtonDisabled}
           onClick={() => setIsQuoteModalOpen(true)}
-          className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black py-3 rounded-xl flex items-center justify-center shadow-md gap-1"
+          className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-3 rounded-xl flex items-center justify-center shadow-md gap-1 active:scale-[0.98]"
         >
           REQUEST QUOTE
           <ChevronRight className="w-4 h-4" />
         </button>
-        {!showConfigurator && (
-          <button
-            type="button"
-            onClick={() => {
-              setShowConfigurator(true);
-              setTimeout(() => {
-                const el = document.getElementById('container-configurator');
-                if (el) {
-                  const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                  window.scrollTo({ top: y, behavior: 'smooth' });
-                }
-              }, 100);
-            }}
-            className="flex-1 bg-white border-2 border-[#2E7D32] text-[#2E7D32] font-poppins text-xs font-black py-2.5 rounded-xl flex items-center justify-center shadow-sm"
-          >
-            CONFIGURE VOLUME
-          </button>
-        )}
       </div>
 
       {/* Testing Modal */}

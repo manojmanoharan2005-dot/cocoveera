@@ -33,30 +33,67 @@ export const createOrder = async (req, res) => {
 
     // Case 1: Order is converted from an approved quote
     if (quoteId) {
-      const quote = await Quote.findById(quoteId).populate('product');
+      const quote = await Quote.findById(quoteId)
+        .populate('products.product')
+        .populate('productDetails.productId');
       if (!quote) {
         return res.status(404).json({ success: false, message: 'Quote not found' });
       }
 
-      if (quote.status !== 'replied') {
+      if (quote.status !== 'replied' && quote.status !== 'Quote Approved' && quote.status !== 'Quote Accepted') {
         return res.status(400).json({ success: false, message: 'This quote is not in a payable state.' });
       }
 
-      const pieces = quote.quantity * getPiecesForContainer(requestedContainer, quote.product.palletCount);
-      
-      orderItems = [
-        {
-          product: quote.product._id,
-          productName: quote.product.name,
-          quantity: quote.quantity, // Fraction
-          pieces: pieces,
-          unitPrice: quote.pricingProposed || quote.product.price,
-        },
-      ];
-      totalPieces = pieces;
-      totalAmount = (quote.pricingProposed || quote.product.price) * pieces;
-      totalWeight = (quote.product.weight || 0) * pieces;
-      totalVolume = (quote.product.volumeCBM || 0) * pieces;
+      if (quote.products && quote.products.length > 0) {
+        orderItems = [];
+        totalPieces = 0;
+        totalAmount = 0;
+        totalWeight = 0;
+        totalVolume = 0;
+
+        for (const item of quote.products) {
+          const productObj = item.product;
+          if (!productObj) continue;
+
+          const pieces = item.quantity * getPiecesForContainer(requestedContainer, productObj.palletCount || 300);
+          
+          orderItems.push({
+            product: productObj._id,
+            productName: item.productName || productObj.name,
+            quantity: item.quantity,
+            pieces: pieces,
+            unitPrice: quote.pricingProposed || productObj.price || 0,
+          });
+
+          totalPieces += pieces;
+          totalAmount += (quote.pricingProposed || productObj.price || 0) * pieces;
+          totalWeight += (productObj.weight || 0) * pieces;
+          totalVolume += (productObj.volumeCBM || 0) * pieces;
+        }
+      } else {
+        // Legacy fallback
+        const productObj = quote.productDetails?.productId;
+        if (!productObj) {
+          return res.status(400).json({ success: false, message: 'No product information found in quote.' });
+        }
+
+        const quoteQty = parseFloat(quote.productDetails?.quantity) || 1;
+        const pieces = quoteQty * getPiecesForContainer(requestedContainer, productObj.palletCount || 300);
+        
+        orderItems = [
+          {
+            product: productObj._id,
+            productName: quote.productDetails?.name || productObj.name,
+            quantity: quoteQty,
+            pieces: pieces,
+            unitPrice: quote.pricingProposed || productObj.price || 0,
+          },
+        ];
+        totalPieces = pieces;
+        totalAmount = (quote.pricingProposed || productObj.price || 0) * pieces;
+        totalWeight = (productObj.weight || 0) * pieces;
+        totalVolume = (productObj.volumeCBM || 0) * pieces;
+      }
     } 
     // Case 2: Order is created directly from catalog
     else if (items && items.length > 0) {

@@ -320,35 +320,81 @@ export default function AdminQuoteRequestDetails() {
               
               {/* Left Column: Specifications & Delivery Address */}
               <div className="md:col-span-2 space-y-6">
-                
-                {/* Product Specification */}
+                           {/* Product Specification */}
                 <div className="bg-white rounded-2xl shadow p-6 space-y-4 border border-stone-200/60">
-                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2 flex items-center gap-2">
-                    <FileText size={18} className="text-blue-500" />
-                    RFQ Specifications
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <span className="text-gray-400 block font-bold">Category</span>
-                      <span className="text-gray-900 font-semibold text-sm">{request.category}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block font-bold">Container Size Requested</span>
-                      <span className="inline-block bg-blue-50 text-blue-700 font-bold border border-blue-100 px-2 py-0.5 rounded mt-1 text-xs">
-                        {request.containerSize}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block font-bold">Expected Delivery Date</span>
-                      <span className="text-gray-900 font-semibold">
-                        {request.expectedDeliveryDate ? new Date(request.expectedDeliveryDate).toLocaleDateString() : 'N/A'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block font-bold">Requested Quantity</span>
-                      <span className="text-gray-900 font-semibold">{request.quantity || 'N/A'}</span>
-                    </div>
-                  </div>
+                  {request.products && request.products.length > 0 ? (
+                    <>
+                      <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2 flex items-center gap-2">
+                        <FileText size={18} className="text-blue-500" />
+                        Selected Products
+                      </h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-stone-50 border-b border-stone-200 text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
+                              <th className="px-3 py-2">Product Name</th>
+                              <th className="px-3 py-2">Category</th>
+                              <th className="px-3 py-2 text-right">Quantity</th>
+                              <th className="px-3 py-2 text-center">Unit</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {request.products.map((item) => (
+                              <tr key={item.product || item._id} className="border-b border-stone-100 last:border-b-0 text-stone-700 font-semibold">
+                                <td className="px-3 py-2 font-bold text-gray-900">{item.productName}</td>
+                                <td className="px-3 py-2 text-gray-500">{item.categoryName}</td>
+                                <td className="px-3 py-2 text-right font-black text-gray-900">{(item.quantity || 0).toFixed(2)}</td>
+                                <td className="px-3 py-2 text-center text-gray-400 font-bold">Containers</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-xs border-t border-stone-100 pt-3">
+                        <div>
+                          <span className="text-gray-400 block font-bold">Container Size Requested</span>
+                          <span className="inline-block bg-blue-50 text-blue-700 font-bold border border-blue-100 px-2 py-0.5 rounded mt-1 text-xs">
+                            {request.containerSize}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 block font-bold">Expected Delivery Date</span>
+                          <span className="text-gray-900 font-semibold">
+                            {request.expectedDeliveryDate ? new Date(request.expectedDeliveryDate).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2 flex items-center gap-2">
+                        <FileText size={18} className="text-blue-500" />
+                        RFQ Specifications
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <span className="text-gray-400 block font-bold">Category</span>
+                          <span className="text-gray-900 font-semibold text-sm">{request.category}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 block font-bold">Container Size Requested</span>
+                          <span className="inline-block bg-blue-50 text-blue-700 font-bold border border-blue-100 px-2 py-0.5 rounded mt-1 text-xs">
+                            {request.containerSize}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 block font-bold">Expected Delivery Date</span>
+                          <span className="text-gray-900 font-semibold">
+                            {request.expectedDeliveryDate ? new Date(request.expectedDeliveryDate).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 block font-bold">Requested Quantity</span>
+                          <span className="text-gray-900 font-semibold">{request.quantity || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   <div className="pt-2">
                     <span className="text-gray-400 block font-bold text-xs mb-1.5">Requirement Notes:</span>

@@ -119,6 +119,32 @@ const QuoteSchema = new mongoose.Schema(
         notes: String,
       },
     },
+    products: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product',
+          required: true,
+        },
+        productName: {
+          type: String,
+          required: true,
+        },
+        category: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Category',
+          required: false,
+        },
+        categoryName: {
+          type: String,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
+      }
+    ],
     containerDetails: {
       containerSize: {
         type: String,

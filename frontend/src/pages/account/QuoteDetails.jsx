@@ -388,53 +388,83 @@ const QuoteDetails = () => {
           </div>
 
           {/* Product Specifications Card */}
-          <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm space-y-4">
-            <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">
-              Quoted Product Details
-            </h3>
-            
-            <div className="flex items-center gap-4 bg-stone-50 p-4 rounded-xl border border-stone-100">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-stone-200 shrink-0">
-                <Package className="w-6 h-6 text-stone-400" />
-              </div>
-              <div className="flex-grow">
-                <h4 className="text-sm font-extrabold text-stone-900">
-                  {quote?.productDetails?.name || 'Coco Coir Export Substrate'}
-                </h4>
-                <p className="text-xs text-stone-500 font-bold mt-0.5">
-                  Quantity: {quote?.productDetails?.quantity || 'N/A'} {quote?.productDetails?.unitType || 'Tons'}
-                </p>
-              </div>
-              <div className="text-right">
-                <span className="text-sm font-black text-[#2E7D32]">
-                  {quote?.convertedAmount > 0
-                    ? convertCurrency(quote?.originalInrAmount || 0, quote?.currency || user?.currency || 'USD').formatted
-                    : 'Awaiting Pricing'}
-                </span>
+          {quote.products && quote.products.length > 0 ? (
+            <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm space-y-4">
+              <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2">
+                Selected Products
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-stone-50 border-b border-stone-200 text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
+                      <th className="px-3 py-2">Product Name</th>
+                      <th className="px-3 py-2">Category</th>
+                      <th className="px-3 py-2 text-right">Quantity</th>
+                      <th className="px-3 py-2 text-center">Unit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {quote.products.map((item) => (
+                      <tr key={item.product || item._id} className="border-b border-stone-100 last:border-b-0 text-stone-700 font-semibold">
+                        <td className="px-3 py-2 font-bold text-stone-900">{item.productName}</td>
+                        <td className="px-3 py-2 text-stone-500">{item.categoryName}</td>
+                        <td className="px-3 py-2 text-right font-black text-stone-900">{(item.quantity || 0).toFixed(2)}</td>
+                        <td className="px-3 py-2 text-center text-stone-400 font-bold">Containers</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            {/* Technical Specifications */}
-            {quote?.productDetails?.specifications && (
-              <div className="pt-2">
-                <h4 className="text-xs font-black text-stone-400 uppercase tracking-wider mb-2">Technical Specifications</h4>
-                <div className="grid grid-cols-3 gap-2 bg-stone-50 p-3 rounded-xl border border-stone-100 text-xs">
-                  <div>
-                    <span className="text-stone-400 block font-bold">EC Target</span>
-                    <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.ec || 'Standard'}</span>
-                  </div>
-                  <div>
-                    <span className="text-stone-400 block font-bold">pH Target</span>
-                    <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.ph || 'Standard'}</span>
-                  </div>
-                  <div>
-                    <span className="text-stone-400 block font-bold">Moisture</span>
-                    <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.moisture || 'Standard'}</span>
-                  </div>
+          ) : (
+            <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm space-y-4">
+              <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">
+                Quoted Product Details
+              </h3>
+              
+              <div className="flex items-center gap-4 bg-stone-50 p-4 rounded-xl border border-stone-100">
+                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-stone-200 shrink-0">
+                  <Package className="w-6 h-6 text-stone-400" />
+                </div>
+                <div className="flex-grow">
+                  <h4 className="text-sm font-extrabold text-stone-900">
+                    {quote?.productDetails?.name || 'Coco Coir Export Substrate'}
+                  </h4>
+                  <p className="text-xs text-stone-500 font-bold mt-0.5">
+                    Quantity: {quote?.productDetails?.quantity || 'N/A'} {quote?.productDetails?.unitType || 'Tons'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-black text-[#2E7D32]">
+                    {quote?.convertedAmount > 0
+                      ? convertCurrency(quote?.originalInrAmount || 0, quote?.currency || user?.currency || 'USD').formatted
+                      : 'Awaiting Pricing'}
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
+
+              {/* Technical Specifications */}
+              {quote?.productDetails?.specifications && (
+                <div className="pt-2">
+                  <h4 className="text-xs font-black text-stone-400 uppercase tracking-wider mb-2">Technical Specifications</h4>
+                  <div className="grid grid-cols-3 gap-2 bg-stone-50 p-3 rounded-xl border border-stone-100 text-xs">
+                    <div>
+                      <span className="text-stone-400 block font-bold">EC Target</span>
+                      <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.ec || 'Standard'}</span>
+                    </div>
+                    <div>
+                      <span className="text-stone-400 block font-bold">pH Target</span>
+                      <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.ph || 'Standard'}</span>
+                    </div>
+                    <div>
+                      <span className="text-stone-400 block font-bold">Moisture</span>
+                      <span className="font-semibold text-stone-800">{quote?.productDetails?.specifications?.moisture || 'Standard'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Container Logistics details */}
           <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">

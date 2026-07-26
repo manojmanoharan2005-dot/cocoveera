@@ -12,8 +12,29 @@ export const getQuoteRequestTemplate = (name, quoteDetails) => {
     <div style="background-color: #FCFBF9; border: 1px solid #E2DCD0; border-radius: 6px; padding: 20px; margin-bottom: 30px;">
       <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Reference ID: ${quoteDetails.referenceId}</p>
       <p style="margin: 0 0 15px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Date: ${quoteDetails.date}</p>
+      
+      ${quoteDetails.products && quoteDetails.products.length > 0 ? `
+      <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold; color: #2C2C2C;">Selected Products:</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 10px; border-collapse: collapse; font-size: 11px; text-align: left;">
+        <thead>
+          <tr style="background-color: #F3F8F4;">
+            <th style="padding: 6px 8px; border-bottom: 1px solid #E2DCD0;">Product</th>
+            <th style="padding: 6px 8px; border-bottom: 1px solid #E2DCD0; text-align: right;">Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${quoteDetails.products.map(p => `
+            <tr>
+              <td style="padding: 6px 8px; border-bottom: 1px solid #EEEEEE; font-weight: bold; color: #333;">${p.productName}</td>
+              <td style="padding: 6px 8px; border-bottom: 1px solid #EEEEEE; text-align: right; font-weight: bold; color: #1E5B2E;">${parseFloat(p.quantity).toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ` : `
       <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold; color: #2C2C2C;">Product Specification:</p>
       <p style="margin: 0; color: #555555; font-style: italic;">${quoteDetails.productSpec}</p>
+      `}
     </div>
     
     <p style="color: #666666; font-size: 14px; line-height: 1.6;">A dedicated account manager will respond with a formal quotation and logistics options within 24-48 business hours.</p>
@@ -244,11 +265,35 @@ export const getAdminQuoteRequestTemplate = (enquiry) => {
     
     <div style="background-color: #FCFBF9; border: 1px solid #E2DCD0; border-radius: 6px; padding: 20px; margin-bottom: 30px;">
       <h4 style="margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: #1E5B2E; border-bottom: 1px solid #E2DCD0; padding-bottom: 8px;">Enquiry Details</h4>
+      
+      ${enquiry.products && enquiry.products.length > 0 ? `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; border-collapse: collapse; font-size: 12px; text-align: left; border: 1px solid #E2DCD0;">
+        <thead>
+          <tr style="background-color: #F3F8F4;">
+            <th style="padding: 8px; border-bottom: 1px solid #E2DCD0;">Product Name</th>
+            <th style="padding: 8px; border-bottom: 1px solid #E2DCD0;">Category</th>
+            <th style="padding: 8px; border-bottom: 1px solid #E2DCD0; text-align: right;">Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${enquiry.products.map(p => `
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #EEEEEE; font-weight: bold;">${p.productName}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #EEEEEE; color: #666;">${p.categoryName}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #EEEEEE; text-align: right; font-weight: bold;">${parseFloat(p.quantity).toFixed(2)} Containers</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ` : ''}
+
       <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #2C2C2C;">
-        <tr><td style="padding: 6px 0; width: 35%; color: #666;"><strong>Category:</strong></td><td>${enquiry.category}</td></tr>
-        <tr><td style="padding: 6px 0; color: #666;"><strong>Product:</strong></td><td><strong>${enquiry.productName}</strong></td></tr>
-        <tr><td style="padding: 6px 0; color: #666;"><strong>Container Size:</strong></td><td>${enquiry.containerSize}</td></tr>
-        ${enquiry.quantity ? `<tr><td style="padding: 6px 0; color: #666;"><strong>Quantity:</strong></td><td>${enquiry.quantity}</td></tr>` : ''}
+        ${!(enquiry.products && enquiry.products.length > 0) ? `
+          <tr><td style="padding: 6px 0; width: 35%; color: #666;"><strong>Category:</strong></td><td>${enquiry.category}</td></tr>
+          <tr><td style="padding: 6px 0; color: #666;"><strong>Product:</strong></td><td><strong>${enquiry.productName}</strong></td></tr>
+        ` : ''}
+        <tr><td style="padding: 6px 0; width: 35%; color: #666;"><strong>Container Size:</strong></td><td>${enquiry.containerSize}</td></tr>
+        ${enquiry.quantity ? `<tr><td style="padding: 6px 0; color: #666;"><strong>Total Quantity:</strong></td><td>${enquiry.quantity}</td></tr>` : ''}
         <tr><td style="padding: 6px 0; color: #666;"><strong>Expected Delivery:</strong></td><td>${enquiry.expectedDeliveryDate ? new Date(enquiry.expectedDeliveryDate).toLocaleDateString() : 'N/A'}</td></tr>
         <tr><td style="padding: 6px 0; color: #666;"><strong>Submission Time:</strong></td><td>${new Date(enquiry.createdAt || Date.now()).toLocaleString()}</td></tr>
       </table>
@@ -284,6 +329,7 @@ export const getRFQApprovalTemplate = (customerName, details) => {
   const {
     category,
     productName,
+    products = [],
     containerSize,
     price,
     currency = 'USD',
@@ -312,7 +358,29 @@ export const getRFQApprovalTemplate = (customerName, details) => {
     <div style="background-color: #FCFBF9; border: 1px solid #E2DCD0; border-radius: 8px; padding: 22px; margin-bottom: 30px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
       <h4 style="margin: 0 0 15px 0; font-family: Georgia, serif; font-size: 16px; color: #1E5B2E; border-bottom: 1px solid #E2DCD0; padding-bottom: 8px;">Approved Quotation Details</h4>
       
+      ${products && products.length > 0 ? `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; border-collapse: collapse; font-size: 12px; text-align: left; border: 1px solid #E2DCD0;">
+        <thead>
+          <tr style="background-color: #F3F8F4;">
+            <th style="padding: 8px; border-bottom: 1px solid #E2DCD0;">Product Name</th>
+            <th style="padding: 8px; border-bottom: 1px solid #E2DCD0;">Category</th>
+            <th style="padding: 8px; border-bottom: 1px solid #E2DCD0; text-align: right;">Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${products.map(p => `
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #EEEEEE; font-weight: bold;">${p.productName}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #EEEEEE; color: #666;">${p.categoryName}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #EEEEEE; text-align: right; font-weight: bold;">${parseFloat(p.quantity).toFixed(2)} Containers</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ` : ''}
+
       <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px; color: #333333;">
+        ${!(products && products.length > 0) ? `
         <tr style="border-bottom: 1px solid #EEEEEE;">
           <td style="padding: 10px 0; font-weight: bold; color: #777777; width: 40%;">Category:</td>
           <td style="padding: 10px 0; font-weight: bold; color: #111111;">${category || 'N/A'}</td>
@@ -321,6 +389,7 @@ export const getRFQApprovalTemplate = (customerName, details) => {
           <td style="padding: 10px 0; font-weight: bold; color: #777777;">Product:</td>
           <td style="padding: 10px 0; font-weight: bold; color: #111111;">${productName || 'N/A'}</td>
         </tr>
+        ` : ''}
         <tr style="border-bottom: 1px solid #EEEEEE;">
           <td style="padding: 10px 0; font-weight: bold; color: #777777;">Container Size:</td>
           <td style="padding: 10px 0; font-weight: bold; color: #111111;">${containerSize || 'N/A'}</td>

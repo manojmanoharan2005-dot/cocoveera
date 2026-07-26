@@ -7,7 +7,17 @@ import 'react-phone-input-2/lib/style.css';
 import { getPhoneCountry } from '../utils/countryHelpers';
 import { useQueryClient } from '@tanstack/react-query';
 
-export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
+export const RequestQuoteModal = ({
+  isOpen,
+  onClose,
+  product,
+  user,
+  quantity = 0,
+  extraItems = [],
+  setQuantity,
+  setExtraItems,
+  containerType = '20FT',
+}) => {
   const queryClient = useQueryClient();
   const { fetchProfile } = useAuth();
   const [rfqSubmitted, setRfqSubmitted] = useState(false);
@@ -16,7 +26,7 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
 
   const [rfqFormData, setRfqFormData] = useState({
     requirementNote: '',
-    containerSize: '20 FT',
+    containerSize: containerType === '40FT' ? '40 FT' : '20 FT',
     quantity: '',
     companyName: '',
     contactPerson: '',
@@ -32,6 +42,60 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
 
   const [rfqValidationErrors, setRfqValidationErrors] = useState({});
   const firstEditableRef = useRef(null);
+
+  // Compute selected products from Parent's Container Configurator
+  const selectedProductsList = React.useMemo(() => {
+    const list = [];
+    if (product && quantity > 0) {
+      list.push({
+        productId: product._id,
+        productName: product.name,
+        categoryId: product.categoryInfo?._id || '',
+        categoryName: product.category || 'Coco Substrates',
+        quantity: quantity,
+        imageUrl: product.images?.[0] || 'https://placehold.co/100x100'
+      });
+    }
+    (extraItems || []).forEach(item => {
+      if (item.quantity > 0) {
+        list.push({
+          productId: item.product._id,
+          productName: item.product.name,
+          categoryId: item.product.categoryInfo?._id || '',
+          categoryName: item.product.category || 'Coco Substrates',
+          quantity: item.quantity,
+          imageUrl: item.product.images?.[0] || 'https://placehold.co/100x100'
+        });
+      }
+    });
+    return list;
+  }, [product, quantity, extraItems]);
+
+  const totalQuantity = React.useMemo(() => {
+    return selectedProductsList.reduce((acc, item) => acc + item.quantity, 0);
+  }, [selectedProductsList]);
+
+  const isWholeContainer = React.useMemo(() => {
+    return totalQuantity > 0 && Math.abs((totalQuantity * 4) - Math.round(totalQuantity * 4)) < 0.001;
+  }, [totalQuantity]);
+
+  const handleRemoveProductFromRfq = (prodId) => {
+    if (prodId === product?._id) {
+      if (setQuantity) setQuantity(0);
+    } else {
+      if (setExtraItems) {
+        setExtraItems(prev => prev.filter(item => item.product._id !== prodId));
+      }
+    }
+  };
+
+  // Sync containerSize if parent containerType updates
+  useEffect(() => {
+    setRfqFormData(prev => ({
+      ...prev,
+      containerSize: containerType === '40FT' ? '40 FT' : '20 FT',
+    }));
+  }, [containerType]);
 
   // Load user profile details if available
   useEffect(() => {
@@ -145,17 +209,33 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
   const handleRfqSubmit = async (e) => {
     e.preventDefault();
     if (!validateRfqForm() || rfqSubmitLoading) return;
+
+    if (selectedProductsList.length === 0) {
+      setRfqError('No products are selected. Please configure your container.');
+      return;
+    }
+    if (totalQuantity === 0) {
+      setRfqError('Total container quantity cannot be zero.');
+      return;
+    }
+
     setRfqSubmitLoading(true);
     setRfqError('');
 
     try {
       // Setup payload with structured shipping address
       const payload = {
-        category: product.category,
-        product: product._id,
+        category: product?.category || 'Coco Substrates',
+        product: product?._id || null,
+        products: selectedProductsList.map(item => ({
+          product: item.productId,
+          productName: item.productName,
+          categoryName: item.categoryName,
+          quantity: item.quantity
+        })),
+        containerType: containerType === '40FT' ? '40FT' : '20FT',
+        containerSize: containerType === '40FT' ? '40 FT' : '20 FT',
         requirementNote: rfqFormData.requirementNote,
-        containerSize: rfqFormData.containerSize,
-        quantity: rfqFormData.quantity,
         companyName: rfqFormData.companyName,
         contactPerson: rfqFormData.contactPerson,
         email: rfqFormData.email,
@@ -219,7 +299,7 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="relative w-full max-w-[450px] bg-white rounded-[20px] overflow-hidden shadow-2xl z-10 max-h-[90vh] flex flex-col border border-stone-200"
+            className="relative w-full max-w-[500px] bg-white rounded-[20px] overflow-hidden shadow-2xl z-10 max-h-[90vh] flex flex-col border border-stone-200"
           >
             {/* Close Button */}
             <button
@@ -264,25 +344,95 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
                       </div>
                     )}
 
-                    {/* Auto-filled, Read Only: Category & Product */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block mb-1">Category</label>
-                        <input
-                          type="text"
-                          value={product?.category || ''}
-                          readOnly
-                          className="w-full bg-stone-50 border border-stone-200 rounded-[10px] py-2 px-3 text-xs text-stone-500 font-bold select-none cursor-not-allowed outline-none"
-                        />
+                    {/* Selected Products Section */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Selected Products</label>
+                      <div className="border border-stone-200 rounded-[12px] overflow-hidden bg-white">
+                        {/* Desktop Table View */}
+                        <div className="hidden sm:block overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-[11px]">
+                            <thead>
+                              <tr className="bg-stone-50 border-b border-stone-200 text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
+                                <th className="px-3 py-2">Image</th>
+                                <th className="px-3 py-2">Product Name</th>
+                                <th className="px-3 py-2">Category</th>
+                                <th className="px-3 py-2 text-right">Qty</th>
+                                <th className="px-3 py-2 text-center">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedProductsList.map((item) => (
+                                <tr key={item.productId} className="border-b border-stone-100 last:border-b-0 text-stone-700 font-semibold">
+                                  <td className="px-3 py-2">
+                                    <div className="w-8 h-8 rounded bg-stone-50 border border-stone-100 p-0.5 overflow-hidden flex items-center justify-center">
+                                      <img src={item.imageUrl} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-2 font-bold text-stone-900 truncate max-w-[140px]">{item.productName}</td>
+                                  <td className="px-3 py-2 text-stone-500">{item.categoryName}</td>
+                                  <td className="px-3 py-2 text-right font-black text-stone-900">{item.quantity.toFixed(2)}</td>
+                                  <td className="px-3 py-2 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveProductFromRfq(item.productId)}
+                                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors border-none bg-transparent cursor-pointer"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Mobile Stacked Card View */}
+                        <div className="block sm:hidden divide-y divide-stone-100">
+                          {selectedProductsList.map((item) => (
+                            <div key={item.productId} className="p-3 flex items-center gap-3 text-xs">
+                              <div className="w-10 h-10 rounded bg-stone-50 border border-stone-100 p-0.5 overflow-hidden flex items-center justify-center shrink-0">
+                                <img src={item.imageUrl} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-bold text-stone-900 truncate leading-snug">{item.productName}</h4>
+                                <div className="flex items-center gap-2 text-[10px] text-stone-500 font-semibold mt-0.5">
+                                  <span>{item.categoryName}</span>
+                                  <span>•</span>
+                                  <span className="font-bold text-stone-850">Qty: {item.quantity.toFixed(2)}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveProductFromRfq(item.productId)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-colors shrink-0 border-none bg-transparent cursor-pointer"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block mb-1">Product</label>
-                        <input
-                          type="text"
-                          value={product?.name || ''}
-                          readOnly
-                          className="w-full bg-stone-50 border border-stone-200 rounded-[10px] py-2 px-3 text-xs text-stone-500 font-bold select-none cursor-not-allowed overflow-hidden text-ellipsis whitespace-nowrap outline-none"
-                        />
+                    </div>
+
+                    {/* RFQ Summary Card */}
+                    <div className="bg-stone-50/80 border border-stone-200 rounded-[12px] p-3 text-[11px] font-semibold text-stone-700 space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-stone-500">Total Selected Products</span>
+                        <span className="font-bold text-stone-900">{selectedProductsList.length}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-stone-500">Container Type</span>
+                        <span className="font-bold text-stone-900">{containerType === '40FT' ? '40 FT' : '20 FT'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-stone-500">Current Total</span>
+                        <span className="font-black text-stone-900">{totalQuantity.toFixed(2)} Containers</span>
+                      </div>
+                      <div className="flex justify-between items-center border-t border-stone-200/60 pt-1.5 mt-0.5">
+                        <span className="text-stone-500">Requirement Status</span>
+                        <span className={`font-black flex items-center gap-1 ${!isWholeContainer ? 'text-orange-600' : 'text-[#2E7D32]'}`}>
+                          {!isWholeContainer ? 'Incomplete' : 'Requirement Met ✓'}
+                        </span>
                       </div>
                     </div>
 
@@ -302,34 +452,6 @@ export const RequestQuoteModal = ({ isOpen, onClose, product, user }) => {
                       {rfqValidationErrors.requirementNote && (
                         <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.requirementNote}</p>
                       )}
-                    </div>
-
-                    {/* Container (Dropdown) & Quantity */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Container <span className="text-red-500">*</span></label>
-                        <select
-                          name="containerSize"
-                          value={rfqFormData.containerSize}
-                          onChange={handleRfqChange}
-                          className="w-full bg-stone-50 border border-stone-200 rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32] cursor-pointer"
-                        >
-                          <option value="20 FT">20 FT Container</option>
-                          <option value="40 FT">40 FT Container</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Quantity <span className="text-stone-400">(Optional)</span></label>
-                        <input
-                          type="text"
-                          name="quantity"
-                          value={rfqFormData.quantity}
-                          onChange={handleRfqChange}
-                          placeholder="e.g. 10 Pallets"
-                          className="w-full bg-stone-50 border border-stone-200 rounded-[10px] py-2 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]"
-                        />
-                      </div>
                     </div>
 
                     {/* Company Name */}

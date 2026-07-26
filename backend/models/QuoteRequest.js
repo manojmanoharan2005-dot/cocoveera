@@ -34,13 +34,39 @@ const QuoteRequestSchema = new mongoose.Schema(
   {
     category: {
       type: String,
-      required: [true, 'Please add a category'],
+      required: false,
     },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
-      required: [true, 'Please add a product reference'],
+      required: false,
     },
+    products: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product',
+          required: true,
+        },
+        productName: {
+          type: String,
+          required: true,
+        },
+        category: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Category',
+          required: false,
+        },
+        categoryName: {
+          type: String,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
+      }
+    ],
     requirementNote: {
       type: String,
       required: [true, 'Please add requirement notes'],
