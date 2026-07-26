@@ -304,7 +304,7 @@ const QuoteDetails = () => {
         </button>
         <div>
           <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Quotation #{quote?.quoteNumber}</h1>
-          <p className="text-stone-500 font-semibold text-sm">Submitted on {quote?.quoteDate ? new Date(quote.quoteDate).toLocaleString() : 'N/A'}</p>
+          <p className="text-stone-500 font-semibold text-sm">Request Date: {quote?.rfq?.createdAt ? new Date(quote.rfq.createdAt).toLocaleString() : (quote?.createdAt ? new Date(quote.createdAt).toLocaleString() : 'N/A')}</p>
           {quote?.validUntil && quote?.status === 'Quote Approved' && (
             <p className="text-red-600 font-bold text-xs mt-1">Valid Until: {new Date(quote.validUntil).toLocaleDateString()}</p>
           )}

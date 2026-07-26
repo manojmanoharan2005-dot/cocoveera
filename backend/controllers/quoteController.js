@@ -88,8 +88,9 @@ export const getMyQuotes = async (req, res) => {
 
     const total = await Quote.countDocuments(query);
     const quotes = await Quote.find(query)
-      .select('quoteNumber rfq user email status rejectionReason quoteDate validUntil currency exchangeRate originalInrAmount convertedAmount shippingTerms estimatedProductionTime commercialNotes pdfUrl productDetails containerDetails shippingAddress')
+      .select('quoteNumber rfq user email status rejectionReason quoteDate validUntil currency exchangeRate originalInrAmount convertedAmount shippingTerms estimatedProductionTime commercialNotes pdfUrl productDetails containerDetails shippingAddress createdAt')
       .populate('productDetails.productId', 'name images price slug')
+      .populate('rfq')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))

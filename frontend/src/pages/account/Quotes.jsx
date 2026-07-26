@@ -301,9 +301,9 @@ const Quotes = () => {
         <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3.5 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
           <div className="flex flex-wrap gap-6 md:gap-12">
             <div className="flex flex-col">
-              <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Quoted On</span>
+              <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Request Date</span>
               <span className="font-bold text-stone-700">
-                {new Date(quote.quoteDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(quote.rfq?.createdAt || quote.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
               </span>
             </div>
 
