@@ -46,16 +46,6 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
 
-const formVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08
-    }
-  }
-};
-
 const parseErrorMessage = (err, fallback = 'An error occurred. Please try again.') => {
   if (!err) return fallback;
   if (typeof err === 'string') return err;
@@ -353,18 +343,12 @@ export const LoginForm = () => {
       )}
 
       {mode === 'login' && (
-        <motion.form
-          key="login"
-          variants={formVariants}
-          initial="hidden"
-          animate="visible"
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4"
-        >
+        <motion.form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Phone or Email */}
           <motion.div 
             variants={itemVariants}
-            animate={errors.phone ? { x: [0, -4, 4, -4, 4, 0] } : {}}
+            initial="hidden"
+            animate={errors.phone ? { x: [0, -4, 4, -4, 4, 0] } : "visible"}
             transition={{ duration: 0.4 }}
           >
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
@@ -394,7 +378,8 @@ export const LoginForm = () => {
           {/* Password */}
           <motion.div 
             variants={itemVariants}
-            animate={errors.password ? { x: [0, -4, 4, -4, 4, 0] } : {}}
+            initial="hidden"
+            animate={errors.password ? { x: [0, -4, 4, -4, 4, 0] } : "visible"}
             transition={{ duration: 0.4 }}
           >
             <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
@@ -433,7 +418,12 @@ export const LoginForm = () => {
           </motion.div>
 
           {/* Remember Me & Forgot Password */}
-          <motion.div variants={itemVariants} className="flex items-center justify-between pt-1">
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex items-center justify-between pt-1"
+          >
             <label className="flex items-center space-x-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -458,7 +448,12 @@ export const LoginForm = () => {
           </motion.div>
 
           {/* Submit Button Wrapper */}
-          <motion.div variants={itemVariants} className="flex justify-center pt-2 w-full">
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex justify-center pt-2 w-full"
+          >
             <motion.button
               layout
               type="submit"
@@ -549,15 +544,8 @@ export const LoginForm = () => {
       )}
 
       {mode === 'forgot' && (
-        <motion.form
-          key="forgot"
-          variants={formVariants}
-          initial="hidden"
-          animate="visible"
-          onSubmit={handleForgotSubmit}
-          className="space-y-4"
-        >
-          <motion.div variants={itemVariants}>
+        <motion.form onSubmit={handleForgotSubmit} className="space-y-4">
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               EMAIL ADDRESS
             </label>
@@ -576,6 +564,8 @@ export const LoginForm = () => {
 
           <motion.button
             variants={itemVariants}
+            initial="hidden"
+            animate="visible"
             type="submit"
             disabled={loading}
             whileHover={{ scale: 1.02 }}
@@ -592,7 +582,12 @@ export const LoginForm = () => {
             )}
           </motion.button>
 
-          <motion.div variants={itemVariants} className="text-center pt-2">
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="text-center pt-2"
+          >
             <button
               type="button"
               onClick={() => {
@@ -609,15 +604,8 @@ export const LoginForm = () => {
       )}
 
       {mode === 'reset' && (
-        <motion.form
-          key="reset"
-          variants={formVariants}
-          initial="hidden"
-          animate="visible"
-          onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode}
-          className="space-y-4"
-        >
-          <motion.div variants={itemVariants}>
+        <motion.form onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode} className="space-y-4">
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               RESET CODE (OTP)
             </label>
@@ -641,6 +629,8 @@ export const LoginForm = () => {
           {!isOtpVerified ? (
             <motion.button
               variants={itemVariants}
+              initial="hidden"
+              animate="visible"
               type="submit"
               disabled={loading}
               whileHover={{ scale: 1.02 }}
@@ -658,7 +648,7 @@ export const LoginForm = () => {
             </motion.button>
           ) : (
             <>
-              <motion.div variants={itemVariants}>
+              <motion.div variants={itemVariants} initial="hidden" animate="visible">
                 <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
                   NEW PASSWORD
                 </label>
@@ -691,7 +681,7 @@ export const LoginForm = () => {
                 )}
               </motion.div>
 
-              <motion.div variants={itemVariants}>
+              <motion.div variants={itemVariants} initial="hidden" animate="visible">
                 <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
                   CONFIRM NEW PASSWORD
                 </label>
@@ -727,6 +717,8 @@ export const LoginForm = () => {
 
               <motion.button
                 variants={itemVariants}
+                initial="hidden"
+                animate="visible"
                 type="submit"
                 disabled={loading}
                 whileHover={{ scale: 1.02 }}
@@ -745,7 +737,12 @@ export const LoginForm = () => {
             </>
           )}
 
-          <motion.div variants={itemVariants} className="text-center pt-2">
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="text-center pt-2"
+          >
             <button
               type="button"
               onClick={() => {
@@ -763,20 +760,13 @@ export const LoginForm = () => {
       )}
 
       {mode === 'verifyAdmin' && (
-        <motion.form
-          key="verifyAdmin"
-          variants={formVariants}
-          initial="hidden"
-          animate="visible"
-          onSubmit={handleVerifyAdmin}
-          className="space-y-4"
-        >
+        <motion.form onSubmit={handleVerifyAdmin} className="space-y-4">
           <div className="text-center mb-6">
             <ShieldCheck className="w-12 h-12 text-[#2E5E35] mx-auto mb-3" />
             <h3 className="text-lg font-poppins font-extrabold text-stone-900">Admin Verification Required</h3>
             <p className="text-xs text-stone-500 mt-1 font-medium">Please enter your 2-Step Verification Key to continue.</p>
           </div>
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
               ADMIN VERIFICATION KEY
             </label>
@@ -802,6 +792,8 @@ export const LoginForm = () => {
 
           <motion.button
             variants={itemVariants}
+            initial="hidden"
+            animate="visible"
             type="submit"
             disabled={loading}
             whileHover={{ scale: 1.02 }}
@@ -818,7 +810,12 @@ export const LoginForm = () => {
             )}
           </motion.button>
 
-          <motion.div variants={itemVariants} className="text-center pt-2">
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="text-center pt-2"
+          >
             <button
               type="button"
               onClick={() => {
