@@ -39,6 +39,7 @@ import {
   updateOrderStatus,
   uploadQualityReport,
   updatePaymentStatus,
+  verifyBankTransferPayment,
   assignContainer,
   generateInvoice,
   downloadInvoice,
@@ -134,6 +135,7 @@ router.get('/orders/:id', protect, admin, getAdminOrder);
 router.patch('/orders/:id/status', protect, admin, updateOrderStatus);
 router.post('/orders/:id/quality-report', protect, admin, upload.single('pdf'), uploadQualityReport);
 router.patch('/orders/:id/payment', protect, admin, updatePaymentStatus);
+router.post('/orders/:id/verify-payment', protect, admin, verifyBankTransferPayment);
 router.patch('/orders/:id/container', protect, admin, assignContainer);
 router.post('/orders/:id/invoice', protect, admin, generateInvoice);
 router.get('/orders/:id/invoice/download', protect, admin, downloadInvoice);

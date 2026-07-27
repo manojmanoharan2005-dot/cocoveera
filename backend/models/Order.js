@@ -112,8 +112,37 @@ const OrderSchema = new mongoose.Schema(
         transactionId: String,
         paidAt: Date,
         milestoneType: String,
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        verifiedAt: Date,
       }
     ],
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
+    transactionReference: {
+      type: String,
+      default: '',
+    },
+    paymentProofUrl: {
+      type: String,
+      default: '',
+    },
+    productionStatus: {
+      type: String,
+      enum: ['Pending', 'In Production', 'Completed'],
+      default: 'Pending',
+    },
+    shipmentStatus: {
+      type: String,
+      enum: ['Pending', 'Loaded', 'In Transit', 'Delivered'],
+      default: 'Pending',
+    },
     refunds: [
       {
         type: mongoose.Schema.Types.ObjectId,
