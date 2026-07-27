@@ -279,6 +279,7 @@ export default function ContainerPreviewPage() {
     const totalPallets = containerSpecs.defaultPallets;
     const totalPieces = Math.round(totalPallets * totalUnitsPerPallet * (totalQuantity >= 1 ? 1 : totalQuantity));
 
+    const pieceCBM = lM * wM * hM;
     const isFullContainer = totalQuantity >= 1;
     const occupiedCBM = isFullContainer ? containerSpecs.cbmCapacity : Math.min(containerSpecs.cbmCapacity, parseFloat((pieceCBM * totalPieces).toFixed(1)));
     const remainingCBM = isFullContainer ? 0 : Math.max(0, parseFloat((containerSpecs.cbmCapacity - occupiedCBM).toFixed(1)));
