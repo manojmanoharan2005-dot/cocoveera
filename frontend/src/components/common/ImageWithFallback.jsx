@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-// Intercept Cloudinary URL to add optimization transformations (width: 400px, auto format, auto quality)
-const optimizeCloudinaryUrl = (url, width = 400) => {
+// Intercept Cloudinary URL to add optimization transformations (width: 1000px default, auto format, auto quality)
+const optimizeCloudinaryUrl = (url, width = 1000) => {
   if (!url || typeof url !== 'string') return url;
   if (url.includes('res.cloudinary.com')) {
     // Avoid double transformation
@@ -22,7 +22,8 @@ export const ImageWithFallback = ({
   onMouseEnter,
   onMouseLeave,
   loading = 'lazy',
-  decoding = 'async'
+  decoding = 'async',
+  width = 1000
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -31,7 +32,7 @@ export const ImageWithFallback = ({
   const isInvalidSource = !src || src === 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?auto=format&fit=crop&w=800&q=80';
   
   // Use the local site logo as a fallback instead of an external image, or optimize using Cloudinary transform
-  const imageSrc = isInvalidSource || hasError ? '/logo.webp' : optimizeCloudinaryUrl(src, 400);
+  const imageSrc = isInvalidSource || hasError ? '/logo.webp' : optimizeCloudinaryUrl(src, width);
 
   return (
     <>

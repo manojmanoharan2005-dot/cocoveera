@@ -65,7 +65,7 @@ export const ProductCard = React.memo(({
           <ImageWithFallback
             src={product.images?.[0]}
             alt={product.name}
-            className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] transition-transform duration-500 ease-out group-hover:scale-108"
+            className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-108"
             style={{ transform: 'scale(1)' }}
             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.07)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}

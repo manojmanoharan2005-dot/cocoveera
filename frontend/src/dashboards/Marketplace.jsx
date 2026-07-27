@@ -255,7 +255,7 @@ export const Marketplace = () => {
                       <img 
                         src={cat.image} 
                         alt={cat.name} 
-                        className="w-full h-full object-contain mix-blend-multiply brightness-[1.05] contrast-[1.05] group-hover:scale-108 transition-transform duration-500 ease-out"
+                        className="w-full h-full object-contain group-hover:scale-108 transition-transform duration-500 ease-out"
                       />
                     </div>
                     {/* Subtle dark overlay for premium feel */}

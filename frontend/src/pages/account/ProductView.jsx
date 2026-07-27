@@ -521,11 +521,11 @@ const ProductView = () => {
               </div>
             )}
 
-            <div className={`h-72 sm:h-96 rounded-[24px] overflow-hidden bg-[#F7F9F7] border border-stone-200/50 shadow-sm relative group`}>
+            <div className={`h-72 sm:h-96 rounded-[24px] overflow-hidden bg-white border border-stone-200/50 shadow-sm relative group`}>
               <ImageWithFallback 
                 src={imagesList[activeImageIndex]} 
                 alt={product.name} 
-                className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 hover:scale-105" 
+                className="w-full h-full object-contain transition-transform duration-500 hover:scale-105" 
               />
               <div className="absolute top-4 right-4 flex items-center gap-2">
                 <button 
@@ -552,14 +552,14 @@ const ProductView = () => {
                   <button 
                     key={i} 
                     onClick={() => setActiveImageIndex(i)}
-                    className={`relative w-20 h-20 rounded-[16px] overflow-hidden bg-stone-50 border cursor-pointer hover:border-[#2E7D32] transition-colors shrink-0 ${
+                    className={`relative w-20 h-20 rounded-[16px] overflow-hidden bg-white border cursor-pointer hover:border-[#2E7D32] transition-colors shrink-0 ${
                       i === activeImageIndex ? 'border-2 border-[#2E7D32]' : 'border-stone-200'
                     }`}
                   >
                     <ImageWithFallback 
                       src={img} 
                       alt={`thumbnail ${i}`} 
-                      className="w-full h-full object-contain mix-blend-multiply" 
+                      className="w-full h-full object-contain" 
                     />
                   </button>
                 ))}
