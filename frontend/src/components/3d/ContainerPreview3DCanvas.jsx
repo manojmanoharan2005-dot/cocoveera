@@ -387,7 +387,7 @@ function CoirLogMesh({ dims }) {
 }
 
 // Universal Model Selector Router (11 Master Category Templates)
-function UniversalProductItem({ categoryType, dims }) {
+const UniversalProductItem = React.memo(function UniversalProductItem({ categoryType, dims }) {
   switch (categoryType) {
     case 'coco_cubes':
       return <CocoCubesMesh dims={dims} />;
@@ -414,12 +414,12 @@ function UniversalProductItem({ categoryType, dims }) {
     default:
       return <CocopeatBlockMesh dims={dims} />;
   }
-}
+});
 
 // ----------------------------------------------------
 // 2. PHOTOREALISTIC WOODEN PALLET WITH STACKED PRODUCTS
 // ----------------------------------------------------
-function PalletWithStack({ position, categoryType, itemDims, containerHeight = 2.39 }) {
+const PalletWithStack = React.memo(function PalletWithStack({ position, categoryType, itemDims, containerHeight = 2.39 }) {
   const palletWidth = 1.05;
   const palletDepth = 1.05;
   const palletHeight = 0.14;
@@ -483,12 +483,12 @@ function PalletWithStack({ position, categoryType, itemDims, containerHeight = 2
       ))}
     </group>
   );
-}
+});
 
 // ----------------------------------------------------
 // 3. INDUSTRIAL SHIPPING CONTAINER MODEL (20FT / 40FT / 40HC)
 // ----------------------------------------------------
-function ShippingContainer({ containerType, isTransparent, doorOpen }) {
+const ShippingContainer = React.memo(function ShippingContainer({ containerType, isTransparent, doorOpen }) {
   const depth = containerType === '20FT' ? 6.0 : 12.0;
   const height = containerType === '40HC' ? 2.69 : 2.39;
   const width = 2.35;
@@ -586,7 +586,7 @@ function ShippingContainer({ containerType, isTransparent, doorOpen }) {
       </group>
     </group>
   );
-}
+});
 
 // ----------------------------------------------------
 // 4. CAMERA CONTROLLER & PRESETS SWITCHER
@@ -594,8 +594,12 @@ function ShippingContainer({ containerType, isTransparent, doorOpen }) {
 function CameraController({ cameraPreset, autoRotate, oscillate }) {
   const { camera } = useThree();
   const controlsRef = useRef();
+  const prevPresetRef = useRef();
 
   useEffect(() => {
+    if (prevPresetRef.current === cameraPreset) return;
+    prevPresetRef.current = cameraPreset;
+
     switch (cameraPreset) {
       case 'top':
         camera.position.set(0, 14, 0);

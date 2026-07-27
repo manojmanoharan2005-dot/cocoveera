@@ -39,7 +39,7 @@ class Mini3DErrorBoundary extends React.Component {
   }
 }
 
-export default function ContainerMini3DCanvas({ containerType = '40HC', product, totalQuantity = 1, palletItems = [] }) {
+const ContainerMini3DCanvas = React.memo(function ContainerMini3DCanvas({ containerType = '40HC', product, totalQuantity = 1, palletItems = [] }) {
   const containerRef = useRef(null);
   const [isVisible, setIsVisible] = useState(true);
   const [hasWebGL, setHasWebGL] = useState(true);
@@ -101,4 +101,6 @@ export default function ContainerMini3DCanvas({ containerType = '40HC', product,
       </div>
     </Mini3DErrorBoundary>
   );
-}
+});
+
+export default ContainerMini3DCanvas;
