@@ -351,7 +351,7 @@ export const RequestQuoteModal = ({
                   <div className="space-y-2">
                     <h3 className="text-base font-poppins font-black text-stone-900 leading-tight">✓ Quote Request Submitted Successfully</h3>
                     <p className="text-xs text-stone-500 font-semibold leading-relaxed">
-                      Our B2B commercial desk is reviewing your requirements and will contact you shortly.
+                      Our commercial desk is reviewing your requirements and will contact you shortly.
                     </p>
                   </div>
                 </div>

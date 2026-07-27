@@ -191,7 +191,6 @@ export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary
                   Anna Nagar, Peelamedu,<br>
                   Coimbatore, Tamil Nadu – 641004<br><br>
                   <strong>GST:</strong> 33OOTPK6234P1ZV<br>
-                  <strong>Contact:</strong> +91 63834 69877, +91 95972 93490<br>
                   <strong>Email:</strong> servicedesk@cocoveera.com<br>
                   <strong>Web:</strong> www.cocoveera.com
                 </div>

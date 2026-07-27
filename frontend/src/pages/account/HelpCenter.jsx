@@ -11,11 +11,11 @@ const KNOWLEDGE_BASE = [
   { keywords: ['hydroponics', 'plant', 'grow', 'best pith', 'pith', 'peat', 'coco peat', 'block', '5kg'], answer: "Our signature 5KG Coco Peat Blocks are highly compressed and yield up to 75 liters of premium growing medium." },
   { keywords: ['ec', 'electrical conductivity', 'salt', 'washed', 'unwashed'], answer: "We offer both Low EC (Washed, <0.5 mS/cm) and High EC (Unwashed) coco peat." },
   { keywords: ['expansion', 'yield', 'liter', 'water holding'], answer: "Our 5KG Coco Peat Blocks have an expansion ratio of 1:15, yielding roughly 70-75 liters of volume per block when hydrated." },
-  { keywords: ['moq', 'minimum order', 'minimum', 'quantity'], answer: "As a B2B manufacturer, our Minimum Order Quantity (MOQ) is generally one 20ft container." },
+  { keywords: ['moq', 'minimum order', 'minimum', 'quantity'], answer: "As a wholesale manufacturer, our Minimum Order Quantity (MOQ) is generally one 20ft container." },
   { keywords: ['pallet', 'container', '20ft', '40ft', 'load'], answer: "A standard 40ft High Cube (HC) container can hold approximately 22-24 metric tons of our 5KG Coco Peat Blocks (roughly 20-22 pallets)." },
   { keywords: ['shipping', 'delivery', 'time', 'lead time'], answer: "Lead time for manufacturing and loading a 40ft container is typically 10-14 days. Ocean transit times vary." },
   { keywords: ['customs', 'duty', 'phytosanitary', 'fumigation'], answer: "We provide all necessary export documentation, including Commercial Invoices, Packing Lists, Certificates of Origin, etc." },
-  { keywords: ['quote', 'bulk', 'wholesale', 'b2b pricing'], answer: "To get B2B pricing, please use the 'Request Bulk Quote' button on our product pages." },
+  { keywords: ['quote', 'bulk', 'wholesale', 'pricing'], answer: "To get wholesale pricing, please use the 'Request Bulk Quote' button on our product pages." },
   { keywords: ['payment', 'pay', 'wire transfer', 'lc'], answer: "For wholesale container orders, we typically accept T/T (Wire Transfer) with a 30% advance and 70% against the copy of the Bill of Lading, or 100% Irrevocable LC at sight." },
   { keywords: ['refund', 'return', 'damaged', 'money back'], answer: "If a shipment is damaged or fails to meet specified EC/pH parameters, please submit a claim with photos within 14 days of port arrival." }
 ];
@@ -112,7 +112,7 @@ export default function HelpCenter() {
       {
         id: 'welcome',
         type: 'bot',
-        content: `Hello ${user?.name ? user.name.split(' ')[0] : 'there'}! I am the Cocoveera Support Assistant. I can help you with B2B product inquiries, shipping logistics, order tracking, and account details. What would you like to know?`,
+        content: `Hello ${user?.name ? user.name.split(' ')[0] : 'there'}! I am the Cocoveera Support Assistant. I can help you with product inquiries, shipping logistics, order tracking, and account details. What would you like to know?`,
         timestamp: new Date()
       }
     ]);
@@ -162,7 +162,7 @@ export default function HelpCenter() {
       // Clear issue category after generating ticket so it doesn't loop
       setIssueCategory('');
       
-      return `Ticket ID: ${ticketId}\n\nStatus: Open\n\nEstimated Response Time: Within 24 Hours\n\nWe have received your issue regarding '${issueCategory}'. A dedicated B2B support representative will get back to you shortly.`;
+      return `Ticket ID: ${ticketId}\n\nStatus: Open\n\nEstimated Response Time: Within 24 Hours\n\nWe have received your issue regarding '${issueCategory}'. A dedicated support representative will get back to you shortly.`;
     }
 
     // --- Dynamic Intents ---
@@ -344,19 +344,9 @@ export default function HelpCenter() {
         <div className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm space-y-4 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-[#2E7D32]"></div>
           <h3 className="font-extrabold text-stone-900 flex items-center gap-2 text-lg"><User className="w-5 h-5 text-[#2E7D32]"/> Need Human Support?</h3>
-          <p className="text-xs text-stone-500 font-medium">Our B2B specialists are available 24/7 to assist you with large volume orders and complex logistics.</p>
+          <p className="text-xs text-stone-500 font-medium">Our logistics specialists are available 24/7 to assist you with large volume orders and complex shipping.</p>
           
           <div className="space-y-3 mt-4">
-            <a href="https://wa.me/911234567890" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-100/50 group">
-              <div className="w-8 h-8 rounded-full bg-[#2E7D32] text-white flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                <MessageCircle className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-green-800 uppercase tracking-wider mb-0.5">WhatsApp Support</p>
-                <p className="text-xs font-semibold text-stone-700">+91 123 456 7890</p>
-              </div>
-            </a>
-            
             <a href="mailto:supportdesk@cocoveera.com" className="flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100/50 group">
               <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                 <Mail className="w-4 h-4" />
@@ -364,16 +354,6 @@ export default function HelpCenter() {
               <div>
                 <p className="text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-0.5">Email Support</p>
                 <p className="text-xs font-semibold text-stone-700">supportdesk@cocoveera.com</p>
-              </div>
-            </a>
-
-            <a href="tel:+916383469877" className="flex items-center gap-3 p-3 bg-stone-50 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200/50 group">
-              <div className="w-8 h-8 rounded-full bg-stone-600 text-white flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                <Phone className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-stone-600 uppercase tracking-wider mb-0.5">Phone Support</p>
-                <p className="text-xs font-semibold text-stone-700">+91 63834 69877</p>
               </div>
             </a>
           </div>

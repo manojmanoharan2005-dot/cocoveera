@@ -757,7 +757,7 @@ const ProductView = () => {
                   Container Configuration
                 </h3>
                 <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
-                  B2B Export Config
+                  Premium Export Config
                 </div>
               </div>
 

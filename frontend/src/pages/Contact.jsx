@@ -1,6 +1,6 @@
 /**
  * File: frontend/src/pages/Contact.jsx
- * Purpose: React page component representing the Premium B2B Contact view.
+ * Purpose: React page component representing the Premium Contact view.
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -99,7 +99,7 @@ const Contact = () => {
     <div className="pb-16 bg-white min-h-screen">
       <SEO 
         title="Contact Us"
-        description="Get in touch with Cocoveera for premium B2B inquiries, bulk orders, and container load planning."
+        description="Get in touch with Cocoveera for premium inquiries, bulk orders, and container load planning."
         url="/contact"
       />
       <PageHero
@@ -454,17 +454,7 @@ const Contact = () => {
                   </div>
                 </div>
 
-                {/* Contact Phone Numbers */}
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#F0FAF0] flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-4 h-4 text-[#2E7D32]" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Office Contact Numbers</p>
-                    <a href="tel:+916383469877" className="block text-stone-900 font-medium hover:text-[#2E7D32] transition">+91 63834 69877</a>
-                    <a href="tel:+919597293490" className="block text-stone-900 font-medium hover:text-[#2E7D32] transition">+91 95972 93490</a>
-                  </div>
-                </div>
+
               </div>
 
               <div className="h-px bg-stone-100 w-full"></div>

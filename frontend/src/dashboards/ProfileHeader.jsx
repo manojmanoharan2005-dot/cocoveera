@@ -81,7 +81,7 @@ export const ProfileHeader = ({
           </div>
           <div className="hidden sm:block text-left leading-none">
             <h4 className="text-xs font-extrabold text-stone-900">{user?.name || 'Representative'}</h4>
-            <span className="text-[8px] text-[#6B7280] font-bold uppercase tracking-wider">{user?.companyName || 'B2B Partner'}</span>
+            <span className="text-[8px] text-[#6B7280] font-bold uppercase tracking-wider">{user?.companyName || 'Export Partner'}</span>
           </div>
         </div>
       </div>

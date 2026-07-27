@@ -123,7 +123,7 @@ export default function AdminInquiries() {
       <div className="max-w-7xl mx-auto space-y-6 pb-12">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">B2B Inquiries</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Inquiries</h1>
           <p className="text-gray-600 mt-1">Manage global export and product inquiries</p>
         </div>
 

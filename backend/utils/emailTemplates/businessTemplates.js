@@ -174,7 +174,7 @@ export const getMarketingCampaignTemplate = (name, campaign) => {
 
 export const getContactInquiryTemplate = (inquiry) => {
   const content = `
-    <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #E63946; margin-top: 0; font-weight: normal; margin-bottom: 20px;">New B2B Inquiry: ${inquiry.inquiryId}</h3>
+    <h3 style="font-family: Georgia, 'Times New Roman', Times, serif; font-size: 18px; color: #E63946; margin-top: 0; font-weight: normal; margin-bottom: 20px;">New Inquiry: ${inquiry.inquiryId}</h3>
     <p style="margin-bottom: 20px;">A new export inquiry has been received.</p>
     
     <div style="background-color: #FFFDF9; border: 1px solid #E2DCD0; border-radius: 6px; padding: 20px; margin-bottom: 30px;">

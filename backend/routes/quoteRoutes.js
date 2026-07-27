@@ -1,6 +1,6 @@
 /**
  * File: backend/routes/quoteRoutes.js
- * Purpose: Defines the API endpoints and routing logic for client-side B2B quotations.
+ * Purpose: Defines the API endpoints and routing logic for client-side quotations.
  */
 import express from 'express';
 import {

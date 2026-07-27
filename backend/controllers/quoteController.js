@@ -1,6 +1,6 @@
 /**
  * File: backend/controllers/quoteController.js
- * Purpose: Handles client-side B2B Quote operations (listing, details, accepting, revision requests, secure PDFs).
+ * Purpose: Handles client-side Quote operations (listing, details, accepting, revision requests, secure PDFs).
  */
 import fs from 'fs';
 import path from 'path';
@@ -277,7 +277,7 @@ export const acceptQuote = async (req, res) => {
       }
     }
 
-    // Generate sequential B2B Order Number
+    // Generate sequential Order Number
     const orderNumber = await generateSequentialNumber('ORD');
 
     // Structure items array
@@ -293,7 +293,7 @@ export const acceptQuote = async (req, res) => {
       }
     ];
 
-    // Setup B2B payment milestones
+    // Setup payment milestones
     const paymentMilestones = [
       {
         milestoneType: '40% Advance Payment',

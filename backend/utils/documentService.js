@@ -47,7 +47,7 @@ export const getNextSequenceValue = async (sequenceName) => {
   return sequenceDocument.seq;
 };
 
-// Strict B2B sequential number mapping
+// Strict sequential number mapping
 export const generateSequentialNumber = async (prefix) => {
   const year = new Date().getFullYear();
   const seq = await getNextSequenceValue(`${prefix}-${year}`);

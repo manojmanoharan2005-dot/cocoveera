@@ -26,7 +26,7 @@ export const ProfileCard = ({ user, setActiveTab }) => {
 
       {/* Role Tag */}
       <span className="text-[8px] text-stone-400 font-extrabold uppercase tracking-widest mt-1">
-        {user?.role === 'admin' ? 'Administrator' : 'B2B Client Representative'}
+        {user?.role === 'admin' ? 'Administrator' : 'Client Representative'}
       </span>
 
       {/* Action Button */}

@@ -153,7 +153,7 @@ export const updateOrderStatus = async (req, res) => {
           user: order.user,
         });
       } else if (orderStatus === 'shipped') {
-        // Generate ALL remaining B2B export documents automatically
+        // Generate ALL remaining export documents automatically
         const exportDocTypes = [
           'commercialInvoicePdf',
           'packingListPdf',

@@ -326,12 +326,7 @@ const Home = () => {
     "name": "Cocoveera",
     "url": "https://cocoveera.com",
     "logo": "https://cocoveera.com/favicon.webp",
-    "description": "Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export.",
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+91-63834-69877",
-      "contactType": "Customer Service"
-    }
+    "description": "Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export."
   };
 
   return (

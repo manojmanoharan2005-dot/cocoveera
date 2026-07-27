@@ -1,6 +1,6 @@
 /**
  * File: backend/controllers/documentController.js
- * Purpose: Secure role-based controller for listing, viewing, and downloading B2B export documents.
+ * Purpose: Secure role-based controller for listing, viewing, and downloading export documents.
  */
 import Document from '../models/Document.js';
 

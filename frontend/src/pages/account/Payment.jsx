@@ -141,7 +141,7 @@ const Payment = () => {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-stone-900">Bank Wire Transfer (T/T)</p>
-                      <p className="text-xs text-stone-500 font-semibold">0% processing fee. Best for B2B.</p>
+                      <p className="text-xs text-stone-500 font-semibold">0% processing fee. Best for bulk international orders.</p>
                     </div>
                   </div>
                 </label>

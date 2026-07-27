@@ -168,7 +168,7 @@ const Products = () => {
         }, 2000);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Error submitting B2B quote request');
+      setError(err.response?.data?.message || 'Error submitting quote request');
     } finally {
       setSubmitLoading(false);
     }
@@ -191,7 +191,7 @@ const Products = () => {
       aeration: 'Medium',
       retention: 'High',
       bestFor: 'Standard greenhouse vegetables (peppers, eggplant) and small nurseries.',
-      desc: 'Our most popular B2B blend. Balanced air porosity with excellent water distribution to prevent dry spots.'
+      desc: 'Our most popular professional blend. Balanced air porosity with excellent water distribution to prevent dry spots.'
     },
     pro: {
       name: 'Pro Blend (50/50 Balanced)',

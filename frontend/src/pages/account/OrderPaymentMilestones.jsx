@@ -47,7 +47,7 @@ const OrderPaymentMilestones = () => {
       // 1. Initiate payment session on the backend
       const initRes = await apiClient.post('/payments/initiate', {
         orderId: id,
-        gateway: 'razorpay', // default B2B gateway
+        gateway: 'razorpay', // default gateway
         milestoneIndex,
       });
 

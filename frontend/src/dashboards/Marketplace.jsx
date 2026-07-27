@@ -394,7 +394,7 @@ export const Marketplace = () => {
                     <div>
                       <span className="text-[10px] text-[#6B7280] font-extrabold uppercase tracking-wider block">Description</span>
                       <p className="text-xs text-stone-600 leading-relaxed font-semibold mt-1.5">
-                        {selectedProduct.description || 'Professional, double-sieved washed coir substrate blocks optimized for industrial B2B greenhouses requiring high drainage index, buffered EC balance, and premium physical consistency.'}
+                        {selectedProduct.description || 'Professional, double-sieved washed coir substrate blocks optimized for industrial commercial greenhouses requiring high drainage index, buffered EC balance, and premium physical consistency.'}
                       </p>
                     </div>
 

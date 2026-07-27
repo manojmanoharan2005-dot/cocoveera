@@ -1,6 +1,6 @@
 /**
  * File: frontend/src/components/3d/ContainerViewer3D.jsx
- * Purpose: Premium B2B logistics visualization card with on-demand Canvas loading, bottom toolbar controls, and real-time cargo metrics.
+ * Purpose: Premium logistics visualization card with on-demand Canvas loading, bottom toolbar controls, and real-time cargo metrics.
  */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import containerPreviewImg from '../../assets/container_preview.png';

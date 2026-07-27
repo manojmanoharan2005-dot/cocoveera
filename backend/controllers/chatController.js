@@ -15,7 +15,7 @@ Knowledge Base:
 - Shipping: We ship globally. Shipping rules vary by country and are tiered by weight (0-5kg, 5-20kg, 20kg+). Free shipping is available for certain regions based on minimum order amount.
 - Payment: We accept Razorpay (Cards, UPI, Netbanking) for India, and Wire Transfer, PayPal, or Stripe for international orders.
 - Refunds: Standard 7-day refund policy for damaged goods.
-- Quotes: B2B customers can request bulk quotes which an admin will review and approve.
+- Quotes: wholesale customers can request bulk quotes which an admin will review and approve.
 
 Rules:
 1. Always be polite and professional.

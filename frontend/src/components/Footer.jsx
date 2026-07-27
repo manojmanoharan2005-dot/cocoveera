@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import useSWR from 'swr';
 import { API_URL } from '../utils/config';
 
@@ -143,24 +143,7 @@ const Footer = () => {
                 Tamil Nadu – 641004, India
               </span>
             </li>
-            <li className="flex items-center gap-3">
-              <Phone className="w-4 h-4 text-primary-light flex-shrink-0" />
-              <a
-                href="tel:+916383469877"
-                className="text-stone-400 hover:text-primary-light transition-colors"
-              >
-                +91 63834 69877
-              </a>
-            </li>
-            <li className="flex items-center gap-3">
-              <Phone className="w-4 h-4 text-primary-light flex-shrink-0" />
-              <a
-                href="tel:+919597293490"
-                className="text-stone-400 hover:text-primary-light transition-colors"
-              >
-                +91 95972 93490
-              </a>
-            </li>
+
             <li className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-primary-light flex-shrink-0" />
               <a

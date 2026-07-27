@@ -209,7 +209,6 @@ function generateCompanyAndCustomerInfo(doc, invoice) {
     'Coimbatore,',
     'Tamil Nadu – 641004\n',
     'GST: 33OOTPK6234P1ZV',
-    'Contact: +91 63834 69877, +91 95972 93490',
     'Email: servicedesk@cocoveera.com',
     'Web: www.cocoveera.com'
   ];

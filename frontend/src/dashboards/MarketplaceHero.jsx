@@ -20,7 +20,7 @@ export const MarketplaceHero = () => {
           Premium Coir Marketplace
         </h2>
         <p className="text-stone-200 text-xs sm:text-sm font-semibold max-w-md">
-          Explore certified B2B coco peat blocks, grow media slabs, and specialized horticulture inputs.
+          Explore certified professional coco peat blocks, grow media slabs, and specialized horticulture inputs.
         </p>
       </div>
     </div>

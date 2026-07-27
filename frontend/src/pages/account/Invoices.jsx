@@ -1,6 +1,6 @@
 /**
  * File: frontend/src/pages/account/Invoices.jsx
- * Purpose: Enterprise B2B Export Documentation Dashboard.
+ * Purpose: Enterprise Export Documentation Dashboard.
  */
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -11,7 +11,7 @@ import SEO from '../../components/SEO';
 
 const documentTypesList = [
   { key: 'quotationPdf', name: 'Official Quotation', desc: 'Detailed commercial quotation proposal for coir export.' },
-  { key: 'proformaInvoicePdf', name: 'Proforma Invoice', desc: 'B2B Proforma Invoice generated upon acceptance of quotation.' },
+  { key: 'proformaInvoicePdf', name: 'Proforma Invoice', desc: 'Proforma Invoice generated upon acceptance of quotation.' },
   { key: 'commercialInvoicePdf', name: 'Commercial Invoice', desc: 'Final Commercial Invoice detailing product codes, quantities & totals.' },
   { key: 'packingListPdf', name: 'Packing List', desc: 'Complete cargo packing layout details including pallets, weight & volume.' },
   { key: 'certificateOfOriginPdf', name: 'Certificate Of Origin', desc: 'Official origin certificate for Indian coir cargo.' },
@@ -87,7 +87,7 @@ export default function Invoices() {
         </div>
         <div>
           <h1 className="text-2xl font-black text-stone-900 font-poppins">Documents & Invoices</h1>
-          <p className="text-stone-500 font-semibold text-sm">Access your official quotes, B2B invoices, and global export documentations.</p>
+          <p className="text-stone-500 font-semibold text-sm">Access your official quotes, invoices, and global export documentations.</p>
         </div>
       </div>
 

@@ -360,7 +360,7 @@ const Orders = () => {
 
     const shortOrderId = (order.orderNumber || order._id).slice(-8).toUpperCase();
 
-    // Render B2B dynamic checklist icons
+    // Render dynamic checklist icons
     const renderProgressChecklist = () => {
       const steps = [40, 60, 80, 100];
       return (
@@ -389,7 +389,7 @@ const Orders = () => {
       );
     };
 
-    // Render B2B Card-Level Action Buttons
+    // Render Card-Level Action Buttons
     const renderCardActionButtons = () => {
       if (rawStatus === 'cancelled') {
         return (

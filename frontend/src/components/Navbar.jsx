@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, ChevronDown, Globe, Mail, Phone, ShieldCheck, Heart, ShoppingCart, User } from 'lucide-react';
+import { Menu, X, ChevronDown, Globe, Mail, ShieldCheck, Heart, ShoppingCart, User } from 'lucide-react';
 
 const Navbar = () => {
   const { user, token, loading, isAuthenticated, logout } = useAuth();
@@ -58,10 +58,7 @@ const Navbar = () => {
               <Mail className="w-3 h-3" />
               supportdesk@cocoveera.com
             </a>
-            <a href="tel:+916383469877" className="flex items-center gap-1.5 hover:text-green-200 transition-colors">
-              <Phone className="w-3 h-3" />
-              +91 63834 69877
-            </a>
+
           </div>
           <div className="hidden sm:flex items-center gap-1.5">
             <ShieldCheck className="w-3 h-3 text-green-300" />

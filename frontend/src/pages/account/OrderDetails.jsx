@@ -226,11 +226,11 @@ const OrderDetails = () => {
             </div>
           </div>
 
-          {/* B2B Payment Milestones Timeline */}
+          {/* Payment Milestones Timeline */}
           {backendOrder.paymentMilestones && backendOrder.paymentMilestones.length > 0 && (
             <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
               <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-6 border-b border-stone-100 pb-2">
-                B2B Payment Milestones
+                Payment Milestones
               </h3>
               
               <Suspense fallback={<div className="h-32 bg-stone-100 rounded-xl animate-pulse" />}>
