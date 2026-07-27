@@ -136,8 +136,10 @@ export const buildInvoiceDataFromQuote = (quote) => {
     estimatedWeight: quote.estimatedWeight || 0,
     estimatedVolume: quote.estimatedVolume || 0,
     shippingMethod: quote.shippingMethod || (isIndia ? 'Road Transport' : 'Sea Freight'),
-    portOfLoading: quote.originPort || '-',
-    portOfDischarge: quote.destinationPort || '-',
+    portOfLoading: quote.originPort || 'Tuticorin Port, India',
+    portOfDischarge: (quote.destinationPort && !quote.destinationPort.includes('\n') && quote.destinationPort.length < 50 && !quote.destinationPort.includes('Street')) 
+      ? quote.destinationPort 
+      : ([quote.shippingAddress?.city, quote.shippingAddress?.country].filter(Boolean).join(', ') || 'Destination Port'),
     incoterms: quote.incoterms || 'FOB',
     transitTime: quote.transitTime || '-',
     expectedDeliveryDate: quote.expectedDelivery || '-',

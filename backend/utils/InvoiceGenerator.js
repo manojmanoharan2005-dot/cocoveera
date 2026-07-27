@@ -107,10 +107,10 @@ export const generateInvoicePDF = async (invoiceData) => {
       // PAGE 1: Header, Info, Logistics
       generateHeader(doc, logoBuffer, invoiceData);
       generateCompanyAndCustomerInfo(doc, invoiceData);
-      generateOrderAndLogisticsInfo(doc, invoiceData);
+      const logisticsBottomY = generateOrderAndLogisticsInfo(doc, invoiceData);
       
-      // PRODUCT TABLE (Handles pagination)
-      const finalY = generateProductTable(doc, invoiceData);
+      // PRODUCT TABLE (Handles pagination dynamically below Shipping Info)
+      const finalY = generateProductTable(doc, invoiceData, logisticsBottomY);
 
       // SUMMARIES & BOTTOM SECTION
       generateSummariesAndBottom(doc, invoiceData, qrBuffer, finalY);
@@ -269,57 +269,108 @@ const isValueEmptyOrPlaceholder = (val) => {
 
 function generateOrderAndLogisticsInfo(doc, invoice) {
   const top = 310;
+  const boxWidth = 240;
+  const paddingX = 10;
+  const labelWidth = 90;
+  const valWidth = boxWidth - labelWidth - paddingX * 2; // 130px flexible value width
 
   const usedCap = invoice.totalContainers || 0;
   const totalPieces = invoice.totalPieces || (invoice.items || []).reduce((acc, item) => acc + (item.pieces || item.quantity || 0), 0);
 
-  // Box 1: Export Logistics
-  doc.rect(40, top, 240, 125).fillAndStroke(THEME.accent, THEME.border);
-  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('EXPORT LOGISTICS', 50, top + 10);
-  
-  let box1Y = top + 30;
+  // Clean Destination Port: Display ONLY port/city (e.g. "Hamburg, Germany"), NEVER full street address
+  let cleanDestPort = invoice.portOfDischarge;
+  if (!cleanDestPort || cleanDestPort.includes('\n') || cleanDestPort.length > 40 || cleanDestPort.includes('Street') || cleanDestPort.includes('Road')) {
+    const city = invoice.shippingAddress?.city;
+    const country = invoice.shippingAddress?.country || invoice.destinationCountry;
+    cleanDestPort = [city, country].filter(Boolean).join(', ') || 'Destination Port';
+  }
+
   const box1Fields = [
     { label: 'Container Type:', value: invoice.containerType },
     { label: 'Total Containers:', value: usedCap ? usedCap.toFixed(2) : '' },
     { label: 'Total Pieces:', value: totalPieces ? Math.round(totalPieces).toLocaleString() : '' },
     { label: 'Estimated Weight:', value: invoice.estimatedWeight ? `${Number(invoice.estimatedWeight).toLocaleString()} KG` : '' },
     { label: 'Estimated Volume:', value: invoice.estimatedVolume ? `${Number(invoice.estimatedVolume).toFixed(2)} CBM` : '' },
-  ];
+  ].filter(f => !isValueEmptyOrPlaceholder(f.value));
 
-  box1Fields.forEach(field => {
-    if (!isValueEmptyOrPlaceholder(field.value)) {
-      doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold').text(field.label, 50, box1Y);
-      doc.font('Helvetica').text(String(field.value), 140, box1Y);
-      box1Y += 15;
-    }
-  });
-
-  // Box 2: Shipping Information
-  doc.rect(315, top, 240, 125).fillAndStroke(THEME.accent, THEME.border);
-  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('SHIPPING INFORMATION', 325, top + 10);
-  
-  let box2Y = top + 30;
   const box2Fields = [
     { label: 'Shipping Method:', value: invoice.shippingMethod },
     { label: 'Origin Port:', value: invoice.portOfLoading },
-    { label: 'Destination Port:', value: invoice.portOfDischarge },
+    { label: 'Destination Port:', value: cleanDestPort },
     { label: 'Incoterms:', value: invoice.incoterms },
     { label: 'Transit Time:', value: invoice.transitTime },
     { label: 'Expected Delivery:', value: invoice.expectedDeliveryDate },
-  ];
+  ].filter(f => !isValueEmptyOrPlaceholder(f.value));
 
-  box2Fields.forEach(field => {
-    if (!isValueEmptyOrPlaceholder(field.value)) {
-      doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold').text(field.label, 325, box2Y);
-      doc.font('Helvetica').text(String(field.value), 415, box2Y);
-      box2Y += 15;
-    }
+  // Dynamically calculate Box 1 height
+  doc.fontSize(8);
+  let box1HeightNeeded = 30; // Header offset
+  box1Fields.forEach(f => {
+    doc.font('Helvetica-Bold');
+    const lH = doc.heightOfString(f.label, { width: labelWidth });
+    doc.font('Helvetica');
+    const vH = doc.heightOfString(String(f.value), { width: valWidth });
+    box1HeightNeeded += Math.max(lH, vH) + 4;
   });
+
+  // Dynamically calculate Box 2 height
+  let box2HeightNeeded = 30; // Header offset
+  box2Fields.forEach(f => {
+    doc.font('Helvetica-Bold');
+    const lH = doc.heightOfString(f.label, { width: labelWidth });
+    doc.font('Helvetica');
+    const vH = doc.heightOfString(String(f.value), { width: valWidth });
+    box2HeightNeeded += Math.max(lH, vH) + 4;
+  });
+
+  const finalBoxHeight = Math.max(120, box1HeightNeeded + 10, box2HeightNeeded + 10);
+
+  // Render Box 1 (Export Logistics)
+  doc.rect(40, top, boxWidth, finalBoxHeight).fillAndStroke(THEME.accent, THEME.border);
+  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('EXPORT LOGISTICS', 50, top + 10);
+
+  let b1Y = top + 30;
+  box1Fields.forEach(field => {
+    const valStr = String(field.value);
+    doc.fontSize(8);
+    doc.font('Helvetica-Bold');
+    const lH = doc.heightOfString(field.label, { width: labelWidth });
+    doc.font('Helvetica');
+    const vH = doc.heightOfString(valStr, { width: valWidth });
+    const rowH = Math.max(lH, vH);
+
+    doc.fillColor(THEME.textMain).font('Helvetica-Bold').text(field.label, 50, b1Y, { width: labelWidth });
+    doc.font('Helvetica').text(valStr, 50 + labelWidth, b1Y, { width: valWidth });
+
+    b1Y += rowH + 4;
+  });
+
+  // Render Box 2 (Shipping Information)
+  doc.rect(315, top, boxWidth, finalBoxHeight).fillAndStroke(THEME.accent, THEME.border);
+  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('SHIPPING INFORMATION', 325, top + 10);
+
+  let b2Y = top + 30;
+  box2Fields.forEach(field => {
+    const valStr = String(field.value);
+    doc.fontSize(8);
+    doc.font('Helvetica-Bold');
+    const lH = doc.heightOfString(field.label, { width: labelWidth });
+    doc.font('Helvetica');
+    const vH = doc.heightOfString(valStr, { width: valWidth });
+    const rowH = Math.max(lH, vH);
+
+    doc.fillColor(THEME.textMain).font('Helvetica-Bold').text(field.label, 325, b2Y, { width: labelWidth });
+    doc.font('Helvetica').text(valStr, 325 + labelWidth, b2Y, { width: valWidth });
+
+    b2Y += rowH + 4;
+  });
+
+  return top + finalBoxHeight;
 }
 
-function generateProductTable(doc, invoice) {
+function generateProductTable(doc, invoice, startY = 440) {
   let i;
-  let invoiceTableTop = 440;
+  let invoiceTableTop = startY + 15; // Product table dynamically positions below Shipping Information!
   const curr = getCurrencySymbol(invoice.currency);
   
   const drawTableHeader = (y) => {
