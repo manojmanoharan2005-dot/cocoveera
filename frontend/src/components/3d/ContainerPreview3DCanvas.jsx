@@ -419,18 +419,21 @@ function UniversalProductItem({ categoryType, dims }) {
 // ----------------------------------------------------
 // 2. PHOTOREALISTIC WOODEN PALLET WITH STACKED PRODUCTS
 // ----------------------------------------------------
-function PalletWithStack({ position, categoryType, itemDims }) {
+function PalletWithStack({ position, categoryType, itemDims, containerHeight = 2.39 }) {
   const palletWidth = 1.05;
   const palletDepth = 1.05;
   const palletHeight = 0.14;
 
   const woodTex = useMemo(() => generateProceduralTexture('wood'), []);
 
-  // Compute how many items fit on pallet
+  // Compute how many items fit on pallet to fill container height up to roof clearance
   const [l, w, h] = itemDims;
   const itemsX = Math.max(1, Math.floor(palletWidth / l));
   const itemsZ = Math.max(1, Math.floor(palletDepth / w));
-  const layersY = Math.max(1, Math.min(8, Math.floor(2.0 / h)));
+  
+  // Fill full vertical height up to container roof (with 20cm safety clearance)
+  const maxAvailableHeight = containerHeight - palletHeight - 0.20;
+  const layersY = Math.max(2, Math.floor(maxAvailableHeight / Math.max(0.08, h)));
 
   const startX = -((itemsX - 1) * l) / 2;
   const startZ = -((itemsZ - 1) * w) / 2;
@@ -464,7 +467,7 @@ function PalletWithStack({ position, categoryType, itemDims }) {
         ))}
       </group>
 
-      {/* Stacked Product Units */}
+      {/* Stacked Product Units filling up to container roof */}
       {Array.from({ length: layersY }).map((_, ly) => (
         <group key={ly} position={[0, palletHeight + ly * h + h / 2, 0]}>
           {Array.from({ length: itemsX }).map((_, ix) => (
@@ -784,6 +787,7 @@ export default function ContainerPreview3DCanvas({
           position={p.pos} 
           categoryType={p.categoryType} 
           itemDims={p.itemDims} 
+          containerHeight={containerType === '40HC' ? 2.69 : 2.39}
         />
       ))}
 
