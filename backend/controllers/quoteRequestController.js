@@ -629,8 +629,7 @@ export const approveQuoteRequest = async (req, res) => {
 
     await quote.save();
 
-    // Call documentService to automatically generate Official Quotation PDF, upload to Cloudinary,
-    // save document URL in MongoDB, register in documents collection, and email customer with PDF.
+    // Call documentService to automatically generate Official Quotation PDF and upload to Cloudinary + DB
     const docRecord = await generateAndStoreDocument({
       quoteId: quote._id,
       type: 'quotationPdf',
@@ -640,6 +639,46 @@ export const approveQuoteRequest = async (req, res) => {
     // Sync URLs to quote
     quote.pdfUrl = docRecord.url;
     await quote.save();
+
+    // Prepare Official_Quotation.pdf attachment for single branded email dispatch
+    let pdfAttachment = null;
+    try {
+      if (quote.pdfPath && fs.existsSync(quote.pdfPath)) {
+        const pdfBuffer = fs.readFileSync(quote.pdfPath);
+        pdfAttachment = {
+          name: 'Official_Quotation.pdf',
+          content: pdfBuffer.toString('base64'),
+          type: 'application/pdf'
+        };
+      }
+    } catch (attError) {
+      console.warn('[quoteRequestController] Could not attach PDF to email:', attError.message);
+    }
+
+    // Send single branded "Official Quotation Available" email
+    try {
+      await sendRFQApprovalEmail(
+        quoteRequest.email,
+        quoteRequest.contactPerson || quote.user?.name || 'Valued Partner',
+        {
+          subject: 'Official Quotation Available - Cocoveera Export',
+          category: quoteRequest.category,
+          productName: quoteRequest.product?.name,
+          products: quote.products,
+          containerSize: quote.containerDetails?.containerSize,
+          price: quote.grandTotal || quote.convertedAmount,
+          currency: quote.currency || 'USD',
+          shippingTerms: quote.incoterms || quote.shippingTerms || 'FOB',
+          validity: quote.quoteValidity || 15,
+          deliveryDate: quote.expectedDelivery,
+          emailBody: quote.commercialNotes,
+          additionalNotes: quote.commercialNotes
+        },
+        pdfAttachment
+      );
+    } catch (mailError) {
+      console.error('[quoteRequestController] Error sending quotation approval email:', mailError.message);
+    }
 
     res.status(200).json({
       success: true,

@@ -294,38 +294,41 @@ export const generateAndStoreDocument = async ({ orderId, quoteId, type, user, d
       });
     }
 
-    // Send email with PDF attachment
-    const emailSubject = `${docName} Generated - Cocoveera Export`;
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
-        <h2 style="color: #2E7D32; border-bottom: 2px solid #2E7D32; padding-bottom: 10px;">${docName} Available</h2>
-        <p>Dear ${targetUser?.name || 'Partner'},</p>
-        <p>We are writing to let you know that your official <strong>${docName}</strong> has been generated and uploaded to the Cocoveera ERP portal.</p>
-        <p>The document is attached directly to this email and is always available for preview &amp; download within your relevant <strong>My Quotes</strong> or <strong>My Orders</strong> section on the Cocoveera portal.</p>
-        <br/>
-        <p>For any queries or modifications, please respond to this email or reach us at servicedesk@cocoveera.com.</p>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
-        <p style="font-size: 11px; color: #888;">This is an automated system notification from Cocoveera Export Platform.</p>
-      </div>
-    `;
+    // Send email with PDF attachment for non-quotation documents
+    // (Quotation approval emails are dispatched via branded sendRFQApprovalEmail in quoteRequestController)
+    if (type !== 'quotationPdf') {
+      const emailSubject = `${docName} Generated - Cocoveera Export`;
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+          <h2 style="color: #2E7D32; border-bottom: 2px solid #2E7D32; padding-bottom: 10px;">${docName} Available</h2>
+          <p>Dear ${targetUser?.name || 'Partner'},</p>
+          <p>We are writing to let you know that your official <strong>${docName}</strong> has been generated and uploaded to the Cocoveera ERP portal.</p>
+          <p>The document is attached directly to this email and is always available for preview &amp; download within your relevant <strong>My Quotes</strong> or <strong>My Orders</strong> section on the Cocoveera portal.</p>
+          <br/>
+          <p>For any queries or modifications, please respond to this email or reach us at servicedesk@cocoveera.com.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
+          <p style="font-size: 11px; color: #888;">This is an automated system notification from Cocoveera Export Platform.</p>
+        </div>
+      `;
 
-    const recipientEmail = targetUser?.email || quote?.email || order?.user?.email;
-    if (recipientEmail) {
-      const pdfBase64 = pdfBuffer.toString('base64');
-      const attachment = {
-        content: pdfBase64,
-        name: `${docName.replace(/\s+/g, '_')}.pdf`,
-        type: 'application/pdf',
-      };
+      const recipientEmail = targetUser?.email || quote?.email || order?.user?.email;
+      if (recipientEmail) {
+        const pdfBase64 = pdfBuffer.toString('base64');
+        const attachment = {
+          content: pdfBase64,
+          name: `${docName.replace(/\s+/g, '_')}.pdf`,
+          type: 'application/pdf',
+        };
 
-      await sendAndLogEmail(
-        emailSubject,
-        emailHtml,
-        recipientEmail,
-        targetUser?.name || 'Partner',
-        attachment,
-        uploadResult.secure_url
-      );
+        await sendAndLogEmail(
+          emailSubject,
+          emailHtml,
+          recipientEmail,
+          targetUser?.name || 'Partner',
+          attachment,
+          uploadResult.secure_url
+        );
+      }
     }
 
     return documentRecord;
