@@ -116,43 +116,65 @@ const sendAndLogEmail = async (subject, htmlContent, toEmail, toName, attachment
 // Map quote details to PDF layout input
 export const buildInvoiceDataFromQuote = (quote) => {
   const isIndia = quote.shippingAddress?.country?.toLowerCase() === 'india';
-  const qty = quote.containerDetails?.quantity || 1;
-  const totalAmt = quote.convertedAmount || 0;
   
   return {
     invoiceNumber: quote.quoteNumber,
-    orderId: quote.rfq?.toString().slice(-8).toUpperCase() || 'N/A',
+    orderId: '', // Order Number should not exist until customer accepts the quotation.
     customerId: quote.user?._id?.toString() || 'Guest',
     currency: quote.currency || 'USD',
     customerName: quote.user?.name || quote.email,
     customerEmail: quote.email,
     customerPhone: quote.user?.phone || '',
     shippingAddress: quote.shippingAddress || {},
-    containerType: quote.containerDetails?.containerSize || '20 FT',
-    totalContainers: qty,
-    totalPieces: quote.products?.reduce((acc, curr) => acc + (curr.pieces || curr.quantity || 0), 0) || 0,
-    estimatedWeight: quote.products?.reduce((acc, curr) => acc + (curr.weight || 0), 0) || 0,
-    estimatedVolume: quote.products?.reduce((acc, curr) => acc + (curr.volume || 0), 0) || 0,
-    shippingMethod: isIndia ? 'Road Transport' : 'Sea Freight',
+    
+    // Logistics
+    containerType: quote.containerDetails?.containerSize || '-',
+    totalContainers: quote.containerCount !== undefined ? quote.containerCount : (quote.containerDetails?.quantity || 1),
+    totalPieces: quote.products && quote.products.length > 0
+      ? quote.products.reduce((acc, curr) => acc + (curr.pieces || 0), 0)
+      : (quote.containerDetails?.quantity || 1),
+    estimatedWeight: quote.estimatedWeight || 0,
+    estimatedVolume: quote.estimatedVolume || 0,
+    shippingMethod: quote.shippingMethod || (isIndia ? 'Road Transport' : 'Sea Freight'),
+    portOfLoading: quote.originPort || '-',
+    portOfDischarge: quote.destinationPort || '-',
+    incoterms: quote.incoterms || 'FOB',
+    transitTime: quote.transitTime || '-',
+    expectedDeliveryDate: quote.expectedDelivery || '-',
+    productionTime: quote.productionTime || '-',
+    paymentTerms: quote.paymentTerms || '-',
+    quoteValidity: quote.quoteValidity || 15,
     destinationCountry: quote.shippingAddress?.country || 'Unknown',
-    transitTime: 'Standard ETA',
-    expectedDeliveryDate: quote.estimatedProductionTime || 'N/A',
+
     items: quote.products?.map(item => ({
       productName: item.productName || 'Product',
       sku: item.product?._id?.toString().slice(-6) || 'COCO-ITEM',
       quantity: item.quantity || 1,
-      unitPrice: qty > 0 ? (totalAmt / qty) : totalAmt,
-      pieces: item.quantity || 0
+      unitPrice: item.unitPrice || 0,
+      pieces: item.pieces || 0,
+      containerAllocation: item.containerAllocation || 0,
+      weight: item.weight || 0,
+      volume: item.volume || 0,
+      discount: item.discount || 0,
+      subtotal: item.subtotal || 0,
     })) || [],
-    subtotal: totalAmt,
-    discount: 0,
-    shippingCharge: 0,
-    tax: 0,
-    totalAmount: totalAmt,
+
+    subtotal: quote.products && quote.products.length > 0
+      ? quote.products.reduce((acc, curr) => acc + (curr.subtotal || 0), 0)
+      : (quote.convertedAmount || 0),
+    discount: quote.discount || 0,
+    freightCharges: quote.freightCharges || 0,
+    packingCharges: quote.packingCharges || 0,
+    handlingCharges: quote.handlingCharges || 0,
+    insuranceCharges: quote.insuranceCharges || 0,
+    shippingCharge: quote.shippingCharges || 0,
+    tax: quote.tax || 0,
+    totalAmount: quote.grandTotal || quote.convertedAmount || 0,
+
     paymentMethod: 'Wire Transfer',
     transactionId: 'N/A',
-    paymentDate: new Date().toLocaleDateString(),
-    paymentStatus: 'PENDING',
+    paymentDate: '',
+    paymentStatus: '',
     orderDate: new Date(quote.createdAt).toLocaleDateString(),
     status: quote.status || 'PENDING',
     isQuotation: true,

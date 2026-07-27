@@ -56,6 +56,28 @@ export default function AdminQuoteRequestDetails() {
     validity: 15,
     deliveryDate: '',
     additionalNotes: '',
+    discount: 0,
+    freightCharges: 0,
+    packingCharges: 0,
+    handlingCharges: 0,
+    insuranceCharges: 0,
+    shippingCharges: 0,
+    tax: 0,
+    containerCount: 1,
+    estimatedWeight: 0,
+    estimatedVolume: 0,
+    shippingMethod: 'Sea Freight',
+    originPort: 'Chennai, India',
+    destinationPort: '',
+    incoterms: 'FOB',
+    transitTime: '14 Days',
+    expectedDelivery: '',
+    paymentTerms: '40% Advance, 60% against shipping documents',
+    quoteValidity: 15,
+    productionTime: '15 Days',
+    grandTotal: 0,
+    exchangeRate: 83.33,
+    products: [],
   });
   const [pdfFile, setPdfFile] = useState(null);
 
@@ -73,16 +95,90 @@ export default function AdminQuoteRequestDetails() {
       const data = response.data;
       setRequest(data);
 
+      // Prepare initial products list from RFQ products
+      const initialProducts = (data.products && data.products.length > 0)
+        ? data.products.map(item => {
+            const qty = item.quantity || 1;
+            const unitPrice = item.product?.price || 0;
+            const weight = qty * 20000;
+            const volume = qty * 28;
+            const pWeight = item.product?.weight || 5;
+            const pieces = Math.round(weight / pWeight);
+            return {
+              product: item.product?._id || item.product,
+              productName: item.productName || item.product?.name || 'Coco Substrates',
+              category: item.category || item.product?.category || null,
+              categoryName: item.categoryName || 'Coco Substrates',
+              quantity: qty,
+              unitPrice: unitPrice,
+              pieces: pieces,
+              containerAllocation: qty,
+              weight: weight,
+              volume: volume,
+              discount: 0,
+              subtotal: (qty * unitPrice)
+            };
+          })
+        : [];
+
+      if (initialProducts.length === 0 && data.product) {
+        const qty = parseFloat(data.quantity) || 1;
+        const unitPrice = data.product?.price || 0;
+        const weight = qty * 20000;
+        const volume = qty * 28;
+        const pWeight = data.product?.weight || 5;
+        const pieces = Math.round(weight / pWeight);
+        initialProducts.push({
+          product: data.product?._id || data.product,
+          productName: data.product?.name || 'Coco Substrates',
+          category: data.product?.category || null,
+          categoryName: data.category || 'Coco Substrates',
+          quantity: qty,
+          unitPrice: unitPrice,
+          pieces: pieces,
+          containerAllocation: qty,
+          weight: weight,
+          volume: volume,
+          discount: 0,
+          subtotal: (qty * unitPrice)
+        });
+      }
+
+      const calculatedSubtotal = initialProducts.reduce((acc, curr) => acc + curr.subtotal, 0);
+
       // Pre-fill approve form default values
       setApproveForm({
         subject: `Quote Request Approved - Cocoveera Export (Ref: #${data._id.slice(-6).toUpperCase()})`,
-        emailBody: `Dear ${data.contactPerson},\n\nWe have reviewed your quotation request for ${data.product?.name || 'Coco Substrates'} (${data.containerSize}). Attached is our official pricing proposal.`,
-        price: data.price || '',
+        emailBody: `Dear ${data.contactPerson},\n\nWe have reviewed your quotation request. Attached is our official pricing proposal.`,
+        price: data.price || calculatedSubtotal,
         currency: data.currency || 'USD',
         shippingTerms: data.shippingTerms || 'FOB',
         validity: data.validity || 15,
         deliveryDate: data.deliveryDate || (data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate).toISOString().split('T')[0] : ''),
         additionalNotes: data.additionalNotes || '',
+        discount: 0,
+        freightCharges: 0,
+        packingCharges: 0,
+        handlingCharges: 0,
+        insuranceCharges: 0,
+        shippingCharges: 0,
+        tax: 0,
+        containerAllocation: initialProducts.reduce((acc, curr) => acc + curr.containerAllocation, 0),
+        containerCount: initialProducts.reduce((acc, curr) => acc + curr.containerAllocation, 0),
+        estimatedWeight: initialProducts.reduce((acc, curr) => acc + curr.weight, 0),
+        estimatedVolume: initialProducts.reduce((acc, curr) => acc + curr.volume, 0),
+        shippingMethod: 'Sea Freight',
+        originPort: 'Chennai, India',
+        destinationPort: data.address || '',
+        incoterms: data.shippingTerms || 'FOB',
+        transitTime: '14 Days',
+        expectedDelivery: data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate).toLocaleDateString() : 'N/A',
+        paymentTerms: '40% Advance, 60% against shipping documents',
+        quoteValidity: data.validity || 15,
+        productionTime: '15 Days',
+        grandTotal: calculatedSubtotal,
+        exchangeRate: data.currency === 'INR' ? 1 : 83.33,
+        products: initialProducts,
       });
     } catch (err) {
       setError('Failed to load quote request details');
@@ -96,6 +192,86 @@ export default function AdminQuoteRequestDetails() {
     if (id) fetchRequestDetails();
   }, [id]);
 
+  const handleProductChange = (index, field, value) => {
+    const updatedProducts = [...approveForm.products];
+    const val = parseFloat(value) || 0;
+    
+    updatedProducts[index] = {
+      ...updatedProducts[index],
+      [field]: val
+    };
+
+    // Recalculate subtotal for this product
+    if (field === 'quantity' || field === 'unitPrice' || field === 'discount') {
+      const qty = updatedProducts[index].quantity;
+      const price = updatedProducts[index].unitPrice;
+      const disc = updatedProducts[index].discount;
+      updatedProducts[index].subtotal = (qty * price) - disc;
+    }
+
+    // Recalculate total weight / volume / pieces if quantity changes
+    if (field === 'quantity') {
+      updatedProducts[index].containerAllocation = val;
+      updatedProducts[index].weight = val * 20000;
+      updatedProducts[index].volume = val * 28;
+      updatedProducts[index].pieces = Math.round((val * 20000) / 5);
+    }
+
+    // Live update overall counts and totals
+    const subtotalSum = updatedProducts.reduce((acc, curr) => acc + curr.subtotal, 0);
+    const weightSum = updatedProducts.reduce((acc, curr) => acc + curr.weight, 0);
+    const volumeSum = updatedProducts.reduce((acc, curr) => acc + curr.volume, 0);
+    const containersSum = updatedProducts.reduce((acc, curr) => acc + curr.containerAllocation, 0);
+
+    const fCharges = parseFloat(approveForm.freightCharges) || 0;
+    const pCharges = parseFloat(approveForm.packingCharges) || 0;
+    const hCharges = parseFloat(approveForm.handlingCharges) || 0;
+    const iCharges = parseFloat(approveForm.insuranceCharges) || 0;
+    const sCharges = parseFloat(approveForm.shippingCharges) || 0;
+    const overallDisc = parseFloat(approveForm.discount) || 0;
+    const taxAmt = parseFloat(approveForm.tax) || 0;
+
+    const grand = subtotalSum + fCharges + pCharges + hCharges + iCharges + sCharges + taxAmt - overallDisc;
+
+    setApproveForm(prev => ({
+      ...prev,
+      products: updatedProducts,
+      containerCount: containersSum,
+      containerAllocation: containersSum,
+      estimatedWeight: weightSum,
+      estimatedVolume: volumeSum,
+      grandTotal: grand,
+      price: grand,
+    }));
+  };
+
+  const handleChargeChange = (field, value) => {
+    const val = parseFloat(value) || 0;
+    
+    // Live update grand total
+    const subtotalSum = approveForm.products.reduce((acc, curr) => acc + curr.subtotal, 0);
+    
+    const charges = {
+      discount: parseFloat(approveForm.discount) || 0,
+      freightCharges: parseFloat(approveForm.freightCharges) || 0,
+      packingCharges: parseFloat(approveForm.packingCharges) || 0,
+      handlingCharges: parseFloat(approveForm.handlingCharges) || 0,
+      insuranceCharges: parseFloat(approveForm.insuranceCharges) || 0,
+      shippingCharges: parseFloat(approveForm.shippingCharges) || 0,
+      tax: parseFloat(approveForm.tax) || 0,
+      [field]: val
+    };
+
+    const grand = subtotalSum + charges.freightCharges + charges.packingCharges + charges.handlingCharges + charges.insuranceCharges + charges.shippingCharges + charges.tax - charges.discount;
+
+    setApproveForm(prev => ({
+      ...prev,
+      [field]: value,
+      grandTotal: grand,
+      price: grand,
+    }));
+  };
+
   const handleApproveSubmit = async (e) => {
     e.preventDefault();
     if (!approveForm.price || isNaN(approveForm.price)) {
@@ -108,7 +284,11 @@ export default function AdminQuoteRequestDetails() {
     setSuccessMsg('');
 
     try {
-      await adminQuoteRequestService.approve(id, approveForm, pdfFile);
+      const submitData = { ...approveForm };
+      if (pdfFile) {
+        submitData.products = JSON.stringify(approveForm.products);
+      }
+      await adminQuoteRequestService.approve(id, submitData, pdfFile);
       setSuccessMsg('✅ Quote approved successfully. ✅ Email sent successfully.');
       setShowApproveModal(false);
       setPdfFile(null);
@@ -538,7 +718,6 @@ export default function AdminQuoteRequestDetails() {
 
           </div>
         )}
-
         {/* APPROVE QUOTE MODAL */}
         {showApproveModal && (
           <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -551,162 +730,365 @@ export default function AdminQuoteRequestDetails() {
                 <button
                   type="button"
                   onClick={() => setShowApproveModal(false)}
-                  className="text-stone-400 hover:text-stone-600 p-1 rounded-full"
+                  className="text-stone-400 hover:text-stone-600 p-1 rounded-full border-none bg-transparent cursor-pointer"
                 >
                   <X size={20} />
                 </button>
               </div>
 
               <form onSubmit={handleApproveSubmit} className="space-y-4">
-                
-                {/* Subject */}
-                <div>
-                  <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                    Email Subject (Pre-filled)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={approveForm.subject}
-                    onChange={(e) => setApproveForm({ ...approveForm, subject: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
-                  />
-                </div>
-
-                {/* Email Body */}
-                <div>
-                  <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                    Editable Email Message Body
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={approveForm.emailBody}
-                    onChange={(e) => setApproveForm({ ...approveForm, emailBody: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
-                  />
-                </div>
-
-                {/* Price, Currency, Validity Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                      Estimated Price *
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      placeholder="e.g. 2450.00"
-                      value={approveForm.price}
-                      onChange={(e) => setApproveForm({ ...approveForm, price: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                      Currency
-                    </label>
-                    <select
-                      value={approveForm.currency}
-                      onChange={(e) => setApproveForm({ ...approveForm, currency: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
-                    >
-                      <option value="USD">USD ($)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="INR">INR (₹)</option>
-                      <option value="GBP">GBP (£)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                      Validity (Default 15 Days)
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      value={approveForm.validity}
-                      onChange={(e) => setApproveForm({ ...approveForm, validity: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
-                    />
-                  </div>
-                </div>
-
-                {/* Shipping Terms & Delivery Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                      Shipping Terms
-                    </label>
-                    <select
-                      value={approveForm.shippingTerms}
-                      onChange={(e) => setApproveForm({ ...approveForm, shippingTerms: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
-                    >
-                      <option value="FOB">FOB (Free On Board)</option>
-                      <option value="CIF">CIF (Cost, Insurance & Freight)</option>
-                      <option value="EXW">EXW (Ex Works)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                      Expected Delivery Date / Notes
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 14 Days from Order Confirmation"
-                      value={approveForm.deliveryDate}
-                      onChange={(e) => setApproveForm({ ...approveForm, deliveryDate: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
-                    />
-                  </div>
-                </div>
-
-                {/* Additional Notes */}
-                <div>
-                  <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                    Additional Commercial Notes
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Price includes standard phytosanitary certification."
-                    value={approveForm.additionalNotes}
-                    onChange={(e) => setApproveForm({ ...approveForm, additionalNotes: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
-                  />
-                </div>
-
-                {/* PDF Quotation Attachment Upload */}
-                <div>
-                  <label className="block text-[11px] font-bold uppercase text-stone-700 mb-1">
-                    Attachment Upload (Quotation PDF)
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-800 px-4 py-2.5 rounded-xl border border-stone-300 text-xs font-bold cursor-pointer transition">
-                      <Upload size={16} />
-                      <span>{pdfFile ? pdfFile.name : 'Choose PDF File...'}</span>
+                <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
+                  {/* General Email details */}
+                  <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/60 space-y-3">
+                    <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider">1. Email Notification Details</h3>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-stone-600 mb-1">
+                        Email Subject
+                      </label>
                       <input
-                        type="file"
-                        accept="application/pdf"
-                        onChange={(e) => setPdfFile(e.target.files[0] || null)}
-                        className="hidden"
+                        type="text"
+                        required
+                        value={approveForm.subject}
+                        onChange={(e) => setApproveForm({ ...approveForm, subject: e.target.value })}
+                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
                       />
-                    </label>
-                    {pdfFile && (
-                      <button
-                        type="button"
-                        onClick={() => setPdfFile(null)}
-                        className="text-xs text-red-600 font-bold hover:underline"
-                      >
-                        Remove
-                      </button>
-                    )}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-stone-600 mb-1">
+                        Email Message Body
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={approveForm.emailBody}
+                        onChange={(e) => setApproveForm({ ...approveForm, emailBody: e.target.value })}
+                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pricing details for every product */}
+                  <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/60 space-y-3">
+                    <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider">2. Product Pricing & Quantity</h3>
+                    {approveForm.products.map((item, index) => (
+                      <div key={index} className="p-3 bg-white border border-stone-200 rounded-xl space-y-2.5">
+                        <div className="font-bold text-xs text-stone-800">{item.productName}</div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
+                          <div>
+                            <label className="block text-stone-500 font-bold mb-1">Qty (Containers)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              required
+                              value={item.quantity}
+                              onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-stone-500 font-bold mb-1">Unit Price ({approveForm.currency})</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              required
+                              value={item.unitPrice}
+                              onChange={(e) => handleProductChange(index, 'unitPrice', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs font-bold text-stone-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-stone-500 font-bold mb-1">Total Pieces</label>
+                            <input
+                              type="number"
+                              required
+                              value={item.pieces}
+                              onChange={(e) => handleProductChange(index, 'pieces', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-stone-500 font-bold mb-1">Discount</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.discount}
+                              onChange={(e) => handleProductChange(index, 'discount', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs text-green-700"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-stone-500 font-bold mb-1">Weight (KG)</label>
+                            <input
+                              type="number"
+                              value={item.weight}
+                              onChange={(e) => handleProductChange(index, 'weight', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-stone-500 font-bold mb-1">Volume (CBM)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.volume}
+                              onChange={(e) => handleProductChange(index, 'volume', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="block text-stone-500 font-bold mb-1">Subtotal ({approveForm.currency})</label>
+                            <div className="w-full px-2 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-black text-stone-900 text-right">
+                              {(item.subtotal || 0).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* General Quotation terms & charges */}
+                  <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/60 space-y-3">
+                    <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider">3. Commercial Charges & Conversion</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Currency</label>
+                        <select
+                          value={approveForm.currency}
+                          onChange={(e) => setApproveForm({ ...approveForm, currency: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none"
+                        >
+                          <option value="USD">USD ($)</option>
+                          <option value="EUR">EUR (€)</option>
+                          <option value="INR">INR (₹)</option>
+                          <option value="GBP">GBP (£)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Exchange Rate (vs INR)</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          required
+                          value={approveForm.exchangeRate}
+                          onChange={(e) => setApproveForm({ ...approveForm, exchangeRate: parseFloat(e.target.value) || 1 })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-650 font-bold mb-1">Freight Charges</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={approveForm.freightCharges}
+                          onChange={(e) => handleChargeChange('freightCharges', e.target.value)}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-650 font-bold mb-1">Packing Charges</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={approveForm.packingCharges}
+                          onChange={(e) => handleChargeChange('packingCharges', e.target.value)}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-650 font-bold mb-1">Handling Charges</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={approveForm.handlingCharges}
+                          onChange={(e) => handleChargeChange('handlingCharges', e.target.value)}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-650 font-bold mb-1">Insurance Charges</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={approveForm.insuranceCharges}
+                          onChange={(e) => handleChargeChange('insuranceCharges', e.target.value)}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-650 font-bold mb-1">Shipping Charges</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={approveForm.shippingCharges}
+                          onChange={(e) => handleChargeChange('shippingCharges', e.target.value)}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-650 font-bold mb-1">Tax Amount</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={approveForm.tax}
+                          onChange={(e) => handleChargeChange('tax', e.target.value)}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Overall Discount</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={approveForm.discount}
+                          onChange={(e) => handleChargeChange('discount', e.target.value)}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs text-green-700 font-semibold focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Validity (Days)</label>
+                        <input
+                          type="number"
+                          required
+                          value={approveForm.validity}
+                          onChange={(e) => setApproveForm({ ...approveForm, validity: e.target.value, quoteValidity: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-stone-900 font-black mb-1">GRAND TOTAL ({approveForm.currency})</label>
+                        <div className="w-full px-3 py-1.5 bg-[#2E5E35]/5 border border-[#2E5E35]/20 rounded-lg text-sm font-black text-[#2E5E35] text-right">
+                          {approveForm.currency} {(approveForm.grandTotal || 0).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Logistics Terms */}
+                  <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/60 space-y-3">
+                    <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider">4. Logistics & Shipping Details</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[11px]">
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Shipping Method</label>
+                        <input
+                          type="text"
+                          value={approveForm.shippingMethod}
+                          onChange={(e) => setApproveForm({ ...approveForm, shippingMethod: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Origin Port</label>
+                        <input
+                          type="text"
+                          value={approveForm.originPort}
+                          onChange={(e) => setApproveForm({ ...approveForm, originPort: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Destination Port</label>
+                        <input
+                          type="text"
+                          value={approveForm.destinationPort}
+                          onChange={(e) => setApproveForm({ ...approveForm, destinationPort: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Incoterms</label>
+                        <select
+                          value={approveForm.shippingTerms}
+                          onChange={(e) => setApproveForm({ ...approveForm, shippingTerms: e.target.value, incoterms: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none"
+                        >
+                          <option value="FOB">FOB (Free On Board)</option>
+                          <option value="CIF">CIF (Cost, Insurance & Freight)</option>
+                          <option value="EXW">EXW (Ex Works)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Transit Time</label>
+                        <input
+                          type="text"
+                          value={approveForm.transitTime}
+                          onChange={(e) => setApproveForm({ ...approveForm, transitTime: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Production Time</label>
+                        <input
+                          type="text"
+                          value={approveForm.productionTime}
+                          onChange={(e) => setApproveForm({ ...approveForm, productionTime: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-stone-600 font-bold mb-1">Payment Terms</label>
+                        <input
+                          type="text"
+                          value={approveForm.paymentTerms}
+                          onChange={(e) => setApproveForm({ ...approveForm, paymentTerms: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-600 font-bold mb-1">Expected Delivery Date / Notes</label>
+                        <input
+                          type="text"
+                          value={approveForm.deliveryDate}
+                          onChange={(e) => setApproveForm({ ...approveForm, deliveryDate: e.target.value, expectedDelivery: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional notes & attachment */}
+                  <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/60 space-y-3">
+                    <h3 className="text-xs font-black text-stone-900 uppercase tracking-wider">5. Notes & Manually Uploaded Copy (Optional)</h3>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-stone-600 mb-1">
+                        Commercial Notes
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Price includes standard phytosanitary certification."
+                        value={approveForm.additionalNotes}
+                        onChange={(e) => setApproveForm({ ...approveForm, additionalNotes: e.target.value })}
+                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-stone-600 mb-1">
+                        Attachment (Quotation PDF) - Optional override
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-2 bg-white hover:bg-stone-100 text-stone-800 px-3 py-2 rounded-xl border border-stone-300 text-xs font-bold cursor-pointer transition">
+                          <Upload size={14} />
+                          <span>{pdfFile ? pdfFile.name : 'Upload PDF...'}</span>
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            onChange={(e) => setPdfFile(e.target.files[0] || null)}
+                            className="hidden"
+                          />
+                        </label>
+                        {pdfFile && (
+                          <button
+                            type="button"
+                            onClick={() => setPdfFile(null)}
+                            className="text-xs text-red-650 font-bold hover:underline"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Submit Actions */}
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-stone-200">
                   <button
                     type="button"
@@ -734,7 +1116,6 @@ export default function AdminQuoteRequestDetails() {
                     )}
                   </button>
                 </div>
-
               </form>
             </div>
           </div>

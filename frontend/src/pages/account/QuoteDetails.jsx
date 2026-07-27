@@ -119,7 +119,7 @@ const QuoteDetails = () => {
 
   const handleViewPDF = () => {
     if (!quote?._id) return;
-    setPdfModalOpen(true);
+    window.open(`/quotes/${quote._id}/pdf`, '_blank');
   };
 
   const handleRejectSubmit = async (e) => {

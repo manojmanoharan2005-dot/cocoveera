@@ -423,10 +423,38 @@ export const approveQuoteRequest = async (req, res) => {
       validity = 15,
       deliveryDate,
       additionalNotes,
+      
+      // Extended fields
+      discount = 0,
+      freightCharges = 0,
+      packingCharges = 0,
+      handlingCharges = 0,
+      insuranceCharges = 0,
+      shippingCharges = 0,
+      tax = 0,
+      containerCount = 1,
+      estimatedWeight = 0,
+      estimatedVolume = 0,
+      shippingMethod = '',
+      originPort = '',
+      destinationPort = '',
+      incoterms = 'FOB',
+      transitTime = '',
+      expectedDelivery = '',
+      paymentTerms = '',
+      quoteValidity = 15,
+      productionTime = '',
+      grandTotal = 0,
+      exchangeRate,
     } = req.body;
 
-    if (!price || isNaN(price)) {
-      return res.status(400).json({ success: false, message: 'Please provide a valid price.' });
+    let products = req.body.products;
+    if (typeof products === 'string') {
+      try {
+        products = JSON.parse(products);
+      } catch (err) {
+        products = [];
+      }
     }
 
     const quoteRequest = await QuoteRequest.findById(req.params.id).populate('product', 'name category');
@@ -434,15 +462,17 @@ export const approveQuoteRequest = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Quote Request not found.' });
     }
 
+    const approvalPrice = Number(grandTotal) || Number(price) || 0;
+
     // Update quote request in database
     quoteRequest.status = 'APPROVED';
     quoteRequest.approvedBy = req.user?._id;
     quoteRequest.approvedAt = new Date();
-    quoteRequest.price = Number(price);
+    quoteRequest.price = approvalPrice;
     quoteRequest.currency = currency;
-    quoteRequest.shippingTerms = shippingTerms;
-    quoteRequest.validity = Number(validity) || 15;
-    quoteRequest.deliveryDate = deliveryDate || '';
+    quoteRequest.shippingTerms = incoterms || shippingTerms || 'FOB';
+    quoteRequest.validity = Number(validity || quoteValidity) || 15;
+    quoteRequest.deliveryDate = expectedDelivery || deliveryDate || '';
     quoteRequest.additionalNotes = additionalNotes || '';
     quoteRequest.emailSent = true;
     quoteRequest.emailSentAt = new Date();
@@ -452,7 +482,7 @@ export const approveQuoteRequest = async (req, res) => {
     quoteRequest.timeline.push({
       status: 'APPROVED',
       title: 'Approved by Admin',
-      description: `Quote approved at ${currency} ${price} (${shippingTerms}). Official quotation generated.`,
+      description: `Quote approved at ${currency} ${approvalPrice} (${incoterms || shippingTerms}). Official quotation generated.`,
       timestamp: new Date(),
       updatedBy: req.user?._id,
     });
@@ -488,28 +518,58 @@ export const approveQuoteRequest = async (req, res) => {
         },
         containerDetails: {
           containerSize: quoteRequest.containerSize || '20 FT',
-          quantity: 1,
+          quantity: Number(containerCount) || 1,
         },
       });
     }
 
-    quote.products = quoteRequest.products || [];
+    // Save multiple products details
+    quote.products = (products && products.length > 0) ? products : (quoteRequest.products || []);
 
     // Calculate INR base values
     const rates = { INR: 1, USD: 0.012, EUR: 0.011, GBP: 0.0094 };
-    const rateToInr = 1 / (rates[currency] || 1);
-    const calculatedInrAmount = Number(price) * rateToInr;
+    const rateToInr = exchangeRate ? Number(exchangeRate) : (1 / (rates[currency] || 1));
+    const calculatedInrAmount = approvalPrice * rateToInr;
 
     quote.status = 'Quote Approved';
     quote.quoteDate = new Date();
-    quote.validUntil = new Date(Date.now() + (Number(validity) || 15) * 24 * 60 * 60 * 1000);
+    quote.validUntil = new Date(Date.now() + (Number(validity || quoteValidity) || 15) * 24 * 60 * 60 * 1000);
     quote.currency = currency;
     quote.exchangeRate = rateToInr;
-    quote.convertedAmount = Number(price);
+    quote.convertedAmount = approvalPrice;
     quote.originalInrAmount = calculatedInrAmount;
-    quote.shippingTerms = shippingTerms;
-    quote.estimatedProductionTime = deliveryDate || '';
+    
+    // Admin editable fields
+    quote.discount = Number(discount) || 0;
+    quote.freightCharges = Number(freightCharges) || 0;
+    quote.packingCharges = Number(packingCharges) || 0;
+    quote.handlingCharges = Number(handlingCharges) || 0;
+    quote.insuranceCharges = Number(insuranceCharges) || 0;
+    quote.shippingCharges = Number(shippingCharges) || 0;
+    quote.tax = Number(tax) || 0;
+    quote.containerCount = Number(containerCount) || 1;
+    quote.estimatedWeight = Number(estimatedWeight) || 0;
+    quote.estimatedVolume = Number(estimatedVolume) || 0;
+    quote.shippingMethod = shippingMethod || '';
+    quote.originPort = originPort || '';
+    quote.destinationPort = destinationPort || '';
+    quote.incoterms = incoterms || shippingTerms || 'FOB';
+    quote.transitTime = transitTime || '';
+    quote.expectedDelivery = expectedDelivery || deliveryDate || '';
+    quote.paymentTerms = paymentTerms || '';
+    quote.quoteValidity = Number(validity || quoteValidity) || 15;
+    quote.productionTime = productionTime || '';
+    quote.grandTotal = approvalPrice;
+    quote.shippingTerms = incoterms || shippingTerms || 'FOB';
+    quote.estimatedProductionTime = productionTime || '';
     quote.commercialNotes = additionalNotes || '';
+
+    // Save container details
+    quote.containerDetails = {
+      containerSize: quoteRequest.containerSize || '20 FT',
+      quantity: Number(containerCount) || 1,
+    };
+
     if (quoteRequest.shippingAddress) {
       quote.shippingAddress = {
         addressLine1: quoteRequest.shippingAddress.addressLine1 || '',

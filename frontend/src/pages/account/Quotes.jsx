@@ -185,11 +185,7 @@ const Quotes = () => {
   };
 
   const handleViewPDF = (quoteId, quoteNumber) => {
-    const token = sessionStorage.getItem('cocoveera_token');
-    const viewUrl = `${apiClient.defaults.baseURL}/quotes/${quoteId}/view-pdf?token=${token}`;
-    setActivePdfUrl(viewUrl);
-    setActiveQuoteNum(quoteNumber);
-    setPdfModalOpen(true);
+    window.open(`/quotes/${quoteId}/pdf`, '_blank');
   };
 
   const handleOpenRejectModal = (quote) => {

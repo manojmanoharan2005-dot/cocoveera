@@ -157,6 +157,34 @@ const QuoteSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        unitPrice: {
+          type: Number,
+          default: 0,
+        },
+        pieces: {
+          type: Number,
+          default: 0,
+        },
+        containerAllocation: {
+          type: Number,
+          default: 0,
+        },
+        weight: {
+          type: Number,
+          default: 0,
+        },
+        volume: {
+          type: Number,
+          default: 0,
+        },
+        discount: {
+          type: Number,
+          default: 0,
+        },
+        subtotal: {
+          type: Number,
+          default: 0,
+        },
       }
     ],
     containerDetails: {
@@ -177,6 +205,86 @@ const QuoteSchema = new mongoose.Schema(
       state: { type: String, default: '' },
       postalCode: { type: String, default: '' },
       country: { type: String, default: '' }
+    },
+    discount: {
+      type: Number,
+      default: 0,
+    },
+    freightCharges: {
+      type: Number,
+      default: 0,
+    },
+    packingCharges: {
+      type: Number,
+      default: 0,
+    },
+    handlingCharges: {
+      type: Number,
+      default: 0,
+    },
+    insuranceCharges: {
+      type: Number,
+      default: 0,
+    },
+    shippingCharges: {
+      type: Number,
+      default: 0,
+    },
+    tax: {
+      type: Number,
+      default: 0,
+    },
+    containerCount: {
+      type: Number,
+      default: 0,
+    },
+    estimatedWeight: {
+      type: Number,
+      default: 0,
+    },
+    estimatedVolume: {
+      type: Number,
+      default: 0,
+    },
+    shippingMethod: {
+      type: String,
+      default: '',
+    },
+    originPort: {
+      type: String,
+      default: '',
+    },
+    destinationPort: {
+      type: String,
+      default: '',
+    },
+    incoterms: {
+      type: String,
+      default: '',
+    },
+    transitTime: {
+      type: String,
+      default: '',
+    },
+    expectedDelivery: {
+      type: String,
+      default: '',
+    },
+    paymentTerms: {
+      type: String,
+      default: '',
+    },
+    quoteValidity: {
+      type: Number,
+      default: 15,
+    },
+    productionTime: {
+      type: String,
+      default: '',
+    },
+    grandTotal: {
+      type: Number,
+      default: 0,
     },
     revisionRequests: [RevisionRequestSchema],
   },

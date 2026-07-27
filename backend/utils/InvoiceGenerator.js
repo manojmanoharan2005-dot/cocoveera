@@ -96,6 +96,14 @@ export const generateInvoicePDF = async (invoiceData) => {
 
       // --- RENDER PDF ---
 
+      const isQuote = invoiceData.isQuotation || invoiceData.documentType === 'quotationPdf';
+      if (isQuote) {
+        doc.on('pageAdded', () => {
+          drawWatermark(doc);
+        });
+        drawWatermark(doc);
+      }
+
       // PAGE 1: Header, Info, Logistics
       generateHeader(doc, logoBuffer, invoiceData);
       generateCompanyAndCustomerInfo(doc, invoiceData);
@@ -106,15 +114,6 @@ export const generateInvoicePDF = async (invoiceData) => {
 
       // SUMMARIES & BOTTOM SECTION
       generateSummariesAndBottom(doc, invoiceData, qrBuffer, finalY);
-
-      // Render diagonal watermark on all pages for quotations
-      if (invoiceData.isQuotation || invoiceData.documentType === 'quotationPdf') {
-        const range = doc.bufferedPageRange();
-        for (let pageIndex = range.start; pageIndex < range.start + range.count; pageIndex++) {
-          doc.switchToPage(pageIndex);
-          drawWatermark(doc);
-        }
-      }
 
       doc.end();
     } catch (error) {
@@ -174,22 +173,29 @@ function generateHeader(doc, logoBuffer, invoice) {
   doc.fillColor(THEME.primary).fontSize(16).font('Helvetica-Bold').text(title, 0, 40, { align: 'right' });
   
   doc.fillColor(THEME.textMain).fontSize(8.5).font('Helvetica-Bold');
-  const numLabel = isQuote ? 'Quotation Number:' : 'Invoice Number:';
-  doc.text(numLabel, 340, 70);
-  doc.font('Helvetica').text(invoice.invoiceNumber, 440, 70, { width: 115, align: 'right' });
+  const numLabel = isQuote ? 'Quote Number:' : 'Invoice Number:';
+  
+  let currentY = 70;
+  doc.font('Helvetica-Bold').text(numLabel, 340, currentY);
+  doc.font('Helvetica').text(invoice.invoiceNumber, 440, currentY, { width: 115, align: 'right' });
 
-  const dateLabel = isQuote ? 'Quotation Date:' : 'Invoice Date:';
-  doc.font('Helvetica-Bold').text(dateLabel, 340, 88);
-  doc.font('Helvetica').text(invoice.invoiceDate || formatDate(new Date()), 440, 88, { width: 115, align: 'right' });
+  currentY += 18;
+  const dateLabel = isQuote ? 'Quote Date:' : 'Invoice Date:';
+  doc.font('Helvetica-Bold').text(dateLabel, 340, currentY);
+  doc.font('Helvetica').text(invoice.invoiceDate || formatDate(new Date()), 440, currentY, { width: 115, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Order Number:', 340, 106);
-  doc.font('Helvetica').text(invoice.orderId || 'N/A', 440, 106, { width: 115, align: 'right' });
+  if (!isQuote) {
+    currentY += 18;
+    doc.font('Helvetica-Bold').text('Order Number:', 340, currentY);
+    doc.font('Helvetica').text(invoice.orderId || 'N/A', 440, currentY, { width: 115, align: 'right' });
+  }
 
-  doc.font('Helvetica-Bold').text('Status:', 340, 124);
+  currentY += 18;
+  doc.font('Helvetica-Bold').text('Status:', 340, currentY);
   const rawStatus = invoice.status || invoice.paymentStatus || 'PAID';
-  const statusStr = ['paid', 'confirmed', 'production', 'packed', 'loaded', 'shipped', 'delivered'].includes(rawStatus.toLowerCase()) ? 'PAID' : (rawStatus.toUpperCase());
+  const statusStr = isQuote ? rawStatus.toUpperCase() : (['paid', 'confirmed', 'production', 'packed', 'loaded', 'shipped', 'delivered'].includes(rawStatus.toLowerCase()) ? 'PAID' : (rawStatus.toUpperCase()));
   const statusColor = (statusStr === 'PENDING' || statusStr === 'UNPAID') ? '#D32F2F' : THEME.primary;
-  doc.fillColor(statusColor).font('Helvetica-Bold').text(statusStr, 440, 124, { width: 115, align: 'right' });
+  doc.fillColor(statusColor).font('Helvetica-Bold').text(statusStr, 440, currentY, { width: 115, align: 'right' });
 
   generateHr(doc, 150, THEME.primary, 2);
 }
@@ -227,12 +233,13 @@ function generateCompanyAndCustomerInfo(doc, invoice) {
   const cityStateZip = [cityState, zip].filter(Boolean).join(' ');
 
   const customerLines = [
-    address.street || address.addressLine || 'Address not provided',
+    address.addressLine1 || address.street || address.addressLine || '',
+    address.addressLine2 || '',
     cityStateZip,
     address.country,
     invoice.customerEmail,
     invoice.customerPhone
-  ].filter(Boolean);
+  ].filter(val => val && val.trim() !== '');
 
   doc.fillColor(THEME.textLight).fontSize(8.5).font('Helvetica')
      .text(customerLines.join('\n'), 300, top + 28, { width: 240 });
@@ -240,34 +247,74 @@ function generateCompanyAndCustomerInfo(doc, invoice) {
   generateHr(doc, top + 138, THEME.border, 1);
 }
 
+const isValueEmptyOrPlaceholder = (val) => {
+  if (val === undefined || val === null) return true;
+  const str = String(val).trim();
+  const placeholders = [
+    'origin port',
+    'destination port',
+    'standard eta',
+    'n/a',
+    'address not provided',
+    '0 kg',
+    '0 cbm',
+    'tbd',
+    '',
+    '-'
+  ];
+  if (placeholders.includes(str.toLowerCase())) return true;
+  if (str === '0' || str === '0.00') return true;
+  return false;
+};
+
 function generateOrderAndLogisticsInfo(doc, invoice) {
   const top = 310;
 
   const usedCap = invoice.totalContainers || 0;
+  const totalPieces = invoice.totalPieces || (invoice.items || []).reduce((acc, item) => acc + (item.pieces || item.quantity || 0), 0);
 
   // Box 1: Export Logistics
   doc.rect(40, top, 240, 125).fillAndStroke(THEME.accent, THEME.border);
   doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('EXPORT LOGISTICS', 50, top + 10);
-  doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
   
-  doc.text('Container Type:', 50, top + 30).font('Helvetica').text(invoice.containerType || 'N/A', 140, top + 30);
-  doc.font('Helvetica-Bold').text('Total Containers:', 50, top + 45).font('Helvetica').text(usedCap ? usedCap.toFixed(2) : '1.00', 140, top + 45);
-  const totalPieces = invoice.totalPieces || (invoice.items || []).reduce((acc, item) => acc + (item.pieces || item.quantity || 0), 0);
-  doc.font('Helvetica-Bold').text('Total Pieces:', 50, top + 60).font('Helvetica').text(Math.round(totalPieces).toLocaleString(), 140, top + 60);
-  doc.font('Helvetica-Bold').text('Estimated Weight:', 50, top + 75).font('Helvetica').text(`${(invoice.estimatedWeight || 0).toLocaleString()} KG`, 140, top + 75);
-  doc.font('Helvetica-Bold').text('Estimated Volume:', 50, top + 90).font('Helvetica').text(`${(invoice.estimatedVolume || 0).toFixed(2)} CBM`, 140, top + 90);
+  let box1Y = top + 30;
+  const box1Fields = [
+    { label: 'Container Type:', value: invoice.containerType },
+    { label: 'Total Containers:', value: usedCap ? usedCap.toFixed(2) : '' },
+    { label: 'Total Pieces:', value: totalPieces ? Math.round(totalPieces).toLocaleString() : '' },
+    { label: 'Estimated Weight:', value: invoice.estimatedWeight ? `${Number(invoice.estimatedWeight).toLocaleString()} KG` : '' },
+    { label: 'Estimated Volume:', value: invoice.estimatedVolume ? `${Number(invoice.estimatedVolume).toFixed(2)} CBM` : '' },
+  ];
+
+  box1Fields.forEach(field => {
+    if (!isValueEmptyOrPlaceholder(field.value)) {
+      doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold').text(field.label, 50, box1Y);
+      doc.font('Helvetica').text(String(field.value), 140, box1Y);
+      box1Y += 15;
+    }
+  });
 
   // Box 2: Shipping Information
   doc.rect(315, top, 240, 125).fillAndStroke(THEME.accent, THEME.border);
   doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('SHIPPING INFORMATION', 325, top + 10);
-  doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
   
-  doc.text('Shipping Method:', 325, top + 30).font('Helvetica').text(invoice.shippingMethod || 'Sea Freight', 415, top + 30);
-  doc.font('Helvetica-Bold').text('Origin Port:', 325, top + 45).font('Helvetica').text(invoice.portOfLoading || 'Origin Port', 415, top + 45);
-  doc.font('Helvetica-Bold').text('Destination Port:', 325, top + 60).font('Helvetica').text(invoice.portOfDischarge || 'Destination Port', 415, top + 60);
-  doc.font('Helvetica-Bold').text('Incoterms:', 325, top + 75).font('Helvetica').text(invoice.incoterms || 'FOB', 415, top + 75);
-  doc.font('Helvetica-Bold').text('Transit Time:', 325, top + 90).font('Helvetica').text(invoice.transitTime || 'TBD', 415, top + 90);
-  doc.font('Helvetica-Bold').text('Expected Delivery:', 325, top + 105).font('Helvetica').text(invoice.expectedDeliveryDate || 'N/A', 415, top + 105);
+  let box2Y = top + 30;
+  const box2Fields = [
+    { label: 'Shipping Method:', value: invoice.shippingMethod },
+    { label: 'Origin Port:', value: invoice.portOfLoading },
+    { label: 'Destination Port:', value: invoice.portOfDischarge },
+    { label: 'Incoterms:', value: invoice.incoterms },
+    { label: 'Transit Time:', value: invoice.transitTime },
+    { label: 'Expected Delivery:', value: invoice.expectedDeliveryDate },
+  ];
+
+  box2Fields.forEach(field => {
+    if (!isValueEmptyOrPlaceholder(field.value)) {
+      doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold').text(field.label, 325, box2Y);
+      doc.font('Helvetica').text(String(field.value), 415, box2Y);
+      box2Y += 15;
+    }
+  });
 }
 
 function generateProductTable(doc, invoice) {
@@ -311,7 +358,8 @@ function generateProductTable(doc, invoice) {
     doc.text((item.quantity || 1).toFixed(2), 250, position + 10, { width: 55, align: 'center' });
     doc.text(Math.round(item.pieces || item.quantity || 0).toLocaleString(), 310, position + 10, { width: 50, align: 'right' });
     doc.text(`${curr}${(item.unitPrice || 0).toFixed(2)}`, 370, position + 10, { width: 70, align: 'right' });
-    doc.text(`${curr}${((item.unitPrice || 0) * (item.pieces || item.quantity || 1)).toFixed(2)}`, 450, position + 10, { width: 95, align: 'right' });
+    const itemSubtotal = item.subtotal !== undefined ? item.subtotal : ((item.unitPrice || 0) * (item.quantity || 1));
+    doc.text(`${curr}${itemSubtotal.toFixed(2)}`, 450, position + 10, { width: 95, align: 'right' });
 
     position += 30;
   }
@@ -322,6 +370,7 @@ function generateProductTable(doc, invoice) {
 
 function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
   const curr = getCurrencySymbol(invoice.currency);
+  const isQuote = invoice.isQuotation || invoice.documentType === 'quotationPdf';
   
   if (finalY > 540) {
     generateFooter(doc);
@@ -332,48 +381,86 @@ function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
 
   const summaryTop = finalY + 15;
   
-  const subtotal = invoice.subtotal || invoice.items.reduce((acc, item) => acc + ((item.unitPrice || 0) * (item.pieces || item.quantity || 1)), 0);
+  const subtotal = invoice.subtotal || invoice.items.reduce((acc, item) => acc + (item.subtotal || ((item.unitPrice || 0) * (item.quantity || 1))), 0);
   const discount = invoice.discount || 0;
   const shipping = invoice.shippingCharge || 0;
   const tax = invoice.tax || 0;
   const total = invoice.totalAmount || (subtotal - discount + shipping + tax);
 
   // Right Column: Grand Total Summary
+  let currentSummaryY = summaryTop + 10;
+  
   doc.font('Helvetica-Bold').fontSize(9).fillColor(THEME.textMain);
-  doc.text('Items Total:', 350, summaryTop + 10, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${subtotal.toFixed(2)}`, 460, summaryTop + 10, { width: 85, align: 'right' });
+  doc.text('Items Total:', 350, currentSummaryY, { width: 100, align: 'right' })
+     .font('Helvetica').text(`${curr}${subtotal.toFixed(2)}`, 460, currentSummaryY, { width: 85, align: 'right' });
+  currentSummaryY += 15;
 
-  doc.font('Helvetica-Bold').text('Discount:', 350, summaryTop + 25, { width: 100, align: 'right' })
-     .font('Helvetica').fillColor(THEME.primary).text(`${curr}${discount.toFixed(2)}`, 460, summaryTop + 25, { width: 85, align: 'right' });
+  const charges = [
+    { label: 'Discount:', value: discount, isDiscount: true },
+    { label: 'Freight Charges:', value: invoice.freightCharges },
+    { label: 'Packing Charges:', value: invoice.packingCharges },
+    { label: 'Handling Charges:', value: invoice.handlingCharges },
+    { label: 'Insurance Charges:', value: invoice.insuranceCharges },
+    { label: 'Shipping Charges:', value: invoice.shippingCharge },
+    { label: 'Tax / GST:', value: tax }
+  ];
 
-  doc.fillColor(THEME.textMain).font('Helvetica-Bold').text('Delivery Charges:', 350, summaryTop + 40, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${shipping.toFixed(2)}`, 460, summaryTop + 40, { width: 85, align: 'right' });
-     
-  doc.font('Helvetica-Bold').text('Handling Charges:', 350, summaryTop + 55, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}0.00`, 460, summaryTop + 55, { width: 85, align: 'right' });
+  charges.forEach(charge => {
+    if (charge.value && charge.value > 0) {
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(THEME.textMain);
+      doc.text(charge.label, 350, currentSummaryY, { width: 100, align: 'right' });
+      
+      if (charge.isDiscount) {
+        doc.font('Helvetica').fillColor(THEME.primary).text(`-${curr}${charge.value.toFixed(2)}`, 460, currentSummaryY, { width: 85, align: 'right' });
+      } else {
+        doc.font('Helvetica').text(`${curr}${charge.value.toFixed(2)}`, 460, currentSummaryY, { width: 85, align: 'right' });
+      }
+      currentSummaryY += 15;
+    }
+  });
 
-  doc.font('Helvetica-Bold').text('Tax / GST:', 350, summaryTop + 70, { width: 100, align: 'right' })
-     .font('Helvetica').text(`${curr}${tax.toFixed(2)}`, 460, summaryTop + 70, { width: 85, align: 'right' });
-
-  generateHr(doc, summaryTop + 85, THEME.border, 1);
+  generateHr(doc, currentSummaryY, THEME.border, 1);
+  currentSummaryY += 10;
 
   doc.fillColor(THEME.primary).font('Helvetica-Bold').fontSize(12)
-     .text('GRAND TOTAL:', 250, summaryTop + 95, { width: 170, align: 'right' })
-     .text(`${curr}${total.toFixed(2)}`, 425, summaryTop + 95, { width: 120, align: 'right' });
+     .text('GRAND TOTAL:', 250, currentSummaryY, { width: 170, align: 'right' })
+     .text(`${curr}${total.toFixed(2)}`, 425, currentSummaryY, { width: 120, align: 'right' });
 
-  const bottomY = Math.max(summaryTop + 125, 640);
+  const bottomY = Math.max(currentSummaryY + 30, 640);
 
-  // Payment Info
-  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('PAYMENT INFORMATION', 40, bottomY);
-  doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
-  doc.text('Method:', 40, bottomY + 15).font('Helvetica').text(invoice.paymentMethod || 'Not specified', 130, bottomY + 15);
-  doc.font('Helvetica-Bold').text('Transaction Ref:', 40, bottomY + 30).font('Helvetica').text(invoice.transactionId || 'N/A', 130, bottomY + 30);
-  doc.font('Helvetica-Bold').text('Paid Date:', 40, bottomY + 45).font('Helvetica').text(invoice.paymentDate || formatDate(new Date()), 130, bottomY + 45);
-  const paymentStatus = (invoice.paymentStatus || 'PENDING').toUpperCase();
-  const paymentStatusColor = (paymentStatus === 'PENDING' || paymentStatus === 'UNPAID') ? '#D32F2F' : THEME.primary;
-  doc.font('Helvetica-Bold').text('Status:', 40, bottomY + 60).fillColor(paymentStatusColor).font('Helvetica-Bold').text(paymentStatus, 130, bottomY + 60);
+  // Left Column: Payment Info or Quotation Terms
+  if (isQuote) {
+    doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('QUOTATION TERMS', 40, bottomY);
+    doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
+    
+    let termsY = bottomY + 15;
+    const terms = [
+      { label: 'Payment Terms:', value: invoice.paymentTerms },
+      { label: 'Quote Validity:', value: invoice.quoteValidity ? `${invoice.quoteValidity} Days` : '' },
+      { label: 'Production Time:', value: invoice.productionTime },
+      { label: 'Transit Time:', value: invoice.transitTime },
+    ];
 
-  // Digital Signature
+    terms.forEach(term => {
+      if (!isValueEmptyOrPlaceholder(term.value)) {
+        doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold').text(term.label, 40, termsY);
+        doc.font('Helvetica').text(String(term.value), 130, termsY);
+        termsY += 15;
+      }
+    });
+  } else {
+    doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('PAYMENT INFORMATION', 40, bottomY);
+    doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
+    doc.text('Method:', 40, bottomY + 15).font('Helvetica').text(invoice.paymentMethod || 'Not specified', 130, bottomY + 15);
+    doc.font('Helvetica-Bold').text('Transaction Ref:', 40, bottomY + 30).font('Helvetica').text(invoice.transactionId || 'N/A', 130, bottomY + 30);
+    doc.font('Helvetica-Bold').text('Paid Date:', 40, bottomY + 45).font('Helvetica').text(invoice.paymentDate || formatDate(new Date()), 130, bottomY + 45);
+    
+    const paymentStatus = (invoice.paymentStatus || 'PENDING').toUpperCase();
+    const paymentStatusColor = (paymentStatus === 'PENDING' || paymentStatus === 'UNPAID') ? '#D32F2F' : THEME.primary;
+    doc.font('Helvetica-Bold').text('Status:', 40, bottomY + 60).fillColor(paymentStatusColor).font('Helvetica-Bold').text(paymentStatus, 130, bottomY + 60);
+  }
+
+  // Right Column: Digital Signature
   doc.fillColor(THEME.textMain).fontSize(10).font('Helvetica-Bold').text('AUTHORIZED SIGNATURE', 380, bottomY, { align: 'center', width: 175 });
   
   // Signature Line
@@ -387,8 +474,12 @@ function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
 }
 
 function generatePageHeader(doc, invoice) {
-  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('COCOVEERA - Invoice Continuation', 40, 40);
-  doc.fillColor(THEME.textMain).fontSize(8).text(`Invoice Number: ${invoice.invoiceNumber}`, 40, 55);
+  const isQuote = invoice.isQuotation || invoice.documentType === 'quotationPdf';
+  const headerText = isQuote ? 'COCOVEERA - Quotation Continuation' : 'COCOVEERA - Invoice Continuation';
+  const numberText = isQuote ? `Quote Number: ${invoice.invoiceNumber}` : `Invoice Number: ${invoice.invoiceNumber}`;
+  
+  doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text(headerText, 40, 40);
+  doc.fillColor(THEME.textMain).fontSize(8).text(numberText, 40, 55);
   generateHr(doc, 70, THEME.border, 1);
 }
 
@@ -432,8 +523,8 @@ function formatDate(date) {
 
 function drawWatermark(doc) {
   doc.save();
-  // Opacity 35–45%
-  doc.opacity(0.4);
+  // Very light opacity (5–8%)
+  doc.opacity(0.06);
   
   const x = doc.page.width / 2;
   const y = doc.page.height / 2;
@@ -442,24 +533,13 @@ function drawWatermark(doc) {
   doc.translate(x, y);
   
   // Diagonal rotation
-  doc.rotate(-40);
+  doc.rotate(-45);
   
-  // Stamp style border (Thick Border, Bright Red)
-  doc.lineWidth(6);
-  doc.strokeColor('#FF0000');
-  doc.rect(-150, -45, 300, 90);
-  doc.stroke();
-  
-  // Text "DRAFT" in Bright Red
-  doc.fillColor('#FF0000')
-     .fontSize(44)
+  // Text "DRAFT" in Black
+  doc.fillColor('#000000')
+     .fontSize(120)
      .font('Helvetica-Bold')
-     .text('DRAFT', -150, -32, { width: 300, align: 'center' });
-  
-  // Below watermark text
-  doc.fontSize(8.5)
-     .font('Helvetica-Bold')
-     .text('THIS IS A DRAFT DOCUMENT\nNOT VALID FOR PAYMENT', -150, 15, { width: 300, align: 'center' });
+     .text('DRAFT', -300, -50, { width: 600, align: 'center' });
   
   doc.restore();
 }

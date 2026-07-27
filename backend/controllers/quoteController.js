@@ -281,17 +281,24 @@ export const acceptQuote = async (req, res) => {
     const orderNumber = await generateSequentialNumber('ORD');
 
     // Structure items array
-    const qty = parseInt(quote.productDetails?.quantity) || 1;
     const totalAmt = quote.convertedAmount || 0;
-    const orderItems = [
-      {
-        product: quote.productDetails?.productId || null,
-        productName: quote.productDetails?.name || 'Coco Substrates',
-        quantity: qty,
-        pieces: 0,
-        unitPrice: qty > 0 ? (totalAmt / qty) : totalAmt,
-      }
-    ];
+    const orderItems = (quote.products && quote.products.length > 0)
+      ? quote.products.map(item => ({
+          product: item.product || null,
+          productName: item.productName || 'Coco Substrates',
+          quantity: item.quantity || 1,
+          pieces: item.pieces || 0,
+          unitPrice: item.unitPrice || 0,
+        }))
+      : [
+          {
+            product: quote.productDetails?.productId || null,
+            productName: quote.productDetails?.name || 'Coco Substrates',
+            quantity: parseInt(quote.productDetails?.quantity) || 1,
+            pieces: 0,
+            unitPrice: parseInt(quote.productDetails?.quantity) > 0 ? (totalAmt / parseInt(quote.productDetails?.quantity)) : totalAmt,
+          }
+        ];
 
     // Setup payment milestones
     const paymentMilestones = [
@@ -331,7 +338,7 @@ export const acceptQuote = async (req, res) => {
       orderNumber,
       user: req.user._id,
       quote: quote._id,
-      expectedDeliveryDate: expectedDeliveryDate || null,
+      expectedDeliveryDate: expectedDeliveryDate || quote.expectedDelivery || null,
       items: orderItems,
       totalAmount: totalAmt,
       currency: quote.currency || 'USD',
@@ -341,6 +348,13 @@ export const acceptQuote = async (req, res) => {
       paymentStatus: 'Awaiting Initial Payment',
       orderStatus: 'Payment Pending',
       paymentProgress: 0,
+      discount: quote.discount || 0,
+      shippingCharge: quote.shippingCharges || 0,
+      tax: quote.tax || 0,
+      totalContainers: quote.containerCount || 1,
+      totalPieces: quote.products?.reduce((acc, curr) => acc + (curr.pieces || 0), 0) || 0,
+      totalWeight: quote.estimatedWeight || 0,
+      totalVolume: quote.estimatedVolume || 0,
       shippingAddress: {
         addressLine1: quote.shippingAddress?.addressLine1 || '',
         addressLine2: quote.shippingAddress?.addressLine2 || '',
@@ -350,11 +364,11 @@ export const acceptQuote = async (req, res) => {
         country: quote.shippingAddress?.country || '',
       },
       shippingDetails: {
-        shippingMethod: 'Sea Freight',
-        portOfLoading: 'Chennai, India',
-        portOfDischarge: 'Destination Port',
-        incoterms: quote.shippingTerms || 'FOB',
-        transitTime: '14 Days',
+        shippingMethod: quote.shippingMethod || 'Sea Freight',
+        portOfLoading: quote.originPort || 'Chennai, India',
+        portOfDischarge: quote.destinationPort || 'Destination Port',
+        incoterms: quote.incoterms || 'FOB',
+        transitTime: quote.transitTime || '14 Days',
         containerType: quote.containerDetails?.containerSize || '20 FT',
       },
       invoiceUrl: '',
