@@ -166,26 +166,36 @@ export const viewQuotePDF = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to access this document.' });
     }
 
-    if (!quote.pdfPath || !fs.existsSync(quote.pdfPath)) {
+    // Resolve the best available PDF source
+    const cloudinaryUrl = quote.pdfUrl || quote.quotationPdf || '';
+    const hasLocalFile = quote.pdfPath && fs.existsSync(quote.pdfPath);
+
+    if (!hasLocalFile && !cloudinaryUrl) {
       return res.status(404).json({ success: false, message: 'Quotation PDF file not found on server.' });
     }
 
-    // Allow framing for this specific PDF route (override Helmet's restrictive defaults)
-    res.removeHeader('X-Frame-Options');
-    res.setHeader(
-      'Content-Security-Policy',
-      "frame-ancestors 'self' https://cocoveera.com https://www.cocoveera.com https://cocoveera.vercel.app https://*.vercel.app http://localhost:5173 http://localhost:5174 http://localhost:5175"
-    );
+    // If local file is available, stream it directly
+    if (hasLocalFile) {
+      // Allow framing for this specific PDF route (override Helmet's restrictive defaults)
+      res.removeHeader('X-Frame-Options');
+      res.setHeader(
+        'Content-Security-Policy',
+        "frame-ancestors 'self' https://cocoveera.com https://www.cocoveera.com https://cocoveera.vercel.app https://*.vercel.app http://localhost:5173 http://localhost:5174 http://localhost:5175"
+      );
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="Quotation_${quote.quoteNumber}.pdf"`);
+      const fileStream = fs.createReadStream(quote.pdfPath);
+      fileStream.pipe(res);
+      return;
+    }
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="Quotation_${quote.quoteNumber}.pdf"`);
-
-    const fileStream = fs.createReadStream(quote.pdfPath);
-    fileStream.pipe(res);
+    // Fall back: redirect to Cloudinary URL (serverless environments like Vercel)
+    return res.redirect(302, cloudinaryUrl);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // @desc    Download Quote PDF file
 // @route   GET /api/quotes/:id/download-pdf
@@ -207,15 +217,24 @@ export const downloadQuotePDF = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to access this document.' });
     }
 
-    if (!quote.pdfPath || !fs.existsSync(quote.pdfPath)) {
+    // Resolve the best available PDF source
+    const cloudinaryUrl = quote.pdfUrl || quote.quotationPdf || '';
+    const hasLocalFile = quote.pdfPath && fs.existsSync(quote.pdfPath);
+
+    if (!hasLocalFile && !cloudinaryUrl) {
       return res.status(404).json({ success: false, message: 'Quotation PDF file not found on server.' });
     }
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Quotation_${quote.quoteNumber}.pdf"`);
+    if (hasLocalFile) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Quotation_${quote.quoteNumber}.pdf"`);
+      const fileStream = fs.createReadStream(quote.pdfPath);
+      fileStream.pipe(res);
+      return;
+    }
 
-    const fileStream = fs.createReadStream(quote.pdfPath);
-    fileStream.pipe(res);
+    // Fall back: redirect browser to Cloudinary with content-disposition attachment hint
+    return res.redirect(302, cloudinaryUrl);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

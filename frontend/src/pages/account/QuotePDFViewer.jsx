@@ -7,45 +7,98 @@ import SEO from '../../components/SEO';
 export default function QuotePDFViewer() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [pdfUrl, setPdfUrl] = useState('');
+  const [iframeSrc, setIframeSrc] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorStatus, setErrorStatus] = useState(null); // 403, 404, or generic
   const [errorMessage, setErrorMessage] = useState('');
 
-  const fetchPdf = async () => {
+  /**
+   * Strategy:
+   * 1. Probe the endpoint with a lightweight JSON request (no blob) to detect 403/404 errors.
+   * 2. On success, point the <iframe> src directly to the API endpoint with ?token=
+   *    so the browser natively follows any 302 redirect (e.g. to Cloudinary) and
+   *    renders the PDF using its built-in viewer with full toolbar controls.
+   */
+  const probe = async () => {
     setLoading(true);
     setErrorStatus(null);
     setErrorMessage('');
+
     try {
-      const response = await apiClient.get(`/quotes/${id}/view-pdf`, {
-        responseType: 'blob'
+      // Probe using a separate JSON-mode request to verify access and PDF existence
+      await apiClient.get(`/quotes/${id}/view-pdf`, {
+        responseType: 'blob',
+        // We only need the headers / status — abort quickly on success
+        validateStatus: (s) => s < 500,
       });
 
-      // Revoke old URL if it exists
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
-      }
-
-      // Create blob URL for local iframe display
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      setPdfUrl(url);
+      // If we reach here without a 4xx, the PDF is accessible.
+      // Now build the direct iframe URL using ?token= so the browser handles rendering.
+      const token = sessionStorage.getItem('cocoveera_token') || '';
+      const base = apiClient.defaults.baseURL?.replace(/\/$/, '');
+      setIframeSrc(`${base}/quotes/${id}/view-pdf?token=${encodeURIComponent(token)}`);
     } catch (error) {
-      console.error('Failed to fetch quotation PDF:', error);
       const status = error.response?.status || 500;
       setErrorStatus(status);
 
-      // Attempt to extract text error from blob response
       try {
         if (error.response?.data instanceof Blob) {
           const text = await error.response.data.text();
           const json = JSON.parse(text);
-          setErrorMessage(json.message || 'Error occurred while loading the document.');
+          setErrorMessage(json.message || 'Error loading document.');
         } else {
-          setErrorMessage(error.response?.data?.message || 'Network error occurred while fetching PDF.');
+          setErrorMessage(error.response?.data?.message || 'Network error while fetching PDF.');
         }
-      } catch (e) {
-        setErrorMessage('Failed to fetch the quotation PDF file.');
+      } catch {
+        setErrorMessage('Failed to fetch the quotation PDF.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Also handle the case where the server returns 403/404 as a successful blob response
+  const checkProbeResult = async () => {
+    setLoading(true);
+    setErrorStatus(null);
+    setErrorMessage('');
+
+    const token = sessionStorage.getItem('cocoveera_token') || '';
+
+    try {
+      // Use a HEAD-style blob fetch to check status without downloading the whole PDF
+      const response = await apiClient.get(`/quotes/${id}/view-pdf`, {
+        responseType: 'blob',
+      });
+
+      // Check content type — a JSON error body means the API returned an error as blob
+      const contentType = response.headers?.['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        // Server returned JSON error as blob (e.g. 200 with error body — edge case)
+        const text = await response.data.text();
+        const json = JSON.parse(text);
+        setErrorStatus(400);
+        setErrorMessage(json.message || 'Error loading document.');
+        return;
+      }
+
+      // Success — build the iframe src using the ?token= query param
+      const base = apiClient.defaults.baseURL?.replace(/\/$/, '');
+      setIframeSrc(`${base}/quotes/${id}/view-pdf?token=${encodeURIComponent(token)}`);
+    } catch (error) {
+      const status = error.response?.status || 500;
+      setErrorStatus(status);
+
+      try {
+        if (error.response?.data instanceof Blob) {
+          const text = await error.response.data.text();
+          const json = JSON.parse(text);
+          setErrorMessage(json.message || 'Error loading document.');
+        } else {
+          setErrorMessage(error.response?.data?.message || 'Network error while fetching PDF.');
+        }
+      } catch {
+        setErrorMessage('Failed to fetch the quotation PDF.');
       }
     } finally {
       setLoading(false);
@@ -54,22 +107,14 @@ export default function QuotePDFViewer() {
 
   useEffect(() => {
     if (id) {
-      fetchPdf();
+      checkProbeResult();
     }
-    
-    return () => {
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
-      }
-    };
   }, [id]);
 
   const handleClose = () => {
     try {
-      // If opened in a new tab, close it
       window.close();
-    } catch (e) {
-      // Fallback
+    } catch {
       navigate('/quotes');
     }
   };
@@ -90,13 +135,13 @@ export default function QuotePDFViewer() {
     );
   }
 
-  // 2. 403 ACCESS DENIED STATE
+  // 2. 403 ACCESS DENIED
   if (errorStatus === 403) {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6">
         <SEO title="Access Denied - Cocoveera" />
         <div className="bg-white p-8 rounded-3xl shadow-xl border border-stone-200/80 max-w-md w-full flex flex-col items-center text-center space-y-5">
-          <div className="w-16 h-16 bg-red-50 text-red-650 rounded-2xl flex items-center justify-center shadow-inner">
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center shadow-inner">
             <AlertCircle className="w-8 h-8" />
           </div>
           <div>
@@ -108,10 +153,7 @@ export default function QuotePDFViewer() {
               Please make sure you are logged in with the email address linked to the original quote request.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/quotes')}
-            className="px-6 py-2.5 bg-stone-900 hover:bg-stone-850 text-white text-xs font-black rounded-xl transition shadow flex items-center gap-2 cursor-pointer border-none"
-          >
+          <button onClick={() => navigate('/quotes')} className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-black rounded-xl transition shadow flex items-center gap-2 cursor-pointer border-none">
             <ArrowLeft size={16} />
             <span>Back to My Quotes</span>
           </button>
@@ -120,7 +162,7 @@ export default function QuotePDFViewer() {
     );
   }
 
-  // 3. 404 NOT FOUND STATE (PDF NOT GENERATED/FOUND)
+  // 3. 404 PDF NOT FOUND
   if (errorStatus === 404) {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6">
@@ -138,10 +180,7 @@ export default function QuotePDFViewer() {
               This usually happens if the quote request is still under review or pending official admin approval.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/quotes')}
-            className="px-6 py-2.5 bg-stone-900 hover:bg-stone-850 text-white text-xs font-black rounded-xl transition shadow flex items-center gap-2 cursor-pointer border-none"
-          >
+          <button onClick={() => navigate('/quotes')} className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-black rounded-xl transition shadow flex items-center gap-2 cursor-pointer border-none">
             <ArrowLeft size={16} />
             <span>Back to My Quotes</span>
           </button>
@@ -150,7 +189,7 @@ export default function QuotePDFViewer() {
     );
   }
 
-  // 4. OTHER GENERIC/NETWORK ERRORS
+  // 4. GENERIC / NETWORK ERROR
   if (errorStatus) {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6">
@@ -166,18 +205,12 @@ export default function QuotePDFViewer() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/quotes')}
-              className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl transition cursor-pointer border-none"
-            >
-               Back
+            <button onClick={() => navigate('/quotes')} className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl transition cursor-pointer border-none">
+              Back
             </button>
-            <button
-              onClick={fetchPdf}
-              className="px-5 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-xl transition shadow flex items-center gap-2 cursor-pointer border-none"
-            >
-              <RefreshCw size={14} className="shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
-              <span>Retry Connection</span>
+            <button onClick={checkProbeResult} className="px-5 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-xl transition shadow flex items-center gap-2 cursor-pointer border-none">
+              <RefreshCw size={14} />
+              <span>Retry</span>
             </button>
           </div>
         </div>
@@ -185,39 +218,39 @@ export default function QuotePDFViewer() {
     );
   }
 
-  // 5. SUCCESSFUL INLINE EMBED VIEW
+  // 5. SUCCESS — FULLSCREEN PDF VIEWER
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col">
       <SEO title="View Quotation Document - Cocoveera" />
-      
-      {/* Top Header Controls bar */}
+
+      {/* Top Header Bar */}
       <header className="bg-white border-b border-stone-200 px-4 py-3 flex items-center justify-between shadow-sm shrink-0">
         <div className="flex items-center space-x-3">
           <button
             onClick={handleClose}
-            className="px-3.5 py-1.5 bg-stone-150 hover:bg-stone-200 text-stone-750 text-xs font-bold rounded-xl transition-all cursor-pointer border-none flex items-center gap-1.5"
+            className="px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded-xl transition-all cursor-pointer border-none flex items-center gap-1.5"
           >
             <ArrowLeft size={14} />
-            <span>Close View</span>
+            <span>Close</span>
           </button>
           <span className="text-stone-300">|</span>
           <div className="flex items-center space-x-2">
             <FileText className="w-5 h-5 text-[#2E7D32]" />
-            <span className="text-sm font-extrabold text-stone-850 font-poppins">Official Quotation Proposal</span>
+            <span className="text-sm font-extrabold text-stone-900 font-poppins">Official Quotation Proposal</span>
           </div>
         </div>
-        
         <div className="text-[10px] font-black uppercase text-stone-400 tracking-wider hidden sm:block">
           Cocoveera Export Portal
         </div>
       </header>
 
-      {/* Main Fullscreen PDF Viewport */}
-      <div className="flex-1 w-full relative">
+      {/* Fullscreen PDF iframe — browser follows 302 redirect to Cloudinary natively */}
+      <div className="flex-1 w-full" style={{ height: 'calc(100vh - 53px)' }}>
         <iframe
-          src={`${pdfUrl}#toolbar=1`}
-          className="absolute inset-0 w-full h-full border-none bg-stone-100"
+          src={iframeSrc}
+          className="w-full h-full border-none"
           title="Quotation PDF Viewer"
+          allow="fullscreen"
         />
       </div>
     </div>
