@@ -1033,6 +1033,40 @@ Timestamp: ${new Date().toLocaleString()}
                 </div>
               </div>
 
+              {/* Sticky Selected Products Summary Banner */}
+              {(() => {
+                const selectedTypesCount = (quantity > 0 ? 1 : 0) + extraItems.filter(i => i.quantity > 0).length;
+                const totalContainerSum = quantity + extraItems.reduce((acc, i) => acc + i.quantity, 0);
+
+                if (selectedTypesCount === 0) return null;
+
+                return (
+                  <div className="sticky top-2 z-10 bg-[#f0fdf4] border-2 border-[#22c55e] rounded-2xl p-3 sm:p-4 shadow-[0_8px_20px_rgba(34,197,94,0.15)] flex items-center justify-between gap-3 mb-3 backdrop-blur-md transition-all duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#22c55e] text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                        <CheckCircle2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-stone-900 font-poppins">
+                          {selectedTypesCount} Product {selectedTypesCount === 1 ? 'Type' : 'Types'} Selected
+                        </h4>
+                        <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                          Live Container Load Configured
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-black text-[#15803d] font-poppins block">
+                        {totalContainerSum.toFixed(2)}
+                      </span>
+                      <span className="text-[9px] font-extrabold text-stone-500 uppercase tracking-wider block">
+                        Containers
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Accordion list */}
               <div className="space-y-2 border-t border-stone-100 pt-4">
                 <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2 block">
@@ -1041,26 +1075,49 @@ Timestamp: ${new Date().toLocaleString()}
                 
                 <div className="space-y-2.5">
                   {categories.map((cat) => {
-                    const isExpanded = expandedCategory === cat.name;
                     const catProducts = groupedProducts[cat.name] || [];
+                    const selectedCatCount = catProducts.filter(p => {
+                      if (p._id === product._id) return quantity > 0;
+                      const extra = extraItems.find(item => item.product._id === p._id);
+                      return extra && extra.quantity > 0;
+                    }).length;
+
+                    const isSelectedCategory = selectedCatCount > 0;
+                    const isExpanded = expandedCategory === cat.name || isSelectedCategory;
                     
                     return (
                       <div 
                         key={cat._id} 
-                        className="bg-white border border-stone-200 rounded-[20px] overflow-hidden transition-all duration-300 shadow-sm"
+                        className={`bg-white border rounded-[20px] overflow-hidden transition-all duration-300 shadow-sm ${
+                          isSelectedCategory ? 'border-[#22c55e]/60 ring-1 ring-[#22c55e]/20' : 'border-stone-200'
+                        }`}
                       >
                         <button
                           type="button"
-                          onClick={() => setExpandedCategory(isExpanded ? null : cat.name)}
-                          className="w-full flex items-center justify-between p-4 bg-stone-50/50 hover:bg-stone-50 text-left font-poppins font-black text-xs sm:text-sm text-stone-850 transition-colors"
+                          onClick={() => setExpandedCategory(isExpanded && !isSelectedCategory ? null : cat.name)}
+                          className={`w-full flex items-center justify-between p-4 text-left font-poppins font-black text-xs sm:text-sm transition-colors ${
+                            isSelectedCategory ? 'bg-[#f0fdf4]/70 hover:bg-[#f0fdf4] text-[#15803d]' : 'bg-stone-50/50 hover:bg-stone-50 text-stone-850'
+                          }`}
                         >
                           <span className="flex items-center gap-2">
-                            <span>{isExpanded ? '▼' : '►'}</span>
+                            {isSelectedCategory ? (
+                              <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
+                            ) : (
+                              <span>{isExpanded ? '▼' : '►'}</span>
+                            )}
                             {cat.name}
                           </span>
-                          <span className="text-[10px] text-[#2E7D32] font-extrabold bg-[#E8F5E9] px-2 py-0.5 rounded-full">
-                            {catProducts.length} Products
-                          </span>
+
+                          {isSelectedCategory ? (
+                            <span className="text-[10px] text-[#15803d] font-black bg-[#dcfce7] border border-[#86efac] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                              {selectedCatCount} Selected
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#2E7D32] font-extrabold bg-[#E8F5E9] px-2 py-0.5 rounded-full">
+                              {catProducts.length} Products
+                            </span>
+                          )}
                         </button>
                         
                         <AnimatePresence initial={false}>
@@ -1082,13 +1139,23 @@ Timestamp: ${new Date().toLocaleString()}
                                     const isMainProduct = p._id === product._id;
                                     const existingExtra = extraItems.find(item => item.product._id === p._id);
                                     const currentQty = isMainProduct ? quantity : (existingExtra ? existingExtra.quantity : 0);
+                                    const isItemSelected = currentQty > 0;
                                     
                                     return (
                                       <div 
                                         key={p._id} 
-                                        className="flex items-center justify-between gap-3 p-3 bg-stone-50 rounded-2xl border border-stone-200/60 hover:border-stone-300 transition-all text-xs"
+                                        className={`flex items-center justify-between gap-3 p-3 rounded-2xl transition-all duration-200 text-xs ${
+                                          isItemSelected 
+                                            ? 'bg-[#f0fdf4] border-2 border-[#22c55e] shadow-[0_4px_14px_rgba(34,197,94,0.15)] scale-[1.01]' 
+                                            : 'bg-stone-50 border border-stone-200/60 hover:border-stone-300'
+                                        }`}
                                       >
                                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                          {isItemSelected && (
+                                            <div className="w-5 h-5 rounded-full bg-[#22c55e] text-white flex items-center justify-center shrink-0 shadow-sm animate-in fade-in zoom-in duration-200">
+                                              <Check className="w-3 h-3 stroke-[3]" />
+                                            </div>
+                                          )}
                                           <div className="w-10 h-10 bg-white rounded-xl overflow-hidden border border-stone-200 shrink-0 p-1 flex items-center justify-center">
                                             <ImageWithFallback 
                                               src={p.images?.[0]} 
@@ -1133,7 +1200,7 @@ Timestamp: ${new Date().toLocaleString()}
                                           >
                                             <Minus className="w-3 h-3" />
                                           </button>
-                                          <span className="w-9 text-center font-black text-stone-800 text-[11px]">
+                                          <span className={`w-9 text-center font-black text-[11px] ${isItemSelected ? 'text-[#15803d]' : 'text-stone-800'}`}>
                                             {currentQty.toFixed(2)}
                                           </span>
                                           <button
