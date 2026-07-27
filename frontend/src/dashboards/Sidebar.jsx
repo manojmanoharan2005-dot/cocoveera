@@ -16,6 +16,7 @@ import {
   HelpCircle,
   ShieldCheck,
   X,
+  BookOpen,
   MessageSquare
 } from 'lucide-react';
 
@@ -34,6 +35,7 @@ export const Sidebar = ({
     { name: 'Orders', label: 'My Orders', icon: Package, path: '/orders' },
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: wishlistCount, path: '/wishlist' },
     { name: 'Testing Reports', label: 'Quality Testing', icon: FileText, path: '/testing-reports', isSoon: true },
+    { name: 'How to Use', label: 'How to Use', icon: BookOpen, path: '/dashboard/how-to-use' },
     { name: 'Address Management', label: 'Address', icon: MapPin, path: '/address' },
     { name: 'Help & Support', label: 'Help Center', icon: HelpCircle, path: '/support' },
     { name: 'Settings', label: 'Settings', icon: Settings, path: '/settings' },

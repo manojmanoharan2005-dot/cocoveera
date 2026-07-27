@@ -340,6 +340,7 @@ function AppContent() {
           <Route path="/quotes/:id" element={<QuoteDetails />} />
           <Route path="/payments" element={<PaymentHistory />} />
           <Route path="/testing-reports" element={<CustomerTestingReports />} />
+          <Route path="/dashboard/how-to-use" element={<Onboarding />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/support" element={<HelpCenter />} />
           <Route path="/mobile" element={<MobileAccount />} />
