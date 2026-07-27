@@ -233,6 +233,7 @@ export const DashboardLayout = () => {
   // Determine active tab purely from pathname
   const getActiveTab = () => {
     const path = location.pathname;
+    if (path.includes('/invoices')) return 'Invoices';
     if (path.includes('/orders')) return 'Orders';
     if (path.includes('/cart')) return 'Cart';
     if (path.includes('/checkout')) return 'Checkout';

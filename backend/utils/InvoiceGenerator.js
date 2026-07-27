@@ -67,7 +67,7 @@ export const buildInvoiceDataFromOrder = (order) => {
 export const generateInvoicePDF = async (invoiceData) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+      const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true, bufferPages: true });
       let buffers = [];
 
       doc.on('data', buffers.push.bind(buffers));
@@ -107,6 +107,15 @@ export const generateInvoicePDF = async (invoiceData) => {
       // SUMMARIES & BOTTOM SECTION
       generateSummariesAndBottom(doc, invoiceData, qrBuffer, finalY);
 
+      // Render diagonal watermark on all pages for quotations
+      if (invoiceData.isQuotation || invoiceData.documentType === 'quotationPdf') {
+        const range = doc.bufferedPageRange();
+        for (let pageIndex = range.start; pageIndex < range.start + range.count; pageIndex++) {
+          doc.switchToPage(pageIndex);
+          drawWatermark(doc);
+        }
+      }
+
       doc.end();
     } catch (error) {
       reject(error);
@@ -129,20 +138,54 @@ function generateHeader(doc, logoBuffer, invoice) {
   doc.fillColor(THEME.primary).fontSize(22).font('Helvetica-Bold').text('Cocoveera', 100, 40);
   doc.fillColor(THEME.textLight).fontSize(9).font('Helvetica-Oblique').text('Premium Coir substrates exports\nand Quality testing', 100, 65);
 
-  // Top Right: TAX INVOICE
-  doc.fillColor(THEME.primary).fontSize(22).font('Helvetica-Bold').text('TAX INVOICE', 0, 40, { align: 'right' });
+  // Top Right: Title mapping
+  const isQuote = invoice.isQuotation || invoice.documentType === 'quotationPdf';
+  let title = 'TAX INVOICE';
+  if (isQuote) {
+    title = 'QUOTATION';
+  } else if (invoice.documentType === 'proformaInvoicePdf') {
+    title = 'PROFORMA INVOICE';
+  } else if (invoice.documentType === 'commercialInvoicePdf') {
+    title = 'COMMERCIAL INVOICE';
+  } else if (invoice.documentType === 'receiptPdf') {
+    title = 'PAYMENT RECEIPT';
+  } else if (invoice.documentType === 'packingListPdf') {
+    title = 'PACKING LIST';
+  } else if (invoice.documentType === 'billOfLadingPdf') {
+    title = 'BILL OF LADING';
+  } else if (invoice.documentType === 'certificateOfOriginPdf') {
+    title = 'CERTIFICATE OF ORIGIN';
+  } else if (invoice.documentType === 'phytosanitaryPdf') {
+    title = 'PHYTOSANITARY CERTIFICATE';
+  } else if (invoice.documentType === 'fumigationPdf') {
+    title = 'FUMIGATION CERTIFICATE';
+  } else if (invoice.documentType === 'weightPdf') {
+    title = 'WEIGHT CERTIFICATE';
+  } else if (invoice.documentType === 'inspectionPdf') {
+    title = 'INSPECTION CERTIFICATE';
+  } else if (invoice.documentType === 'loadingReportPdf') {
+    title = 'CONTAINER LOADING REPORT';
+  } else if (invoice.documentType === 'qualityReportPdf') {
+    title = 'QUALITY REPORT';
+  } else if (invoice.documentType === 'exportDeclarationPdf') {
+    title = 'EXPORT DECLARATION';
+  }
+
+  doc.fillColor(THEME.primary).fontSize(16).font('Helvetica-Bold').text(title, 0, 40, { align: 'right' });
   
-  doc.fillColor(THEME.textMain).fontSize(9).font('Helvetica-Bold');
-  doc.text('Invoice Number:', 360, 70);
+  doc.fillColor(THEME.textMain).fontSize(8.5).font('Helvetica-Bold');
+  const numLabel = isQuote ? 'Quotation Number:' : 'Invoice Number:';
+  doc.text(numLabel, 340, 70);
   doc.font('Helvetica').text(invoice.invoiceNumber, 440, 70, { width: 115, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Invoice Date:', 360, 88);
+  const dateLabel = isQuote ? 'Quotation Date:' : 'Invoice Date:';
+  doc.font('Helvetica-Bold').text(dateLabel, 340, 88);
   doc.font('Helvetica').text(invoice.invoiceDate || formatDate(new Date()), 440, 88, { width: 115, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Order Number:', 360, 106);
-  doc.font('Helvetica').text(invoice.orderId, 440, 106, { width: 115, align: 'right' });
+  doc.font('Helvetica-Bold').text('Order Number:', 340, 106);
+  doc.font('Helvetica').text(invoice.orderId || 'N/A', 440, 106, { width: 115, align: 'right' });
 
-  doc.font('Helvetica-Bold').text('Status:', 360, 124);
+  doc.font('Helvetica-Bold').text('Status:', 340, 124);
   const rawStatus = invoice.status || invoice.paymentStatus || 'PAID';
   const statusStr = ['paid', 'confirmed', 'production', 'packed', 'loaded', 'shipped', 'delivered'].includes(rawStatus.toLowerCase()) ? 'PAID' : (rawStatus.toUpperCase());
   const statusColor = (statusStr === 'PENDING' || statusStr === 'UNPAID') ? '#D32F2F' : THEME.primary;
@@ -386,4 +429,38 @@ function formatDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
+}
+
+function drawWatermark(doc) {
+  doc.save();
+  // Opacity 35–45%
+  doc.opacity(0.4);
+  
+  const x = doc.page.width / 2;
+  const y = doc.page.height / 2;
+  
+  // Center of page translation
+  doc.translate(x, y);
+  
+  // Diagonal rotation
+  doc.rotate(-40);
+  
+  // Stamp style border (Thick Border, Bright Red)
+  doc.lineWidth(6);
+  doc.strokeColor('#FF0000');
+  doc.rect(-150, -45, 300, 90);
+  doc.stroke();
+  
+  // Text "DRAFT" in Bright Red
+  doc.fillColor('#FF0000')
+     .fontSize(44)
+     .font('Helvetica-Bold')
+     .text('DRAFT', -150, -32, { width: 300, align: 'center' });
+  
+  // Below watermark text
+  doc.fontSize(8.5)
+     .font('Helvetica-Bold')
+     .text('THIS IS A DRAFT DOCUMENT\nNOT VALID FOR PAYMENT', -150, 15, { width: 300, align: 'center' });
+  
+  doc.restore();
 }

@@ -11,6 +11,7 @@ import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import { sendQuoteRevisionRequestEmail, sendQuoteResponseEmail } from '../utils/mailer.js';
+import { generateAndStoreDocument, generateSequentialNumber } from '../utils/documentService.js';
 
 // Helper to check and update quote expiration status dynamically
 const checkQuoteExpiration = async (quote) => {
@@ -276,12 +277,8 @@ export const acceptQuote = async (req, res) => {
       }
     }
 
-    // Generate unique B2B Order Number
-    const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    const day = String(new Date().getDate()).padStart(2, '0');
-    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
-    const orderNumber = `ORD-${year}${month}${day}-${randomSuffix}`;
+    // Generate sequential B2B Order Number
+    const orderNumber = await generateSequentialNumber('ORD');
 
     // Structure items array
     const qty = parseInt(quote.productDetails?.quantity) || 1;
@@ -360,9 +357,20 @@ export const acceptQuote = async (req, res) => {
         transitTime: '14 Days',
         containerType: quote.containerDetails?.containerSize || '20 FT',
       },
-      invoiceUrl: quote.pdfUrl || '',
+      invoiceUrl: '',
       paymentMilestones: paymentMilestones,
     });
+
+    // Automatically generate sequential Proforma Invoice and upload to Cloudinary + DB
+    const docRecord = await generateAndStoreDocument({
+      orderId: order._id,
+      type: 'proformaInvoicePdf',
+      user: req.user,
+    });
+
+    // Update order with the Proforma Invoice URL
+    order.invoiceUrl = docRecord.url;
+    await order.save();
 
     res.status(200).json({
       success: true,

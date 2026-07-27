@@ -17,6 +17,7 @@ import {
   sendQuoteRequestEmail,
 } from '../utils/mailer.js';
 import { formatDateFriendly } from '../utils/dateFormatter.js';
+import { generateAndStoreDocument } from '../utils/documentService.js';
 
 // @desc    Submit a quote request (RFQ)
 // @route   POST /api/quote-requests
@@ -86,6 +87,24 @@ export const submitQuoteRequest = async (req, res) => {
     const quantityStr = `${totalContainers.toFixed(2)} Containers`;
     const categoryFallback = products[0]?.categoryName || category || 'Coco Substrates';
     const productFallback = products[0]?.product || productId || null;
+
+    if (email && productFallback) {
+      const activeDuplicate = await QuoteRequest.findOne({
+        email: email.toLowerCase(),
+        status: { $in: ['NEW', 'APPROVED', 'INFO_REQUESTED'] },
+        $or: [
+          { product: productFallback },
+          { 'products.product': productFallback }
+        ]
+      });
+
+      if (activeDuplicate) {
+        return res.status(409).json({
+          success: false,
+          message: 'A quote request for this product is already in progress for your account.',
+        });
+      }
+    }
 
     // Map address string for legacy admin fields compatibility
     const compiledLegacyAddress = `${addressLine1}${addressLine2 ? ', ' + addressLine2 : ''}, ${city}, ${state}, ${postalCode}`;
@@ -403,11 +422,7 @@ export const approveQuoteRequest = async (req, res) => {
       shippingTerms = 'FOB',
       validity = 15,
       deliveryDate,
-      subject,
-      emailBody,
       additionalNotes,
-      pdfBase64,
-      pdfName,
     } = req.body;
 
     if (!price || isNaN(price)) {
@@ -419,50 +434,7 @@ export const approveQuoteRequest = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Quote Request not found.' });
     }
 
-    // Construct PDF Attachment if supplied via file upload (multer) or base64
-    let pdfAttachment = null;
-    let pdfUrl = quoteRequest.quotationPDF || '';
-
-    if (req.file) {
-      pdfAttachment = {
-        name: req.file.originalname || `Quotation_${quoteRequest._id.toString().slice(-6).toUpperCase()}.pdf`,
-        content: req.file.buffer.toString('base64'),
-      };
-    } else if (pdfBase64) {
-      pdfAttachment = {
-        name: pdfName || `Quotation_${quoteRequest._id.toString().slice(-6).toUpperCase()}.pdf`,
-        content: pdfBase64.includes('base64,') ? pdfBase64.split('base64,')[1] : pdfBase64,
-      };
-    }
-
-    // Prepare email data payload
-    const approvalData = {
-      subject: subject || `Quote Request Approved - Cocoveera Export (Ref: #${quoteRequest._id.toString().slice(-6).toUpperCase()})`,
-      category: quoteRequest.category,
-      productName: quoteRequest.product?.name || 'Coco Substrates',
-      products: quoteRequest.products || [],
-      containerSize: quoteRequest.containerSize,
-      price,
-      currency,
-      shippingTerms,
-      validity: Number(validity) || 15,
-      deliveryDate: deliveryDate || (quoteRequest.expectedDeliveryDate ? new Date(quoteRequest.expectedDeliveryDate).toLocaleDateString() : 'As agreed'),
-      emailBody,
-      additionalNotes,
-    };
-
-    // REQUIREMENT 12: ROLLBACK TRANSACTION IF EMAIL DISPATCH FAILS
-    try {
-      await sendRFQApprovalEmail(quoteRequest.email, quoteRequest.contactPerson, approvalData, pdfAttachment);
-    } catch (mailError) {
-      console.error('Email dispatch failed during RFQ approval:', mailError);
-      return res.status(500).json({
-        success: false,
-        message: `Failed to send approval email via Brevo: ${mailError.message || 'Email service error'}. Status was not updated.`,
-      });
-    }
-
-    // Email dispatch succeeded -> update Database state
+    // Update quote request in database
     quoteRequest.status = 'APPROVED';
     quoteRequest.approvedBy = req.user?._id;
     quoteRequest.approvedAt = new Date();
@@ -480,34 +452,16 @@ export const approveQuoteRequest = async (req, res) => {
     quoteRequest.timeline.push({
       status: 'APPROVED',
       title: 'Approved by Admin',
-      description: `Quote approved at ${currency} ${price} (${shippingTerms}). Official quotation email sent.`,
+      description: `Quote approved at ${currency} ${price} (${shippingTerms}). Official quotation generated.`,
       timestamp: new Date(),
       updatedBy: req.user?._id,
     });
 
     await quoteRequest.save();
 
-    // 1. Save PDF file if attached
-    let pdfFilePath = '';
-    let savedPdfName = '';
-    if (pdfAttachment && pdfAttachment.content) {
-      try {
-        const uploadDir = path.join('uploads', 'quotes');
-        if (!fs.existsSync(uploadDir)) {
-          fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        savedPdfName = `quote_${quoteRequest._id}_${Date.now()}.pdf`;
-        pdfFilePath = path.join(uploadDir, savedPdfName);
-        fs.writeFileSync(pdfFilePath, Buffer.from(pdfAttachment.content, 'base64'));
-      } catch (pdfErr) {
-        console.error('Failed to save PDF on server:', pdfErr);
-      }
-    }
-
-    // 2. Find or create Quote in database
+    // Find or create Quote in database
     let quote = await Quote.findOne({ rfq: quoteRequest._id });
     if (!quote) {
-      // Find User by email
       const user = await User.findOne({ email: quoteRequest.email.toLowerCase() });
       const year = new Date().getFullYear();
       const month = String(new Date().getMonth() + 1).padStart(2, '0');
@@ -541,7 +495,7 @@ export const approveQuoteRequest = async (req, res) => {
 
     quote.products = quoteRequest.products || [];
 
-    // 3. Calculate INR base values
+    // Calculate INR base values
     const rates = { INR: 1, USD: 0.012, EUR: 0.011, GBP: 0.0094 };
     const rateToInr = 1 / (rates[currency] || 1);
     const calculatedInrAmount = Number(price) * rateToInr;
@@ -567,16 +521,23 @@ export const approveQuoteRequest = async (req, res) => {
       };
     }
 
-    if (pdfFilePath) {
-      quote.pdfPath = pdfFilePath;
-      quote.pdfUrl = `/api/quotes/${quote._id}/view-pdf`;
-    }
+    await quote.save();
 
+    // Call documentService to automatically generate Official Quotation PDF, upload to Cloudinary,
+    // save document URL in MongoDB, register in documents collection, and email customer with PDF.
+    const docRecord = await generateAndStoreDocument({
+      quoteId: quote._id,
+      type: 'quotationPdf',
+      user: quote.user,
+    });
+
+    // Sync URLs to quote
+    quote.pdfUrl = docRecord.url;
     await quote.save();
 
     res.status(200).json({
       success: true,
-      message: 'Quote approved successfully and email sent.',
+      message: 'Quote approved successfully, PDF generated and email sent.',
       data: quoteRequest,
     });
   } catch (error) {
@@ -731,5 +692,36 @@ export const handleBrevoWebhook = async (req, res) => {
   } catch (error) {
     console.error('Brevo Webhook Error:', error);
     res.status(200).json({ success: false, message: error.message }); // Always 200 to prevent Brevo webhook retries storm
+  }
+};
+
+// @desc    Check if customer has an active RFQ for a product
+// @route   GET /api/quote-requests/active-check
+// @access  Private
+export const checkActiveRFQ = async (req, res) => {
+  try {
+    const { productId } = req.query;
+    if (!productId) {
+      return res.status(400).json({ success: false, message: 'Product ID is required.' });
+    }
+
+    const email = req.user.email.toLowerCase();
+
+    // Check for NEW, APPROVED, or INFO_REQUESTED quote requests containing this product
+    const activeDuplicate = await QuoteRequest.findOne({
+      email,
+      status: { $in: ['NEW', 'APPROVED', 'INFO_REQUESTED'] },
+      $or: [
+        { product: productId },
+        { 'products.product': productId }
+      ]
+    });
+
+    res.status(200).json({
+      success: true,
+      hasActiveRfq: !!activeDuplicate
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

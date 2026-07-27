@@ -524,6 +524,46 @@ const QuoteDetails = () => {
         {/* Right Summaries Column */}
         <div className="space-y-6">
           
+          {/* Documents Card */}
+          <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm space-y-4">
+            <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2">
+              Quotation Documents
+            </h3>
+            <div className="flex items-center justify-between p-4 bg-stone-50 rounded-xl border border-stone-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-stone-200 shrink-0">
+                  <FileText className="text-[#2E7D32] w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-stone-900">Official Quotation</h4>
+                  <span className={`text-[10px] font-black uppercase mt-1 inline-block ${
+                    hasPdf ? 'text-emerald-600' : 'text-amber-600'
+                  }`}>
+                    Status: {hasPdf ? 'Available' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+              {hasPdf && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleViewPDF}
+                    className="p-2 bg-white hover:bg-stone-100 text-stone-700 rounded-lg border border-stone-250 transition cursor-pointer"
+                    title="Preview Document"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleDownloadPDF}
+                    className="p-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-lg transition cursor-pointer"
+                    title="Download Document"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Price breakdown */}
           <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
             <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">

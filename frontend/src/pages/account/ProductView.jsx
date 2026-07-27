@@ -116,6 +116,22 @@ const ProductView = () => {
 
   // RFQ Modal state
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [hasActiveRfq, setHasActiveRfq] = useState(false);
+
+  useEffect(() => {
+    const checkRfqStatus = async () => {
+      if (!user || !product) return;
+      try {
+        const res = await apiClient.get(`/quote-requests/active-check?productId=${product._id}`);
+        if (res.data.success) {
+          setHasActiveRfq(res.data.hasActiveRfq);
+        }
+      } catch (err) {
+        console.error('Failed to check active RFQ:', err);
+      }
+    };
+    checkRfqStatus();
+  }, [product, user]);
 
   useEffect(() => {
     if (location.state?.scrollToRfq && product) {
@@ -1004,12 +1020,17 @@ const ProductView = () => {
               <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:block">
                 <button
                   type="button"
-                  disabled={isQuoteButtonDisabled}
+                  disabled={isQuoteButtonDisabled || hasActiveRfq}
                   onClick={() => setIsQuoteModalOpen(true)}
                   className="w-full bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group active:scale-[0.98]"
                 >
                   {actionLoading ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : hasActiveRfq ? (
+                    <>
+                      <Check className="w-4 h-4 text-white" />
+                      Quote Requested
+                    </>
                   ) : (
                     <>
                       REQUEST QUOTE
@@ -1115,6 +1136,9 @@ const ProductView = () => {
         setQuantity={setQuantity}
         setExtraItems={setExtraItems}
         containerType={containerType}
+        hasActiveRfq={hasActiveRfq}
+        onSuccess={() => setHasActiveRfq(true)}
+        showToast={(msg) => setAddedMessage(msg)}
       />
 
       {/* Related Products Carousel */}
@@ -1169,12 +1193,21 @@ const ProductView = () => {
       <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-2 items-center backdrop-blur-md bg-white/95">
         <button
           type="button"
-          disabled={isQuoteButtonDisabled}
+          disabled={isQuoteButtonDisabled || hasActiveRfq}
           onClick={() => setIsQuoteModalOpen(true)}
           className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-3 rounded-xl flex items-center justify-center shadow-md gap-1 active:scale-[0.98]"
         >
-          REQUEST QUOTE
-          <ChevronRight className="w-4 h-4" />
+          {hasActiveRfq ? (
+            <>
+              <Check className="w-4 h-4 text-white" />
+              Quote Requested
+            </>
+          ) : (
+            <>
+              REQUEST QUOTE
+              <ChevronRight className="w-4 h-4" />
+            </>
+          )}
         </button>
       </div>
 

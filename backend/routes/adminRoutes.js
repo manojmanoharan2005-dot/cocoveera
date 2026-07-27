@@ -37,6 +37,7 @@ import {
   getAdminOrders,
   getAdminOrder,
   updateOrderStatus,
+  uploadQualityReport,
   updatePaymentStatus,
   assignContainer,
   generateInvoice,
@@ -131,6 +132,7 @@ router.patch('/products/:id/publish', protect, admin, togglePublishProduct);
 router.get('/orders', protect, admin, getAdminOrders);
 router.get('/orders/:id', protect, admin, getAdminOrder);
 router.patch('/orders/:id/status', protect, admin, updateOrderStatus);
+router.post('/orders/:id/quality-report', protect, admin, upload.single('pdf'), uploadQualityReport);
 router.patch('/orders/:id/payment', protect, admin, updatePaymentStatus);
 router.patch('/orders/:id/container', protect, admin, assignContainer);
 router.post('/orders/:id/invoice', protect, admin, generateInvoice);

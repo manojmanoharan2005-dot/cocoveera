@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Calendar, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../context/AuthContext';
 import PhoneInput from 'react-phone-input-2';
@@ -17,6 +17,9 @@ export const RequestQuoteModal = ({
   setQuantity,
   setExtraItems,
   containerType = '20FT',
+  hasActiveRfq = false,
+  onSuccess,
+  showToast,
 }) => {
   const queryClient = useQueryClient();
   const { fetchProfile } = useAuth();
@@ -269,6 +272,8 @@ export const RequestQuoteModal = ({
       const res = await apiClient.post('/quote-requests', payload);
 
       if (res.data.success) {
+        if (showToast) showToast('Quote request submitted successfully.');
+        if (onSuccess) onSuccess();
         setRfqSubmitted(true);
         // Invalidate the quotes query cache so the "My Quotes" page fetches the new request immediately
         queryClient.invalidateQueries(['quotes']);
@@ -288,7 +293,9 @@ export const RequestQuoteModal = ({
         }, 2200);
       }
     } catch (error) {
-      setRfqError(error.response?.data?.message || error.message || 'Something went wrong');
+      const errMsg = error.response?.data?.message || error.message || 'Something went wrong';
+      setRfqError(errMsg);
+      if (showToast) showToast(errMsg);
     } finally {
       setRfqSubmitLoading(false);
     }
@@ -671,13 +678,21 @@ export const RequestQuoteModal = ({
                       </button>
                       <button
                         type="submit"
-                        disabled={rfqSubmitLoading}
+                        disabled={rfqSubmitLoading || hasActiveRfq}
                         className="flex-1 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold py-2.5 rounded-[12px] text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                       >
                         {rfqSubmitLoading ? (
-                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <>
+                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Submitting Request...
+                          </>
+                        ) : hasActiveRfq ? (
+                          <>
+                            <Check className="w-4 h-4 text-white" />
+                            Quote Requested
+                          </>
                         ) : (
-                          'Submit RFQ'
+                          'Request Quote'
                         )}
                       </button>
                     </div>

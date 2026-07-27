@@ -13,6 +13,7 @@ import Quote from '../models/Quote.js';
 import User from '../models/User.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
 import { sendOrderConfirmationNotification } from '../utils/NotificationService.js';
+import { generateAndStoreDocument } from '../utils/documentService.js';
 
 // @desc    Initiate payment session for an order
 // @route   POST /api/payments/initiate
@@ -303,33 +304,20 @@ export const confirmPayment = async (req, res) => {
         await Quote.findByIdAndUpdate(order.quote, { status: 'converted' });
       }
 
+      // Generate and store Payment Receipt PDF automatically
       try {
-        const address = order.shippingAddress || {};
-        const { generateInvoicePDF, buildInvoiceDataFromOrder } = await import('../utils/InvoiceGenerator.js');
-        const invoiceData = buildInvoiceDataFromOrder(order);
-
-        const pdfBuffer = await generateInvoicePDF(invoiceData);
-
-        // Send Email
-        const orderSummary = {
-          customerName: order.user.name,
-          orderDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-          totalAmount: order.totalAmount,
-          paymentStatus: order.paymentStatus,
-          deliveryInfo: 'Will be shipped in 3-5 business days',
-          shippingAddress: order.shippingAddress,
-          shippingDate: order.shippingDate,
-          estimatedDeliveryDate: order.estimatedDeliveryDate,
-          items: order.items.map(item => ({
-            productName: item.productName || (item.product && item.product.name) || 'Product',
-            unitPrice: item.unitPrice,
-            quantity: item.quantity
-          }))
-        };
-        await sendOrderConfirmationNotification(order.user.email, order.user.phone, order._id.toString(), orderSummary, pdfBuffer);
-
+        await generateAndStoreDocument({
+          orderId: order._id,
+          type: 'receiptPdf',
+          user: order.user,
+          dataOverrides: {
+            paymentStatus: 'PAID',
+            transactionId: order.paymentId,
+            paymentDate: new Date().toLocaleDateString(),
+          }
+        });
       } catch (err) {
-        console.error('Invoice generation or email failed:', err);
+        console.error('Payment receipt generation or email failed:', err);
       }
 
       return res.status(200).json({ success: true, message: 'Payment confirmed successfully', data: order });

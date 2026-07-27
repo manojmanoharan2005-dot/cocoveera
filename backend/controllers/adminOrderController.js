@@ -6,6 +6,12 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 import { sendStatusUpdateNotification } from '../utils/NotificationService.js';
+import fs from 'fs';
+import path from 'path';
+import Document from '../models/Document.js';
+import Timeline from '../models/Timeline.js';
+import { generateAndStoreDocument } from '../utils/documentService.js';
+import { uploadToCloudinary } from '../config/cloudinary.js';
 
 // @desc    Get all orders (Admin)
 // @route   GET /api/admin/orders
@@ -104,6 +110,7 @@ export const updateOrderStatus = async (req, res) => {
       ![
         'pending',
         'confirmed',
+        'production',
         'packed',
         'loaded',
         'shipped',
@@ -122,6 +129,58 @@ export const updateOrderStatus = async (req, res) => {
     order.orderStatus = orderStatus;
     await order.save();
 
+    // Trigger automated document generation based on status change
+    try {
+      if (orderStatus === 'production') {
+        // Generate Production / Quality Report automatically
+        await generateAndStoreDocument({
+          orderId: order._id,
+          type: 'qualityReportPdf',
+          user: order.user,
+        });
+      } else if (orderStatus === 'packed') {
+        // Generate Packing List automatically
+        await generateAndStoreDocument({
+          orderId: order._id,
+          type: 'packingListPdf',
+          user: order.user,
+        });
+      } else if (orderStatus === 'loaded') {
+        // Generate Container Loading Report automatically
+        await generateAndStoreDocument({
+          orderId: order._id,
+          type: 'loadingReportPdf',
+          user: order.user,
+        });
+      } else if (orderStatus === 'shipped') {
+        // Generate ALL remaining B2B export documents automatically
+        const exportDocTypes = [
+          'commercialInvoicePdf',
+          'packingListPdf',
+          'certificateOfOriginPdf',
+          'billOfLadingPdf',
+          'phytosanitaryPdf',
+          'fumigationPdf',
+          'weightPdf',
+          'inspectionPdf',
+          'exportDeclarationPdf',
+        ];
+        for (const docType of exportDocTypes) {
+          try {
+            await generateAndStoreDocument({
+              orderId: order._id,
+              type: docType,
+              user: order.user,
+            });
+          } catch (docErr) {
+            console.error(`Failed to automatically generate export document ${docType}:`, docErr);
+          }
+        }
+      }
+    } catch (docErr) {
+      console.error(`Failed to run automated documents for status ${orderStatus}:`, docErr);
+    }
+
     // Send email notification to user
     try {
       if (order.user && order.user.email) {
@@ -135,6 +194,75 @@ export const updateOrderStatus = async (req, res) => {
       success: true,
       message: 'Order status updated successfully',
       data: order,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Upload Quality Inspection Report PDF
+// @route   POST /api/admin/orders/:id/quality-report
+// @access  Private/Admin
+export const uploadQualityReport = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload a PDF file.' });
+    }
+
+    const order = await Order.findById(orderId).populate('user').populate('items.product');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Upload buffer to Cloudinary
+    const uploadResult = await uploadToCloudinary(req.file.buffer, 'cocoveera_documents/qualityReportPdf');
+
+    // Save a local copy for viewing endpoints
+    try {
+      const localDir = path.join('uploads', 'orders');
+      if (!fs.existsSync(localDir)) {
+        fs.mkdirSync(localDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(localDir, `invoice_${order._id}.pdf`), req.file.buffer);
+    } catch (localErr) {
+      console.warn('Failed to save a local copy of uploaded PDF:', localErr);
+    }
+
+    // Create or update Document record in DB
+    let docRecord = await Document.findOne({ order: order._id, type: 'qualityReportPdf' });
+    if (!docRecord) {
+      docRecord = new Document({
+        order: order._id,
+        user: order.user._id,
+        name: 'Quality Report',
+        type: 'qualityReportPdf',
+        generatedBy: 'Admin Upload',
+      });
+    }
+
+    docRecord.url = uploadResult.secure_url;
+    docRecord.publicId = uploadResult.public_id;
+    docRecord.status = 'Available';
+    docRecord.generatedDate = new Date();
+    await docRecord.save();
+
+    // Update order
+    order.qualityReportPdf = uploadResult.secure_url;
+    await order.save();
+
+    // Create Order Timeline event
+    await Timeline.create({
+      order: order._id,
+      status: 'qualityReportPdf',
+      title: 'Quality Inspection Report Uploaded',
+      description: 'The Quality Inspection Report was uploaded by the administration and is available.',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Quality Inspection Report uploaded successfully',
+      data: docRecord,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
