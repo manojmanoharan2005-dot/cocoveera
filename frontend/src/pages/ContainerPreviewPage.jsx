@@ -338,49 +338,58 @@ export default function ContainerPreviewPage() {
   };
 
   return (
-    <div className="fixed inset-0 w-screen h-screen bg-stone-950 text-white overflow-hidden font-sans select-none z-50 flex flex-col">
+    <div className="fixed inset-0 w-screen h-screen bg-stone-950 text-white overflow-x-hidden overflow-y-auto sm:overflow-hidden font-sans select-none z-50 flex flex-col">
       
-      {/* 1. TOP NAVIGATION BAR */}
-      <header className="h-16 bg-stone-900/90 backdrop-blur-md border-b border-stone-800 px-4 sm:px-6 flex items-center justify-between z-30 shrink-0">
+      {/* 1. TOP NAVIGATION BAR (Optimized for Mobile < 768px & Desktop) */}
+      <header className="bg-stone-900/95 backdrop-blur-md border-b border-stone-800 px-3 sm:px-6 py-2 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between z-30 shrink-0 gap-2">
         
-        {/* Left: Back to Product */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-2 px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-xl text-xs font-bold font-poppins transition-all border border-stone-700/60 active:scale-95 cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4 text-emerald-400" />
-            <span className="hidden sm:inline">Back to Product</span>
-          </button>
+        {/* Top Row: Back Button, Title & Mobile Utilization */}
+        <div className="flex items-center justify-between gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <button
+              onClick={handleBack}
+              className="w-11 h-11 min-w-[44px] min-h-[44px] bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-xl flex items-center justify-center transition-all border border-stone-700/60 active:scale-95 cursor-pointer shrink-0"
+              title="Back to Product Details"
+              aria-label="Back to Product Details"
+            >
+              <ArrowLeft className="w-5 h-5 text-emerald-400" />
+            </button>
 
-          <div className="h-6 w-px bg-stone-800 hidden sm:block" />
-
-          {/* Product Title & Category */}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="font-poppins font-black text-sm sm:text-base text-white truncate max-w-[180px] sm:max-w-xs md:max-w-md">
-                {product?.name || 'Cocoveera Product 3D Preview'}
-              </h1>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hidden md:inline-block">
-                {product?.category || 'Export Substrate'}
-              </span>
+            {/* Product Title & Category (2-line clamp on mobile) */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h1 className="font-poppins font-black text-xs sm:text-base text-white line-clamp-2 leading-tight">
+                  {product?.name || 'Cocoveera Product 3D Preview'}
+                </h1>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hidden md:inline-block">
+                  {product?.category || 'Export Substrate'}
+                </span>
+              </div>
+              <p className="text-[10px] text-stone-400 font-semibold truncate hidden sm:block">
+                {product?.packageSize || 'Compressed Export Stacking'} • Dims: {product?.specifications?.length || 30}x{product?.specifications?.width || 30}x{product?.specifications?.height || 12}cm
+              </p>
             </div>
-            <p className="text-[10px] text-stone-400 font-semibold truncate hidden sm:block">
-              {product?.packageSize || 'Compressed Export Stacking'} • Dims: {product?.specifications?.length || 30}x{product?.specifications?.width || 30}x{product?.specifications?.height || 12}cm
-            </p>
+          </div>
+
+          {/* Utilization Badge on Mobile */}
+          <div className="px-2.5 py-1 bg-emerald-950/90 border border-emerald-800/80 rounded-xl flex sm:hidden items-center gap-1.5 shrink-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-black text-emerald-300 font-poppins">
+              {logisticsMetrics.loadingPct}%
+            </span>
           </div>
         </div>
 
-        {/* Right: Container Switcher & Connection Status */}
-        <div className="flex items-center gap-3">
+        {/* Bottom Row / Desktop Right: Container Switcher & Connection Status */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
           
-          {/* Container Type Selector */}
-          <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800">
+          {/* Container Type Selector (Full-width on mobile) */}
+          <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 w-full sm:w-auto justify-around">
             {['20FT', '40FT', '40HC'].map((type) => (
               <button
                 key={type}
                 onClick={() => setContainerType(type)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-black font-poppins transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-black font-poppins transition-all cursor-pointer text-center ${
                   containerType === type
                     ? 'bg-[#2E7D32] text-white shadow-sm'
                     : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/50'
@@ -391,7 +400,7 @@ export default function ContainerPreviewPage() {
             ))}
           </div>
 
-          {/* Utilization Badge */}
+          {/* Utilization Badge on Desktop */}
           <div className="px-3 py-1.5 bg-emerald-950/80 border border-emerald-800/60 rounded-xl hidden lg:flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-xs font-black text-emerald-300 font-poppins">
@@ -399,7 +408,7 @@ export default function ContainerPreviewPage() {
             </span>
           </div>
 
-          {/* FPS & Connection Status */}
+          {/* Connection Status */}
           <div className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-stone-950 rounded-xl border border-stone-800 text-[10px] font-extrabold text-stone-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>Connected • 60 FPS</span>
@@ -408,7 +417,7 @@ export default function ContainerPreviewPage() {
       </header>
 
       {/* MAIN VIEWPORT BODY */}
-      <div className="relative flex-1 w-full h-full bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 overflow-hidden">
+      <div className="relative flex-1 w-full h-full bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 overflow-hidden flex flex-col">
         
         {/* LOADING EXPERIENCE OVERLAY */}
         <AnimatePresence>
@@ -446,8 +455,8 @@ export default function ContainerPreviewPage() {
           )}
         </AnimatePresence>
 
-        {/* 2. FULLSCREEN 3D CANVAS SCENE WITH SILENT WEBGL FALLBACK */}
-        <div ref={canvasRef} className="w-full h-full relative">
+        {/* 2. FULLSCREEN 3D CANVAS SCENE WITH SILENT WEBGL FALLBACK (45-55% viewport height on mobile) */}
+        <div ref={canvasRef} className="w-full h-[48vh] sm:h-[55vh] md:h-full relative shrink-0">
           <Suspense fallback={null}>
             {hasWebGL ? (
               <ContainerPreview3DCanvas
@@ -475,18 +484,19 @@ export default function ContainerPreviewPage() {
           </Suspense>
         </div>
 
-        {/* 3. FLOATING RIGHT TOOLBAR (CIRCULAR ACTION BUTTONS) */}
-        <div className="absolute top-4 right-3 sm:top-6 sm:right-6 z-20 flex flex-col gap-2 sm:gap-3 max-h-[calc(100vh-180px)] overflow-y-auto custom-scrollbar p-1">
+        {/* 3. FLOATING ACTION BUTTONS (Horizontal bar on mobile, vertical sidebar on desktop) */}
+        <div className="absolute top-2 right-2 sm:top-6 sm:right-6 z-20 flex flex-row sm:flex-col gap-2 p-1 max-w-full overflow-x-auto">
           
           {/* Transparent / Opaque View Toggle */}
           <button
             onClick={() => setIsTransparent(!isTransparent)}
-            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-lg border backdrop-blur-md active:scale-90 cursor-pointer ${
+            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all shadow-lg border backdrop-blur-md active:scale-90 cursor-pointer ${
               isTransparent 
                 ? 'bg-emerald-500 text-stone-950 border-emerald-400 shadow-emerald-500/20' 
                 : 'bg-stone-900/90 text-stone-300 hover:text-white border-stone-700 hover:border-stone-500'
             }`}
             title={isTransparent ? 'Switch to Opaque Steel View' : 'Switch to Transparent X-Ray View'}
+            aria-label="Toggle Opaque View"
           >
             {isTransparent ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
@@ -494,12 +504,13 @@ export default function ContainerPreviewPage() {
           {/* Open / Close Container Doors */}
           <button
             onClick={() => setDoorOpen(!doorOpen)}
-            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-lg border backdrop-blur-md active:scale-90 cursor-pointer ${
+            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all shadow-lg border backdrop-blur-md active:scale-90 cursor-pointer ${
               doorOpen 
                 ? 'bg-amber-500 text-stone-950 border-amber-400' 
                 : 'bg-stone-900/90 text-stone-300 hover:text-white border-stone-700 hover:border-stone-500'
             }`}
             title={doorOpen ? 'Close Container Doors' : 'Open Container Doors'}
+            aria-label="Toggle Container Doors"
           >
             <DoorOpen className="w-5 h-5" />
           </button>
@@ -507,59 +518,37 @@ export default function ContainerPreviewPage() {
           {/* Auto Rotate Toggle */}
           <button
             onClick={() => setAutoRotate(!autoRotate)}
-            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-lg border backdrop-blur-md active:scale-90 cursor-pointer ${
+            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all shadow-lg border backdrop-blur-md active:scale-90 cursor-pointer ${
               autoRotate 
                 ? 'bg-emerald-500/30 text-emerald-400 border-emerald-500/50' 
                 : 'bg-stone-900/90 text-stone-400 hover:text-white border-stone-700'
             }`}
             title={autoRotate ? 'Pause Camera Rotation' : 'Auto Rotate Scene'}
+            aria-label="Toggle Auto Rotate"
           >
             {autoRotate ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           </button>
 
-          <div className="w-8 h-px bg-stone-800 mx-auto my-1" />
+          <div className="w-px h-8 sm:w-8 sm:h-px bg-stone-800 my-auto sm:mx-auto" />
 
           {/* Camera View Presets */}
-          <div className="bg-stone-900/90 backdrop-blur-md border border-stone-800 rounded-2xl p-1.5 flex flex-col gap-1.5 shadow-lg">
-            <button
-              onClick={() => setCameraPreset('top')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-black uppercase transition-all ${
-                cameraPreset === 'top' ? 'bg-[#2E7D32] text-white' : 'text-stone-400 hover:text-white hover:bg-stone-800'
-              }`}
-              title="Top View"
-            >
-              TOP
-            </button>
-            <button
-              onClick={() => setCameraPreset('front')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-black uppercase transition-all ${
-                cameraPreset === 'front' ? 'bg-[#2E7D32] text-white' : 'text-stone-400 hover:text-white hover:bg-stone-800'
-              }`}
-              title="Front Door View"
-            >
-              FRONT
-            </button>
-            <button
-              onClick={() => setCameraPreset('side')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-black uppercase transition-all ${
-                cameraPreset === 'side' ? 'bg-[#2E7D32] text-white' : 'text-stone-400 hover:text-white hover:bg-stone-800'
-              }`}
-              title="Side View"
-            >
-              SIDE
-            </button>
-            <button
-              onClick={() => setCameraPreset('inside')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-black uppercase transition-all ${
-                cameraPreset === 'inside' ? 'bg-[#2E7D32] text-white' : 'text-stone-400 hover:text-white hover:bg-stone-800'
-              }`}
-              title="Inside Container View"
-            >
-              INSIDE
-            </button>
+          <div className="bg-stone-900/90 backdrop-blur-md border border-stone-800 rounded-2xl p-1 flex flex-row sm:flex-col gap-1 shadow-lg">
+            {['top', 'front', 'side', 'inside'].map((preset) => (
+              <button
+                key={preset}
+                onClick={() => setCameraPreset(preset)}
+                className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-xl flex items-center justify-center text-[10px] font-black uppercase transition-all ${
+                  cameraPreset === preset ? 'bg-[#2E7D32] text-white' : 'text-stone-400 hover:text-white hover:bg-stone-800'
+                }`}
+                title={`${preset} View`}
+                aria-label={`${preset} View`}
+              >
+                {preset.substring(0, 3).toUpperCase()}
+              </button>
+            ))}
           </div>
 
-          <div className="w-8 h-px bg-stone-800 mx-auto my-1" />
+          <div className="w-px h-8 sm:w-8 sm:h-px bg-stone-800 my-auto sm:mx-auto" />
 
           {/* Reset Camera */}
           <button
@@ -567,17 +556,19 @@ export default function ContainerPreviewPage() {
               setCameraPreset('perspective');
               setZoomLevel(1);
             }}
-            className="w-11 h-11 rounded-full bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white flex items-center justify-center transition-all shadow-lg border border-stone-700 active:scale-90 cursor-pointer"
-            title="Reset Camera Position"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white flex items-center justify-center transition-all shadow-lg border border-stone-700 active:scale-90 cursor-pointer"
+            title="Reset Camera View"
+            aria-label="Reset Camera View"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
 
-          {/* Take Screenshot */}
+          {/* Download Snapshot */}
           <button
             onClick={takeScreenshot}
-            className="w-11 h-11 rounded-full bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white flex items-center justify-center transition-all shadow-lg border border-stone-700 active:scale-90 cursor-pointer"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white flex items-center justify-center transition-all shadow-lg border border-stone-700 active:scale-90 cursor-pointer hidden sm:flex"
             title="Download HD 3D Snapshot"
+            aria-label="Download HD 3D Snapshot"
           >
             <Camera className="w-4 h-4" />
           </button>
@@ -585,109 +576,110 @@ export default function ContainerPreviewPage() {
           {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
-            className="w-11 h-11 rounded-full bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white flex items-center justify-center transition-all shadow-lg border border-stone-700 active:scale-90 cursor-pointer"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white flex items-center justify-center transition-all shadow-lg border border-stone-700 active:scale-90 cursor-pointer hidden sm:flex"
             title="Toggle Fullscreen"
+            aria-label="Toggle Fullscreen"
           >
             <Maximize className="w-4 h-4" />
           </button>
 
         </div>
 
-        {/* 4. BOTTOM INDUSTRIAL INFORMATION PANEL (LOGISTICS HUD) */}
-        <div className="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-6 z-20">
-          <div className="bg-stone-900/95 backdrop-blur-md border border-stone-800 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4">
+        {/* 4. BOTTOM LOGISTICS INFORMATION PANEL (Responsive Grid for Mobile & Desktop) */}
+        <div className="relative sm:absolute bottom-0 left-0 right-0 sm:bottom-4 sm:left-6 sm:right-6 z-20 p-3 sm:p-0">
+          <div className="bg-stone-900/95 backdrop-blur-md border border-stone-800 rounded-2xl p-3 sm:p-5 shadow-2xl space-y-3 sm:space-y-4">
             
             {/* Header & Main Stats Row */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-800 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-stone-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
                   📦
                 </div>
-                <div>
-                  <h3 className="font-poppins font-black text-xs sm:text-sm text-white uppercase tracking-wider">
-                    {containerSpecs.name} Cargo Manifest
+                <div className="min-w-0">
+                  <h3 className="font-poppins font-black text-xs sm:text-sm text-white uppercase tracking-wider truncate">
+                    {containerSpecs.name} Manifest
                   </h3>
-                  <span className="text-[10px] text-stone-400 font-semibold block">
-                    Optimized Export Stacking Strategy ({logisticsMetrics.rows}x{logisticsMetrics.cols} Grid)
+                  <span className="text-[9.5px] text-stone-400 font-semibold block truncate">
+                    Export Grid ({logisticsMetrics.rows}x{logisticsMetrics.cols})
                   </span>
                 </div>
               </div>
 
               {/* Quick Summary Pill Badges */}
-              <div className="flex items-center gap-2 flex-wrap text-xs">
-                <span className="px-3 py-1 bg-stone-950 rounded-xl text-stone-300 font-bold border border-stone-800">
+              <div className="flex items-center gap-1.5 flex-wrap text-[11px] w-full sm:w-auto">
+                <span className="px-2.5 py-1 bg-stone-950 rounded-lg text-stone-300 font-bold border border-stone-800 flex-1 sm:flex-none text-center">
                   Pallets: <strong className="text-white">{logisticsMetrics.totalPallets}</strong>
                 </span>
-                <span className="px-3 py-1 bg-stone-950 rounded-xl text-stone-300 font-bold border border-stone-800">
+                <span className="px-2.5 py-1 bg-stone-950 rounded-lg text-stone-300 font-bold border border-stone-800 flex-1 sm:flex-none text-center">
                   Pieces: <strong className="text-emerald-400">{logisticsMetrics.totalPieces.toLocaleString()}</strong>
                 </span>
-                <span className="px-3 py-1 bg-stone-950 rounded-xl text-stone-300 font-bold border border-stone-800">
+                <span className="px-2.5 py-1 bg-stone-950 rounded-lg text-stone-300 font-bold border border-stone-800 flex-1 sm:flex-none text-center">
                   Weight: <strong className="text-white">{(logisticsMetrics.grossWeightKG / 1000).toFixed(1)} MT</strong>
                 </span>
               </div>
             </div>
 
-            {/* Comprehensive Grid Metrics (12 KPI Cards) */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2 text-center">
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Occupied Vol</span>
+            {/* Comprehensive Grid Metrics (2-column on mobile, 4-col on tablet, 12-col on desktop) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-1.5 sm:gap-2 text-center">
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Occupied Vol</span>
                 <span className="text-xs font-black text-white font-poppins">{logisticsMetrics.occupiedCBM} CBM</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Remaining Vol</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Remaining Vol</span>
                 <span className="text-xs font-black text-emerald-400 font-poppins">{logisticsMetrics.remainingCBM} CBM</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Total Capacity</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Total Capacity</span>
                 <span className="text-xs font-black text-white font-poppins">{containerSpecs.cbmCapacity} CBM</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Loading %</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Loading %</span>
                 <span className="text-xs font-black text-emerald-400 font-poppins">{logisticsMetrics.loadingPct}%</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Total Pieces</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Total Pieces</span>
                 <span className="text-xs font-black text-white font-poppins">{logisticsMetrics.totalPieces.toLocaleString()}</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Total Pallets</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Total Pallets</span>
                 <span className="text-xs font-black text-white font-poppins">{logisticsMetrics.totalPallets}</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Gross Weight</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Gross Weight</span>
                 <span className="text-xs font-black text-white font-poppins">{(logisticsMetrics.grossWeightKG / 1000).toFixed(1)} MT</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Net Weight</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Net Weight</span>
                 <span className="text-xs font-black text-white font-poppins">{(logisticsMetrics.netWeightKG / 1000).toFixed(1)} MT</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">CBM / Unit</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">CBM / Unit</span>
                 <span className="text-xs font-black text-white font-poppins">
                   {((product?.specifications?.length || 30) * (product?.specifications?.width || 30) * (product?.specifications?.height || 12) / 1000000).toFixed(3)}
                 </span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Pallet Rows</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Pallet Rows</span>
                 <span className="text-xs font-black text-white font-poppins">{logisticsMetrics.rows} Rows</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Pallet Cols</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Pallet Cols</span>
                 <span className="text-xs font-black text-white font-poppins">{logisticsMetrics.cols} Cols</span>
               </div>
 
-              <div className="p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
-                <span className="text-[8.5px] font-extrabold text-stone-400 uppercase block">Stack Layers</span>
+              <div className="p-1.5 sm:p-2 bg-stone-950/80 rounded-xl border border-stone-800/80">
+                <span className="text-[8px] sm:text-[8.5px] font-extrabold text-stone-400 uppercase block truncate">Stack Layers</span>
                 <span className="text-xs font-black text-white font-poppins">{logisticsMetrics.layers} Layers</span>
               </div>
             </div>
