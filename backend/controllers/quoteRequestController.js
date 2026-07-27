@@ -205,7 +205,22 @@ export const submitQuoteRequest = async (req, res) => {
           notes: requirementNote || '',
         },
       },
-      products,
+      products: (products || []).map(p => ({
+        product: p.product?._id || p.product || p.productId || productFallback,
+        productName: p.productName || p.name || 'Coco Substrate Product',
+        category: typeof p.category === 'string' && p.category ? p.category : (p.categoryName || categoryFallback || 'General Coir Products'),
+        categoryName: p.categoryName || (typeof p.category === 'string' ? p.category : categoryFallback || 'General Coir Products'),
+        quantity: Number(p.quantity) || 1,
+        unit: p.unit || 'Containers',
+        dimensions: p.dimensions || '',
+        weight: Number(p.weight) || 0,
+        volume: Number(p.volume) || 0,
+        unitPrice: Number(p.unitPrice) || 0,
+        pieces: Number(p.pieces) || 0,
+        containerAllocation: Number(p.containerAllocation) || 0,
+        discount: Number(p.discount) || 0,
+        subtotal: Number(p.subtotal) || 0,
+      })),
       containerDetails: {
         containerSize: containerSize || '20 FT',
         quantity: totalContainers || 1,
@@ -523,8 +538,39 @@ export const approveQuoteRequest = async (req, res) => {
       });
     }
 
-    // Save multiple products details
-    quote.products = (products && products.length > 0) ? products : (quoteRequest.products || []);
+    // Save multiple products details with historical string categories
+    const rawProducts = (products && products.length > 0) ? products : (quoteRequest.products || []);
+    quote.products = rawProducts.map(p => {
+      const prodId = p.product?._id || p.product || p.productId || quoteRequest.product?._id || quoteRequest.product;
+      const prodName = p.productName || p.name || quoteRequest.product?.name || 'Coco Substrate Product';
+      let catStr = 'General Coir Products';
+      if (typeof p.category === 'string' && p.category) {
+        catStr = p.category;
+      } else if (p.category?.name) {
+        catStr = p.category.name;
+      } else if (p.categoryName) {
+        catStr = p.categoryName;
+      } else if (quoteRequest.category) {
+        catStr = quoteRequest.category;
+      }
+
+      return {
+        product: prodId,
+        productName: prodName,
+        category: catStr,
+        categoryName: catStr,
+        quantity: Number(p.quantity) || 1,
+        unit: p.unit || 'Containers',
+        dimensions: p.dimensions || '',
+        weight: Number(p.weight) || 0,
+        volume: Number(p.volume) || 0,
+        unitPrice: Number(p.unitPrice) || 0,
+        pieces: Number(p.pieces) || 0,
+        containerAllocation: Number(p.containerAllocation) || 0,
+        discount: Number(p.discount) || 0,
+        subtotal: Number(p.subtotal) || 0,
+      };
+    });
 
     // Calculate INR base values
     const rates = { INR: 1, USD: 0.012, EUR: 0.011, GBP: 0.0094 };
@@ -601,6 +647,15 @@ export const approveQuoteRequest = async (req, res) => {
       data: quoteRequest,
     });
   } catch (error) {
+    console.error('Quote approval error:', error);
+    if (error.name === 'ValidationError') {
+      const fieldDetails = Object.keys(error.errors).map(key => `${key}: ${error.errors[key].message}`).join(', ');
+      return res.status(400).json({
+        success: false,
+        message: `Quote validation failed on fields: ${fieldDetails}`,
+        errors: error.errors
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };

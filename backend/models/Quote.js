@@ -145,9 +145,8 @@ const QuoteSchema = new mongoose.Schema(
           required: true,
         },
         category: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Category',
-          required: false,
+          type: String,
+          required: true,
         },
         categoryName: {
           type: String,
@@ -156,6 +155,14 @@ const QuoteSchema = new mongoose.Schema(
         quantity: {
           type: Number,
           required: true,
+        },
+        unit: {
+          type: String,
+          default: 'Containers',
+        },
+        dimensions: {
+          type: String,
+          default: '',
         },
         unitPrice: {
           type: Number,
