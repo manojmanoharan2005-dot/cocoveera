@@ -277,13 +277,12 @@ export default function ContainerPreviewPage() {
     const totalUnitsPerPallet = unitsPerLayerOnPallet * layersOnPallet;
 
     const totalPallets = containerSpecs.defaultPallets;
-    const totalPieces = totalPallets * totalUnitsPerPallet;
+    const totalPieces = Math.round(totalPallets * totalUnitsPerPallet * (totalQuantity >= 1 ? 1 : totalQuantity));
 
-    const pieceCBM = lM * wM * hM;
-    const totalCargoCBM = parseFloat((pieceCBM * totalPieces).toFixed(1));
-    const occupiedCBM = Math.min(containerSpecs.cbmCapacity, totalCargoCBM);
-    const remainingCBM = Math.max(0, parseFloat((containerSpecs.cbmCapacity - occupiedCBM).toFixed(1)));
-    const loadingPct = Math.min(100, Math.round((occupiedCBM / containerSpecs.cbmCapacity) * 100));
+    const isFullContainer = totalQuantity >= 1;
+    const occupiedCBM = isFullContainer ? containerSpecs.cbmCapacity : Math.min(containerSpecs.cbmCapacity, parseFloat((pieceCBM * totalPieces).toFixed(1)));
+    const remainingCBM = isFullContainer ? 0 : Math.max(0, parseFloat((containerSpecs.cbmCapacity - occupiedCBM).toFixed(1)));
+    const loadingPct = isFullContainer ? 100 : Math.min(100, Math.round((occupiedCBM / containerSpecs.cbmCapacity) * 100));
 
     const grossWeightKG = Math.round(totalPieces * weightKG + totalPallets * 25); // + 25kg per wooden pallet
     const netWeightKG = Math.round(totalPieces * weightKG);
@@ -295,16 +294,16 @@ export default function ContainerPreviewPage() {
     return {
       occupiedCBM,
       remainingCBM,
-      loadingPct: loadingPct || 92,
+      loadingPct,
       totalPallets,
-      totalPieces: totalPieces || 2400,
-      grossWeightKG: grossWeightKG || 22000,
-      netWeightKG: netWeightKG || 21500,
+      totalPieces: totalPieces || 1530,
+      grossWeightKG: grossWeightKG || 7900,
+      netWeightKG: netWeightKG || 7700,
       rows,
       cols,
       layers
     };
-  }, [product, containerSpecs, containerType]);
+  }, [product, containerSpecs, containerType, totalQuantity]);
 
   // Fullscreen Handler
   const toggleFullscreen = () => {

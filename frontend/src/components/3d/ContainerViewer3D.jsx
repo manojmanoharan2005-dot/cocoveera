@@ -13,9 +13,9 @@ export const ContainerViewer3D = React.memo(({ containerType = '40HC', totalQuan
   const navigate = useNavigate();
 
   const palletsPerContainer = containerType === '20FT' ? 10 : 22;
-  const totalPallets = Math.round((totalQuantity || 1) * palletsPerContainer);
-  const fillRatio = totalQuantity === 0 ? 0 : (totalQuantity % 1 === 0 ? 1 : totalQuantity % 1);
-  const usagePct = totalQuantity === 0 ? 0 : Math.round((fillRatio * 100) || 100);
+  const isFullContainer = totalQuantity >= 1;
+  const totalPallets = isFullContainer ? palletsPerContainer : Math.max(1, Math.round(totalQuantity * palletsPerContainer));
+  const usagePct = totalQuantity === 0 ? 0 : (isFullContainer ? 100 : Math.round(totalQuantity * 100));
 
   const activeProduct = product || palletItems?.[0]?.product;
   const productSlug = activeProduct?.slug || activeProduct?._id || 'cocopeat-block';

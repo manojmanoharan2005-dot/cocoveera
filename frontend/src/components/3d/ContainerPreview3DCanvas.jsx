@@ -708,7 +708,11 @@ export default function ContainerPreview3DCanvas({
     for (const item of activeItems) {
       if (globalPalletIndex >= maxPalletsPerContainer) break;
 
-      const numPalletsToRender = Math.max(1, Math.round(item.quantity * maxPalletsPerContainer));
+      const isFull = item.quantity >= 1 || totalQuantity >= 1;
+      const numPalletsToRender = isFull
+        ? (activeItems.length === 1 ? maxPalletsPerContainer : Math.round(maxPalletsPerContainer / activeItems.length))
+        : Math.max(1, Math.round(item.quantity * maxPalletsPerContainer));
+
       const itemCatType = getCategoryType(item.product?.category, item.product?.name);
       const lCM = item.product?.specifications?.length || 30;
       const wCM = item.product?.specifications?.width || 30;
