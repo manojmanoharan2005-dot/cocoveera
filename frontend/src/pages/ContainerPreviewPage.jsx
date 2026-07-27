@@ -476,7 +476,7 @@ export default function ContainerPreviewPage() {
         </div>
 
         {/* 3. FLOATING RIGHT TOOLBAR (CIRCULAR ACTION BUTTONS) */}
-        <div className="absolute top-6 right-6 z-20 flex flex-col gap-3">
+        <div className="absolute top-4 right-3 sm:top-6 sm:right-6 z-20 flex flex-col gap-2 sm:gap-3 max-h-[calc(100vh-180px)] overflow-y-auto custom-scrollbar p-1">
           
           {/* Transparent / Opaque View Toggle */}
           <button

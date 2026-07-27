@@ -591,10 +591,21 @@ const ShippingContainer = React.memo(function ShippingContainer({ containerType,
 // ----------------------------------------------------
 // 4. CAMERA CONTROLLER & PRESETS SWITCHER
 // ----------------------------------------------------
-function CameraController({ cameraPreset, autoRotate, oscillate }) {
-  const { camera } = useThree();
+function CameraController({ cameraPreset, autoRotate, oscillate, isMini }) {
+  const { camera, size } = useThree();
   const controlsRef = useRef();
   const prevPresetRef = useRef();
+  const isMobile = size.width < 640;
+
+  useEffect(() => {
+    // Dynamic Responsive FOV adjustment
+    if (isMobile) {
+      camera.fov = isMini ? 46 : 50;
+    } else {
+      camera.fov = 38;
+    }
+    camera.updateProjectionMatrix();
+  }, [size.width, isMobile, isMini, camera]);
 
   useEffect(() => {
     if (prevPresetRef.current === cameraPreset) return;
@@ -602,15 +613,15 @@ function CameraController({ cameraPreset, autoRotate, oscillate }) {
 
     switch (cameraPreset) {
       case 'top':
-        camera.position.set(0, 14, 0);
+        camera.position.set(0, isMobile ? 16 : 14, 0);
         if (controlsRef.current) controlsRef.current.target.set(0, 1, 0);
         break;
       case 'front':
-        camera.position.set(0, 2.5, 10);
+        camera.position.set(0, 2.5, isMobile ? 12 : 10);
         if (controlsRef.current) controlsRef.current.target.set(0, 1.2, 0);
         break;
       case 'side':
-        camera.position.set(12, 2.5, 0);
+        camera.position.set(isMobile ? 14 : 12, 2.5, 0);
         if (controlsRef.current) controlsRef.current.target.set(0, 1.2, 0);
         break;
       case 'inside':
@@ -619,11 +630,15 @@ function CameraController({ cameraPreset, autoRotate, oscillate }) {
         break;
       case 'perspective':
       default:
-        camera.position.set(5.2, 3.4, 5.8);
+        if (isMobile) {
+          camera.position.set(6.8, 4.2, 7.6);
+        } else {
+          camera.position.set(5.2, 3.4, 5.8);
+        }
         if (controlsRef.current) controlsRef.current.target.set(0, 1.1, 0);
         break;
     }
-  }, [cameraPreset, camera]);
+  }, [cameraPreset, camera, isMobile]);
 
   useFrame((state) => {
     if (oscillate) {
@@ -799,7 +814,7 @@ export default function ContainerPreview3DCanvas({
       <ContactShadows position={[0, 0, 0]} opacity={0.7} scale={18} blur={1.8} far={4} />
 
       {/* Camera & Controls */}
-      <CameraController cameraPreset={cameraPreset} autoRotate={autoRotate} oscillate={oscillate} />
+      <CameraController cameraPreset={cameraPreset} autoRotate={autoRotate} oscillate={oscillate} isMini={isMini} />
     </Canvas>
   );
 }
