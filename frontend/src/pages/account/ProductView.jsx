@@ -577,330 +577,173 @@ Timestamp: ${new Date().toLocaleString()}
       <div className="bg-white rounded-[28px] border border-stone-200/60 shadow-[0_4px_30px_rgba(0,0,0,0.02)] p-6 sm:p-8 md:p-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
-          {/* Left: Dynamic Preview Column (State A: Product Images | State B: Live 3D Container) */}
+          {/* Left: Product Image Gallery, Features, Live 3D Container, & Specification Report */}
           <div className="lg:col-span-5 space-y-4">
-            <AnimatePresence mode="wait">
-              {totalQuantity === 0 ? (
-                /* State A: Product Image Gallery */
-                <motion.div
-                  key="product-image-gallery"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="space-y-4"
-                >
-                  {/* Large Product Image with Hover Zoom */}
-                  <div 
+            
+            {/* 1. Product Image Gallery */}
+            <div className="space-y-4">
+              {/* Large Product Image with Hover Zoom */}
+              <div 
+                onClick={() => {
+                  setFullscreenImageIndex(activeImageIndex);
+                  setIsFullscreenOpen(true);
+                }}
+                className="h-72 sm:h-96 md:h-[420px] rounded-[24px] overflow-hidden bg-white border border-stone-200/60 shadow-sm relative group cursor-zoom-in"
+              >
+                <ImageWithFallback 
+                  src={imagesList[activeImageIndex]} 
+                  alt={product.name} 
+                  className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-125" 
+                />
+
+                {/* Quick Overlay Action Buttons */}
+                <div className="absolute top-4 right-4 flex items-center gap-2 z-10" onClick={e => e.stopPropagation()}>
+                  <button 
                     onClick={() => {
                       setFullscreenImageIndex(activeImageIndex);
                       setIsFullscreenOpen(true);
                     }}
-                    className="h-72 sm:h-96 md:h-[420px] rounded-[24px] overflow-hidden bg-white border border-stone-200/60 shadow-sm relative group cursor-zoom-in"
+                    className="bg-white/90 hover:bg-white text-stone-700 hover:text-[#2E7D32] p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center active:scale-95"
+                    title="Fullscreen Preview"
                   >
-                    <ImageWithFallback 
-                      src={imagesList[activeImageIndex]} 
-                      alt={product.name} 
-                      className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-125" 
-                    />
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={handleShareProduct}
+                    className="bg-white/90 hover:bg-white text-stone-700 hover:text-[#2E7D32] p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center active:scale-95"
+                    title="Share Product Link"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={handleWishlistToggle}
+                    className="bg-white/90 hover:bg-white text-stone-700 hover:text-red-500 p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center active:scale-95"
+                    title="Wishlist Product"
+                  >
+                    <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+                  </button>
+                </div>
 
-                    {/* Quick Overlay Action Buttons */}
-                    <div className="absolute top-4 right-4 flex items-center gap-2 z-10" onClick={e => e.stopPropagation()}>
-                      <button 
-                        onClick={() => {
-                          setFullscreenImageIndex(activeImageIndex);
-                          setIsFullscreenOpen(true);
-                        }}
-                        className="bg-white/90 hover:bg-white text-stone-700 hover:text-[#2E7D32] p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center active:scale-95"
-                        title="Fullscreen Preview"
-                      >
-                        <Maximize2 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={handleShareProduct}
-                        className="bg-white/90 hover:bg-white text-stone-700 hover:text-[#2E7D32] p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center active:scale-95"
-                        title="Share Product Link"
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={handleWishlistToggle}
-                        className="bg-white/90 hover:bg-white text-stone-700 hover:text-red-500 p-2.5 rounded-full transition-all shadow-md border border-stone-100 flex items-center justify-center active:scale-95"
-                        title="Wishlist Product"
-                      >
-                        <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
-                      </button>
-                    </div>
-
-                    {/* Zoom & Fullscreen hint badge */}
-                    <div className="absolute bottom-3 left-3 bg-stone-900/75 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-1.5">
-                      <Maximize2 className="w-3 h-3 text-emerald-400" />
-                      <span>Hover to zoom • Click for fullscreen</span>
-                    </div>
-                  </div>
-                  
-                  {/* Thumbnail Gallery */}
-                  {imagesList.length > 1 && (
-                    <div className="flex gap-3 overflow-x-auto py-1 [&::-webkit-scrollbar]:hidden">
-                      {imagesList.map((img, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => setActiveImageIndex(i)}
-                          className={`relative w-20 h-20 rounded-[16px] overflow-hidden bg-white border cursor-pointer hover:border-[#2E7D32] transition-all shrink-0 ${
-                            i === activeImageIndex ? 'border-2 border-[#2E7D32] shadow-sm scale-102' : 'border-stone-200/80 opacity-70 hover:opacity-100'
-                          }`}
-                        >
-                          <ImageWithFallback 
-                            src={img} 
-                            alt={`thumbnail ${i}`} 
-                            className="w-full h-full object-contain p-1" 
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Action Row below Product Images */}
-                  <div className="flex items-center justify-around py-3 px-4 bg-[#F7F9F7] rounded-2xl border border-stone-200/60 my-4 shadow-sm relative">
-                    <button
-                      onClick={handleWishlistToggle}
-                      className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-red-500 transition-colors py-1 px-3 rounded-xl active:scale-95"
+                {/* Zoom & Fullscreen hint badge */}
+                <div className="absolute bottom-3 left-3 bg-stone-900/75 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-1.5">
+                  <Maximize2 className="w-3 h-3 text-emerald-400" />
+                  <span>Hover to zoom • Click for fullscreen</span>
+                </div>
+              </div>
+              
+              {/* Thumbnail Gallery */}
+              {imagesList.length > 1 && (
+                <div className="flex gap-3 overflow-x-auto py-1 [&::-webkit-scrollbar]:hidden">
+                  {imagesList.map((img, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => setActiveImageIndex(i)}
+                      className={`relative w-20 h-20 rounded-[16px] overflow-hidden bg-white border cursor-pointer hover:border-[#2E7D32] transition-all shrink-0 ${
+                        i === activeImageIndex ? 'border-2 border-[#2E7D32] shadow-sm scale-102' : 'border-stone-200/80 opacity-70 hover:opacity-100'
+                      }`}
                     >
-                      <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-stone-600'}`} />
-                      <span>{isWishlisted ? 'Wishlisted' : 'Wishlist'}</span>
-                    </button>
-
-                    <div className="h-4 w-px bg-stone-300/60" />
-
-                    <button
-                      onClick={handleShareProduct}
-                      className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
-                    >
-                      <Share2 className="w-4 h-4 text-stone-600" />
-                      <span>Share</span>
-                    </button>
-
-                    <div className="h-4 w-px bg-stone-300/60" />
-
-                    <button
-                      onClick={() => {
-                        setFullscreenImageIndex(activeImageIndex);
-                        setIsFullscreenOpen(true);
-                      }}
-                      className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
-                    >
-                      <Maximize2 className="w-4 h-4 text-stone-600" />
-                      <span>Fullscreen</span>
-                    </button>
-
-                    <div className="h-4 w-px bg-stone-300/60" />
-
-                    <button
-                      onClick={() => setShowMoreMenu(!showMoreMenu)}
-                      className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
-                    >
-                      <MoreVertical className="w-4 h-4 text-stone-600" />
-                      <span>More</span>
-                    </button>
-
-                    {/* More Options Menu Popup */}
-                    <AnimatePresence>
-                      {showMoreMenu && (
-                        <>
-                          <div className="fixed inset-0 bg-transparent z-40" onClick={() => setShowMoreMenu(false)} />
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                            className="absolute bottom-full right-4 mb-2 z-50 bg-white rounded-2xl shadow-xl border border-stone-200/80 p-2 w-56 text-stone-800 space-y-1"
-                          >
-                            <button
-                              onClick={() => {
-                                setShowMoreMenu(false);
-                                setIsQuoteModalOpen(true);
-                              }}
-                              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
-                            >
-                              <FileText className="w-4 h-4 text-[#2E7D32]" />
-                              <span>Request Wholesale Quote</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setShowMoreMenu(false);
-                                setIsTestingModalOpen(true);
-                              }}
-                              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
-                            >
-                              <ShieldCheck className="w-4 h-4 text-[#2E7D32]" />
-                              <span>Quality & Lab Testing</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setShowMoreMenu(false);
-                                navigate('/help-center');
-                              }}
-                              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
-                            >
-                              <HelpCircle className="w-4 h-4 text-[#2E7D32]" />
-                              <span>Help & Support</span>
-                            </button>
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              ) : (
-                /* State B: Live 3D Container Visualizer */
-                <motion.div
-                  key="3d-container-visualizer"
-                  initial={{ opacity: 0, scale: 0.94, y: 15 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.94, y: 15 }}
-                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                  className="space-y-4"
-                >
-                  {/* Live 3D Container Card */}
-                  <div className="bg-white rounded-[24px] border border-stone-200/80 shadow-md overflow-hidden flex flex-col h-[440px] sm:h-[480px] relative">
-                    {/* Header Bar */}
-                    <div className="p-4 border-b border-stone-100 bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 text-white flex justify-between items-center shrink-0">
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <div>
-                          <h3 className="font-poppins font-black text-xs text-white uppercase tracking-wider block leading-tight">
-                            Live 3D Container Visualizer
-                          </h3>
-                          <span className="text-[9.5px] font-bold text-stone-300 block">
-                            {containerType} Cargo Configuration
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="px-2.5 py-1 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 flex items-center gap-1.5">
-                          <span className="text-[9px] font-extrabold text-stone-300 uppercase">Usage</span>
-                          <span className="text-xs font-black text-emerald-400">
-                            {capacityPercentage}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 3D Canvas Canvas */}
-                    <div className="relative flex-1 w-full bg-[#F7F9F7]">
-                      <ContainerViewer3D 
-                        containerType={containerType} 
-                        totalQuantity={viewerQuantity} 
-                        autoRotate={true} 
-                        palletItems={viewerPallets} 
+                      <ImageWithFallback 
+                        src={img} 
+                        alt={`thumbnail ${i}`} 
+                        className="w-full h-full object-contain p-1" 
                       />
-                    </div>
-                  </div>
-
-                  {/* Real-time Logistics Stats Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-[#F7F9F7] rounded-[20px] border border-stone-200/60 shadow-sm text-center">
-                    <div className="p-2.5 bg-white rounded-xl border border-stone-200/70">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Space Used</span>
-                      <span className="text-xs font-black text-stone-900 font-poppins">{capacityPercentage}%</span>
-                    </div>
-                    <div className="p-2.5 bg-white rounded-xl border border-stone-200/70">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Pallets</span>
-                      <span className="text-xs font-black text-[#2E7D32] font-poppins">
-                        {Math.round(totalQuantity * (containerType === '20FT' ? 10 : 22))} Units
-                      </span>
-                    </div>
-                    <div className="p-2.5 bg-white rounded-xl border border-stone-200/70">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Total Pieces</span>
-                      <span className="text-xs font-black text-stone-900 font-poppins">{totalPieces.toLocaleString()}</span>
-                    </div>
-                    <div className="p-2.5 bg-white rounded-xl border border-stone-200/70">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Est. Weight</span>
-                      <span className="text-xs font-black text-stone-900 font-poppins">
-                        {((product?.specifications?.weightVal || 22) * (totalQuantity || 1)).toFixed(1)} MT
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Action Row below 3D Container */}
-                  <div className="flex items-center justify-around py-3 px-4 bg-[#F7F9F7] rounded-2xl border border-stone-200/60 my-4 shadow-sm relative">
-                    <button
-                      onClick={handleWishlistToggle}
-                      className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-red-500 transition-colors py-1 px-3 rounded-xl active:scale-95"
-                    >
-                      <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-stone-600'}`} />
-                      <span>{isWishlisted ? 'Wishlisted' : 'Wishlist'}</span>
                     </button>
-
-                    <div className="h-4 w-px bg-stone-300/60" />
-
-                    <button
-                      onClick={handleShareProduct}
-                      className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
-                    >
-                      <Share2 className="w-4 h-4 text-stone-600" />
-                      <span>Share</span>
-                    </button>
-
-                    <div className="h-4 w-px bg-stone-300/60" />
-
-                    <button
-                      onClick={() => setShowMoreMenu(!showMoreMenu)}
-                      className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
-                    >
-                      <MoreVertical className="w-4 h-4 text-stone-600" />
-                      <span>More</span>
-                    </button>
-
-                    {/* More Options Menu Popup */}
-                    <AnimatePresence>
-                      {showMoreMenu && (
-                        <>
-                          <div className="fixed inset-0 bg-transparent z-40" onClick={() => setShowMoreMenu(false)} />
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                            className="absolute bottom-full right-4 mb-2 z-50 bg-white rounded-2xl shadow-xl border border-stone-200/80 p-2 w-56 text-stone-800 space-y-1"
-                          >
-                            <button
-                              onClick={() => {
-                                setShowMoreMenu(false);
-                                setIsQuoteModalOpen(true);
-                              }}
-                              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
-                            >
-                              <FileText className="w-4 h-4 text-[#2E7D32]" />
-                              <span>Request Wholesale Quote</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setShowMoreMenu(false);
-                                setIsTestingModalOpen(true);
-                              }}
-                              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
-                            >
-                              <ShieldCheck className="w-4 h-4 text-[#2E7D32]" />
-                              <span>Quality & Lab Testing</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setShowMoreMenu(false);
-                                navigate('/help-center');
-                              }}
-                              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
-                            >
-                              <HelpCircle className="w-4 h-4 text-[#2E7D32]" />
-                              <span>Help & Support</span>
-                            </button>
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
+                  ))}
+                </div>
               )}
-            </AnimatePresence>
 
-            {/* Certifications and special notes */}
+              {/* Action Row below Product Images */}
+              <div className="flex items-center justify-around py-3 px-4 bg-[#F7F9F7] rounded-2xl border border-stone-200/60 my-4 shadow-sm relative">
+                <button
+                  onClick={handleWishlistToggle}
+                  className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-red-500 transition-colors py-1 px-3 rounded-xl active:scale-95"
+                >
+                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-stone-600'}`} />
+                  <span>{isWishlisted ? 'Wishlisted' : 'Wishlist'}</span>
+                </button>
+
+                <div className="h-4 w-px bg-stone-300/60" />
+
+                <button
+                  onClick={handleShareProduct}
+                  className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
+                >
+                  <Share2 className="w-4 h-4 text-stone-600" />
+                  <span>Share</span>
+                </button>
+
+                <div className="h-4 w-px bg-stone-300/60" />
+
+                <button
+                  onClick={() => {
+                    setFullscreenImageIndex(activeImageIndex);
+                    setIsFullscreenOpen(true);
+                  }}
+                  className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
+                >
+                  <Maximize2 className="w-4 h-4 text-stone-600" />
+                  <span>Fullscreen</span>
+                </button>
+
+                <div className="h-4 w-px bg-stone-300/60" />
+
+                <button
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
+                >
+                  <MoreVertical className="w-4 h-4 text-stone-600" />
+                  <span>More</span>
+                </button>
+
+                {/* More Options Menu Popup */}
+                <AnimatePresence>
+                  {showMoreMenu && (
+                    <>
+                      <div className="fixed inset-0 bg-transparent z-40" onClick={() => setShowMoreMenu(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                        className="absolute bottom-full right-4 mb-2 z-50 bg-white rounded-2xl shadow-xl border border-stone-200/80 p-2 w-56 text-stone-800 space-y-1"
+                      >
+                        <button
+                          onClick={() => {
+                            setShowMoreMenu(false);
+                            setIsQuoteModalOpen(true);
+                          }}
+                          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
+                        >
+                          <FileText className="w-4 h-4 text-[#2E7D32]" />
+                          <span>Request Wholesale Quote</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowMoreMenu(false);
+                            setIsTestingModalOpen(true);
+                          }}
+                          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-[#2E7D32]" />
+                          <span>Quality & Lab Testing</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowMoreMenu(false);
+                            navigate('/help-center');
+                          }}
+                          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
+                        >
+                          <HelpCircle className="w-4 h-4 text-[#2E7D32]" />
+                          <span>Help & Support</span>
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* 2. Product Features & Quality Cards */}
             <div className="grid grid-cols-2 gap-3 text-xs font-bold text-stone-600 bg-stone-50 border border-stone-100 p-4 rounded-[20px] mt-6">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center shrink-0">
@@ -916,7 +759,6 @@ Timestamp: ${new Date().toLocaleString()}
               </div>
             </div>
 
-            {/* Quality Summary */}
             <div className="bg-stone-50/50 border border-stone-200/60 rounded-[20px] p-5 mt-4 space-y-3">
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-0.5 text-[#EAB308]">
@@ -942,8 +784,94 @@ Timestamp: ${new Date().toLocaleString()}
               </div>
             </div>
 
-            {/* Verified Specification Report */}
-            <div className="bg-white border border-stone-200/60 rounded-[20px] p-5 mt-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4">
+            {/* 3. Live 3D Container Visualizer (Inserted directly BELOW Product Features when totalQuantity > 0) */}
+            <AnimatePresence>
+              {totalQuantity > 0 && (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, height: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                  exit={{ opacity: 0, height: 0, scale: 0.96 }}
+                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                  className="overflow-hidden space-y-4 pt-2"
+                >
+                  {/* 3D Cargo Visualizer Card */}
+                  <div className="bg-white rounded-[24px] border border-stone-200/80 shadow-md overflow-hidden flex flex-col h-[440px] sm:h-[480px] relative">
+                    <div className="p-3.5 border-b border-stone-100 bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 text-white flex justify-between items-center shrink-0">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <div>
+                          <h3 className="font-poppins font-black text-xs text-white uppercase tracking-wider block leading-tight">
+                            Live 3D Cargo Visualizer
+                          </h3>
+                          <span className="text-[9.5px] font-bold text-stone-300 block">
+                            {containerType} Cargo Configuration
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button 
+                          onClick={() => setAutoRotate(!autoRotate)}
+                          className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase transition-colors ${
+                            autoRotate ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/10 text-stone-300'
+                          }`}
+                        >
+                          🔄 {autoRotate ? 'Rotate ON' : 'Rotate OFF'}
+                        </button>
+                        <button 
+                          onClick={() => setDoorOpen(!doorOpen)}
+                          className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase transition-colors ${
+                            doorOpen ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/10 text-stone-300'
+                          }`}
+                        >
+                          🚪 {doorOpen ? 'Close Door' : 'Open Door'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="relative flex-1 w-full bg-[#F7F9F7]">
+                      <ContainerViewer3D 
+                        containerType={containerType} 
+                        totalQuantity={viewerQuantity} 
+                        autoRotate={autoRotate} 
+                        palletItems={viewerPallets} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Real-time Logistics Stats Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 bg-[#F7F9F7] rounded-[20px] border border-stone-200/60 shadow-sm text-center">
+                    <div className="p-2 bg-white rounded-xl border border-stone-200/70">
+                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Space Used</span>
+                      <span className="text-xs font-black text-stone-900 font-poppins">{capacityPercentage}%</span>
+                    </div>
+                    <div className="p-2 bg-white rounded-xl border border-stone-200/70">
+                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Pallets</span>
+                      <span className="text-xs font-black text-[#2E7D32] font-poppins">
+                        {Math.round(totalQuantity * (containerType === '20FT' ? 10 : 22))}
+                      </span>
+                    </div>
+                    <div className="p-2 bg-white rounded-xl border border-stone-200/70">
+                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Pieces</span>
+                      <span className="text-xs font-black text-stone-900 font-poppins">{totalPieces.toLocaleString()}</span>
+                    </div>
+                    <div className="p-2 bg-white rounded-xl border border-stone-200/70">
+                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Weight</span>
+                      <span className="text-xs font-black text-stone-900 font-poppins">
+                        {((product?.specifications?.weightVal || 22) * (totalQuantity || 1)).toFixed(1)} MT
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 4. Verified Specification Report (Shifts down smoothly when 3D Container appears) */}
+            <motion.div 
+              layout
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white border border-stone-200/60 rounded-[20px] p-5 mt-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4"
+            >
               <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
                 <div className="w-6 h-6 rounded-lg bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32]">
                   <FileText className="w-3.5 h-3.5" />
@@ -975,7 +903,7 @@ Timestamp: ${new Date().toLocaleString()}
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Right: Product Details, Pricing, & Spec Sheet */}
