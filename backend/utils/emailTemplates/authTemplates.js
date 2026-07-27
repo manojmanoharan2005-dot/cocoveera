@@ -50,7 +50,7 @@ export const getWelcomeTemplate = (name) => {
       </tr>
       <tr>
         <td valign="top" style="padding: 16px 10px 16px 20px; color: #1E5B2E; font-weight: bold; width: 20px;">✓</td>
-        <td style="padding: 16px 20px 16px 0; line-height: 1.5;"><strong>Export Documents</strong>: Retrieve shipping invoices and quality certifications.</td>
+        <td style="padding: 16px 20px 16px 0; line-height: 1.5;"><strong>Export Documentation</strong>: Retrieve shipping invoices and quality certifications directly from your My Quotes and My Orders sections.</td>
       </tr>
     </table>
     

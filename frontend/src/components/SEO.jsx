@@ -17,7 +17,7 @@ const SEO = ({ title, description, url, image, schema, noindex }) => {
                      path.startsWith('/account') || 
                      path.startsWith('/dashboard') || 
                      path.startsWith('/admin') ||
-                     ['/login', '/register', '/verify-otp', '/cart', '/checkout', '/order-summary', '/payment', '/order-success', '/wishlist', '/saved', '/address', '/settings', '/profile', '/invoices', '/quotes', '/payments', '/testing-reports', '/notifications', '/support', '/mobile'].includes(path);
+                     ['/login', '/register', '/verify-otp', '/cart', '/checkout', '/order-summary', '/payment', '/order-success', '/wishlist', '/saved', '/address', '/settings', '/profile', '/quotes', '/payments', '/testing-reports', '/notifications', '/support', '/mobile'].includes(path);
 
   return (
     <Helmet>

@@ -27,7 +27,6 @@ import adminRoutes from './routes/adminRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import testingRoutes from './routes/testingRoutes.js';
-import documentRoutes from './routes/documentRoutes.js';
 
 // Models for seeding
 import Product from './models/Product.js';
@@ -177,7 +176,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/testing', testingRoutes);
-app.use('/api/documents', documentRoutes);
 
 // Root & Health routes
 app.get('/', (req, res) => {

@@ -301,7 +301,7 @@ export const generateAndStoreDocument = async ({ orderId, quoteId, type, user, d
         <h2 style="color: #2E7D32; border-bottom: 2px solid #2E7D32; padding-bottom: 10px;">${docName} Available</h2>
         <p>Dear ${targetUser?.name || 'Partner'},</p>
         <p>We are writing to let you know that your official <strong>${docName}</strong> has been generated and uploaded to the Cocoveera ERP portal.</p>
-        <p>The document is attached directly to this email and is always available for preview & download on your client dashboard under <strong>Documents & Invoices</strong>.</p>
+        <p>The document is attached directly to this email and is always available for preview &amp; download within your relevant <strong>My Quotes</strong> or <strong>My Orders</strong> section on the Cocoveera portal.</p>
         <br/>
         <p>For any queries or modifications, please respond to this email or reach us at servicedesk@cocoveera.com.</p>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />

@@ -81,7 +81,6 @@ const Address = lazy(() => import('./pages/account/Address'));
 const Settings = lazy(() => import('./pages/account/Settings'));
 const Profile = lazy(() => import('./pages/account/Profile'));
 import ProductView from './pages/account/ProductView';
-const Invoices = lazy(() => import('./pages/account/Invoices'));
 const Quotes = lazy(() => import('./pages/account/Quotes'));
 const QuoteDetails = lazy(() => import('./pages/account/QuoteDetails'));
 const Notifications = lazy(() => import('./pages/account/Notifications'));
@@ -265,7 +264,7 @@ function AppContent() {
       const hasValidAdminToken = isTokenValid(adminToken);
       
       const path = window.location.pathname;
-      const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/invoices') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved');
+      const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved');
       const isAdminProtected = path.startsWith('/admin');
       
       if (isAdminProtected && !hasValidAdminToken) {
@@ -337,7 +336,6 @@ function AppContent() {
           <Route path="/address" element={<Address />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/invoices" element={<Invoices />} />
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/quotes/:id" element={<QuoteDetails />} />
           <Route path="/payments" element={<PaymentHistory />} />
