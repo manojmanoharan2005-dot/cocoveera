@@ -84,7 +84,6 @@ import ProductView from './pages/account/ProductView';
 const Invoices = lazy(() => import('./pages/account/Invoices'));
 const Quotes = lazy(() => import('./pages/account/Quotes'));
 const QuoteDetails = lazy(() => import('./pages/account/QuoteDetails'));
-const QuotePDFViewer = lazy(() => import('./pages/account/QuotePDFViewer'));
 const Notifications = lazy(() => import('./pages/account/Notifications'));
 const PaymentHistory = lazy(() => import('./pages/account/PaymentHistory'));
 const CustomerTestingReports = lazy(() => import('./pages/account/CustomerTestingReports'));
@@ -350,8 +349,6 @@ function AppContent() {
           <Route path="/productview/:id" element={<ProductView />} />
         </Route>
 
-        {/* Fullscreen Protected PDF Viewer */}
-        <Route path="/quotes/:id/pdf" element={<ProtectedRoute><QuotePDFViewer /></ProtectedRoute>} />
 
         {/* Admin Routes */}
         <Route

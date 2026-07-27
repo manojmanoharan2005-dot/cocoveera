@@ -185,7 +185,9 @@ const Quotes = () => {
   };
 
   const handleViewPDF = (quoteId, quoteNumber) => {
-    window.open(`/quotes/${quoteId}/pdf`, '_blank');
+    const token = sessionStorage.getItem('cocoveera_token') || '';
+    const base = apiClient.defaults.baseURL?.replace(/\/$/, '');
+    window.open(`${base}/quotes/${quoteId}/view-pdf?token=${encodeURIComponent(token)}`, '_blank');
   };
 
   const handleOpenRejectModal = (quote) => {

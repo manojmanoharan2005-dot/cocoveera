@@ -119,7 +119,9 @@ const QuoteDetails = () => {
 
   const handleViewPDF = () => {
     if (!quote?._id) return;
-    window.open(`/quotes/${quote._id}/pdf`, '_blank');
+    const token = sessionStorage.getItem('cocoveera_token') || '';
+    const base = apiClient.defaults.baseURL?.replace(/\/$/, '');
+    window.open(`${base}/quotes/${quote._id}/view-pdf?token=${encodeURIComponent(token)}`, '_blank');
   };
 
   const handleRejectSubmit = async (e) => {
