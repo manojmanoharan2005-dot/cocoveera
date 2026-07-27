@@ -94,6 +94,7 @@ export default function ContainerMini3DCanvas({ containerType = '40HC', product,
               autoRotate={false}
               oscillate={true}
               cameraPreset="perspective"
+              isMini={true}
             />
           </Suspense>
         )}

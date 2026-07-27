@@ -414,6 +414,7 @@ export default function ContainerPreview3DCanvas({
   autoRotate = false,
   oscillate = false,
   cameraPreset = 'perspective',
+  isMini = false,
   onFpsUpdate
 }) {
   const maxPalletsPerContainer = containerType === '20FT' ? 10 : 22;
@@ -467,27 +468,29 @@ export default function ContainerPreview3DCanvas({
   return (
     <Canvas
       camera={{ position: [5.2, 3.4, 5.8], fov: 38 }}
-      shadows
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+      shadows={!isMini}
+      dpr={isMini ? [1, 1.25] : [1, 2]}
+      gl={{ antialias: true, alpha: true, powerPreference: isMini ? 'low-power' : 'high-performance' }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1.15;
       }}
       className="w-full h-full"
     >
-      {/* Lighting Setup */}
-      <ambientLight intensity={0.8} />
+      {/* Fast Lighting Setup */}
+      <ambientLight intensity={isMini ? 0.9 : 0.8} />
+      <hemisphereLight skyColor="#ffffff" groundColor="#444444" intensity={isMini ? 0.7 : 0.5} />
       <directionalLight 
         position={[10, 15, 10]} 
         intensity={1.8} 
-        castShadow 
+        castShadow={!isMini} 
         shadow-mapSize-width={1024} 
         shadow-mapSize-height={1024} 
       />
       <pointLight position={[-10, 10, -10]} intensity={0.6} />
 
-      {/* Studio Environment Lighting */}
-      <Environment preset="city" />
+      {/* Studio Environment HDRI Lighting (Downloaded only in Fullscreen Mode for instant mini load) */}
+      {!isMini && <Environment preset="city" />}
 
       {/* Shipping Container */}
       <ShippingContainer 
