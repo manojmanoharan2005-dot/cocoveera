@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SEO = ({ title, description, url, image, schema }) => {
+const SEO = ({ title, description, url, image, schema, noindex }) => {
   const siteUrl = 'https://cocoveera.com';
   const defaultImage = `${siteUrl}/favicon.webp`;
   const defaultDescription = 'COCOVEERA - Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export. Verify batch quality tests instantly.';
@@ -11,6 +11,14 @@ const SEO = ({ title, description, url, image, schema }) => {
   const seoUrl = url ? `${siteUrl}${url}` : siteUrl;
   const seoImage = image || defaultImage;
 
+  // Automatically determine if the path is internal/private
+  const path = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isInternal = noindex || 
+                     path.startsWith('/account') || 
+                     path.startsWith('/dashboard') || 
+                     path.startsWith('/admin') ||
+                     ['/login', '/register', '/verify-otp', '/cart', '/checkout', '/order-summary', '/payment', '/order-success', '/wishlist', '/saved', '/address', '/settings', '/profile', '/invoices', '/quotes', '/payments', '/testing-reports', '/notifications', '/support', '/mobile'].includes(path);
+
   return (
     <Helmet>
       {/* Primary Meta Tags */}
@@ -18,6 +26,7 @@ const SEO = ({ title, description, url, image, schema }) => {
       <meta name="title" content={seoTitle} />
       <meta name="description" content={seoDescription} />
       <link rel="canonical" href={seoUrl} />
+      {isInternal && <meta name="robots" content="noindex, nofollow" />}
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content="website" />

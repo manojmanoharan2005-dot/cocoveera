@@ -304,6 +304,7 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductView />} />
           <Route path="/quality-testing" element={<QualityTesting />} />
           <Route path="/substrates" element={<CoconutSubstrates />} />
           <Route path="/contact" element={<Contact />} />

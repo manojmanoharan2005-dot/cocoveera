@@ -18,7 +18,7 @@ export const getProducts = async (req, res) => {
       query.category = category;
     }
     const products = await Product.find(query)
-      .select('name slug category description price stock images packageSize specifications')
+      .select('name slug category description price stock images packageSize specifications updatedAt')
       .lean();
     res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {

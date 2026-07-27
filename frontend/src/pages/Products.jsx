@@ -356,13 +356,7 @@ const Products = () => {
                 isWishlisted={user?.wishlist?.some(item => (item._id || item) === prod._id)}
                 onWishlistToggle={handleAddToWishlist}
                 onCardClick={(p) => {
-                  const targetUrl = `/product/${p.slug || p._id}`;
-                  if (!user) {
-                    sessionStorage.setItem('postLoginRedirect', targetUrl);
-                    navigate('/login');
-                  } else {
-                    navigate(targetUrl);
-                  }
+                  navigate(`/products/${p.slug || p._id}`);
                 }}
                 hideWishlist={true}
               />

@@ -451,7 +451,7 @@ const ProductView = () => {
       <SEO 
         title={product.name}
         description={product.description?.substring(0, 160) || `Buy premium ${product.name} at Cocoveera.`}
-        url={`/product/${product.slug || product._id}`}
+        url={`/products/${product.slug || product._id}`}
         image={product.images?.[0]?.url || product.image}
       />
       
@@ -1154,7 +1154,7 @@ const ProductView = () => {
                 <div 
                   key={item._id} 
                   onClick={() => {
-                    navigate(`/product/${item.slug || item._id}`);
+                    navigate(`/products/${item.slug || item._id}`);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="bg-white border border-stone-200 hover:border-[#2E7D32] rounded-[22px] p-4 sm:p-5 cursor-pointer hover:shadow-md transition-all flex flex-col group overflow-hidden"
