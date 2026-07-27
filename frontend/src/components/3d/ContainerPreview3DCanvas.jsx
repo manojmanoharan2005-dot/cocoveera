@@ -642,6 +642,38 @@ function CameraController({ cameraPreset, autoRotate, oscillate }) {
   );
 }
 
+function ResourceCleaner() {
+  const { gl, scene } = useThree();
+
+  useEffect(() => {
+    return () => {
+      // Traverse scene and dispose of all Three.js geometries, materials, and textures
+      scene.traverse((child) => {
+        if (child.geometry) {
+          child.geometry.dispose();
+        }
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach((m) => {
+              if (m.map) m.map.dispose();
+              m.dispose();
+            });
+          } else {
+            if (child.material.map) child.material.map.dispose();
+            child.material.dispose();
+          }
+        }
+      });
+      try {
+        gl.dispose();
+        gl.forceContextLoss();
+      } catch (e) {}
+    };
+  }, [gl, scene]);
+
+  return null;
+}
+
 // ----------------------------------------------------
 // MAIN 3D VIEWPORT ENGINE CANVAS
 // ----------------------------------------------------
@@ -717,6 +749,8 @@ export default function ContainerPreview3DCanvas({
       }}
       className="w-full h-full"
     >
+      <ResourceCleaner />
+
       {/* Fast Lighting Setup */}
       <ambientLight intensity={isMini ? 0.9 : 0.8} />
       <hemisphereLight skyColor="#ffffff" groundColor="#444444" intensity={isMini ? 0.7 : 0.5} />
