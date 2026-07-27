@@ -287,26 +287,6 @@ export const uploadQualityReport = async (req, res) => {
   }
 };
 
-// @desc    Update payment status (Admin)
-// @route   PATCH /api/admin/orders/:id/payment
-// @access  Private/Admin
-export const updatePaymentStatus = async (req, res) => {
-  try {
-    const { paymentStatus, paymentId } = req.body;
-
-    if (!['pending', 'paid', 'failed', 'refunded'].includes(paymentStatus)) {
-      return res.status(400).json({ success: false, message: 'Invalid payment status' });
-    }
-
-    let order = await Order.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
-
-    order.paymentStatus = paymentStatus;
-    if (paymentId) order.paymentId = paymentId;
-    await order.save();
-
 // Automated Milestone Progression Helper
 export const advancePaymentMilestone = async (orderId, adminUser = null, transactionRef = '') => {
   const Timeline = (await import('../models/Timeline.js')).default;
