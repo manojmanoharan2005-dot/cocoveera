@@ -260,23 +260,43 @@ export const acceptQuote = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to perform this action.' });
     }
 
-    // Verify status is Approved or valid (cannot accept expired or already accepted)
+    // Check if order already exists for this quote (Idempotency check)
+    const Order = (await import('../models/Order.js')).default;
+    const existingOrder = await Order.findOne({ quote: quote._id });
+    if (existingOrder) {
+      if (quote.status !== 'Quote Accepted') {
+        quote.status = 'Quote Accepted';
+        quote.acceptedAt = quote.acceptedAt || new Date();
+        quote.acceptedBy = quote.acceptedBy || req.user._id;
+        await quote.save();
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'Quotation accepted successfully. Redirecting to Orders...',
+        orderId: existingOrder._id,
+        data: quote,
+      });
+    }
+
+    // Verify status is Approved or valid (cannot accept expired, rejected, or already accepted)
     await checkQuoteExpiration(quote);
 
     if (quote.status === 'Quote Expired') {
       return res.status(400).json({ success: false, message: 'This quotation has expired and cannot be accepted.' });
     }
 
-    if (quote.status === 'Quote Accepted') {
-      return res.status(400).json({ success: false, message: 'This quotation has already been accepted.' });
+    if (quote.status === 'Quote Rejected' || quote.status === 'Rejected by Customer') {
+      return res.status(400).json({ success: false, message: 'Rejected quotations cannot be accepted.' });
     }
 
-    if (quote.status !== 'Quote Approved') {
-      return res.status(400).json({ success: false, message: 'Only approved quotations can be accepted.' });
+    if (quote.status === 'Quote Accepted' || quote.status === 'ACCEPTED' || quote.status === 'converted') {
+      return res.status(400).json({ success: false, message: 'Quotation has already been accepted.' });
     }
 
     // Accept Quote and save state
     quote.status = 'Quote Accepted';
+    quote.acceptedAt = new Date();
+    quote.acceptedBy = req.user._id;
     await quote.save();
 
     // Link back to RFQ and update its status

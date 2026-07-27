@@ -61,6 +61,13 @@ const QuoteSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    acceptedAt: {
+      type: Date,
+    },
+    acceptedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     quoteDate: {
       type: Date,
       default: Date.now,
