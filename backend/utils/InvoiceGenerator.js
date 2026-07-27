@@ -97,12 +97,20 @@ export const generateInvoicePDF = async (invoiceData) => {
       // --- RENDER PDF ---
 
       const isQuote = invoiceData.isQuotation || invoiceData.documentType === 'quotationPdf';
-      if (isQuote) {
-        doc.on('pageAdded', () => {
-          drawWatermark(doc);
-        });
-        drawWatermark(doc);
-      }
+      const watermarkText = invoiceData.watermarkText || (
+        isQuote 
+          ? 'OFFICIAL QUOTE' 
+          : (invoiceData.paymentProgress === 100 || invoiceData.paymentStatus === 'PAID'
+              ? 'PAID' 
+              : (invoiceData.paymentProgress > 0 
+                  ? `PARTIALLY PAID (${invoiceData.paymentProgress}%)` 
+                  : 'PAYMENT PENDING'))
+      );
+
+      doc.on('pageAdded', () => {
+        drawWatermark(doc, watermarkText);
+      });
+      drawWatermark(doc, watermarkText);
 
       // PAGE 1: Header, Info, Logistics
       generateHeader(doc, logoBuffer, invoiceData);
@@ -473,11 +481,28 @@ function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
   generateHr(doc, currentSummaryY, THEME.border, 1);
   currentSummaryY += 10;
 
-  doc.fillColor(THEME.primary).font('Helvetica-Bold').fontSize(12)
+  doc.fillColor(THEME.primary).font('Helvetica-Bold').fontSize(11)
      .text('GRAND TOTAL:', 250, currentSummaryY, { width: 170, align: 'right' })
      .text(`${curr}${total.toFixed(2)}`, 425, currentSummaryY, { width: 120, align: 'right' });
+  currentSummaryY += 15;
 
-  const bottomY = Math.max(currentSummaryY + 30, 640);
+  if (!isQuote) {
+    const amtPaid = invoice.amountPaid !== undefined ? invoice.amountPaid : (total * ((invoice.paymentProgress || 0) / 100));
+    const remBal = invoice.remainingAmount !== undefined ? invoice.remainingAmount : Math.max(0, total - amtPaid);
+
+    doc.fillColor(THEME.textMain).font('Helvetica-Bold').fontSize(9)
+       .text('Amount Paid:', 250, currentSummaryY, { width: 170, align: 'right' })
+       .font('Helvetica').text(`${curr}${amtPaid.toFixed(2)}`, 425, currentSummaryY, { width: 120, align: 'right' });
+    currentSummaryY += 14;
+
+    const remColor = remBal === 0 ? THEME.primary : '#D32F2F';
+    doc.fillColor(remColor).font('Helvetica-Bold').fontSize(9)
+       .text('Outstanding Balance:', 250, currentSummaryY, { width: 170, align: 'right' })
+       .text(`${curr}${remBal.toFixed(2)}`, 425, currentSummaryY, { width: 120, align: 'right' });
+    currentSummaryY += 15;
+  }
+
+  const bottomY = Math.max(currentSummaryY + 20, 640);
 
   // Left Column: Payment Info or Quotation Terms
   if (isQuote) {
@@ -500,15 +525,17 @@ function generateSummariesAndBottom(doc, invoice, qrBuffer, finalY) {
       }
     });
   } else {
-    doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('PAYMENT INFORMATION', 40, bottomY);
+    doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('PAYMENT MILESTONE SUMMARY', 40, bottomY);
     doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
-    doc.text('Method:', 40, bottomY + 15).font('Helvetica').text(invoice.paymentMethod || 'Not specified', 130, bottomY + 15);
-    doc.font('Helvetica-Bold').text('Transaction Ref:', 40, bottomY + 30).font('Helvetica').text(invoice.transactionId || 'N/A', 130, bottomY + 30);
-    doc.font('Helvetica-Bold').text('Paid Date:', 40, bottomY + 45).font('Helvetica').text(invoice.paymentDate || formatDate(new Date()), 130, bottomY + 45);
     
-    const paymentStatus = (invoice.paymentStatus || 'PENDING').toUpperCase();
-    const paymentStatusColor = (paymentStatus === 'PENDING' || paymentStatus === 'UNPAID') ? '#D32F2F' : THEME.primary;
-    doc.font('Helvetica-Bold').text('Status:', 40, bottomY + 60).fillColor(paymentStatusColor).font('Helvetica-Bold').text(paymentStatus, 130, bottomY + 60);
+    const progress = invoice.paymentProgress !== undefined ? invoice.paymentProgress : 0;
+    const statusText = progress === 100 ? 'PAID IN FULL (Payment Completed)' : (progress > 0 ? `PARTIALLY PAID (${progress}%)` : 'PAYMENT PENDING');
+    const statusColor = progress === 100 ? THEME.primary : (progress > 0 ? '#D97706' : '#D32F2F');
+
+    doc.text('Payment Progress:', 40, bottomY + 15).font('Helvetica').text(`${progress}% Paid`, 150, bottomY + 15);
+    doc.font('Helvetica-Bold').text('Payment Method:', 40, bottomY + 30).font('Helvetica').text(invoice.paymentMethod || 'Wire Transfer', 150, bottomY + 30);
+    doc.font('Helvetica-Bold').text('Transaction Ref:', 40, bottomY + 45).font('Helvetica').text(invoice.transactionId || 'N/A', 150, bottomY + 45);
+    doc.font('Helvetica-Bold').text('Status:', 40, bottomY + 60).fillColor(statusColor).font('Helvetica-Bold').text(statusText, 150, bottomY + 60);
   }
 
   // Right Column: Digital Signature
@@ -572,10 +599,10 @@ function formatDate(date) {
   return `${day}/${month}/${year}`;
 }
 
-function drawWatermark(doc) {
+function drawWatermark(doc, text = 'OFFICIAL DOCUMENT') {
   doc.save();
   // Very light opacity (5–8%)
-  doc.opacity(0.06);
+  doc.opacity(0.07);
   
   const x = doc.page.width / 2;
   const y = doc.page.height / 2;
@@ -586,11 +613,11 @@ function drawWatermark(doc) {
   // Diagonal rotation
   doc.rotate(-45);
   
-  // Text "DRAFT" in Black
-  doc.fillColor('#000000')
-     .fontSize(120)
+  const fontSize = text.length > 15 ? 70 : (text.length > 10 ? 90 : 120);
+  doc.fillColor('#2E7D32')
+     .fontSize(fontSize)
      .font('Helvetica-Bold')
-     .text('DRAFT', -300, -50, { width: 600, align: 'center' });
+     .text(text.toUpperCase(), -300, -35, { width: 600, align: 'center' });
   
   doc.restore();
 }

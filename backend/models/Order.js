@@ -93,6 +93,27 @@ const OrderSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    amountPaid: {
+      type: Number,
+      default: 0,
+    },
+    remainingAmount: {
+      type: Number,
+      default: 0,
+    },
+    invoiceVersion: {
+      type: String,
+      default: 'v1',
+    },
+    paymentHistory: [
+      {
+        amount: Number,
+        percentage: Number,
+        transactionId: String,
+        paidAt: Date,
+        milestoneType: String,
+      }
+    ],
     refunds: [
       {
         type: mongoose.Schema.Types.ObjectId,

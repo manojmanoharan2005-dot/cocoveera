@@ -272,6 +272,13 @@ export const confirmPayment = async (req, res) => {
           order.paymentStatus = 'paid';
         }
 
+        // Recalculate Database Driven Payment Totals & Invoice Versioning
+        const total = order.totalAmount || 0;
+        const progress = order.paymentProgress || 0;
+        order.amountPaid = (total * progress) / 100;
+        order.remainingAmount = Math.max(0, total - order.amountPaid);
+        order.invoiceVersion = progress === 100 ? 'v4' : (progress >= 80 ? 'v3' : (progress >= 60 ? 'v2' : 'v1'));
+
         if (idx + 1 < order.paymentMilestones.length) {
           order.paymentMilestones[idx + 1].status = 'Pending';
         }
@@ -279,10 +286,23 @@ export const confirmPayment = async (req, res) => {
         order.paymentStatus = 'paid';
         order.orderStatus = 'confirmed';
         order.paymentProgress = 100;
+        order.amountPaid = order.totalAmount;
+        order.remainingAmount = 0;
+        order.invoiceVersion = 'v4';
       }
 
       order.paymentId = paymentId || 'pm_' + Math.random().toString(36).substring(7);
       order.paymentGateway = gateway || 'mock';
+
+      // Log Payment History Entry
+      order.paymentHistory.push({
+        amount: paidAmount,
+        percentage: order.paymentProgress,
+        transactionId: order.paymentId,
+        paidAt: new Date(),
+        milestoneType: milestoneDescription,
+      });
+
       await order.save();
 
       try {
@@ -302,6 +322,22 @@ export const confirmPayment = async (req, res) => {
 
       if (order.quote && order.paymentProgress === 100) {
         await Quote.findByIdAndUpdate(order.quote, { status: 'converted' });
+      }
+
+      // Automatically Regenerate & Version Dynamic Invoice PDF (Commercial Invoice or Tax Invoice)
+      try {
+        const invDocType = order.paymentProgress === 100 ? 'taxInvoicePdf' : 'commercialInvoicePdf';
+        const invDocRecord = await generateAndStoreDocument({
+          orderId: order._id,
+          type: invDocType,
+          user: order.user,
+        });
+        if (invDocRecord && invDocRecord.url) {
+          order.invoiceUrl = invDocRecord.url;
+          await order.save();
+        }
+      } catch (invErr) {
+        console.error('Dynamic invoice regeneration failed:', invErr);
       }
 
       // Generate and store Payment Receipt PDF automatically

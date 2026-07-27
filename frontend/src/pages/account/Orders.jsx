@@ -140,7 +140,7 @@ const Orders = () => {
   const handlePreviewInvoice = (orderId, orderNumber) => {
     if (!orderId) return;
     const token = sessionStorage.getItem('cocoveera_token');
-    const viewUrl = `${apiClient.defaults.baseURL}/orders/${orderId}/invoice?token=${token}`;
+    const viewUrl = `${apiClient.defaults.baseURL}/orders/${orderId}/invoice?token=${token}&_t=${Date.now()}`;
     setActivePdfUrl(viewUrl);
     setActiveOrderNum(orderNumber);
     setPdfModalOpen(true);
@@ -149,7 +149,7 @@ const Orders = () => {
   const handleDownloadInvoice = async (orderId, orderNumber) => {
     if (!orderId) return;
     try {
-      const response = await apiClient.get(`/orders/${orderId}/invoice`, {
+      const response = await apiClient.get(`/orders/${orderId}/invoice?_t=${Date.now()}`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
