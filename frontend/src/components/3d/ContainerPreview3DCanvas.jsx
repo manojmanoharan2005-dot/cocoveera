@@ -1,7 +1,7 @@
 /**
  * File: frontend/src/components/3d/ContainerPreview3DCanvas.jsx
  * Purpose: Photorealistic Three.js / React Three Fiber engine for Cocoveera B2B 3D Cargo Visualizer.
- * Features procedural PBR materials, 9 category-specific industrial models, realistic wooden pallets, and realistic shipping container details.
+ * Features 11 Master Category Product Templates, realistic wooden pallets, and realistic shipping container details.
  */
 import React, { useRef, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -52,7 +52,7 @@ function generateProceduralTexture(type = 'coir') {
       ctx.lineTo(x + Math.sin(i) * 10, 256);
       ctx.stroke();
     }
-  } else if (type === 'geotextile') {
+  } else if (type === 'geotextile' || type === 'net') {
     // Woven coir netting grid texture
     ctx.fillStyle = '#6B4226';
     ctx.fillRect(0, 0, 256, 256);
@@ -84,28 +84,45 @@ function generateProceduralTexture(type = 'coir') {
   return texture;
 }
 
-// Category Resolver Helper
+// Category Resolver Helper (Mapping 11 Master Categories)
 function getCategoryType(categoryName = '', productName = '') {
   const nameStr = (categoryName + ' ' + productName).toLowerCase();
   
+  if (nameStr.includes('blueberry') || nameStr.includes('disc')) return 'blueberry_disc';
+  if (nameStr.includes('substrate bag') || nameStr.includes('substratebag')) return 'substrate_bag';
   if (nameStr.includes('grow bag') || nameStr.includes('growbag')) {
     if (nameStr.includes('open top') || nameStr.includes('opentop')) return 'open_top_grow_bag';
     return 'grow_bag';
   }
   if (nameStr.includes('rope') || nameStr.includes('curled')) return 'curled_rope';
   if (nameStr.includes('bale') || nameStr.includes('fibre bale')) return 'coir_bale';
+  if (nameStr.includes('blanket')) return 'erosion_blanket';
+  if (nameStr.includes('net') || nameStr.includes('erosion control net')) return 'erosion_net';
+  if (nameStr.includes('log') || nameStr.includes('erosion control log')) return 'coir_log';
   if (nameStr.includes('cube')) return 'coco_cubes';
   if (nameStr.includes('briquette') || nameStr.includes('brick')) return 'briquette';
   if (nameStr.includes('geotextile') || nameStr.includes('mat') || nameStr.includes('roll')) return 'geotextile_roll';
-  if (nameStr.includes('log')) return 'coir_log';
   return 'cocopeat_block';
 }
 
 // ----------------------------------------------------
-// 1. PHOTOREALISTIC CATEGORY 3D MODELS (9 UNIQUE MODELS)
+// 1. PHOTOREALISTIC CATEGORY 3D MODELS (11 MASTER TEMPLATES)
 // ----------------------------------------------------
 
-// 1. Cocopeat Block (Compressed 5KG Block with Plastic Strapping Bands)
+// 01. Coco Cubes (Compact Cube Matrix)
+function CocoCubesMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('block'), []);
+  const cubeGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
+  const cubeMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#3D2314',
+    roughness: 0.85,
+  }), [mapTex]);
+
+  return <mesh geometry={cubeGeo} material={cubeMat} castShadow receiveShadow />;
+}
+
+// 02. Cocopeat Blocks (Compressed 5KG Block with Dual Strapping Bands)
 function CocopeatBlockMesh({ dims }) {
   const mapTex = useMemo(() => generateProceduralTexture('block'), []);
   const blockGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
@@ -117,7 +134,7 @@ function CocopeatBlockMesh({ dims }) {
   }), [mapTex]);
 
   const strapMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#1A1A1A', // Heavy plastic strap
+    color: '#1A1A1A',
     roughness: 0.3,
     metalness: 0.2,
   }), []);
@@ -125,7 +142,6 @@ function CocopeatBlockMesh({ dims }) {
   return (
     <group>
       <mesh geometry={blockGeo} material={blockMat} castShadow receiveShadow />
-      {/* Dual Strapping Bands */}
       <mesh position={[-dims[0] * 0.25, 0, 0]}>
         <boxGeometry args={[0.015, dims[1] + 0.002, dims[2] + 0.002]} />
         <primitive object={strapMat} attach="material" />
@@ -138,29 +154,56 @@ function CocopeatBlockMesh({ dims }) {
   );
 }
 
-// 2. Grow Bag (Soft UV Treated White Bag with Branding Accent & Dark Top Soil)
+// 03. Coir Fibre Bales (Rectangular Bale with 3 Heavy Straps)
+function CoirBaleMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('bale'), []);
+  const baleGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
+  const baleMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#A06D3B',
+    roughness: 0.95,
+  }), [mapTex]);
+
+  const strapMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#E6B800',
+    roughness: 0.3,
+    metalness: 0.1,
+  }), []);
+
+  return (
+    <group>
+      <mesh geometry={baleGeo} material={baleMat} castShadow receiveShadow />
+      {[-0.3, 0, 0.3].map((offset, idx) => (
+        <mesh key={idx} position={[dims[0] * offset, 0, 0]}>
+          <boxGeometry args={[0.02, dims[1] + 0.003, dims[2] + 0.003]} />
+          <primitive object={strapMat} attach="material" />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// 04. Grow Bags (White UV Soft Bag with Soil Top & Green Accent)
 function GrowBagMesh({ dims }) {
   const bagGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
   const bagMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#F5F5F0', // Matte UV Treated White Bag
+    color: '#F5F5F0',
     roughness: 0.35,
     metalness: 0.02,
   }), []);
 
   const brandMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#2E7D32', // Cocoveera Green Brand Accent
+    color: '#2E7D32',
     roughness: 0.4,
   }), []);
 
   return (
     <group>
       <mesh geometry={bagGeo} material={bagMat} castShadow receiveShadow />
-      {/* Top Soil Substrate Opening */}
       <mesh position={[0, dims[1] / 2 + 0.003, 0]}>
         <planeGeometry args={[dims[0] * 0.92, dims[2] * 0.92]} />
         <meshStandardMaterial color="#2B1810" roughness={0.9} />
       </mesh>
-      {/* Printed Brand Line Accent */}
       <mesh position={[0, 0, dims[2] / 2 + 0.002]}>
         <planeGeometry args={[dims[0] * 0.8, dims[1] * 0.25]} />
         <primitive object={brandMat} attach="material" />
@@ -169,7 +212,31 @@ function GrowBagMesh({ dims }) {
   );
 }
 
-// 3. Curled Coir Rope (Helical Coir Coil with Core Hole & Fiber Texture)
+// 05. Substrate Bags (Filled White Bag with Printed Brand & Emblem)
+function SubstrateBagMesh({ dims }) {
+  const bagGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
+  const bagMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#FAFAFA',
+    roughness: 0.3,
+  }), []);
+
+  const brandMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#1B5E20',
+    roughness: 0.4,
+  }), []);
+
+  return (
+    <group>
+      <mesh geometry={bagGeo} material={bagMat} castShadow receiveShadow />
+      <mesh position={[0, 0, dims[2] / 2 + 0.002]}>
+        <planeGeometry args={[dims[0] * 0.75, dims[1] * 0.4]} />
+        <primitive object={brandMat} attach="material" />
+      </mesh>
+    </group>
+  );
+}
+
+// 06. Curled Coir Rope (Helical Coir Coil with Core Opening)
 function CurledRopeMesh({ dims }) {
   const mapTex = useMemo(() => generateProceduralTexture('rope'), []);
   const radius = Math.min(dims[0], dims[2]) / 2;
@@ -183,7 +250,6 @@ function CurledRopeMesh({ dims }) {
   return (
     <group>
       <mesh geometry={cylinderGeo} material={ropeMat} castShadow receiveShadow />
-      {/* Center Core Opening */}
       <mesh position={[0, 0.001, 0]}>
         <cylinderGeometry args={[radius * 0.35, radius * 0.35, dims[1] + 0.004, 16]} />
         <meshStandardMaterial color="#3D2109" roughness={0.95} />
@@ -192,65 +258,9 @@ function CurledRopeMesh({ dims }) {
   );
 }
 
-// 4. Coir Fibre Bale (Golden Coir Fibre Bale with Heavy Yellow Bands)
-function CoirBaleMesh({ dims }) {
-  const mapTex = useMemo(() => generateProceduralTexture('bale'), []);
-  const baleGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const baleMat = useMemo(() => new THREE.MeshStandardMaterial({
-    map: mapTex,
-    color: '#A06D3B',
-    roughness: 0.95,
-  }), [mapTex]);
-
-  const strapMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#E6B800', // Yellow Export Strapping Band
-    roughness: 0.3,
-    metalness: 0.1,
-  }), []);
-
-  return (
-    <group>
-      <mesh geometry={baleGeo} material={baleMat} castShadow receiveShadow />
-      {/* 3 Heavy Duty Strapping Bands */}
-      {[-0.3, 0, 0.3].map((offset, idx) => (
-        <mesh key={idx} position={[dims[0] * offset, 0, 0]}>
-          <boxGeometry args={[0.02, dims[1] + 0.003, dims[2] + 0.003]} />
-          <primitive object={strapMat} attach="material" />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-// 5. Coco Cubes (Compact Matrix of Bevelled Cubes)
-function CocoCubesMesh({ dims }) {
-  const mapTex = useMemo(() => generateProceduralTexture('block'), []);
-  const cubeGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const cubeMat = useMemo(() => new THREE.MeshStandardMaterial({
-    map: mapTex,
-    color: '#3D2314',
-    roughness: 0.85,
-  }), [mapTex]);
-
-  return <mesh geometry={cubeGeo} material={cubeMat} castShadow receiveShadow />;
-}
-
-// 6. Coir Briquettes (Brick Arrangement)
-function BriquetteMesh({ dims }) {
-  const mapTex = useMemo(() => generateProceduralTexture('block'), []);
-  const brickGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const brickMat = useMemo(() => new THREE.MeshStandardMaterial({
-    map: mapTex,
-    color: '#5C3818',
-    roughness: 0.8,
-  }), [mapTex]);
-
-  return <mesh geometry={brickGeo} material={brickMat} castShadow receiveShadow />;
-}
-
-// 7. Geotextile Rolls (Woven Coir Fabric Roll Cylinder)
-function GeotextileRollMesh({ dims }) {
-  const mapTex = useMemo(() => generateProceduralTexture('geotextile'), []);
+// 07. Erosion Control Nets & Logs (Horizontal Rolled Coir Netting)
+function ErosionNetMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('net'), []);
   const radius = dims[1] / 2;
   const rollGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[0], 24), [radius, dims]);
   const rollMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -264,26 +274,48 @@ function GeotextileRollMesh({ dims }) {
   );
 }
 
-// 8. Open Top Grow Bag
-function OpenTopBagMesh({ dims }) {
-  const bagGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const bagMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#1E1E1E', // Black UV Bag
-    roughness: 0.4,
+// 08. Blueberry Discs (Round Compressed Discs Stacked Vertically)
+function BlueberryDiscMesh({ dims }) {
+  const radius = Math.min(dims[0], dims[2]) / 2;
+  const discGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[1], 24), [radius, dims]);
+  const discMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#4A2C11',
+    roughness: 0.85,
   }), []);
 
+  return <mesh geometry={discGeo} material={discMat} castShadow receiveShadow />;
+}
+
+// 09. Erosion Control Blankets (Rolled Coir Blanket Mat)
+function ErosionBlanketMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('geotextile'), []);
+  const radius = dims[1] / 2;
+  const rollGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[0], 24), [radius, dims]);
+  const rollMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#5C3A1E',
+    roughness: 0.9,
+  }), [mapTex]);
+
   return (
-    <group>
-      <mesh geometry={bagGeo} material={bagMat} castShadow receiveShadow />
-      <mesh position={[0, dims[1] / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[dims[0] * 0.94, dims[2] * 0.94]} />
-        <meshStandardMaterial color="#3B2219" roughness={0.95} />
-      </mesh>
-    </group>
+    <mesh geometry={rollGeo} material={rollMat} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow />
   );
 }
 
-// 9. Coir Log (Woven Netting Log with Rope Binding Rings)
+// 10. Briquettes (Compressed Brick Shape Layout)
+function BriquetteMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('block'), []);
+  const brickGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
+  const brickMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#5C3818',
+    roughness: 0.8,
+  }), [mapTex]);
+
+  return <mesh geometry={brickGeo} material={brickMat} castShadow receiveShadow />;
+}
+
+// 11. Coir Logs (Cylindrical Log with Rope Binding Rings)
 function CoirLogMesh({ dims }) {
   const radius = dims[1] / 2;
   const logGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[0], 24), [radius, dims]);
@@ -300,7 +332,6 @@ function CoirLogMesh({ dims }) {
   return (
     <group rotation={[0, 0, Math.PI / 2]}>
       <mesh geometry={logGeo} material={logMat} castShadow receiveShadow />
-      {/* 4 Rope Binding Rings */}
       {[-0.35, -0.12, 0.12, 0.35].map((offset, idx) => (
         <mesh key={idx} position={[0, dims[0] * offset, 0]}>
           <cylinderGeometry args={[radius + 0.003, radius + 0.003, 0.02, 24]} />
@@ -311,23 +342,28 @@ function CoirLogMesh({ dims }) {
   );
 }
 
-// Universal Model Selector Router
+// Universal Model Selector Router (11 Master Category Templates)
 function UniversalProductItem({ categoryType, dims }) {
   switch (categoryType) {
-    case 'grow_bag':
-      return <GrowBagMesh dims={dims} />;
-    case 'curled_rope':
-      return <CurledRopeMesh dims={dims} />;
-    case 'coir_bale':
-      return <CoirBaleMesh dims={dims} />;
     case 'coco_cubes':
       return <CocoCubesMesh dims={dims} />;
+    case 'coir_bale':
+      return <CoirBaleMesh dims={dims} />;
+    case 'grow_bag':
+      return <GrowBagMesh dims={dims} />;
+    case 'substrate_bag':
+      return <SubstrateBagMesh dims={dims} />;
+    case 'curled_rope':
+      return <CurledRopeMesh dims={dims} />;
+    case 'erosion_net':
+    case 'geotextile_roll':
+      return <ErosionNetMesh dims={dims} />;
+    case 'blueberry_disc':
+      return <BlueberryDiscMesh dims={dims} />;
+    case 'erosion_blanket':
+      return <ErosionBlanketMesh dims={dims} />;
     case 'briquette':
       return <BriquetteMesh dims={dims} />;
-    case 'geotextile_roll':
-      return <GeotextileRollMesh dims={dims} />;
-    case 'open_top_grow_bag':
-      return <OpenTopBagMesh dims={dims} />;
     case 'coir_log':
       return <CoirLogMesh dims={dims} />;
     case 'cocopeat_block':
@@ -538,7 +574,6 @@ function CameraController({ cameraPreset, autoRotate, oscillate }) {
     }
   }, [cameraPreset, camera]);
 
-  // Oscillate sway animation around front-right perspective angle (without 360 degree spin)
   useFrame((state) => {
     if (oscillate) {
       const time = state.clock.getElapsedTime();
@@ -586,9 +621,8 @@ export default function ContainerPreview3DCanvas({
     const list = [];
     const depth = containerType === '20FT' ? 6.0 : 12.0;
     const rowStride = 1.05;
-    const startZ = -depth / 2 + 0.6; // Back wall clearance
+    const startZ = -depth / 2 + 0.6;
 
-    // Prepare list of items to place
     const activeItems = (palletItems && palletItems.length > 0) 
       ? palletItems.filter(item => item.quantity > 0)
       : (product && totalQuantity > 0 ? [{ product, quantity: totalQuantity }] : []);
