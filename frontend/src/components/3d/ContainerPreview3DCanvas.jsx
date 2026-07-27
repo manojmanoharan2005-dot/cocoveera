@@ -1,14 +1,90 @@
 /**
  * File: frontend/src/components/3d/ContainerPreview3DCanvas.jsx
- * Purpose: Three.js / React Three Fiber viewport engine for the Enterprise 3D Container Visualizer.
- * Supports realistic shipping containers (20FT, 40FT, 40HC), PBR materials, 9 unique category 3D models, and smooth camera views.
+ * Purpose: Photorealistic Three.js / React Three Fiber engine for Cocoveera B2B 3D Cargo Visualizer.
+ * Features procedural PBR materials, 9 category-specific industrial models, realistic wooden pallets, and realistic shipping container details.
  */
 import React, { useRef, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Category Stacking & Model Resolver Helper
+// ----------------------------------------------------
+// PROCEDURAL CANVAS TEXTURE GENERATOR (SUB-MILLISECOND PBR MAPS)
+// ----------------------------------------------------
+function generateProceduralTexture(type = 'coir') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  if (type === 'bale') {
+    // Golden coir fibre strands with random directional noise
+    ctx.fillStyle = '#A06D3B';
+    ctx.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 700; i++) {
+      ctx.strokeStyle = i % 2 === 0 ? '#C28E58' : '#73461D';
+      ctx.lineWidth = 1 + Math.random() * 2;
+      ctx.beginPath();
+      const x = Math.random() * 256;
+      const y = Math.random() * 256;
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + (Math.random() - 0.5) * 45, y + (Math.random() - 0.5) * 45);
+      ctx.stroke();
+    }
+  } else if (type === 'rope') {
+    // Twisted rope helical strands
+    ctx.fillStyle = '#8B5A2B';
+    ctx.fillRect(0, 0, 256, 256);
+    for (let y = 0; y < 256; y += 12) {
+      ctx.fillStyle = y % 24 === 0 ? '#A67342' : '#6B3E19';
+      ctx.fillRect(0, y, 256, 6);
+    }
+  } else if (type === 'wood') {
+    // Wooden pallet grain texture
+    ctx.fillStyle = '#C2A682';
+    ctx.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 250; i++) {
+      ctx.strokeStyle = '#947653';
+      ctx.lineWidth = 0.5 + Math.random();
+      ctx.beginPath();
+      const x = Math.random() * 256;
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + Math.sin(i) * 10, 256);
+      ctx.stroke();
+    }
+  } else if (type === 'geotextile') {
+    // Woven coir netting grid texture
+    ctx.fillStyle = '#6B4226';
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = '#4A2A14';
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 256; i += 16) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, 256);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, i);
+      ctx.lineTo(256, i);
+      ctx.stroke();
+    }
+  } else {
+    // Earthy peat block brown with fine fibrous speckles
+    ctx.fillStyle = '#4A2C11';
+    ctx.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 800; i++) {
+      ctx.fillStyle = i % 3 === 0 ? '#6E4522' : '#2D1808';
+      ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  return texture;
+}
+
+// Category Resolver Helper
 function getCategoryType(categoryName = '', productName = '') {
   const nameStr = (categoryName + ' ' + productName).toLowerCase();
   
@@ -22,115 +98,166 @@ function getCategoryType(categoryName = '', productName = '') {
   if (nameStr.includes('briquette') || nameStr.includes('brick')) return 'briquette';
   if (nameStr.includes('geotextile') || nameStr.includes('mat') || nameStr.includes('roll')) return 'geotextile_roll';
   if (nameStr.includes('log')) return 'coir_log';
-  return 'cocopeat_block'; // Default compressed block
+  return 'cocopeat_block';
 }
 
 // ----------------------------------------------------
-// 1. PROCEDURAL CATEGORY 3D MODEL COMPONENTS (9 UNIQUE MODELS)
+// 1. PHOTOREALISTIC CATEGORY 3D MODELS (9 UNIQUE MODELS)
 // ----------------------------------------------------
 
-// 1. Cocopeat Block (Square compressed coir block with grid texture & strapping)
+// 1. Cocopeat Block (Compressed 5KG Block with Plastic Strapping Bands)
 function CocopeatBlockMesh({ dims }) {
-  const geometry = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const material = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#4A2C11', // Rich earthy coconut brown
-      roughness: 0.85,
-      metalness: 0.1,
-    });
-  }, []);
+  const mapTex = useMemo(() => generateProceduralTexture('block'), []);
+  const blockGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
+  const blockMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#4A2C11',
+    roughness: 0.85,
+    metalness: 0.05,
+  }), [mapTex]);
 
-  return <mesh geometry={geometry} material={material} castShadow receiveShadow />;
-}
-
-// 2. Grow Bag (Soft white UV bag with dark soil substrate inside)
-function GrowBagMesh({ dims }) {
-  const bagGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const bagMat = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#F4F4F0', // White UV treated plastic
-      roughness: 0.4,
-      metalness: 0.05,
-    });
-  }, []);
+  const strapMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#1A1A1A', // Heavy plastic strap
+    roughness: 0.3,
+    metalness: 0.2,
+  }), []);
 
   return (
     <group>
-      <mesh geometry={bagGeo} material={bagMat} castShadow receiveShadow />
-      {/* Top opening accent */}
-      <mesh position={[0, dims[1] / 2 + 0.005, 0]}>
-        <planeGeometry args={[dims[0] * 0.9, dims[2] * 0.9]} />
-        <meshStandardMaterial color="#2B1810" roughness={0.9} />
+      <mesh geometry={blockGeo} material={blockMat} castShadow receiveShadow />
+      {/* Dual Strapping Bands */}
+      <mesh position={[-dims[0] * 0.25, 0, 0]}>
+        <boxGeometry args={[0.015, dims[1] + 0.002, dims[2] + 0.002]} />
+        <primitive object={strapMat} attach="material" />
+      </mesh>
+      <mesh position={[dims[0] * 0.25, 0, 0]}>
+        <boxGeometry args={[0.015, dims[1] + 0.002, dims[2] + 0.002]} />
+        <primitive object={strapMat} attach="material" />
       </mesh>
     </group>
   );
 }
 
-// 3. Curled Coir Rope (Cylindrical coil model)
+// 2. Grow Bag (Soft UV Treated White Bag with Branding Accent & Dark Top Soil)
+function GrowBagMesh({ dims }) {
+  const bagGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
+  const bagMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#F5F5F0', // Matte UV Treated White Bag
+    roughness: 0.35,
+    metalness: 0.02,
+  }), []);
+
+  const brandMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#2E7D32', // Cocoveera Green Brand Accent
+    roughness: 0.4,
+  }), []);
+
+  return (
+    <group>
+      <mesh geometry={bagGeo} material={bagMat} castShadow receiveShadow />
+      {/* Top Soil Substrate Opening */}
+      <mesh position={[0, dims[1] / 2 + 0.003, 0]}>
+        <planeGeometry args={[dims[0] * 0.92, dims[2] * 0.92]} />
+        <meshStandardMaterial color="#2B1810" roughness={0.9} />
+      </mesh>
+      {/* Printed Brand Line Accent */}
+      <mesh position={[0, 0, dims[2] / 2 + 0.002]}>
+        <planeGeometry args={[dims[0] * 0.8, dims[1] * 0.25]} />
+        <primitive object={brandMat} attach="material" />
+      </mesh>
+    </group>
+  );
+}
+
+// 3. Curled Coir Rope (Helical Coir Coil with Core Hole & Fiber Texture)
 function CurledRopeMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('rope'), []);
   const radius = Math.min(dims[0], dims[2]) / 2;
-  const cylinderGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[1], 16), [radius, dims]);
-  const ropeMat = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#8B5A2B', // Golden brown coir fiber
-      roughness: 0.9,
-      metalness: 0.0,
-    });
-  }, []);
+  const cylinderGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[1], 24), [radius, dims]);
+  const ropeMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#8B5A2B',
+    roughness: 0.9,
+  }), [mapTex]);
 
-  return <mesh geometry={cylinderGeo} material={ropeMat} castShadow receiveShadow />;
+  return (
+    <group>
+      <mesh geometry={cylinderGeo} material={ropeMat} castShadow receiveShadow />
+      {/* Center Core Opening */}
+      <mesh position={[0, 0.001, 0]}>
+        <cylinderGeometry args={[radius * 0.35, radius * 0.35, dims[1] + 0.004, 16]} />
+        <meshStandardMaterial color="#3D2109" roughness={0.95} />
+      </mesh>
+    </group>
+  );
 }
 
-// 4. Coir Fibre Bale (Large compressed rectangular bale bound with plastic bands)
+// 4. Coir Fibre Bale (Golden Coir Fibre Bale with Heavy Yellow Bands)
 function CoirBaleMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('bale'), []);
   const baleGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const baleMat = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#A06D3B', // Natural golden coir
-      roughness: 0.95,
-      metalness: 0.0,
-    });
-  }, []);
+  const baleMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#A06D3B',
+    roughness: 0.95,
+  }), [mapTex]);
 
-  return <mesh geometry={baleGeo} material={baleMat} castShadow receiveShadow />;
+  const strapMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#E6B800', // Yellow Export Strapping Band
+    roughness: 0.3,
+    metalness: 0.1,
+  }), []);
+
+  return (
+    <group>
+      <mesh geometry={baleGeo} material={baleMat} castShadow receiveShadow />
+      {/* 3 Heavy Duty Strapping Bands */}
+      {[-0.3, 0, 0.3].map((offset, idx) => (
+        <mesh key={idx} position={[dims[0] * offset, 0, 0]}>
+          <boxGeometry args={[0.02, dims[1] + 0.003, dims[2] + 0.003]} />
+          <primitive object={strapMat} attach="material" />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
-// 5. Coco Cubes (Compact cube grid matrix)
+// 5. Coco Cubes (Compact Matrix of Bevelled Cubes)
 function CocoCubesMesh({ dims }) {
-  const boxGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const cubeMat = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#3D2314',
-      roughness: 0.8,
-    });
-  }, []);
+  const mapTex = useMemo(() => generateProceduralTexture('block'), []);
+  const cubeGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
+  const cubeMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#3D2314',
+    roughness: 0.85,
+  }), [mapTex]);
 
-  return <mesh geometry={boxGeo} material={cubeMat} castShadow receiveShadow />;
+  return <mesh geometry={cubeGeo} material={cubeMat} castShadow receiveShadow />;
 }
 
-// 6. Coir Briquettes (Brick style arrangement)
+// 6. Coir Briquettes (Brick Arrangement)
 function BriquetteMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('block'), []);
   const brickGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const brickMat = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#5C3818',
-      roughness: 0.75,
-    });
-  }, []);
+  const brickMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#5C3818',
+    roughness: 0.8,
+  }), [mapTex]);
 
   return <mesh geometry={brickGeo} material={brickMat} castShadow receiveShadow />;
 }
 
-// 7. Geotextile Rolls (Horizontal roll cylinder)
+// 7. Geotextile Rolls (Woven Coir Fabric Roll Cylinder)
 function GeotextileRollMesh({ dims }) {
+  const mapTex = useMemo(() => generateProceduralTexture('geotextile'), []);
   const radius = dims[1] / 2;
-  const rollGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[0], 16), [radius, dims]);
-  const rollMat = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#6B4226',
-      roughness: 0.85,
-    });
-  }, []);
+  const rollGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[0], 24), [radius, dims]);
+  const rollMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: mapTex,
+    color: '#6B4226',
+    roughness: 0.9,
+  }), [mapTex]);
 
   return (
     <mesh geometry={rollGeo} material={rollMat} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow />
@@ -140,36 +267,48 @@ function GeotextileRollMesh({ dims }) {
 // 8. Open Top Grow Bag
 function OpenTopBagMesh({ dims }) {
   const bagGeo = useMemo(() => new THREE.BoxGeometry(dims[0], dims[1], dims[2]), [dims]);
-  const bagMat = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#1E1E1E', // Black UV grow bag
-      roughness: 0.5,
-    });
-  }, []);
+  const bagMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#1E1E1E', // Black UV Bag
+    roughness: 0.4,
+  }), []);
 
   return (
     <group>
       <mesh geometry={bagGeo} material={bagMat} castShadow receiveShadow />
-      <mesh position={[0, dims[1] / 2 + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[dims[0] * 0.95, dims[2] * 0.95]} />
+      <mesh position={[0, dims[1] / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[dims[0] * 0.94, dims[2] * 0.94]} />
         <meshStandardMaterial color="#3B2219" roughness={0.95} />
       </mesh>
     </group>
   );
 }
 
-// 9. Coir Log (Long erosion log)
+// 9. Coir Log (Woven Netting Log with Rope Binding Rings)
 function CoirLogMesh({ dims }) {
   const radius = dims[1] / 2;
-  const logGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[0], 16), [radius, dims]);
-  const logMat = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#70441E',
-      roughness: 0.9,
-    });
-  }, []);
+  const logGeo = useMemo(() => new THREE.CylinderGeometry(radius, radius, dims[0], 24), [radius, dims]);
+  const logMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#70441E',
+    roughness: 0.95,
+  }), []);
 
-  return <mesh geometry={logGeo} material={logMat} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow />;
+  const ringMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#3D2109',
+    roughness: 0.9,
+  }), []);
+
+  return (
+    <group rotation={[0, 0, Math.PI / 2]}>
+      <mesh geometry={logGeo} material={logMat} castShadow receiveShadow />
+      {/* 4 Rope Binding Rings */}
+      {[-0.35, -0.12, 0.12, 0.35].map((offset, idx) => (
+        <mesh key={idx} position={[0, dims[0] * offset, 0]}>
+          <cylinderGeometry args={[radius + 0.003, radius + 0.003, 0.02, 24]} />
+          <primitive object={ringMat} attach="material" />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
 // Universal Model Selector Router
@@ -198,12 +337,14 @@ function UniversalProductItem({ categoryType, dims }) {
 }
 
 // ----------------------------------------------------
-// 2. WOODEN PALLET WITH STACKED PRODUCTS
+// 2. PHOTOREALISTIC WOODEN PALLET WITH STACKED PRODUCTS
 // ----------------------------------------------------
 function PalletWithStack({ position, categoryType, itemDims }) {
   const palletWidth = 1.05;
   const palletDepth = 1.05;
   const palletHeight = 0.14;
+
+  const woodTex = useMemo(() => generateProceduralTexture('wood'), []);
 
   // Compute how many items fit on pallet
   const [l, w, h] = itemDims;
@@ -214,13 +355,34 @@ function PalletWithStack({ position, categoryType, itemDims }) {
   const startX = -((itemsX - 1) * l) / 2;
   const startZ = -((itemsZ - 1) * w) / 2;
 
+  const woodMat = useMemo(() => new THREE.MeshStandardMaterial({
+    map: woodTex,
+    color: '#C2A682',
+    roughness: 0.75,
+    metalness: 0.02,
+  }), [woodTex]);
+
   return (
     <group position={position}>
-      {/* Wooden Pallet Base */}
-      <mesh position={[0, palletHeight / 2, 0]} receiveShadow castShadow>
-        <boxGeometry args={[palletWidth, palletHeight, palletDepth]} />
-        <meshStandardMaterial color="#C2A682" roughness={0.7} metalness={0.05} />
-      </mesh>
+      {/* Photorealistic Wooden Pallet Base with Planks */}
+      <group position={[0, palletHeight / 2, 0]}>
+        {/* Top Deck Planks */}
+        {[-0.42, -0.21, 0, 0.21, 0.42].map((xOffset, idx) => (
+          <mesh key={idx} position={[xOffset, 0.05, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.18, 0.025, palletDepth]} />
+            <primitive object={woodMat} attach="material" />
+          </mesh>
+        ))}
+        {/* Bottom Stringer Blocks */}
+        {[-0.45, 0, 0.45].map((xOff, i1) => (
+          [-0.45, 0, 0.45].map((zOff, i2) => (
+            <mesh key={`${i1}-${i2}`} position={[xOff, -0.03, zOff]} castShadow receiveShadow>
+              <boxGeometry args={[0.12, 0.08, 0.12]} />
+              <primitive object={woodMat} attach="material" />
+            </mesh>
+          ))
+        ))}
+      </group>
 
       {/* Stacked Product Units */}
       {Array.from({ length: layersY }).map((_, ly) => (
@@ -253,7 +415,7 @@ function ShippingContainer({ containerType, isTransparent, doorOpen }) {
   // Container Body Material
   const steelMat = useMemo(() => {
     return new THREE.MeshStandardMaterial({
-      color: '#1B5E20', // Cocoveera Industrial Forest Green Paint
+      color: '#154318', // Cocoveera Industrial Forest Green Paint
       roughness: 0.35,
       metalness: 0.5,
       transparent: isTransparent,
@@ -380,7 +542,7 @@ function CameraController({ cameraPreset, autoRotate, oscillate }) {
   useFrame((state) => {
     if (oscillate) {
       const time = state.clock.getElapsedTime();
-      const angle = Math.sin(time * 0.35) * 0.28; // Subtle oscillation around front-right angle
+      const angle = Math.sin(time * 0.35) * 0.28;
       camera.position.x = Math.sin(angle + 0.65) * 6.5;
       camera.position.z = Math.cos(angle + 0.65) * 6.5;
       camera.lookAt(0, 1.1, 0);
@@ -394,7 +556,7 @@ function CameraController({ cameraPreset, autoRotate, oscillate }) {
       autoRotateSpeed={0.8}
       enableDamping
       dampingFactor={0.05}
-      maxPolarAngle={Math.PI / 2 - 0.05} // Prevent camera from rotating underneath ground
+      maxPolarAngle={Math.PI / 2 - 0.05}
       minDistance={1.5}
       maxDistance={25}
     />
@@ -489,7 +651,7 @@ export default function ContainerPreview3DCanvas({
       />
       <pointLight position={[-10, 10, -10]} intensity={0.6} />
 
-      {/* Studio Environment HDRI Lighting (Downloaded only in Fullscreen Mode for instant mini load) */}
+      {/* Studio Environment HDRI Lighting */}
       {!isMini && <Environment preset="city" />}
 
       {/* Shipping Container */}
