@@ -60,8 +60,6 @@ const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const AdminCurrencyManagement = lazy(() => import('./pages/AdminCurrencyManagement'));
 const AdminShippingManagement = lazy(() => import('./pages/AdminShippingManagement'));
 const AdminDiscounts = lazy(() => import('./pages/AdminDiscounts'));
-const ContainerViewerDemo = lazy(() => import('./pages/ContainerViewerDemo'));
-const ContainerPreviewPage = lazy(() => import('./pages/ContainerPreviewPage'));
 const AdminQuoteRequests = lazy(() => import('./pages/admin/AdminQuoteRequests'));
 const AdminQuoteRequestDetails = lazy(() => import('./pages/admin/AdminQuoteRequestDetails'));
 
@@ -298,8 +296,6 @@ function AppContent() {
       <Routes>
         {/* Fullscreen Immerse Routes */}
         <Route path="/welcome" element={<Onboarding />} />
-        <Route path="/container-preview/:productSlug" element={<ContainerPreviewPage />} />
-        <Route path="/container-preview" element={<ContainerPreviewPage />} />
 
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
@@ -310,7 +306,6 @@ function AppContent() {
           <Route path="/quality-testing" element={<QualityTesting />} />
           <Route path="/substrates" element={<CoconutSubstrates />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/containers/viewer" element={<ContainerViewerDemo />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
           
