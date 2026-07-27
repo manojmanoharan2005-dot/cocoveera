@@ -24,20 +24,83 @@ const ProductView = () => {
   const location = useLocation();
   const { user, fetchProfile, toggleWishlist } = useAuth();
 
-  // State management
+  // State management with sessionStorage persistence across 3D Viewer navigation
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [quantity, setQuantity] = useState(0.00);
+  const [quantity, setQuantity] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(`cocoveera_qty_${id}`);
+      return saved !== null ? parseFloat(saved) : 0.00;
+    } catch (e) {
+      return 0.00;
+    }
+  });
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const isWishlisted = user?.wishlist?.some(item => (item._id || item) === product?._id) || false;
   const [actionLoading, setActionLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState('');
-  const [containerType, setContainerType] = useState('20FT');
+  const [containerType, setContainerType] = useState(() => {
+    try {
+      return sessionStorage.getItem(`cocoveera_type_${id}`) || '20FT';
+    } catch (e) {
+      return '20FT';
+    }
+  });
   const [showConfigurator, setShowConfigurator] = useState(true);
-  const [extraItems, setExtraItems] = useState([]);
+  const [extraItems, setExtraItems] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(`cocoveera_extra_${id}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // Sync state with sessionStorage when ID changes or state updates
+  useEffect(() => {
+    if (id) {
+      try {
+        sessionStorage.setItem(`cocoveera_qty_${id}`, quantity);
+        sessionStorage.setItem(`cocoveera_type_${id}`, containerType);
+        sessionStorage.setItem(`cocoveera_extra_${id}`, JSON.stringify(extraItems));
+
+        if (product) {
+          if (product.slug) {
+            sessionStorage.setItem(`cocoveera_qty_${product.slug}`, quantity);
+            sessionStorage.setItem(`cocoveera_type_${product.slug}`, containerType);
+            sessionStorage.setItem(`cocoveera_extra_${product.slug}`, JSON.stringify(extraItems));
+          }
+          if (product._id) {
+            sessionStorage.setItem(`cocoveera_qty_${product._id}`, quantity);
+            sessionStorage.setItem(`cocoveera_type_${product._id}`, containerType);
+            sessionStorage.setItem(`cocoveera_extra_${product._id}`, JSON.stringify(extraItems));
+          }
+        }
+      } catch (e) {}
+    }
+  }, [id, quantity, containerType, extraItems, product]);
+
+  useEffect(() => {
+    if (id) {
+      try {
+        const savedQty = sessionStorage.getItem(`cocoveera_qty_${id}`);
+        if (savedQty !== null) {
+          setQuantity(parseFloat(savedQty));
+        }
+        const savedType = sessionStorage.getItem(`cocoveera_type_${id}`);
+        if (savedType) {
+          setContainerType(savedType);
+        }
+        const savedExtra = sessionStorage.getItem(`cocoveera_extra_${id}`);
+        if (savedExtra) {
+          setExtraItems(JSON.parse(savedExtra));
+        }
+      } catch (e) {}
+    }
+  }, [id]);
 
   // Fullscreen Lightbox gallery states
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
@@ -250,6 +313,22 @@ Timestamp: ${new Date().toLocaleString()}
           setProduct(fetchedProduct);
           setExpandedCategory(fetchedProduct.category);
           
+          // Restore saved quantities for this product slug/_id
+          try {
+            const savedQty = sessionStorage.getItem(`cocoveera_qty_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_qty_${fetchedProduct._id}`);
+            if (savedQty !== null) {
+              setQuantity(parseFloat(savedQty));
+            }
+            const savedType = sessionStorage.getItem(`cocoveera_type_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_type_${fetchedProduct._id}`);
+            if (savedType) {
+              setContainerType(savedType);
+            }
+            const savedExtra = sessionStorage.getItem(`cocoveera_extra_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_extra_${fetchedProduct._id}`);
+            if (savedExtra) {
+              setExtraItems(JSON.parse(savedExtra));
+            }
+          } catch (e) {}
+
           if (relatedRes.data.success) {
             setRelatedProducts(relatedRes.data.data);
           }
@@ -276,17 +355,14 @@ Timestamp: ${new Date().toLocaleString()}
     fetchTestingPackages();
   }, [id, user]);
 
-  // Update 3D viewer state with a debounce so the UI (buttons/percentage bar) won't lag
+  // Update 3D viewer state instantly whenever quantity or extraItems changes
   useEffect(() => {
     if (!product) return;
     const currentTotalQty = quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0);
     const currentPalletItems = [{ product, quantity }, ...extraItems];
     
-    const t = setTimeout(() => {
-      setViewerQuantity(currentTotalQty);
-      setViewerPallets(currentPalletItems);
-    }, 250);
-    return () => clearTimeout(t);
+    setViewerQuantity(currentTotalQty);
+    setViewerPallets(currentPalletItems);
   }, [quantity, extraItems, product]);
 
   const handleWishlistToggle = async () => {
@@ -795,73 +871,12 @@ Timestamp: ${new Date().toLocaleString()}
                   transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden space-y-4 pt-2"
                 >
-                  {/* 3D Cargo Visualizer Card */}
-                  <div className="bg-white rounded-[24px] border border-stone-200/80 shadow-md overflow-hidden flex flex-col h-[440px] sm:h-[480px] relative">
-                    <div className="p-3.5 border-b border-stone-100 bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 text-white flex justify-between items-center shrink-0">
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <div>
-                          <h3 className="font-poppins font-black text-xs text-white uppercase tracking-wider block leading-tight">
-                            Live 3D Cargo Visualizer
-                          </h3>
-                          <span className="text-[9.5px] font-bold text-stone-300 block">
-                            {containerType} Cargo Configuration
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <button 
-                          onClick={() => setAutoRotate(!autoRotate)}
-                          className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase transition-colors ${
-                            autoRotate ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/10 text-stone-300'
-                          }`}
-                        >
-                          🔄 {autoRotate ? 'Rotate ON' : 'Rotate OFF'}
-                        </button>
-                        <button 
-                          onClick={() => setDoorOpen(!doorOpen)}
-                          className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase transition-colors ${
-                            doorOpen ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/10 text-stone-300'
-                          }`}
-                        >
-                          🚪 {doorOpen ? 'Close Door' : 'Open Door'}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="relative flex-1 w-full bg-[#F7F9F7]">
-                      <ContainerViewer3D 
-                        containerType={containerType} 
-                        totalQuantity={viewerQuantity} 
-                        autoRotate={autoRotate} 
-                        palletItems={viewerPallets} 
-                      />
-                    </div>
-                  </div>
-
-                  {/* Real-time Logistics Stats Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 bg-[#F7F9F7] rounded-[20px] border border-stone-200/60 shadow-sm text-center">
-                    <div className="p-2 bg-white rounded-xl border border-stone-200/70">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Space Used</span>
-                      <span className="text-xs font-black text-stone-900 font-poppins">{capacityPercentage}%</span>
-                    </div>
-                    <div className="p-2 bg-white rounded-xl border border-stone-200/70">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Pallets</span>
-                      <span className="text-xs font-black text-[#2E7D32] font-poppins">
-                        {Math.round(totalQuantity * (containerType === '20FT' ? 10 : 22))}
-                      </span>
-                    </div>
-                    <div className="p-2 bg-white rounded-xl border border-stone-200/70">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Pieces</span>
-                      <span className="text-xs font-black text-stone-900 font-poppins">{totalPieces.toLocaleString()}</span>
-                    </div>
-                    <div className="p-2 bg-white rounded-xl border border-stone-200/70">
-                      <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider block">Weight</span>
-                      <span className="text-xs font-black text-stone-900 font-poppins">
-                        {((product?.specifications?.weightVal || 22) * (totalQuantity || 1)).toFixed(1)} MT
-                      </span>
-                    </div>
-                  </div>
+                  <ContainerViewer3D 
+                    containerType={containerType} 
+                    totalQuantity={viewerQuantity} 
+                    product={product}
+                    palletItems={viewerPallets} 
+                  />
                 </motion.div>
               )}
             </AnimatePresence>

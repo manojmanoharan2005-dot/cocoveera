@@ -61,6 +61,7 @@ const AdminCurrencyManagement = lazy(() => import('./pages/AdminCurrencyManageme
 const AdminShippingManagement = lazy(() => import('./pages/AdminShippingManagement'));
 const AdminDiscounts = lazy(() => import('./pages/AdminDiscounts'));
 const ContainerViewerDemo = lazy(() => import('./pages/ContainerViewerDemo'));
+const ContainerPreviewPage = lazy(() => import('./pages/ContainerPreviewPage'));
 const AdminQuoteRequests = lazy(() => import('./pages/admin/AdminQuoteRequests'));
 const AdminQuoteRequestDetails = lazy(() => import('./pages/admin/AdminQuoteRequestDetails'));
 
@@ -295,8 +296,10 @@ function AppContent() {
     <Suspense fallback={<LoadingScreen />}>
       <ScrollToTop />
       <Routes>
-        {/* Fullscreen Immerse Route */}
+        {/* Fullscreen Immerse Routes */}
         <Route path="/welcome" element={<Onboarding />} />
+        <Route path="/container-preview/:productSlug" element={<ContainerPreviewPage />} />
+        <Route path="/container-preview" element={<ContainerPreviewPage />} />
 
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
