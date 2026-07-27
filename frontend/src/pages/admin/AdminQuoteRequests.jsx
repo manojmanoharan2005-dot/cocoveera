@@ -15,6 +15,7 @@ import {
   Globe
 } from 'lucide-react';
 import AdminLayout from '../../layouts/AdminLayout';
+import { formatDateFriendly } from '../../utils/dateFormatter';
 
 export default function AdminQuoteRequests() {
   const [requests, setRequests] = useState([]);
@@ -207,6 +208,9 @@ export default function AdminQuoteRequests() {
                       Submitted Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      Expected Delivery
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Approved Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -218,21 +222,35 @@ export default function AdminQuoteRequests() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {requests.map((req) => (
-                    <tr key={req._id} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
-                        <div>{req.contactPerson}</div>
-                        <div className="text-xs text-gray-400 font-normal">{req.email}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {req.companyName || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
-                        <div>{req.product?.name || 'Deleted Product'}</div>
-                        <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-bold border border-blue-100">
-                          {req.containerSize}
-                        </span>
-                      </td>
+                  {requests.map((req) => {
+                    const displayProducts = req.products && req.products.length > 0
+                      ? req.products
+                      : (req.product?.name ? [{
+                          product: req.product,
+                          productName: req.product.name,
+                        }] : []);
+
+                    return (
+                      <tr key={req._id} className="hover:bg-gray-50 transition">
+                        <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
+                          <div>{req.contactPerson}</div>
+                          <div className="text-xs text-gray-400 font-normal">{req.email}</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {req.companyName || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
+                          <div className="space-y-1">
+                            {displayProducts.map((p, pIdx) => (
+                              <div key={pIdx} className="font-semibold text-gray-900">
+                                {p.productName || p.product?.name || 'Deleted Product'}
+                              </div>
+                            ))}
+                            <span className="inline-block text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-bold border border-blue-100 mt-1">
+                              {req.containerSize}
+                            </span>
+                          </div>
+                        </td>
                       <td className="px-6 py-4 text-sm text-gray-600 font-medium">
                         {req.country}
                       </td>
@@ -257,6 +275,9 @@ export default function AdminQuoteRequests() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 font-medium">
                         {new Date(req.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                        {req.expectedDeliveryDate ? formatDateFriendly(req.expectedDeliveryDate) : '—'}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 font-medium">
                         {req.approvedAt ? new Date(req.approvedAt).toLocaleDateString() : '—'}
@@ -296,7 +317,7 @@ export default function AdminQuoteRequests() {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>

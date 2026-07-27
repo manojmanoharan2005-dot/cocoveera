@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import SEO from '../../components/SEO';
+import { formatDateFriendly } from '../../utils/dateFormatter';
 
 // Lazy loaded components
 const PDFModal = React.lazy(() => import('../../components/common/PDFModal'));
@@ -471,7 +472,7 @@ const QuoteDetails = () => {
             <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">
               Container Logistics
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
               <div>
                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Container Size</p>
                 <p className="text-sm font-bold text-stone-900">{quote?.containerDetails?.containerSize || '20 FT FCL'}</p>
@@ -479,6 +480,10 @@ const QuoteDetails = () => {
               <div>
                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Number of Containers</p>
                 <p className="text-sm font-bold text-stone-900">{quote?.containerDetails?.quantity || 1}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Expected Delivery</p>
+                <p className="text-sm font-bold text-stone-900">{quote?.rfq?.expectedDeliveryDate ? formatDateFriendly(quote.rfq.expectedDeliveryDate) : 'N/A'}</p>
               </div>
               <div>
                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Estimated Production Time</p>
@@ -695,7 +700,15 @@ const QuoteDetails = () => {
               </div>
               <div className="flex justify-between">
                 <span>Product Summary</span>
-                <span className="text-stone-900 font-bold">{quote?.productDetails?.name || 'Coco Coir'}</span>
+                <div className="text-right">
+                  {quote?.products && quote?.products.length > 0 ? (
+                    quote.products.map((p, idx) => (
+                      <span key={idx} className="text-stone-900 font-bold block">{p.productName}</span>
+                    ))
+                  ) : (
+                    <span className="text-stone-900 font-bold">{quote?.productDetails?.name || 'Coco Coir'}</span>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between text-sm pt-1 border-t border-stone-200">
                 <span className="font-extrabold text-stone-900">Total Price</span>

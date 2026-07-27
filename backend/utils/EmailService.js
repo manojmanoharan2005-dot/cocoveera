@@ -235,6 +235,7 @@ export const sendOrderConfirmationWithInvoice = async (to, orderId, orderSummary
                   <tr><td><strong>Destination Port:</strong></td><td align="right">${orderSummary.portOfDischarge || 'Destination Port'}</td></tr>
                   <tr><td><strong>Incoterms:</strong></td><td align="right">${orderSummary.incoterms || 'FOB'}</td></tr>
                   <tr><td><strong>Transit Time:</strong></td><td align="right">${orderSummary.transitTime || 'Standard ETA'}</td></tr>
+                  ${orderSummary.expectedDeliveryDate ? `<tr><td><strong>Expected Delivery:</strong></td><td align="right">${orderSummary.expectedDeliveryDate}</td></tr>` : ''}
                 </table>
               </td>
             </tr>

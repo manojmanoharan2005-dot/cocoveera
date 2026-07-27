@@ -11,7 +11,8 @@ export const getQuoteRequestTemplate = (name, quoteDetails) => {
     
     <div style="background-color: #FCFBF9; border: 1px solid #E2DCD0; border-radius: 6px; padding: 20px; margin-bottom: 30px;">
       <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Reference ID: ${quoteDetails.referenceId}</p>
-      <p style="margin: 0 0 15px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Date: ${quoteDetails.date}</p>
+      <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Date: ${quoteDetails.date}</p>
+      <p style="margin: 0 0 15px 0; font-size: 11px; text-transform: uppercase; color: #9E7E53; font-weight: bold;">Expected Delivery: ${quoteDetails.expectedDeliveryDate || 'N/A'}</p>
       
       ${quoteDetails.products && quoteDetails.products.length > 0 ? `
       <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold; color: #2C2C2C;">Selected Products:</p>

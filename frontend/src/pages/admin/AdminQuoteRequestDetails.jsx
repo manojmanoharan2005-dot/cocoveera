@@ -29,6 +29,7 @@ import {
   X
 } from 'lucide-react';
 import AdminLayout from '../../layouts/AdminLayout';
+import { formatDateFriendly } from '../../utils/dateFormatter';
 
 export default function AdminQuoteRequestDetails() {
   const { id } = useParams();
@@ -360,7 +361,7 @@ export default function AdminQuoteRequestDetails() {
                         <div>
                           <span className="text-gray-400 block font-bold">Expected Delivery Date</span>
                           <span className="text-gray-900 font-semibold">
-                            {request.expectedDeliveryDate ? new Date(request.expectedDeliveryDate).toLocaleDateString() : 'N/A'}
+                            {formatDateFriendly(request.expectedDeliveryDate)}
                           </span>
                         </div>
                       </div>
@@ -385,7 +386,7 @@ export default function AdminQuoteRequestDetails() {
                         <div>
                           <span className="text-gray-400 block font-bold">Expected Delivery Date</span>
                           <span className="text-gray-900 font-semibold">
-                            {request.expectedDeliveryDate ? new Date(request.expectedDeliveryDate).toLocaleDateString() : 'N/A'}
+                            {formatDateFriendly(request.expectedDeliveryDate)}
                           </span>
                         </div>
                         <div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../context/AuthContext';
 import PhoneInput from 'react-phone-input-2';
@@ -28,6 +28,7 @@ export const RequestQuoteModal = ({
     requirementNote: '',
     containerSize: containerType === '40FT' ? '40 FT' : '20 FT',
     quantity: '',
+    expectedDeliveryDate: '',
     companyName: '',
     contactPerson: '',
     email: '',
@@ -202,6 +203,19 @@ export const RequestQuoteModal = ({
       errors.country = 'Country is required';
     }
 
+    if (!rfqFormData.expectedDeliveryDate) {
+      errors.expectedDeliveryDate = 'Expected delivery date is required';
+    } else {
+      const selectedDate = new Date(rfqFormData.expectedDeliveryDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (isNaN(selectedDate.getTime())) {
+        errors.expectedDeliveryDate = 'Please select a valid date';
+      } else if (selectedDate < today) {
+        errors.expectedDeliveryDate = 'Expected delivery date cannot be in the past';
+      }
+    }
+
     setRfqValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -249,7 +263,7 @@ export const RequestQuoteModal = ({
           postalCode: rfqFormData.postalCode.trim(),
           country: rfqFormData.country.trim(),
         },
-        expectedDeliveryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // default to 30 days out
+        expectedDeliveryDate: rfqFormData.expectedDeliveryDate,
       };
 
       const res = await apiClient.post('/quote-requests', payload);
@@ -279,6 +293,12 @@ export const RequestQuoteModal = ({
       setRfqSubmitLoading(false);
     }
   };
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const minDateStr = `${yyyy}-${mm}-${dd}`;
 
   return (
     <AnimatePresence>
@@ -434,6 +454,26 @@ export const RequestQuoteModal = ({
                           {!isWholeContainer ? 'Incomplete' : 'Requirement Met ✓'}
                         </span>
                       </div>
+                    </div>
+
+                    {/* Expected Delivery Date */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Expected Delivery Date <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          name="expectedDeliveryDate"
+                          min={minDateStr}
+                          value={rfqFormData.expectedDeliveryDate}
+                          onChange={handleRfqChange}
+                          className={`w-full bg-stone-50 border ${rfqValidationErrors.expectedDeliveryDate ? 'border-red-400' : 'border-stone-200'} rounded-[10px] py-2 pl-9 pr-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32]`}
+                          placeholder="Select your expected delivery date"
+                        />
+                        <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-stone-400 pointer-events-none" />
+                      </div>
+                      {rfqValidationErrors.expectedDeliveryDate && (
+                        <p className="text-[10px] text-red-500 font-semibold mt-0.5">{rfqValidationErrors.expectedDeliveryDate}</p>
+                      )}
                     </div>
 
                     {/* Requirement Note (Textarea) */}

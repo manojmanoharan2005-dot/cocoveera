@@ -38,6 +38,10 @@ const generateInvoicePdf = (order, user) => {
         .text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 50, 95)
         .text(`Status: ${order.paymentStatus.toUpperCase()}`, 50, 110)
         .text(`Gateway: ${order.paymentGateway.toUpperCase()}`, 50, 125);
+      
+      if (order.expectedDeliveryDate) {
+        doc.text(`Expected Delivery: ${new Date(order.expectedDeliveryDate).toLocaleDateString()}`, 50, 140);
+      }
 
       doc.moveDown(2);
 

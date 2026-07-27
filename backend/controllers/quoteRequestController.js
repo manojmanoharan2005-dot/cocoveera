@@ -14,7 +14,9 @@ import {
   sendRFQApprovalEmail,
   sendRFQRejectionEmail,
   sendRFQInfoRequestedEmail,
+  sendQuoteRequestEmail,
 } from '../utils/mailer.js';
+import { formatDateFriendly } from '../utils/dateFormatter.js';
 
 // @desc    Submit a quote request (RFQ)
 // @route   POST /api/quote-requests
@@ -228,6 +230,21 @@ export const submitQuoteRequest = async (req, res) => {
       console.error('Failed to send admin notification email:', mailErr.message);
     }
 
+    // Send RFQ confirmation email to customer
+    try {
+      await sendQuoteRequestEmail(email, contactPerson, {
+        referenceId: quoteRequest._id.toString().slice(-6).toUpperCase(),
+        date: new Date(quoteRequest.createdAt).toLocaleDateString(),
+        expectedDeliveryDate: expectedDeliveryDate ? formatDateFriendly(expectedDeliveryDate) : 'N/A',
+        products,
+        containerSize,
+        quantity: quantityStr,
+        requirementNote,
+      });
+    } catch (mailErr) {
+      console.error('Failed to send customer confirmation email:', mailErr.message);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Your Quote Request has been submitted successfully.',
@@ -277,6 +294,7 @@ export const getAdminQuoteRequests = async (req, res) => {
     const total = await QuoteRequest.countDocuments(query);
     const quoteRequests = await QuoteRequest.find(query)
       .populate('product', 'name category images packageSize')
+      .populate('products.product', 'name category images packageSize')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -302,7 +320,8 @@ export const getAdminQuoteRequests = async (req, res) => {
 export const getAdminQuoteRequestById = async (req, res) => {
   try {
     const quoteRequest = await QuoteRequest.findById(req.params.id)
-      .populate('product', 'name category images packageSize description');
+      .populate('product', 'name category images packageSize description')
+      .populate('products.product', 'name category images packageSize description');
 
     if (!quoteRequest) {
       return res.status(404).json({ success: false, message: 'Quote Request not found' });

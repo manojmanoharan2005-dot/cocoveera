@@ -324,6 +324,7 @@ const Orders = () => {
   const OrderCardItem = React.memo(({ order, idx }) => {
     const rawStatus = order.orderStatus ? order.orderStatus.toLowerCase() : 'pending';
     const progress = order.paymentProgress || 0;
+    const [isExpanded, setIsExpanded] = useState(false);
     
     let displayStatusText = 'Pending';
     let statusColorClass = 'text-stone-900';
@@ -572,13 +573,13 @@ const Orders = () => {
             )}
           </div>
 
-          {order.items.map((item, itemIdx) => (
-            <div key={itemIdx} className="flex flex-col md:flex-row gap-6">
+          {(isExpanded ? order.items : order.items.slice(0, 3)).map((item, itemIdx) => (
+            <div key={itemIdx} className="flex flex-col md:flex-row gap-6 border-b border-stone-100 last:border-b-0 pb-5 last:pb-0">
               {/* Product Image */}
               <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
                 {item.product?.images?.[0] ? (
                   <div className="w-full h-full relative p-1 overflow-hidden group">
-                    <ImageWithFallback src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" />
+                    <ImageWithFallback src={item.product.images[0]} alt={item.product.name || item.productName} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" />
                   </div>
                 ) : (
                   <Package className="w-8 h-8 text-stone-300" />
@@ -591,12 +592,27 @@ const Orders = () => {
                   className="text-base font-bold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer line-clamp-2"
                   onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}
                 >
-                  {item.product?.name || 'Unknown Product'}
+                  {item.productName || item.product?.name || 'Unknown Product'}
                 </h4>
-                <div className="text-xs text-stone-500 mt-1 mb-2">Containers: {item.quantity}</div>
+                <div className="text-xs text-stone-500 mt-1 mb-2 space-y-1">
+                  <p>Quantity: {item.pieces || 0} Pieces</p>
+                  <p>Container Quantity: {item.quantity}</p>
+                  <p>Container Type: {order.shippingDetails?.containerType || '20 FT FCL'}</p>
+                </div>
               </div>
             </div>
           ))}
+
+          {/* Expand / Collapse Toggle */}
+          {order.items.length > 3 && (
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs font-black text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer border-none bg-transparent p-0 flex items-center mt-2"
+            >
+              {isExpanded ? 'Show Less Products' : `+${order.items.length - 3} More Products`}
+            </button>
+          )}
 
           {/* Action buttons wrapper */}
           <div className="flex flex-wrap gap-2 pt-4 border-t border-stone-100">

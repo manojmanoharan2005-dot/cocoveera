@@ -103,7 +103,8 @@ export const validateQuoteRequest = [
     .isIn(['20 FT', '40 FT'])
     .withMessage('Container size must be either 20 FT or 40 FT'),
   body('expectedDeliveryDate')
-    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage('Expected delivery date is required')
     .isISO8601()
     .withMessage('Expected delivery date must be a valid date')
     .custom((value) => {
@@ -111,8 +112,8 @@ export const validateQuoteRequest = [
       const deliveryDate = new Date(value);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      if (deliveryDate <= today) {
-        throw new Error('Expected delivery date must be a future date only');
+      if (deliveryDate < today) {
+        throw new Error('Expected delivery date cannot be in the past');
       }
       return true;
     }),

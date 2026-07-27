@@ -88,8 +88,9 @@ export const getMyQuotes = async (req, res) => {
 
     const total = await Quote.countDocuments(query);
     const quotes = await Quote.find(query)
-      .select('quoteNumber rfq user email status rejectionReason quoteDate validUntil currency exchangeRate originalInrAmount convertedAmount shippingTerms estimatedProductionTime commercialNotes pdfUrl productDetails containerDetails shippingAddress createdAt')
+      .select('quoteNumber rfq user email status rejectionReason quoteDate validUntil currency exchangeRate originalInrAmount convertedAmount shippingTerms estimatedProductionTime commercialNotes pdfUrl productDetails containerDetails shippingAddress products createdAt')
       .populate('productDetails.productId', 'name images price slug')
+      .populate('products.product', 'name images price slug')
       .populate('rfq')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -259,6 +260,7 @@ export const acceptQuote = async (req, res) => {
     await quote.save();
 
     // Link back to RFQ and update its status
+    let expectedDeliveryDate = null;
     if (quote.rfq) {
       const rfq = await QuoteRequest.findById(quote.rfq);
       if (rfq) {
@@ -270,6 +272,7 @@ export const acceptQuote = async (req, res) => {
           timestamp: new Date(),
         });
         await rfq.save();
+        expectedDeliveryDate = rfq.expectedDeliveryDate;
       }
     }
 
@@ -331,6 +334,7 @@ export const acceptQuote = async (req, res) => {
       orderNumber,
       user: req.user._id,
       quote: quote._id,
+      expectedDeliveryDate: expectedDeliveryDate || null,
       items: orderItems,
       totalAmount: totalAmt,
       currency: quote.currency || 'USD',

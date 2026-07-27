@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import RecommendedProducts from '../../components/common/RecommendedProducts';
+import { formatDateFriendly } from '../../utils/dateFormatter';
 
 // Lazy loaded heavy components
 const PDFModal = React.lazy(() => import('../../components/common/PDFModal'));
@@ -118,11 +119,13 @@ const OrderDetails = () => {
         <div>
           <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Order {backendOrder.orderNumber || order.id}</h1>
           <p className="text-stone-500 font-semibold text-sm">Placed on {new Date(order.date).toLocaleString()}</p>
-          {(order.shippingDate || order.estimatedDeliveryDate) && (
+          {(order.shippingDate || order.estimatedDeliveryDate || backendOrder.expectedDeliveryDate) && (
             <p className="text-stone-500 font-semibold text-xs mt-1">
               {order.shippingDate && <span>Est. Shipping: {new Date(order.shippingDate).toLocaleDateString()}</span>}
               {order.shippingDate && order.estimatedDeliveryDate && <span className="mx-2">&bull;</span>}
               {order.estimatedDeliveryDate && <span>Est. Delivery: {new Date(order.estimatedDeliveryDate).toLocaleDateString()}</span>}
+              {(order.estimatedDeliveryDate || order.shippingDate) && backendOrder.expectedDeliveryDate && <span className="mx-2">&bull;</span>}
+              {backendOrder.expectedDeliveryDate && <span>Expected Delivery: {formatDateFriendly(backendOrder.expectedDeliveryDate)}</span>}
             </p>
           )}
         </div>
@@ -197,7 +200,7 @@ const OrderDetails = () => {
           {/* Container Information */}
           <div className="bg-white rounded-2xl p-6 border border-stone-200/80 shadow-sm">
             <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">Container Logistics</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
               <div>
                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Type</p>
                 <p className="text-sm font-bold text-stone-900">{order.container.type}</p>
@@ -214,6 +217,12 @@ const OrderDetails = () => {
                 <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Total Pallets</p>
                 <p className="text-sm font-bold text-stone-900">{order.container.pallets}</p>
               </div>
+              {backendOrder.expectedDeliveryDate && (
+                <div>
+                  <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Expected Delivery</p>
+                  <p className="text-sm font-bold text-stone-900">{formatDateFriendly(backendOrder.expectedDeliveryDate)}</p>
+                </div>
+              )}
             </div>
           </div>
 

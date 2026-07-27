@@ -35,7 +35,8 @@ export const createOrder = async (req, res) => {
     if (quoteId) {
       const quote = await Quote.findById(quoteId)
         .populate('products.product')
-        .populate('productDetails.productId');
+        .populate('productDetails.productId')
+        .populate('rfq');
       if (!quote) {
         return res.status(404).json({ success: false, message: 'Quote not found' });
       }
@@ -152,6 +153,7 @@ export const createOrder = async (req, res) => {
     const order = await Order.create({
       user: req.user.id,
       quote: quoteId || null,
+      expectedDeliveryDate: (quoteId && quote) ? (quote.rfq?.expectedDeliveryDate || null) : null,
       items: orderItems,
       totalAmount: totalAmount + Number(shippingCharge) - Number(discount) + Number(tax),
       shippingCharge: Number(shippingCharge),

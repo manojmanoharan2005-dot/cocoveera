@@ -5,6 +5,7 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import fetch from 'node-fetch';
+import { formatDateFriendly } from './dateFormatter.js';
 
 const THEME = {
   primary: '#2E7D32', // Cocoveera Green
@@ -41,6 +42,7 @@ export const buildInvoiceDataFromOrder = (order) => {
     shippingMethod: order.shippingDetails?.shippingMethod || (isIndia ? 'Road Transport' : 'Sea Freight'),
     destinationCountry: order.shippingAddress?.country || 'Unknown',
     transitTime: order.shippingDetails?.transitTime || 'Standard ETA',
+    expectedDeliveryDate: order.expectedDeliveryDate ? formatDateFriendly(order.expectedDeliveryDate) : 'N/A',
     items: order.items.map(item => ({
       productName: item.product?.name || item.productName || 'Product',
       sku: item.product?.slug ? item.product.slug.toUpperCase().substring(0, 8) : (item.product?._id?.toString().slice(-6) || 'COCO-ITEM'),
@@ -202,7 +204,7 @@ function generateOrderAndLogisticsInfo(doc, invoice) {
   const usedCap = invoice.totalContainers || 0;
 
   // Box 1: Export Logistics
-  doc.rect(40, top, 240, 110).fillAndStroke(THEME.accent, THEME.border);
+  doc.rect(40, top, 240, 125).fillAndStroke(THEME.accent, THEME.border);
   doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('EXPORT LOGISTICS', 50, top + 10);
   doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
   
@@ -214,7 +216,7 @@ function generateOrderAndLogisticsInfo(doc, invoice) {
   doc.font('Helvetica-Bold').text('Estimated Volume:', 50, top + 90).font('Helvetica').text(`${(invoice.estimatedVolume || 0).toFixed(2)} CBM`, 140, top + 90);
 
   // Box 2: Shipping Information
-  doc.rect(315, top, 240, 110).fillAndStroke(THEME.accent, THEME.border);
+  doc.rect(315, top, 240, 125).fillAndStroke(THEME.accent, THEME.border);
   doc.fillColor(THEME.primary).fontSize(10).font('Helvetica-Bold').text('SHIPPING INFORMATION', 325, top + 10);
   doc.fillColor(THEME.textMain).fontSize(8).font('Helvetica-Bold');
   
@@ -223,6 +225,7 @@ function generateOrderAndLogisticsInfo(doc, invoice) {
   doc.font('Helvetica-Bold').text('Destination Port:', 325, top + 60).font('Helvetica').text(invoice.portOfDischarge || 'Destination Port', 415, top + 60);
   doc.font('Helvetica-Bold').text('Incoterms:', 325, top + 75).font('Helvetica').text(invoice.incoterms || 'FOB', 415, top + 75);
   doc.font('Helvetica-Bold').text('Transit Time:', 325, top + 90).font('Helvetica').text(invoice.transitTime || 'TBD', 415, top + 90);
+  doc.font('Helvetica-Bold').text('Expected Delivery:', 325, top + 105).font('Helvetica').text(invoice.expectedDeliveryDate || 'N/A', 415, top + 105);
 }
 
 function generateProductTable(doc, invoice) {

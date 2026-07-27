@@ -9,6 +9,7 @@ import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import SEO from '../../components/SEO';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
+import { formatDateFriendly } from '../../utils/dateFormatter';
 
 // Lazy load heavy PDF Modal
 const PDFModal = React.lazy(() => import('../../components/common/PDFModal'));
@@ -287,9 +288,28 @@ const Quotes = () => {
     return `${address.addressLine1}, ${address.city}, ${address.country}`;
   };
 
-  // Reusable Single Quote Card Item component
   const QuoteCardItem = React.memo(({ quote, idx }) => {
     const hasPdf = !!quote.pdfUrl;
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const displayProducts = quote.products && quote.products.length > 0
+      ? quote.products.map(item => ({
+          product: item.product,
+          productName: item.productName,
+          quantity: item.quantity,
+          containerQty: item.quantity,
+          categoryName: item.categoryName
+        }))
+      : (quote.productDetails?.name ? [{
+          product: quote.productDetails.productId,
+          productName: quote.productDetails.name,
+          quantity: quote.productDetails.quantity || 'N/A',
+          containerQty: quote.containerDetails?.quantity || 1,
+          categoryName: quote.productDetails.category || 'Coco Substrates'
+        }] : []);
+
+    const visibleProducts = isExpanded ? displayProducts : displayProducts.slice(0, 3);
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -304,6 +324,13 @@ const Quotes = () => {
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Request Date</span>
               <span className="font-bold text-stone-700">
                 {new Date(quote.rfq?.createdAt || quote.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+            </div>
+
+            <div className="flex flex-col">
+              <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Expected Delivery</span>
+              <span className="font-bold text-stone-700">
+                {quote.rfq?.expectedDeliveryDate ? formatDateFriendly(quote.rfq.expectedDeliveryDate) : 'N/A'}
               </span>
             </div>
 
@@ -364,31 +391,51 @@ const Quotes = () => {
 
         {/* Card Body */}
         <div className="p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="flex gap-5">
-            {/* Product image container */}
-            <div className="w-16 h-16 bg-stone-50 rounded-xl border border-stone-200 overflow-hidden flex items-center justify-center shrink-0 relative">
-              <ImageWithFallback
-                src={quote.productDetails?.productId?.images?.[0]}
-                alt={quote.productDetails?.name || 'Product'}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {/* Product Summary details */}
+          <div className="flex-1 w-full space-y-4">
             <div>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${getStatusBadgeClass(quote.status)}`}>
                 {quote.status}
               </span>
-              <h4 className="text-base font-extrabold text-stone-800 mt-2">
-                {quote.productDetails?.name || 'Coco Coir Export Substrate'}
-              </h4>
-              <p className="text-xs text-stone-500 font-semibold mt-1">
-                Quantity: {quote.productDetails?.quantity || quote.containerDetails?.quantity || 'N/A'} {quote.productDetails?.unitType || 'Tons'} &bull; Container: {quote.containerDetails?.containerSize || '20 FT FCL'}
-              </p>
-              <p className="text-[11px] text-stone-400 mt-0.5">Shipping Destination: <strong className="text-stone-600">{renderCardAddress(quote.shippingAddress)}</strong></p>
-              {quote.shippingTerms && (
-                <p className="text-[11px] text-stone-400 mt-0.5">Shipping Terms: <strong className="text-stone-600">{quote.shippingTerms}</strong></p>
-              )}
             </div>
+
+            {/* Products List */}
+            <div className="space-y-4">
+              {visibleProducts.map((item, itemIdx) => (
+                <div key={itemIdx} className="flex gap-5 border-b border-stone-100 last:border-b-0 pb-4 last:pb-0">
+                  <div className="w-16 h-16 bg-stone-50 rounded-xl border border-stone-200 overflow-hidden flex items-center justify-center shrink-0 relative">
+                    <ImageWithFallback
+                      src={item.product?.images?.[0] || item.imageUrl}
+                      alt={item.productName || 'Product'}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-stone-850">
+                      {item.productName || 'Coco Coir Export Substrate'}
+                    </h4>
+                    <p className="text-xs text-stone-500 font-semibold mt-1">
+                      Quantity: {item.quantity} {typeof item.quantity === 'number' ? 'Containers' : ''} &bull; Container Qty: {item.containerQty} &bull; Container Type: {quote.containerDetails?.containerSize || '20 FT'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Expand / Collapse Toggle */}
+            {displayProducts.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-xs font-black text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer border-none bg-transparent p-0 flex items-center mt-2"
+              >
+                {isExpanded ? 'Show Less Products' : `+${displayProducts.length - 3} More Products`}
+              </button>
+            )}
+
+            <p className="text-[11px] text-stone-400 mt-1">Shipping Destination: <strong className="text-stone-600">{renderCardAddress(quote.shippingAddress)}</strong></p>
+            {quote.shippingTerms && (
+              <p className="text-[11px] text-stone-400 mt-0.5">Shipping Terms: <strong className="text-stone-600">{quote.shippingTerms}</strong></p>
+            )}
           </div>
 
           {/* Actions buttons column */}
@@ -681,7 +728,15 @@ const Quotes = () => {
               </div>
               <div className="flex justify-between">
                 <span>Product Summary</span>
-                <span className="text-stone-900 font-bold">{selectedQuote.productDetails?.name || 'Coco Coir'}</span>
+                <div className="text-right">
+                  {selectedQuote.products && selectedQuote.products.length > 0 ? (
+                    selectedQuote.products.map((p, idx) => (
+                      <span key={idx} className="text-stone-900 font-bold block">{p.productName}</span>
+                    ))
+                  ) : (
+                    <span className="text-stone-900 font-bold">{selectedQuote.productDetails?.name || 'Coco Coir'}</span>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between text-sm pt-1 border-t border-stone-200">
                 <span className="font-extrabold text-stone-900">Total Price</span>

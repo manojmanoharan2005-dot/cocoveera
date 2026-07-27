@@ -20,6 +20,7 @@ import {
 import AdminLayout from '../layouts/AdminLayout';
 import { apiClient } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
+import { formatDateFriendly } from '../utils/dateFormatter';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -253,6 +254,14 @@ export default function AdminOrders() {
                         {new Date(selectedOrder.createdAt).toLocaleDateString()}
                       </p>
                     </div>
+                    {selectedOrder.expectedDeliveryDate && (
+                      <div>
+                        <p className="text-sm text-gray-600">Expected Delivery Date</p>
+                        <p className="text-gray-900 font-medium">
+                          {formatDateFriendly(selectedOrder.expectedDeliveryDate)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
