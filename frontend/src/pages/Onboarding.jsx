@@ -1,889 +1,958 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { 
+  ArrowRight, Search, Plus, Minus, Package, ShieldCheck, CheckCircle2,
+  FileText, ArrowDownRight, ArrowUpRight, Zap, Download, Truck, Ship,
+  Clock, CreditCard, ChevronRight, Anchor, Factory, Check, HelpCircle,
+  ExternalLink, Layers, Award, Sparkles, AlertCircle, FileCheck, RefreshCw, Eye
+} from 'lucide-react';
 
-// --- Premium Design Tokens ---
-const colors = {
-  primary: '#2E7D32',
-  dark: '#1B5E20',
-  light: '#A5D6A7',
-  gold: '#D4AF37',
-  sunlight: '#FFD54F',
-  earth: '#8D6E63',
-  ocean: '#0277BD',
-  sky: '#81D4FA'
-};
-
-const sceneTimings = [
-  2500, // 0: Welcome (2.5s)
-  3500, // 1: Farm (3.5s)
-  3000, // 2: Manufacturing (3s)
-  3000, // 3: Transportation (3s)
-  3500, // 4: Ocean (3.5s)
-  3000, // 5: Delivery (3s)
-  0,    // 6: Final
+const STEPS = [
+  { id: 1, title: 'Homepage & Search', subtitle: 'Browse & search coconut substrates', category: 'Discovery' },
+  { id: 2, title: 'Product Details', subtitle: 'Select specifications & quantities', category: 'Discovery' },
+  { id: 3, title: 'Live Container', subtitle: 'Real-time 3D fill & weight check', category: 'Planning' },
+  { id: 4, title: 'Request Quote', subtitle: 'Submit RFQ with shipping address', category: 'Planning' },
+  { id: 5, title: 'My Quotes Dashboard', subtitle: 'Instant quotation review status', category: 'Negotiation' },
+  { id: 6, title: 'Quote Approved', subtitle: 'Review pricing, PDF & validity', category: 'Negotiation' },
+  { id: 7, title: 'Accept Quote', subtitle: 'One-click quote to order conversion', category: 'Negotiation' },
+  { id: 8, title: 'My Orders', subtitle: 'Automated milestone order tracking', category: 'Fulfillment' },
+  { id: 9, title: '40% Advance Payment', subtitle: 'Proforma invoice & wire transfer', category: 'Payment' },
+  { id: 10, title: 'Production & QC', subtitle: 'Sieving, EC testing & packaging', category: 'Production' },
+  { id: 11, title: '60% Production Payment', subtitle: 'Milestone progress update', category: 'Payment' },
+  { id: 12, title: 'Container Loading', subtitle: 'Palletized loading photos & seals', category: 'Logistics' },
+  { id: 13, title: '80% Shipping Payment', subtitle: 'Port dispatch confirmation', category: 'Payment' },
+  { id: 14, title: 'Ocean Freight Tracking', subtitle: 'Live vessel & ETA monitoring', category: 'Logistics' },
+  { id: 15, title: 'Delivery & Documents', subtitle: 'Tax Invoice, B/L, COO & Reports', category: 'Completion' }
 ];
-
-const backgrounds = [
-  'bg-[#F8F9FA]', // 0: Welcome (Creamy white)
-  'bg-gradient-to-b from-[#4FC3F7] via-[#81D4FA] to-[#A5D6A7]', // 1: Farm (Sunrise Sky to Grass)
-  'bg-gradient-to-br from-[#ECEFF1] to-[#CFD8DC]', // 2: Factory (Metallic grey)
-  'bg-gradient-to-b from-[#81D4FA] via-[#B3E5FC] to-[#78909C]', // 3: Transport (Day sky to asphalt)
-  'bg-gradient-to-b from-[#FFB74D] via-[#FF8A65] to-[#0288D1]', // 4: Ocean (Sunset to deep ocean)
-  'bg-gradient-to-br from-[#E8F5E9] to-[#C8E6C9]', // 5: Delivery (Fresh greenhouse)
-  'bg-[#F8F9FA]', // 6: Final
-];
-
-const variants = {
-  enter: { opacity: 0, scale: 1.05, filter: 'blur(15px)' },
-  center: { opacity: 1, scale: 1, filter: 'blur(0px)', transition: { duration: 1.2, ease: [0.22, 1, 0.36, 1] } },
-  exit: { opacity: 0, scale: 0.95, filter: 'blur(15px)', transition: { duration: 0.8, ease: [0.7, 0, 0.84, 0] } },
-};
-
-// ==========================================
-// REUSABLE HIGH-QUALITY SVGS & COMPONENTS
-// ==========================================
-
-const Logo = ({ className }) => (
-  <img src="/logo.webp" alt="Cocoveera Logo" className={className} />
-);
-
-const PremiumCheckmark = () => (
-  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_10px_20px_rgba(46,125,50,0.4)]">
-    <defs>
-      <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4CAF50" />
-        <stop offset="100%" stopColor="#1B5E20" />
-      </linearGradient>
-      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="3" result="blur" />
-        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-      </filter>
-    </defs>
-    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#checkGrad)" strokeWidth="6" strokeDasharray="283" strokeDashoffset="283" opacity="0.2" />
-    <motion.circle 
-      cx="50" cy="50" r="45" fill="none" stroke="url(#checkGrad)" strokeWidth="6" 
-      initial={{ strokeDashoffset: 283 }} 
-      animate={{ strokeDashoffset: 0 }} 
-      transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
-    />
-    <motion.path 
-      d="M30 50 L45 65 L70 35" 
-      fill="none" 
-      stroke="url(#checkGrad)" 
-      strokeWidth="8" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      filter="url(#glow)"
-      initial={{ pathLength: 0 }}
-      animate={{ pathLength: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut", delay: 1 }}
-    />
-  </svg>
-);
-
-const RealisticCoconutTree = ({ scale = 1, delay = 0, windForce = 5 }) => (
-  <motion.div 
-    className="absolute bottom-0 origin-bottom" 
-    style={{ transform: `scale(${scale})` }}
-    animate={{ rotate: [0, windForce, -windForce/2, 0] }}
-    transition={{ duration: 4 + delay, repeat: Infinity, ease: "easeInOut", delay }}
-  >
-    <svg width="200" height="400" viewBox="0 0 200 400" className="overflow-visible">
-      <defs>
-        <linearGradient id="trunk" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#5D4037" />
-          <stop offset="50%" stopColor="#8D6E63" />
-          <stop offset="100%" stopColor="#3E2723" />
-        </linearGradient>
-        <linearGradient id="leaf" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#81C784" />
-          <stop offset="50%" stopColor="#2E7D32" />
-          <stop offset="100%" stopColor="#1B5E20" />
-        </linearGradient>
-        <radialGradient id="coconut" cx="30%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#AED581" />
-          <stop offset="80%" stopColor="#558B2F" />
-          <stop offset="100%" stopColor="#33691E" />
-        </radialGradient>
-      </defs>
-      
-      {/* Trunk with curve */}
-      <path d="M90,400 Q110,200 95,50 L105,50 Q120,200 110,400 Z" fill="url(#trunk)" />
-      
-      {/* Trunk Texture Lines */}
-      {[...Array(15)].map((_, i) => (
-        <path key={i} d={`M${92 + Math.sin(i)*5},${380 - i*22} Q100,${375 - i*22} ${108 + Math.cos(i)*5},${378 - i*22}`} fill="none" stroke="#3E2723" strokeWidth="1.5" opacity="0.6" />
-      ))}
-
-      {/* Leaves Group - Animated for wind */}
-      <motion.g 
-        originX="100" originY="50"
-        animate={{ rotate: [0, windForce*2, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: delay*0.5 }}
-      >
-        {/* Back Leaves */}
-        <path d="M100,50 Q50,0 20,40 Q60,30 100,50 Z" fill="url(#leaf)" />
-        <path d="M100,50 Q150,0 180,40 Q140,30 100,50 Z" fill="url(#leaf)" />
-        <path d="M100,50 Q40,30 10,80 Q60,60 100,50 Z" fill="url(#leaf)" />
-        
-        {/* Coconuts */}
-        <circle cx="90" cy="65" r="12" fill="url(#coconut)" />
-        <circle cx="110" cy="60" r="14" fill="url(#coconut)" />
-        <circle cx="100" cy="75" r="11" fill="url(#coconut)" />
-        <circle cx="85" cy="55" r="10" fill="url(#coconut)" />
-
-        {/* Front Leaves */}
-        <path d="M100,50 Q160,30 190,80 Q140,60 100,50 Z" fill="url(#leaf)" />
-        <path d="M100,50 Q70,90 40,140 Q80,100 100,50 Z" fill="url(#leaf)" />
-        <path d="M100,50 Q130,90 160,140 Q120,100 100,50 Z" fill="url(#leaf)" />
-        <path d="M100,50 Q100,10 100,-20 Q110,20 100,50 Z" fill="url(#leaf)" />
-        <path d="M100,50 Q80,10 60,-10 Q90,20 100,50 Z" fill="url(#leaf)" />
-        <path d="M100,50 Q120,10 140,-10 Q110,20 100,50 Z" fill="url(#leaf)" />
-      </motion.g>
-    </svg>
-  </motion.div>
-);
-
-const CloudLayer = ({ y, duration, delay, scale, opacity }) => (
-  <motion.div
-    className="absolute"
-    style={{ top: y, scale, opacity, left: '-20%' }}
-    animate={{ x: ['0vw', '120vw'] }}
-    transition={{ duration, repeat: Infinity, ease: 'linear', delay }}
-  >
-    <svg width="200" height="100" viewBox="0 0 200 100">
-      <path d="M50,60 a20,20 0 0,1 0,-40 a30,30 0 0,1 60,-10 a25,25 0 0,1 40,20 a20,20 0 0,1 0,40 z" fill="#FFFFFF" />
-    </svg>
-  </motion.div>
-);
-
-const Bird = ({ delay, y, duration }) => (
-  <motion.div
-    className="absolute z-20"
-    style={{ top: y, left: '-5%' }}
-    animate={{ x: ['0vw', '110vw'], y: [0, -20, 10, -10, 0] }}
-    transition={{ duration, repeat: Infinity, ease: 'linear', delay }}
-  >
-    <motion.svg width="30" height="20" viewBox="0 0 30 20"
-      animate={{ scaleY: [1, -0.5, 1] }}
-      transition={{ duration: 0.4, repeat: Infinity, ease: "easeInOut" }}
-    >
-      <path d="M0,10 Q7,0 15,10 Q22,0 30,10 Q22,5 15,12 Q7,5 0,10 Z" fill="#333" opacity="0.8" />
-    </motion.svg>
-  </motion.div>
-);
-
-// ==========================================
-// SCENES
-// ==========================================
-
-// SCENE 1: WELCOME
-const SceneWelcome = () => (
-  <motion.div className="relative flex flex-col items-center justify-center w-full h-full text-center z-10">
-    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-[#F8F9FA] to-[#E0E0E0] opacity-80" />
-    
-    <motion.div 
-      initial={{ scale: 0.9, opacity: 0, y: 20 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
-      transition={{ duration: 1.5, ease: 'easeOut' }}
-      className="relative z-10 flex flex-col items-center bg-white/40 p-12 rounded-[40px] backdrop-blur-2xl border border-white/60 shadow-[0_30px_60px_rgba(0,0,0,0.05)]"
-    >
-      {/* Animated Glow Behind Logo */}
-      <motion.div 
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#D4AF37] rounded-full blur-[80px] -z-10"
-      />
-      
-      <div className="w-32 h-32 mb-8 relative">
-        <PremiumCheckmark />
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute inset-0 flex items-center justify-center -z-10"
-        >
-          <Logo className="w-16 h-16 opacity-20" />
-        </motion.div>
-      </div>
-
-      <motion.h1 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 1 }}
-        className="text-4xl md:text-5xl font-extrabold text-stone-900 mb-3 tracking-tight font-poppins"
-      >
-        Welcome to <span className="text-[#2E7D32]">Cocoveera</span>
-      </motion.h1>
-      <motion.p 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6, duration: 1 }}
-        className="text-lg md:text-xl text-stone-500 font-medium"
-      >
-        Your premium export journey begins here.
-      </motion.p>
-    </motion.div>
-
-    {/* Floating environmental leaves */}
-    {[...Array(8)].map((_, i) => (
-      <motion.div
-        key={i}
-        className="absolute w-4 h-4 bg-[#2E7D32] rounded-full opacity-20 blur-[1px]"
-        style={{ borderRadius: '0 50% 50% 50%', left: `${10 + Math.random()*80}%` }}
-        initial={{ y: '110vh', rotate: 0 }}
-        animate={{ y: '-10vh', x: Math.sin(i)*100, rotate: 360 }}
-        transition={{ duration: 10 + Math.random()*5, repeat: Infinity, ease: 'linear', delay: Math.random()*5 }}
-      />
-    ))}
-  </motion.div>
-);
-
-// SCENE 2: COCONUT FARM
-const SceneFarm = () => (
-  <motion.div className="relative w-full h-full overflow-hidden flex flex-col items-center justify-end pb-32">
-    {/* Sun & Light Rays */}
-    <motion.div 
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 2, ease: "easeOut" }}
-      className="absolute top-24 right-32"
-    >
-      <div className="w-32 h-32 bg-[#FFD54F] rounded-full blur-[2px] shadow-[0_0_100px_#FFD54F]" />
-      <motion.div 
-        animate={{ rotate: 360 }}
-        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-0 -inset-x-32 -inset-y-32"
-        style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,213,79,0.2) 20deg, transparent 40deg, rgba(255,213,79,0.2) 60deg, transparent 80deg)', borderRadius: '50%', filter: 'blur(10px)' }}
-      />
-    </motion.div>
-
-    {/* Clouds */}
-    <CloudLayer y="10%" duration={40} delay={0} scale={1.5} opacity={0.6} />
-    <CloudLayer y="25%" duration={55} delay={15} scale={1} opacity={0.4} />
-    <CloudLayer y="15%" duration={45} delay={25} scale={1.2} opacity={0.5} />
-
-    {/* Birds */}
-    <Bird y="20%" duration={12} delay={1} />
-    <Bird y="15%" duration={15} delay={4} />
-    <Bird y="25%" duration={10} delay={8} />
-
-    {/* Distant Mountains */}
-    <div className="absolute bottom-[20%] w-full h-[30%] opacity-40 z-0">
-      <svg viewBox="0 0 1000 300" preserveAspectRatio="none" className="w-full h-full">
-        <path d="M0,300 L0,150 Q100,50 250,150 T500,100 T750,180 T1000,100 L1000,300 Z" fill="#689F38" />
-        <path d="M0,300 L0,200 Q150,100 300,220 T600,150 T900,240 T1000,180 L1000,300 Z" fill="#33691E" opacity="0.6" />
-      </svg>
-    </div>
-
-    {/* Ground / Grass */}
-    <div className="absolute bottom-0 w-full h-[25%] bg-gradient-to-t from-[#2E7D32] to-[#7CB342] z-10" />
-
-    {/* Trees */}
-    <div className="absolute bottom-[10%] w-full flex justify-between px-10 z-20">
-      <RealisticCoconutTree scale={0.7} delay={0} windForce={4} />
-      <RealisticCoconutTree scale={1.1} delay={1.5} windForce={6} />
-      <RealisticCoconutTree scale={0.8} delay={0.7} windForce={3} />
-      <RealisticCoconutTree scale={1.3} delay={2.2} windForce={7} />
-      <RealisticCoconutTree scale={0.9} delay={1.1} windForce={5} />
-    </div>
-
-    {/* Text Overlay */}
-    <motion.div 
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1, duration: 1 }}
-      className="relative z-30 bg-white/70 backdrop-blur-xl px-10 py-5 rounded-[24px] border border-white/50 shadow-2xl mb-12"
-    >
-      <h2 className="text-3xl font-poppins font-extrabold text-[#1B5E20]">Sustainable Sourcing</h2>
-      <p className="text-stone-600 font-medium mt-1">Sourced from premium South Indian plantations.</p>
-    </motion.div>
-  </motion.div>
-);
-
-// SCENE 3: MANUFACTURING
-const SceneManufacturing = () => (
-  <motion.div className="relative w-full h-full overflow-hidden flex flex-col items-center justify-center">
-    {/* Factory Background */}
-    <div className="absolute inset-0 bg-[#263238] opacity-10" />
-    
-    <motion.div 
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 1 }}
-      className="relative z-10 w-[80%] max-w-4xl h-[60%] bg-gradient-to-b from-[#ECEFF1] to-[#CFD8DC] rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.15)] border-4 border-white/50 overflow-hidden flex items-center justify-center"
-    >
-      {/* Factory Windows */}
-      <div className="absolute top-0 w-full h-24 flex gap-4 p-6 opacity-30">
-        {[...Array(6)].map((_, i) => <div key={i} className="flex-1 bg-white/50 rounded-b-xl shadow-inner" />)}
-      </div>
-
-      {/* Complex Conveyor Belt SVG Animation */}
-      <div className="relative w-full h-64 mt-20">
-        <svg viewBox="0 0 1000 300" className="w-full h-full drop-shadow-2xl">
-          <defs>
-            <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#B0BEC5" />
-              <stop offset="50%" stopColor="#78909C" />
-              <stop offset="100%" stopColor="#455A64" />
-            </linearGradient>
-            <linearGradient id="belt" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#212121" />
-              <stop offset="100%" stopColor="#424242" />
-            </linearGradient>
-            <linearGradient id="cocoBlock" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#795548" />
-              <stop offset="100%" stopColor="#4E342E" />
-            </linearGradient>
-          </defs>
-
-          {/* Machine Body */}
-          <rect x="100" y="50" width="800" height="200" fill="url(#metal)" rx="20" />
-          <rect x="200" y="20" width="100" height="80" fill="#607D8B" rx="10" />
-          <rect x="700" y="20" width="100" height="80" fill="#607D8B" rx="10" />
-
-          {/* Glass Window */}
-          <rect x="250" y="80" width="500" height="100" fill="#E1F5FE" opacity="0.6" rx="10" />
-          <path d="M250 80 L750 180" stroke="#FFFFFF" strokeWidth="2" opacity="0.5" />
-
-          {/* Rollers */}
-          {[...Array(15)].map((_, i) => (
-            <motion.circle 
-              key={i} cx={270 + i*33} cy="160" r="12" fill="#546E7A"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              style={{ transformOrigin: `${270 + i*33}px 160px` }}
-            />
-          ))}
-
-          {/* Belt */}
-          <path d="M250,148 L750,148 A12,12 0 0,1 750,172 L250,172 A12,12 0 0,1 250,148 Z" fill="url(#belt)" opacity="0.8" />
-
-          {/* Moving Blocks */}
-          {[...Array(3)].map((_, i) => (
-            <motion.g 
-              key={i}
-              initial={{ x: 150 }}
-              animate={{ x: 700 }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear", delay: i*1.33 }}
-            >
-              <rect x="0" y="118" width="50" height="30" fill="url(#cocoBlock)" rx="4" />
-              {/* Quality Checkmark overlay flashes as it passes center */}
-              <motion.path 
-                d="M10 133 L20 143 L40 123" stroke="#76FF03" strokeWidth="4" fill="none"
-                animate={{ opacity: [0, 0, 1, 1, 0, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear", delay: i*1.33, times: [0, 0.4, 0.45, 0.55, 0.6, 1] }}
-              />
-            </motion.g>
-          ))}
-        </svg>
-
-        {/* Steam Particles */}
-        {[...Array(10)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute top-20 bg-white rounded-full blur-[10px]"
-            style={{ left: `${30 + Math.random()*40}%`, width: 40+Math.random()*40, height: 40+Math.random()*40 }}
-            initial={{ y: 0, opacity: 0, scale: 0.5 }}
-            animate={{ y: -100, opacity: [0, 0.4, 0], scale: 2 }}
-            transition={{ duration: 2+Math.random()*2, repeat: Infinity, delay: Math.random()*2 }}
-          />
-        ))}
-      </div>
-    </motion.div>
-
-    <motion.div 
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1, duration: 1 }}
-      className="mt-8 z-20 bg-white/80 backdrop-blur-md px-10 py-5 rounded-[24px] shadow-xl text-center border border-white"
-    >
-      <h2 className="text-3xl font-poppins font-extrabold text-stone-800">Advanced Manufacturing</h2>
-      <p className="text-stone-500 font-medium mt-1">Washed, buffered, and compressed to perfection.</p>
-    </motion.div>
-  </motion.div>
-);
-
-// SCENE 4: TRANSPORTATION
-const SceneTransportation = () => (
-  <motion.div className="relative w-full h-full overflow-hidden flex flex-col items-center justify-end">
-    {/* Moving Road/Highway */}
-    <div className="absolute bottom-0 w-full h-[40%] bg-gradient-to-b from-[#78909C] to-[#37474F] z-0 flex items-center shadow-inner" style={{ perspective: '1000px' }}>
-      <motion.div 
-        className="w-[200%] h-4 border-t-8 border-dashed border-white/50 absolute top-1/2"
-        animate={{ x: ['0%', '-50%'] }}
-        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-      />
-    </div>
-
-    {/* Parallax Mountains */}
-    <motion.div 
-      className="absolute bottom-[40%] w-[200%] h-[30%] opacity-20 flex"
-      animate={{ x: ['0%', '-50%'] }}
-      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-    >
-      <svg viewBox="0 0 1000 300" preserveAspectRatio="none" className="w-1/2 h-full">
-        <path d="M0,300 L200,100 L400,300 L700,50 L1000,300 Z" fill="#263238" />
-      </svg>
-      <svg viewBox="0 0 1000 300" preserveAspectRatio="none" className="w-1/2 h-full">
-        <path d="M0,300 L200,100 L400,300 L700,50 L1000,300 Z" fill="#263238" />
-      </svg>
-    </motion.div>
-
-    {/* Parallax Trees */}
-    <motion.div 
-      className="absolute bottom-[40%] w-[200%] h-[15%] z-10 flex items-end justify-around"
-      animate={{ x: ['0%', '-50%'] }}
-      transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-    >
-      {[...Array(20)].map((_, i) => (
-        <div key={i} className="w-12 h-32 bg-[#2E7D32] rounded-t-full relative">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-10 bg-[#5D4037]" />
-        </div>
-      ))}
-    </motion.div>
-
-    {/* The Truck */}
-    <motion.div 
-      className="relative z-30 mb-[15%]"
-      initial={{ x: '-100vw' }}
-      animate={{ x: 0 }}
-      transition={{ duration: 1.5, ease: "easeOut" }}
-    >
-      <motion.div 
-        animate={{ y: [-2, 2, -2] }} 
-        transition={{ duration: 0.4, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <svg width="600" height="250" viewBox="0 0 600 250" className="drop-shadow-2xl overflow-visible">
-          {/* Shadow */}
-          <ellipse cx="300" cy="245" rx="250" ry="10" fill="black" opacity="0.3" />
-          
-          {/* Trailer Container */}
-          <rect x="50" y="20" width="380" height="180" fill="#F5F5F5" rx="5" />
-          <rect x="50" y="20" width="380" height="180" fill="none" stroke="#E0E0E0" strokeWidth="2" rx="5" />
-          
-          {/* Container Ribs */}
-          {[...Array(15)].map((_, i) => (
-            <line key={i} x1={70 + i*22} y1="20" x2={70 + i*22} y2="200" stroke="#E0E0E0" strokeWidth="4" />
-          ))}
-
-          {/* Logo on Container */}
-          <rect x="120" y="80" width="240" height="60" fill="white" rx="10" opacity="0.9" />
-          <text x="240" y="118" fontFamily="Poppins" fontSize="28" fontWeight="900" fill="#2E7D32" textAnchor="middle">COCOVEERA</text>
-          <text x="240" y="132" fontFamily="sans-serif" fontSize="10" fontWeight="bold" fill="#666" textAnchor="middle">PREMIUM EXPORTS</text>
-
-          {/* Truck Cab */}
-          <path d="M440 200 L440 80 Q440 60 460 60 L510 60 Q530 60 540 80 L570 140 Q580 160 580 180 L580 200 Z" fill="#2E7D32" />
-          {/* Window */}
-          <path d="M450 130 L450 70 Q450 65 460 65 L505 65 Q515 65 520 75 L545 130 Z" fill="#E1F5FE" />
-          {/* Grill/Bumper */}
-          <rect x="570" y="160" width="15" height="40" fill="#424242" rx="2" />
-          <rect x="430" y="190" width="160" height="15" fill="#424242" rx="2" />
-          {/* Headlight Ray */}
-          <path d="M585 175 L800 120 L800 230 Z" fill="url(#headlightGrad)" opacity="0.6" />
-          
-          <defs>
-            <linearGradient id="headlightGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#FFF9C4" />
-              <stop offset="100%" stopColor="transparent" />
-            </linearGradient>
-          </defs>
-
-          {/* Wheels (Rotating) */}
-          {[100, 180, 260, 480, 540].map((cx, i) => (
-            <motion.g 
-              key={i}
-              style={{ transformOrigin: `${cx}px 210px` }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-            >
-              <circle cx={cx} cy="210" r="30" fill="#212121" />
-              <circle cx={cx} cy="210" r="15" fill="#9E9E9E" />
-              {/* Wheel spokes */}
-              {[0, 60, 120, 180, 240, 300].map((angle, j) => (
-                <line key={j} x1={cx} y1="195" x2={cx} y2="225" stroke="#E0E0E0" strokeWidth="3" transform={`rotate(${angle} ${cx} 210)`} />
-              ))}
-            </motion.g>
-          ))}
-        </svg>
-      </motion.div>
-    </motion.div>
-
-    <motion.div 
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1, duration: 1 }}
-      className="absolute top-20 z-40 bg-white/80 backdrop-blur-xl px-10 py-5 rounded-[24px] shadow-xl text-center border border-white/50"
-    >
-      <h2 className="text-3xl font-poppins font-extrabold text-[#0277BD]">Global Logistics</h2>
-      <p className="text-stone-600 font-medium mt-1">Seamless port-to-port container dispatch.</p>
-    </motion.div>
-  </motion.div>
-);
-
-// SCENE 5: OCEAN EXPORT
-const SceneOcean = () => (
-  <motion.div className="relative w-full h-full overflow-hidden flex flex-col items-center justify-end">
-    {/* Sun setting */}
-    <motion.div 
-      initial={{ y: -50 }}
-      animate={{ y: 50 }}
-      transition={{ duration: 4, ease: "linear" }}
-      className="absolute top-[20%] right-[10%] w-40 h-40 bg-[#FF5722] rounded-full blur-[10px] shadow-[0_0_100px_#FF5722]"
-    />
-
-    {/* Distant Port Cranes */}
-    <motion.div 
-      initial={{ x: 0 }} animate={{ x: -100 }} transition={{ duration: 10, ease: "linear" }}
-      className="absolute bottom-[30%] left-[10%] flex gap-10 opacity-30 z-0"
-    >
-      {[...Array(3)].map((_, i) => (
-        <svg key={i} width="100" height="200" viewBox="0 0 100 200">
-          <path d="M20 200 L40 50 L80 50 L100 100" fill="none" stroke="#263238" strokeWidth="8" />
-          <path d="M40 50 L100 20 L100 200" fill="none" stroke="#263238" strokeWidth="4" />
-        </svg>
-      ))}
-    </motion.div>
-
-    {/* Ocean Background */}
-    <div className="absolute bottom-0 w-full h-[35%] bg-gradient-to-b from-[#0277BD] to-[#01579B] z-10 overflow-hidden">
-      {/* Animated Waves */}
-      {[...Array(4)].map((_, i) => (
-        <motion.div 
-          key={i}
-          className="absolute w-[200%] h-full opacity-30"
-          style={{ top: `${i * 15}%`, left: '-50%' }}
-          animate={{ x: ['0%', '25%'], y: [-5, 5, -5] }}
-          transition={{ duration: 3 + i, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full">
-            <path d="M0,40 C150,80 300,0 600,40 C900,80 1050,0 1200,40 L1200,120 L0,120 Z" fill="#81D4FA" />
-          </svg>
-        </motion.div>
-      ))}
-    </div>
-
-    {/* The Cargo Ship */}
-    <motion.div 
-      className="relative z-20 mb-[8%]"
-      initial={{ x: '100vw' }}
-      animate={{ x: 0 }}
-      transition={{ duration: 2, ease: "easeOut" }}
-    >
-      <motion.div 
-        animate={{ y: [-5, 5, -5], rotate: [-1, 1, -1] }} 
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <svg width="800" height="300" viewBox="0 0 800 300" className="drop-shadow-2xl">
-          {/* Hull */}
-          <path d="M50,250 L150,150 L750,150 L700,250 Z" fill="#D32F2F" />
-          <path d="M50,250 L150,150 L750,150 L700,250 Z" fill="url(#hullGrad)" opacity="0.5" />
-          <text x="250" y="210" fontFamily="Poppins" fontSize="32" fontWeight="900" fill="white" letterSpacing="4">COCOVEERA</text>
-
-          <defs>
-            <linearGradient id="hullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="white" />
-              <stop offset="100%" stopColor="black" />
-            </linearGradient>
-            <linearGradient id="contGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1976D2" />
-              <stop offset="100%" stopColor="#0D47A1" />
-            </linearGradient>
-            <linearGradient id="contGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#388E3C" />
-              <stop offset="100%" stopColor="#1B5E20" />
-            </linearGradient>
-          </defs>
-
-          {/* Bridge/Cabin */}
-          <rect x="600" y="50" width="100" height="100" fill="#FAFAFA" />
-          <rect x="620" y="20" width="60" height="30" fill="#E0E0E0" />
-          <rect x="610" y="60" width="20" height="20" fill="#81D4FA" />
-          <rect x="640" y="60" width="20" height="20" fill="#81D4FA" />
-          <rect x="670" y="60" width="20" height="20" fill="#81D4FA" />
-          <rect x="650" y="10" width="10" height="10" fill="#FFC107" />
-
-          {/* Containers Stacked */}
-          {[...Array(6)].map((_, col) => (
-            [...Array(4)].map((_, row) => {
-              // Create a stepped stacking effect
-              if (row > 2 && col > 4) return null; 
-              const isCocoveera = Math.random() > 0.5;
-              return (
-                <g key={`${col}-${row}`} transform={`translate(${180 + col*70}, ${115 - row*35})`}>
-                  <rect x="0" y="0" width="65" height="30" fill={isCocoveera ? "url(#contGrad2)" : "url(#contGrad1)"} rx="2" />
-                  {isCocoveera && <text x="32.5" y="18" fontFamily="sans-serif" fontSize="8" fontWeight="bold" fill="white" textAnchor="middle">COCOVEERA</text>}
-                </g>
-              )
-            })
-          ))}
-
-          {/* Radar rotating */}
-          <motion.line 
-            x1="650" y1="20" x2="680" y2="20" stroke="#424242" strokeWidth="4"
-            style={{ transformOrigin: '650px 20px' }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          />
-        </svg>
-      </motion.div>
-    </motion.div>
-
-    <motion.div 
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1, duration: 1 }}
-      className="absolute top-20 z-40 bg-white/90 backdrop-blur-xl px-10 py-5 rounded-[24px] shadow-xl text-center border border-white"
-    >
-      <h2 className="text-3xl font-poppins font-extrabold text-[#D32F2F]">International Export</h2>
-      <p className="text-stone-600 font-medium mt-1">Shipping to 50+ countries worldwide.</p>
-    </motion.div>
-  </motion.div>
-);
-
-// SCENE 6: CUSTOMER DELIVERY
-const SceneDelivery = () => (
-  <motion.div className="relative w-full h-full overflow-hidden flex flex-col items-center justify-center">
-    {/* Soft glowing background */}
-    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-[#E8F5E9] to-[#C8E6C9] opacity-90" />
-
-    {/* Greenhouse Structure SVG */}
-    <motion.div 
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 1, ease: "easeOut" }}
-      className="relative z-10 w-[80%] max-w-4xl h-[60%] flex items-end justify-center border-b-8 border-[#795548]"
-    >
-      <svg width="100%" height="100%" viewBox="0 0 1000 500" className="absolute bottom-0" preserveAspectRatio="none">
-        {/* Glass Panels */}
-        <path d="M100 500 L100 200 L500 50 L900 200 L900 500 Z" fill="#E8F5E9" opacity="0.6" stroke="#4CAF50" strokeWidth="10" />
-        <path d="M300 500 L300 125 M500 500 L500 50 M700 500 L700 125" stroke="#4CAF50" strokeWidth="6" opacity="0.4" />
-        <path d="M100 350 L900 350 M100 200 L900 200" stroke="#4CAF50" strokeWidth="6" opacity="0.4" />
-      </svg>
-
-      {/* Growing Plants inside */}
-      <div className="absolute bottom-0 w-full flex justify-around px-32 pb-2">
-        {[...Array(5)].map((_, i) => (
-          <motion.div 
-            key={i}
-            className="flex flex-col items-center justify-end"
-            initial={{ scaleY: 0 }}
-            animate={{ scaleY: 1 }}
-            style={{ transformOrigin: 'bottom' }}
-            transition={{ type: "spring", stiffness: 50, damping: 10, delay: 1 + i*0.2 }}
-          >
-            {/* Grow Bag */}
-            <div className="w-24 h-12 bg-white rounded-md border-2 border-stone-200 flex items-center justify-center relative z-10 shadow-sm">
-              <span className="text-[8px] font-bold text-[#2E7D32]">COCOVEERA</span>
-            </div>
-            {/* The Plant */}
-            <svg width="60" height="150" viewBox="0 0 60 150" className="absolute bottom-10 z-0 overflow-visible">
-              <path d="M30,150 Q30,80 10,20" fill="none" stroke="#4CAF50" strokeWidth="4" />
-              <path d="M30,150 Q30,80 50,40" fill="none" stroke="#4CAF50" strokeWidth="4" />
-              <path d="M30,150 L30,0" fill="none" stroke="#2E7D32" strokeWidth="5" />
-              {/* Leaves */}
-              <circle cx="10" cy="20" r="12" fill="#81C784" />
-              <circle cx="50" cy="40" r="10" fill="#81C784" />
-              <circle cx="30" cy="0" r="15" fill="#4CAF50" />
-              {/* Blooming Flower */}
-              <motion.circle 
-                cx="30" cy="0" r="8" fill="#FFEB3B"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 2.5 + i*0.2 }}
-              />
-            </svg>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-
-    {/* Sparkles Overlay */}
-    <div className="absolute inset-0 pointer-events-none z-20">
-      {[...Array(15)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-[#FFD54F]"
-          style={{ top: `${Math.random()*100}%`, left: `${Math.random()*100}%` }}
-          initial={{ scale: 0, opacity: 0, rotate: 0 }}
-          animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0], rotate: 180 }}
-          transition={{ duration: 2, repeat: Infinity, delay: Math.random()*3 }}
-        >
-          <Sparkles className="w-8 h-8" />
-        </motion.div>
-      ))}
-    </div>
-
-    <motion.div 
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1, duration: 1 }}
-      className="absolute top-20 z-40 bg-white/90 backdrop-blur-xl px-12 py-6 rounded-[30px] shadow-2xl text-center border border-white"
-    >
-      <h2 className="text-4xl font-poppins font-extrabold text-[#2E7D32]">Thriving Yields</h2>
-      <p className="text-stone-600 font-medium mt-2 text-lg">Delivering exceptional results to global growers.</p>
-    </motion.div>
-  </motion.div>
-);
-
-// SCENE 7: FINAL
-const SceneFinal = ({ onExplore }) => (
-  <motion.div className="relative flex flex-col items-center justify-center w-full h-full text-center z-10 bg-[#F8F9FA]">
-    <motion.div 
-      initial={{ scale: 0.9, opacity: 0, y: 30 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
-      transition={{ duration: 1.5, ease: 'easeOut' }}
-      className="relative flex flex-col items-center bg-white p-16 rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.08)] border border-stone-100 z-10"
-    >
-      {/* Intense Golden Glow */}
-      <motion.div 
-        animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#D4AF37] rounded-full blur-[100px] -z-10"
-      />
-      
-      <Logo className="h-32 object-contain mb-8 drop-shadow-xl" />
-      
-      <h1 className="text-5xl md:text-7xl font-extrabold text-[#1B5E20] mb-3 tracking-tight font-poppins">
-        Nature to Nurture
-      </h1>
-      <p className="text-xl md:text-2xl text-[#2E7D32] mb-12 font-medium">
-        Premium Coconut Growing Solutions
-      </p>
-      
-      <motion.button
-        onClick={onExplore}
-        whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(46, 125, 50, 0.3)' }}
-        whileTap={{ scale: 0.95 }}
-        className="group relative flex items-center gap-4 px-10 py-5 bg-gradient-to-r from-[#2E7D32] to-[#43A047] text-white font-black text-xl rounded-full shadow-[0_10px_30px_rgba(46,125,50,0.4)] transition-all overflow-hidden"
-      >
-        <span className="relative z-10 tracking-wide">Enter Dashboard</span>
-        <ArrowRight className="w-6 h-6 relative z-10 group-hover:translate-x-2 transition-transform" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-      </motion.button>
-    </motion.div>
-  </motion.div>
-);
-
-
-// ==========================================
-// MAIN ONBOARDING COMPONENT
-// ==========================================
 
 export default function Onboarding() {
-  const [currentScene, setCurrentScene] = useState(0);
-  const [showSkip, setShowSkip] = useState(false);
   const navigate = useNavigate();
-  const timerRef = useRef(null);
+  const [activeStep, setActiveStep] = useState(1);
+  const [filterQuery, setFilterQuery] = useState('');
+  const stepRefs = useRef({});
 
+  // IntersectionObserver to sync sticky sidebar step highlight as user scrolls
   useEffect(() => {
-    // Show skip button after a short delay
-    const skipTimer = setTimeout(() => setShowSkip(true), 2500);
-
-    const runScenes = () => {
-      let delay = sceneTimings[currentScene];
-      if (delay > 0) {
-        timerRef.current = setTimeout(() => {
-          setCurrentScene(prev => {
-            if (prev < sceneTimings.length - 1) return prev + 1;
-            return prev;
-          });
-        }, delay);
-      } else if (currentScene === sceneTimings.length - 1) {
-        // Auto redirect after sitting on final scene
-        timerRef.current = setTimeout(() => {
-          navigate('/dashboard');
-        }, 8000);
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 250;
+      for (let i = STEPS.length; i >= 1; i--) {
+        const el = stepRefs.current[i];
+        if (el && el.offsetTop <= scrollPos) {
+          setActiveStep(i);
+          break;
+        }
       }
     };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-    runScenes();
-
-    return () => {
-      clearTimeout(skipTimer);
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [currentScene, navigate]);
-
-  const handleSkip = () => {
-    navigate('/dashboard');
+  const scrollToStep = (id) => {
+    setActiveStep(id);
+    const el = stepRefs.current[id];
+    if (el) {
+      const topOffset = el.getBoundingClientRect().top + window.pageYOffset - 90;
+      window.scrollTo({ top: topOffset, behavior: 'smooth' });
+    }
   };
 
-  const scenes = [
-    <SceneWelcome key="0" />,
-    <SceneFarm key="1" />,
-    <SceneManufacturing key="2" />,
-    <SceneTransportation key="3" />,
-    <SceneOcean key="4" />,
-    <SceneDelivery key="5" />,
-    <SceneFinal key="6" onExplore={handleSkip} />
-  ];
+  const filteredSteps = STEPS.filter(s => 
+    s.title.toLowerCase().includes(filterQuery.toLowerCase()) ||
+    s.subtitle.toLowerCase().includes(filterQuery.toLowerCase()) ||
+    s.category.toLowerCase().includes(filterQuery.toLowerCase()) ||
+    `step ${s.id}`.includes(filterQuery.toLowerCase())
+  );
 
   return (
-    <div className={`relative w-full h-screen overflow-hidden transition-colors duration-1000 ${backgrounds[currentScene]}`}>
+    <div className="min-h-screen bg-[#F4F6F4] text-stone-900 font-sans selection:bg-[#2E7D32] selection:text-white">
       
-      {/* Global Particle System */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        {[...Array(25)].map((_, i) => (
-          <motion.div
-            key={`particle-${i}`}
-            className="absolute rounded-full bg-white/40 backdrop-blur-md"
-            style={{
-              width: Math.random() * 15 + 5 + 'px',
-              height: Math.random() * 15 + 5 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-            }}
-            animate={{
-              y: [0, -150 - Math.random() * 100],
-              x: Math.random() * 60 - 30,
-              opacity: [0, 0.6, 0],
-            }}
-            transition={{
-              duration: Math.random() * 6 + 6,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          />
-        ))}
+      {/* ── TOP NAV / HEADER BAR ── */}
+      <header className="sticky top-0 z-50 bg-stone-900/95 backdrop-blur-md border-b border-stone-800 text-white py-3.5 px-4 sm:px-8 shadow-xl">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-2">
+              <img src="/logo.webp" alt="Cocoveera" className="h-9 object-contain" />
+              <span className="font-poppins font-black text-base text-white tracking-wider hidden sm:inline">
+                COCO<span className="text-emerald-400">VEERA</span>
+              </span>
+            </Link>
+            <span className="h-4 w-px bg-stone-700 hidden sm:block" />
+            <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 animate-spin text-emerald-300" />
+              Interactive B2B Ordering Manual
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link 
+              to="/products"
+              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-xl text-xs font-black font-poppins transition-all shadow-md flex items-center gap-1.5"
+            >
+              <span>Explore Products</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* ── HERO BANNER SECTION ── */}
+      <section className="relative py-14 px-4 sm:px-8 bg-gradient-to-b from-stone-900 via-stone-900 to-[#122413] text-white border-b border-stone-800 overflow-hidden">
+        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#4CAF50_1px,transparent_1px)] [background-size:24px_24px]" />
+        
+        <div className="max-w-7xl mx-auto relative z-10 text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold uppercase tracking-widest">
+            <Zap className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+            <span>90% Visual Walkthrough • 10% Text • Zero Reading Required</span>
+          </div>
+          
+          <h1 className="text-3xl sm:text-5xl font-poppins font-black tracking-tight leading-tight max-w-4xl mx-auto">
+            How to Buy Coconut Substrates on <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-300 to-emerald-200">Cocoveera</span>
+          </h1>
+
+          <p className="text-stone-300 text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed font-medium">
+            Follow this 15-step interactive visual guide to learn how to request quotations, track 3D container loading, manage milestone payments, and download export documentation.
+          </p>
+
+          {/* Quick Step Search / Filter */}
+          <div className="max-w-md mx-auto pt-2">
+            <div className="relative">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text" 
+                placeholder="Search any step (e.g. Quote, Container, 40% Payment, Delivery)..."
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-stone-400 text-xs focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 font-medium transition-all"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── MAIN BODY WITH STICKY PROGRESS SIDEBAR ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* ── STICKY SIDEBAR (LEFT: 3 COLS) ── */}
+        <aside className="lg:col-span-3 sticky top-20 hidden lg:block bg-white rounded-2xl border border-stone-200 shadow-sm p-4 space-y-3 max-h-[82vh] overflow-y-auto custom-scrollbar">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+            <h3 className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wider flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#2E7D32]" />
+              <span>Ordering Workflow</span>
+            </h3>
+            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-[#2E7D32]">
+              {activeStep} / 15
+            </span>
+          </div>
+
+          {/* STEP NAVIGATION BUTTONS */}
+          <div className="space-y-1">
+            {STEPS.map((step) => {
+              const isActive = activeStep === step.id;
+              const isPassed = activeStep > step.id;
+
+              return (
+                <button
+                  key={step.id}
+                  onClick={() => scrollToStep(step.id)}
+                  className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center gap-3 cursor-pointer group ${
+                    isActive 
+                      ? 'bg-[#2E7D32] text-white shadow-md font-bold ring-2 ring-[#2E7D32]/20' 
+                      : isPassed 
+                        ? 'bg-stone-50 text-stone-700 hover:bg-emerald-50/60' 
+                        : 'text-stone-500 hover:bg-stone-100'
+                  }`}
+                >
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-colors ${
+                    isActive 
+                      ? 'bg-white text-[#2E7D32]' 
+                      : isPassed 
+                        ? 'bg-emerald-500 text-white' 
+                        : 'bg-stone-200 text-stone-600 group-hover:bg-stone-300'
+                  }`}>
+                    {isPassed ? <Check className="w-3 h-3 stroke-[3]" /> : step.id}
+                  </span>
+
+                  <div className="truncate">
+                    <div className="text-xs font-extrabold truncate">{step.title}</div>
+                    <div className={`text-[10px] truncate ${isActive ? 'text-emerald-100' : 'text-stone-400'}`}>
+                      {step.subtitle}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* ── STEP CONTENT CARDS (RIGHT: 9 COLS) ── */}
+        <main className="lg:col-span-9 space-y-16">
+          
+          {/* STEP 1: HOMEPAGE & SEARCH */}
+          <section ref={el => stepRefs.current[1] = el} id="step-1" className="scroll-mt-24 space-y-4">
+            <StepHeader number={1} title="Homepage & Search" category="Discovery" subtitle="Locate products via header navigation or visual search" />
+            
+            {/* UI SCREEN CONTAINER */}
+            <MockupContainer title="Cocoveera B2B Homepage — Search & Categories">
+              <div className="bg-stone-900 text-white p-6 space-y-6 relative overflow-hidden rounded-b-xl">
+                
+                {/* Search Bar Annotation Box */}
+                <div className="relative bg-stone-800 border-2 border-emerald-400 rounded-2xl p-4 shadow-lg">
+                  <HighlightBadge number={1} label="Search Bar" position="top-right" />
+                  <div className="flex items-center gap-3 bg-stone-900 px-4 py-3 rounded-xl border border-stone-700">
+                    <Search className="w-5 h-5 text-emerald-400" />
+                    <span className="text-sm font-semibold text-stone-300">Search "5kg Cocopeat Block", "Grow Bags", "Coco Chips"...</span>
+                    <span className="ml-auto bg-emerald-600 text-white text-xs px-3 py-1 rounded-lg font-bold">Search</span>
+                  </div>
+                </div>
+
+                {/* Categories & Product Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative">
+                  
+                  {/* Category Highlight */}
+                  <div className="bg-stone-800 border-2 border-red-500 rounded-xl p-4 relative">
+                    <HighlightBadge number={2} label="Product Categories" position="top-right" color="red" />
+                    <div className="text-xs font-black text-emerald-400 uppercase tracking-wider mb-2">Category Filter</div>
+                    <ul className="space-y-1.5 text-xs text-stone-300 font-medium">
+                      <li className="bg-emerald-900/60 text-emerald-200 px-2.5 py-1 rounded-lg font-bold border border-emerald-600">✔ Cocopeat Blocks (5kg)</li>
+                      <li className="px-2.5 py-1">✔ Open Top Grow Bags</li>
+                      <li className="px-2.5 py-1">✔ Coco Chips & Briquettes</li>
+                    </ul>
+                  </div>
+
+                  {/* Browse Products */}
+                  <div className="sm:col-span-2 bg-stone-800 border-2 border-emerald-500 rounded-xl p-4 relative flex flex-col justify-between">
+                    <HighlightBadge number={3} label="Browse Products" position="top-right" />
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs font-black text-white">Popular Substrate Blocks</span>
+                      <span className="text-[10px] font-bold text-emerald-400">Showing 12 Export Items</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-stone-900 p-3 rounded-xl border border-stone-700 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-amber-900/40 rounded-lg flex items-center justify-center font-black text-amber-400 text-xs">5KG</div>
+                        <div>
+                          <div className="text-xs font-bold text-white">5kg Cocopeat Block</div>
+                          <div className="text-[10px] text-emerald-400 font-bold">$2.80 / Block</div>
+                        </div>
+                      </div>
+                      <div className="bg-stone-900 p-3 rounded-xl border border-stone-700 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-900/40 rounded-lg flex items-center justify-center font-black text-emerald-400 text-xs">BAG</div>
+                        <div>
+                          <div className="text-xs font-bold text-white">Grow Bag 100cm</div>
+                          <div className="text-[10px] text-emerald-400 font-bold">$1.95 / Bag</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Red Connecting Arrow */}
+                    <div className="mt-4 flex items-center justify-end gap-2 text-red-400 font-black text-xs animate-bounce">
+                      <span>Click Product to View Details</span>
+                      <ArrowRight className="w-4 h-4 stroke-[3]" />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 2: PRODUCT DETAILS */}
+          <section ref={el => stepRefs.current[2] = el} id="step-2" className="scroll-mt-24 space-y-4">
+            <StepHeader number={2} title="Product Details & Quantity Selector" category="Discovery" subtitle="Adjust specs, pallet requirements, and order container volume" />
+            
+            <MockupContainer title="Product Details — 5kg Cocopeat Block">
+              <div className="bg-white p-6 grid grid-cols-1 md:grid-cols-2 gap-6 relative rounded-b-xl border border-stone-200">
+                
+                {/* Left: Product Image Box */}
+                <div className="relative bg-stone-100 rounded-2xl p-6 border-2 border-stone-300 flex flex-col items-center justify-center group">
+                  <HighlightBadge number={1} label="High-Res Product Asset" position="top-left" />
+                  <div className="w-44 h-44 bg-gradient-to-br from-amber-800 to-amber-950 rounded-2xl shadow-xl flex flex-col items-center justify-center text-white p-4 text-center">
+                    <Package className="w-12 h-12 text-amber-400 mb-2" />
+                    <span className="font-poppins font-black text-sm">5KG COCOPEAT BLOCK</span>
+                    <span className="text-[10px] text-amber-200 mt-1">Washed • Low EC &lt; 0.5 mS/cm</span>
+                  </div>
+                </div>
+
+                {/* Right: Quantity & Live Container Preview Trigger */}
+                <div className="space-y-4 relative">
+                  <div>
+                    <h4 className="font-poppins font-black text-lg text-stone-900">5kg High Expansion Cocopeat Block</h4>
+                    <p className="text-xs text-stone-500 font-medium">B2B Wholesale Container Pricing • Minimum 1 Container</p>
+                  </div>
+
+                  {/* Quantity Selector Highlight */}
+                  <div className="p-4 bg-emerald-50 rounded-2xl border-2 border-emerald-500 relative space-y-2">
+                    <HighlightBadge number={2} label="Quantity Selector (+ / -)" position="top-right" />
+                    <label className="block text-xs font-black text-[#2E7D32] uppercase tracking-wider">Select Container Quantity</label>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center border-2 border-emerald-600 bg-white rounded-xl overflow-hidden shadow-sm">
+                        <button className="px-3 py-2 text-emerald-800 font-black hover:bg-emerald-100"><Minus className="w-4 h-4" /></button>
+                        <span className="px-4 py-2 font-black text-sm text-stone-900">1.00</span>
+                        <button className="px-3 py-2 text-emerald-800 font-black hover:bg-emerald-100"><Plus className="w-4 h-4" /></button>
+                      </div>
+                      <span className="text-xs font-bold text-stone-600">FCL Container (40ft High Cube)</span>
+                    </div>
+                  </div>
+
+                  {/* Live Container Preview Card Highlight */}
+                  <div className="p-4 bg-stone-900 text-white rounded-2xl border-2 border-red-500 relative space-y-2">
+                    <HighlightBadge number={3} label="Live Container Preview" position="top-right" color="red" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">Live Cargo Visualizer</span>
+                      <span className="text-[10px] font-extrabold bg-emerald-700 text-white px-2 py-0.5 rounded-md">100% Filled</span>
+                    </div>
+                    <div className="h-2 bg-stone-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 w-full rounded-full" />
+                    </div>
+                    <div className="flex justify-between text-[11px] font-bold text-stone-350 pt-1">
+                      <span>Pallet Count: 24 Pallets</span>
+                      <span>Total Net Wt: 26.4 MT</span>
+                    </div>
+                  </div>
+
+                  {/* Red Arrow Pointer */}
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between text-red-700 font-black text-xs">
+                    <span className="flex items-center gap-2">
+                      <ArrowRight className="w-4 h-4 text-red-600 stroke-[3]" />
+                      Click "+" or adjust quantity to automatically compute container fill.
+                    </span>
+                  </div>
+
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 3: LIVE CONTAINER VISUALIZER */}
+          <section ref={el => stepRefs.current[3] = el} id="step-3" className="scroll-mt-24 space-y-4">
+            <StepHeader number={3} title="Live Container Cargo Simulator" category="Planning" subtitle="Inspect volume utilization, weight limits and pallet placement in real time" />
+            
+            <MockupContainer title="Real-Time 3D Container Fill Visualizer">
+              <div className="bg-stone-950 p-6 rounded-b-xl relative text-white space-y-6">
+                
+                {/* 3D Container Model Box */}
+                <div className="relative h-64 bg-gradient-to-b from-stone-900 to-stone-950 border-2 border-emerald-500 rounded-2xl flex items-center justify-center overflow-hidden">
+                  <HighlightBadge number={1} label="3D Interactive Canvas" position="top-left" />
+                  
+                  {/* Wireframe Container Graphic */}
+                  <div className="w-4/5 h-40 border-2 border-emerald-400/80 rounded-lg relative flex items-center justify-evenly p-2 bg-emerald-950/30">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="font-poppins font-black text-2xl text-emerald-400/40 uppercase tracking-widest">40FT HIGH CUBE CONTAINER</span>
+                    </div>
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="w-10 h-28 bg-amber-800/80 border border-amber-400/60 rounded flex flex-col justify-end p-1 shadow-md z-10">
+                        <div className="w-full h-3 bg-amber-500/80 rounded-sm mb-1"></div>
+                        <span className="text-[8px] font-black text-white text-center">PLT {i+1}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Metrics Summary Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 relative">
+                  <div className="bg-stone-900 p-3 rounded-xl border border-stone-800 text-center">
+                    <HighlightBadge number={2} label="Fill %" position="top-right" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Container Fill</span>
+                    <span className="text-lg font-black text-emerald-400 font-poppins">100.0%</span>
+                  </div>
+
+                  <div className="bg-stone-900 p-3 rounded-xl border border-stone-800 text-center">
+                    <HighlightBadge number={3} label="Weight" position="top-right" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Gross Weight</span>
+                    <span className="text-lg font-black text-emerald-400 font-poppins">26.40 MT</span>
+                  </div>
+
+                  <div className="bg-stone-900 p-3 rounded-xl border border-stone-800 text-center">
+                    <HighlightBadge number={4} label="Volume CBM" position="top-right" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Volume CBM</span>
+                    <span className="text-lg font-black text-emerald-400 font-poppins">68.2 CBM</span>
+                  </div>
+
+                  <div className="bg-stone-900 p-3 rounded-xl border border-stone-800 text-center">
+                    <HighlightBadge number={5} label="Items" position="top-right" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Total Blocks</span>
+                    <span className="text-lg font-black text-emerald-400 font-poppins">5,280 Units</span>
+                  </div>
+                </div>
+
+                {/* Next Step Arrow */}
+                <div className="p-4 bg-emerald-950 border border-emerald-600/80 rounded-xl flex items-center justify-between">
+                  <div className="text-xs text-emerald-200 font-medium">
+                    When container setup is verified, click <strong className="text-white">Request Quote</strong> to send specifications directly to our export managers.
+                  </div>
+                  <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-black flex items-center gap-1.5 shrink-0 shadow-lg">
+                    <span>Request Quote</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 4: REQUEST QUOTE */}
+          <section ref={el => stepRefs.current[4] = el} id="step-4" className="scroll-mt-24 space-y-4">
+            <StepHeader number={4} title="Request Official Quotation (RFQ)" category="Planning" subtitle="Provide delivery country, destination port, and custom packaging instructions" />
+            
+            <MockupContainer title="Request Quote Modal — Destination & Specifications">
+              <div className="bg-white p-6 rounded-b-xl border border-stone-200 space-y-6">
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Left 2 Cols: RFQ Form */}
+                  <div className="md:col-span-2 space-y-4">
+                    
+                    <div className="p-3 bg-stone-50 border-2 border-emerald-500 rounded-xl relative space-y-2">
+                      <HighlightBadge number={1} label="Destination Country & Port" position="top-right" />
+                      <label className="block text-xs font-black text-stone-700 uppercase tracking-wider">Destination Country &amp; Discharge Port</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2 bg-white border border-stone-300 rounded-lg text-xs font-bold text-stone-800">🇺🇸 United States</div>
+                        <div className="p-2 bg-white border border-stone-300 rounded-lg text-xs font-bold text-stone-800">Port of Rotterdam (NL)</div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-stone-50 border-2 border-red-500 rounded-xl relative space-y-2">
+                      <HighlightBadge number={2} label="Custom Packing & Notes" position="top-right" color="red" />
+                      <label className="block text-xs font-black text-stone-700 uppercase tracking-wider">Special Packaging / Palletizing Notes</label>
+                      <div className="p-2.5 bg-white border border-stone-300 rounded-lg text-xs font-medium text-stone-600">
+                        "Require heat-treated ISPM 15 wooden pallets with corner edge guards &amp; private label plastic film print."
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Right Col: Container Summary & Submit */}
+                  <div className="bg-stone-900 text-white p-4 rounded-xl space-y-4 relative border-2 border-emerald-500 flex flex-col justify-between">
+                    <HighlightBadge number={3} label="Selected Products & Submit" position="top-right" />
+                    
+                    <div>
+                      <div className="text-xs font-black text-emerald-400 uppercase tracking-wider mb-2">Quote Summary</div>
+                      <div className="text-xs space-y-1 font-medium text-stone-300">
+                        <div className="flex justify-between"><span>Container:</span><span className="font-bold text-white">40FT HC</span></div>
+                        <div className="flex justify-between"><span>Substrate:</span><span className="font-bold text-white">5kg Block</span></div>
+                        <div className="flex justify-between"><span>Quantity:</span><span className="font-bold text-white">1.00 FCL</span></div>
+                      </div>
+                    </div>
+
+                    <button className="w-full py-3 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black rounded-xl shadow-lg flex items-center justify-center gap-2">
+                      <span>Submit Request Quote</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 5: MY QUOTES DASHBOARD */}
+          <section ref={el => stepRefs.current[5] = el} id="step-5" className="scroll-mt-24 space-y-4">
+            <StepHeader number={5} title="My Quotes Dashboard & Review Status" category="Negotiation" subtitle="Monitor submitted RFQs while export managers calculate FOB / CIF pricing" />
+            
+            <MockupContainer title="Customer Dashboard — My Quotes Tab">
+              <div className="bg-white p-6 rounded-b-xl border border-stone-200 space-y-4">
+                
+                {/* Dashboard Table Mockup */}
+                <div className="overflow-hidden border border-stone-200 rounded-xl shadow-sm">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-stone-100 text-stone-700 font-poppins font-black uppercase text-[10px] tracking-wider border-b border-stone-200">
+                      <tr>
+                        <th className="p-3">RFQ Number</th>
+                        <th className="p-3">Container Type</th>
+                        <th className="p-3">Destination Port</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100 font-medium">
+                      <tr className="bg-amber-50/60 border-l-4 border-l-amber-500">
+                        <td className="p-3 font-bold text-stone-900">#QT-2026-9041</td>
+                        <td className="p-3 text-stone-600">1x 40FT High Cube</td>
+                        <td className="p-3 text-stone-600">Port of Rotterdam (NL)</td>
+                        <td className="p-3">
+                          <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase border border-amber-300 inline-flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-amber-600 animate-spin" />
+                            Pending Review
+                          </span>
+                        </td>
+                        <td className="p-3 text-right font-bold text-emerald-700">Under Evaluation</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Explanation Glassmorphic Box */}
+                <div className="p-4 bg-emerald-900/90 text-white rounded-xl border border-emerald-600 flex items-start gap-3 shadow-md">
+                  <HelpCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                  <div className="text-xs space-y-1">
+                    <strong className="text-emerald-300 font-bold block">What happens during Pending Review?</strong>
+                    <p className="text-stone-200 leading-relaxed font-medium">
+                      Our commercial export desk calculates ocean freight rates, customs clearance, port handling fees, and volume discounts. Response time is usually under 2 business hours.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 6: QUOTE APPROVED */}
+          <section ref={el => stepRefs.current[6] = el} id="step-6" className="scroll-mt-24 space-y-4">
+            <StepHeader number={6} title="Official Quote Approval & PDF Download" category="Negotiation" subtitle="Receive finalized FOB/CIF quotation with pricing breakdown and validity window" />
+            
+            <MockupContainer title="Approved Quotation View — #QT-2026-9041">
+              <div className="bg-white p-6 rounded-b-xl border border-stone-200 space-y-6">
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  
+                  <div className="p-3 bg-stone-50 border-2 border-emerald-500 rounded-xl relative text-center">
+                    <HighlightBadge number={1} label="Quotation Number" position="top-right" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Quote ID</span>
+                    <span className="text-sm font-black text-stone-900 font-poppins">#QT-2026-9041</span>
+                  </div>
+
+                  <div className="p-3 bg-stone-50 border-2 border-emerald-500 rounded-xl relative text-center">
+                    <HighlightBadge number={2} label="Negotiated Unit Price" position="top-right" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">FOB Unit Price</span>
+                    <span className="text-sm font-black text-emerald-700 font-poppins">$2.65 / Block</span>
+                  </div>
+
+                  <div className="p-3 bg-stone-50 border-2 border-red-500 rounded-xl relative text-center">
+                    <HighlightBadge number={3} label="Quote Validity" position="top-right" color="red" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Validity Window</span>
+                    <span className="text-sm font-black text-red-600 font-poppins">14 Days Remaining</span>
+                  </div>
+
+                  <div className="p-3 bg-emerald-900 text-white rounded-xl border-2 border-emerald-400 relative text-center flex flex-col justify-center items-center">
+                    <HighlightBadge number={4} label="Download PDF" position="top-right" />
+                    <button className="flex items-center gap-1.5 text-xs font-black bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-white">
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download PDF</span>
+                    </button>
+                  </div>
+
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 7: ACCEPT QUOTE */}
+          <section ref={el => stepRefs.current[7] = el} id="step-7" className="scroll-mt-24 space-y-4">
+            <StepHeader number={7} title="Accept Quote & Convert to Active Order" category="Negotiation" subtitle="One-click acceptance locks container allocation and generates proforma order" />
+            
+            <MockupContainer title="Quotation Action Panel — Accept & Lock Order">
+              <div className="bg-stone-900 text-white p-6 rounded-b-xl relative space-y-6">
+                
+                <div className="p-6 bg-gradient-to-r from-emerald-950 to-stone-900 border-2 border-emerald-400 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-6 relative shadow-xl">
+                  <HighlightBadge number={1} label="Accept Quote Button" position="top-left" />
+                  
+                  <div>
+                    <h4 className="font-poppins font-black text-lg text-white">Ready to Lock Your Shipment?</h4>
+                    <p className="text-xs text-emerald-200 font-medium mt-1">
+                      Accepting this quote reserves 1x 40FT HC Container production batch and generates milestone payment terms.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button className="px-6 py-3 bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-xl font-poppins font-black text-xs shadow-lg flex items-center gap-2 cursor-pointer transition-all animate-pulse">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                      <span>ACCEPT QUOTE NOW</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 text-emerald-400 font-black text-xs">
+                  <ArrowRight className="w-4 h-4 stroke-[3]" />
+                  <span>Clicking "Accept Quote" automatically creates order #ORD-2026-9041 under My Orders.</span>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 8: MY ORDERS */}
+          <section ref={el => stepRefs.current[8] = el} id="step-8" className="scroll-mt-24 space-y-4">
+            <StepHeader number={8} title="Automated Order Conversion & Status Tracker" category="Fulfillment" subtitle="View order stage, payment milestones, and fulfillment progress" />
+            
+            <MockupContainer title="Customer Dashboard — My Orders Tab">
+              <div className="bg-white p-6 rounded-b-xl border border-stone-200 space-y-6">
+                
+                <div className="p-4 bg-stone-50 border-2 border-emerald-500 rounded-2xl space-y-4 relative">
+                  <HighlightBadge number={1} label="Order Status & Progress Bar" position="top-right" />
+                  
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="text-xs font-black text-stone-900">Order #ORD-2026-9041</span>
+                      <span className="text-[10px] text-stone-400 block">Created Jul 27, 2026 • 1x 40FT HC</span>
+                    </div>
+                    <span className="px-3 py-1 bg-emerald-100 text-[#2E7D32] rounded-full text-xs font-black border border-emerald-300">
+                      Processing • 40% Milestone Due
+                    </span>
+                  </div>
+
+                  {/* Progress Milestone Line */}
+                  <div className="relative pt-2">
+                    <div className="h-2 bg-stone-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-600 w-[10%] rounded-full" />
+                    </div>
+                    <div className="flex justify-between text-[10px] font-black text-stone-500 pt-2 uppercase">
+                      <span className="text-emerald-700">0% Confirmed</span>
+                      <span>40% Advance</span>
+                      <span>60% Production</span>
+                      <span>80% Loading</span>
+                      <span>100% Delivered</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 9: 40% ADVANCE PAYMENT */}
+          <section ref={el => stepRefs.current[9] = el} id="step-9" className="scroll-mt-24 space-y-4">
+            <StepHeader number={9} title="40% Advance Milestone Payment" category="Payment" subtitle="Download Proforma Invoice, initiate SWIFT wire transfer & upload payment slip" />
+            
+            <MockupContainer title="Milestone Payment Portal — 40% Advance ($5,596.80)">
+              <div className="bg-stone-900 text-white p-6 rounded-b-xl border border-stone-800 space-y-6">
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  <div className="p-4 bg-stone-800 border-2 border-emerald-500 rounded-xl relative space-y-2">
+                    <HighlightBadge number={1} label="Pay Now / Wire Details" position="top-right" />
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Wire Transfer (SWIFT)</span>
+                    <div className="text-xs space-y-1 text-stone-300 font-medium">
+                      <div>Bank: <strong>HDFC Bank India</strong></div>
+                      <div>SWIFT: <strong>HDFCINBBXXX</strong></div>
+                      <div>Account: <strong>502000889120</strong></div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-stone-800 border-2 border-red-500 rounded-xl relative space-y-2">
+                    <HighlightBadge number={2} label="Upload Payment Proof" position="top-right" color="red" />
+                    <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider block">Payment Slip Upload</span>
+                    <div className="p-3 bg-stone-900 border border-stone-700 rounded-lg text-center cursor-pointer hover:border-emerald-400">
+                      <CreditCard className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+                      <span className="text-xs font-bold text-white block">Click to Upload Bank Slip</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-emerald-950 border-2 border-emerald-400 rounded-xl relative flex flex-col justify-between">
+                    <HighlightBadge number={3} label="Milestone Auto-Update" position="top-right" />
+                    <div>
+                      <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider block">Milestone Status</span>
+                      <span className="text-sm font-black text-white block mt-1">40% Payment Confirmed</span>
+                    </div>
+                    <div className="text-[10px] text-emerald-200 font-medium mt-2">
+                      Raw coir block processing and washing begins upon 40% receipt.
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 10: PRODUCTION & QC */}
+          <section ref={el => stepRefs.current[10] = el} id="step-10" className="scroll-mt-24 space-y-4">
+            <StepHeader number={10} title="Factory Production & Quality Control" category="Production" subtitle="Sieving, washing, EC/pH testing, block compression and pallet shrink wrapping" />
+            
+            <MockupContainer title="Factory Production Visual Tracker">
+              <div className="bg-white p-6 rounded-b-xl border border-stone-200 space-y-6">
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  
+                  <div className="p-4 bg-stone-50 border-2 border-emerald-500 rounded-xl relative text-center space-y-2">
+                    <HighlightBadge number={1} label="Manufacturing" position="top-right" />
+                    <Factory className="w-8 h-8 text-[#2E7D32] mx-auto" />
+                    <h5 className="font-poppins font-black text-xs text-stone-900">Coir Processing</h5>
+                    <p className="text-[11px] text-stone-500 font-medium">Triple-washed, sun-dried &amp; sieved to remove fiber fines.</p>
+                  </div>
+
+                  <div className="p-4 bg-stone-50 border-2 border-emerald-500 rounded-xl relative text-center space-y-2">
+                    <HighlightBadge number={2} label="Quality Check (EC & pH)" position="top-right" />
+                    <ShieldCheck className="w-8 h-8 text-emerald-600 mx-auto" />
+                    <h5 className="font-poppins font-black text-xs text-stone-900">Lab Testing</h5>
+                    <p className="text-[11px] text-stone-500 font-medium">EC &lt; 0.5 mS/cm • pH 5.8-6.5 • Moisture &lt; 15%</p>
+                  </div>
+
+                  <div className="p-4 bg-stone-50 border-2 border-emerald-500 rounded-xl relative text-center space-y-2">
+                    <HighlightBadge number={3} label="Pallet Packing" position="top-right" />
+                    <Package className="w-8 h-8 text-amber-700 mx-auto" />
+                    <h5 className="font-poppins font-black text-xs text-stone-900">Export Palletizing</h5>
+                    <p className="text-[11px] text-stone-500 font-medium">220 blocks per pallet, shrink wrapped with edge guards.</p>
+                  </div>
+
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 11: 60% PAYMENT */}
+          <section ref={el => stepRefs.current[11] = el} id="step-11" className="scroll-mt-24 space-y-4">
+            <StepHeader number={11} title="60% Production Completion Milestone" category="Payment" subtitle="Second milestone invoice released upon production completion inspection" />
+            
+            <MockupContainer title="Production Progress Invoice — 60% Milestone">
+              <div className="bg-stone-900 text-white p-6 rounded-b-xl border border-stone-800 space-y-4">
+                
+                <div className="p-4 bg-stone-800 border-2 border-emerald-400 rounded-2xl flex items-center justify-between gap-4 relative">
+                  <HighlightBadge number={1} label="60% Progress Update" position="top-left" />
+                  
+                  <div>
+                    <span className="text-xs font-black text-emerald-400 uppercase tracking-wider block">Milestone 2 Reached</span>
+                    <span className="text-sm font-bold text-white">Production Finished &amp; QC Verified</span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-stone-400 block">Milestone Amount</span>
+                    <span className="text-lg font-black text-emerald-400 font-poppins">$2,798.40</span>
+                  </div>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 12: CONTAINER LOADING */}
+          <section ref={el => stepRefs.current[12] = el} id="step-12" className="scroll-mt-24 space-y-4">
+            <StepHeader number={12} title="Container Stuffing & Port Dispatch Photos" category="Logistics" subtitle="High-resolution loading inspection photos and container seal verification" />
+            
+            <MockupContainer title="Stuffing Inspection & Container Seal Photos">
+              <div className="bg-white p-6 rounded-b-xl border border-stone-200 space-y-6">
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  
+                  <div className="p-3 bg-stone-100 rounded-xl border-2 border-emerald-500 relative text-center">
+                    <HighlightBadge number={1} label="Pallet Inspection" position="top-right" />
+                    <div className="h-28 bg-amber-900/20 rounded-lg flex items-center justify-center mb-2">
+                      <Package className="w-10 h-10 text-amber-800" />
+                    </div>
+                    <span className="text-xs font-bold text-stone-800">24 Pallets Checked</span>
+                  </div>
+
+                  <div className="p-3 bg-stone-100 rounded-xl border-2 border-emerald-500 relative text-center">
+                    <HighlightBadge number={2} label="Stuffing Process" position="top-right" />
+                    <div className="h-28 bg-emerald-900/20 rounded-lg flex items-center justify-center mb-2">
+                      <Truck className="w-10 h-10 text-emerald-800" />
+                    </div>
+                    <span className="text-xs font-bold text-stone-800">Container Loaded</span>
+                  </div>
+
+                  <div className="p-3 bg-stone-100 rounded-xl border-2 border-red-500 relative text-center">
+                    <HighlightBadge number={3} label="Customs Seal Tag" position="top-right" color="red" />
+                    <div className="h-28 bg-red-900/20 rounded-lg flex items-center justify-center mb-2">
+                      <ShieldCheck className="w-10 h-10 text-red-800" />
+                    </div>
+                    <span className="text-xs font-bold text-stone-800">Seal #IND-902811</span>
+                  </div>
+
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 13: 80% PAYMENT */}
+          <section ref={el => stepRefs.current[13] = el} id="step-13" className="scroll-mt-24 space-y-4">
+            <StepHeader number={13} title="80% Port Dispatch Payment Milestone" category="Payment" subtitle="Third milestone release upon container gate-in at export terminal" />
+            
+            <MockupContainer title="Port Terminal Gate-In Confirmation — 80% Payment">
+              <div className="bg-stone-900 text-white p-6 rounded-b-xl border border-stone-800">
+                
+                <div className="p-4 bg-emerald-950 border-2 border-emerald-400 rounded-2xl flex items-center justify-between gap-4 relative">
+                  <HighlightBadge number={1} label="80% Confirmed" position="top-left" />
+                  <div>
+                    <span className="text-xs font-black text-emerald-400 uppercase">Container at Port Terminal</span>
+                    <p className="text-xs text-stone-300 font-medium">Customs clearance completed &amp; vessel loading scheduled.</p>
+                  </div>
+                  <span className="text-sm font-black text-white bg-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-500">
+                    80% Milestone Complete
+                  </span>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 14: SHIPMENT */}
+          <section ref={el => stepRefs.current[14] = el} id="step-14" className="scroll-mt-24 space-y-4">
+            <StepHeader number={14} title="Ocean Freight Shipment & Live Vessel Tracking" category="Logistics" subtitle="Real-time vessel GPS location, bill of lading draft & estimated arrival date" />
+            
+            <MockupContainer title="Live Ocean Cargo Radar & Shipping Details">
+              <div className="bg-stone-950 text-white p-6 rounded-b-xl border border-stone-800 space-y-6">
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  
+                  <div className="p-3 bg-stone-900 border-2 border-emerald-500 rounded-xl relative text-center">
+                    <HighlightBadge number={1} label="Tracking Number" position="top-right" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Container ID</span>
+                    <span className="text-xs font-black text-emerald-400 font-poppins">MSKU-9821049</span>
+                  </div>
+
+                  <div className="p-3 bg-stone-900 border-2 border-emerald-500 rounded-xl relative text-center">
+                    <HighlightBadge number={2} label="Shipping Line" position="top-right" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Carrier</span>
+                    <span className="text-xs font-black text-white font-poppins">Maersk Line (Vessel 402E)</span>
+                  </div>
+
+                  <div className="p-3 bg-stone-900 border-2 border-red-500 rounded-xl relative text-center">
+                    <HighlightBadge number={3} label="ETA Date" position="top-right" color="red" />
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Estimated Arrival</span>
+                    <span className="text-xs font-black text-red-400 font-poppins">Aug 18, 2026 (Rotterdam)</span>
+                  </div>
+
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+
+          {/* STEP 15: DELIVERED & DOCUMENTS */}
+          <section ref={el => stepRefs.current[15] = el} id="step-15" className="scroll-mt-24 space-y-4">
+            <StepHeader number={15} title="Order Completion & Digital Export Document Vault" category="Completion" subtitle="Download all 5 official shipping documents for port release & customs entry" />
+            
+            <MockupContainer title="Export Document Hub — Complete Order #ORD-2026-9041">
+              <div className="bg-white p-6 rounded-b-xl border border-stone-200 space-y-6">
+                
+                <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-[#2E7D32]" />
+                    <div>
+                      <h4 className="font-poppins font-black text-sm text-stone-900">Shipment Delivered &amp; Cleared</h4>
+                      <p className="text-xs text-stone-600 font-medium">All 5 compliance export documents are verified and available for download.</p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 bg-[#2E7D32] text-white text-xs font-black rounded-lg uppercase">Completed</span>
+                </div>
+
+                {/* 5 Export Document Buttons Highlight */}
+                <div className="p-4 bg-stone-900 text-white rounded-2xl border-2 border-emerald-500 space-y-3 relative">
+                  <HighlightBadge number={1} label="5 Downloadable Export Documents" position="top-right" />
+                  
+                  <div className="text-xs font-black text-emerald-400 uppercase tracking-wider">Official Certificate Vault</div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    
+                    <div className="p-2.5 bg-stone-800 border border-stone-700 rounded-xl flex items-center justify-between text-xs font-bold">
+                      <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-emerald-400" /> Tax Invoice</span>
+                      <Download className="w-3.5 h-3.5 text-stone-400 cursor-pointer hover:text-white" />
+                    </div>
+
+                    <div className="p-2.5 bg-stone-800 border border-stone-700 rounded-xl flex items-center justify-between text-xs font-bold">
+                      <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-emerald-400" /> Packing List</span>
+                      <Download className="w-3.5 h-3.5 text-stone-400 cursor-pointer hover:text-white" />
+                    </div>
+
+                    <div className="p-2.5 bg-stone-800 border border-stone-700 rounded-xl flex items-center justify-between text-xs font-bold">
+                      <span className="flex items-center gap-2"><Anchor className="w-4 h-4 text-emerald-400" /> Bill of Lading (B/L)</span>
+                      <Download className="w-3.5 h-3.5 text-stone-400 cursor-pointer hover:text-white" />
+                    </div>
+
+                    <div className="p-2.5 bg-stone-800 border border-stone-700 rounded-xl flex items-center justify-between text-xs font-bold">
+                      <span className="flex items-center gap-2"><Award className="w-4 h-4 text-emerald-400" /> Certificate of Origin</span>
+                      <Download className="w-3.5 h-3.5 text-stone-400 cursor-pointer hover:text-white" />
+                    </div>
+
+                    <div className="p-2.5 bg-stone-800 border border-stone-700 rounded-xl flex items-center justify-between text-xs font-bold">
+                      <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-400" /> Quality Certificate</span>
+                      <Download className="w-3.5 h-3.5 text-stone-400 cursor-pointer hover:text-white" />
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </MockupContainer>
+          </section>
+
+        </main>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentScene}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          className="absolute inset-0 flex items-center justify-center w-full h-full"
-        >
-          {scenes[currentScene]}
-        </motion.div>
-      </AnimatePresence>
+    </div>
+  );
+}
 
-      <AnimatePresence>
-        {showSkip && currentScene < 6 && (
-          <motion.button
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            onClick={handleSkip}
-            className="absolute top-8 right-8 z-50 px-8 py-3 bg-white/30 hover:bg-white/60 text-stone-900 backdrop-blur-xl border border-white/50 rounded-full font-bold shadow-lg transition-all hover:scale-105"
-          >
-            Skip Animation
-          </motion.button>
-        )}
-      </AnimatePresence>
-      
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes shimmer {
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}} />
+/* ── HELPER COMPONENTS ── */
+
+function StepHeader({ number, title, category, subtitle }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2.5">
+        <span className="w-8 h-8 rounded-xl bg-[#2E7D32] text-white flex items-center justify-center font-poppins font-black text-sm shadow-md">
+          {number}
+        </span>
+        <span className="text-xs font-black uppercase tracking-widest text-[#2E7D32] bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+          Step {number} • {category}
+        </span>
+      </div>
+      <h2 className="text-xl sm:text-2xl font-poppins font-black text-stone-900 tracking-tight">
+        {title}
+      </h2>
+      <p className="text-xs text-stone-600 font-medium">
+        {subtitle}
+      </p>
+    </div>
+  );
+}
+
+function MockupContainer({ title, children }) {
+  return (
+    <div className="w-full bg-stone-900 rounded-2xl shadow-xl overflow-hidden border border-stone-700">
+      {/* MAC-STYLE BROWSER HEADER BAR */}
+      <div className="bg-stone-900 px-4 py-2.5 flex items-center justify-between border-b border-stone-800">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-red-500 inline-block" />
+          <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block" />
+          <span className="w-3 h-3 rounded-full bg-green-500 inline-block" />
+        </div>
+        
+        <div className="bg-stone-800 px-6 py-1 rounded-md text-[11px] text-stone-400 font-mono font-medium truncate max-w-xs sm:max-w-md">
+          https://cocoveera.com/app/{title.toLowerCase().replace(/[^a-z0-9]/g, '-')}
+        </div>
+
+        <div className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest hidden sm:block">
+          Interactive UI Mockup
+        </div>
+      </div>
+
+      {/* SCREEN CONTENT */}
+      {children}
+    </div>
+  );
+}
+
+function HighlightBadge({ number, label, position = 'top-right', color = 'green' }) {
+  const isRed = color === 'red';
+
+  return (
+    <div className={`absolute z-20 flex items-center gap-1.5 ${
+      position === 'top-right' ? '-top-3 -right-2' : 
+      position === 'top-left' ? '-top-3 -left-2' : 
+      position === 'bottom-right' ? '-bottom-3 -right-2' : '-bottom-3 -left-2'
+    }`}>
+      <span className={`w-5 h-5 rounded-full ${isRed ? 'bg-red-600' : 'bg-emerald-600'} text-white text-[10px] font-black flex items-center justify-center shadow-lg ring-2 ring-white animate-pulse`}>
+        {number}
+      </span>
+      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isRed ? 'bg-red-950 text-red-200 border border-red-700' : 'bg-emerald-950 text-emerald-200 border border-emerald-700'} shadow-md uppercase tracking-wider`}>
+        {label}
+      </span>
     </div>
   );
 }

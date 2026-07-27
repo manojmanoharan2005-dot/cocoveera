@@ -306,6 +306,8 @@ function AppContent() {
           <Route path="/quality-testing" element={<QualityTesting />} />
           <Route path="/substrates" element={<CoconutSubstrates />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/how-to-use" element={<Onboarding />} />
+          <Route path="/how-it-works" element={<Onboarding />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
           

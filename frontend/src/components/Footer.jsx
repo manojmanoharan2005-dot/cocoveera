@@ -30,6 +30,7 @@ const FALLBACK_CATEGORIES = [
 const SUPPORT_LINKS = [
   { label: 'About Us', path: '/about' },
   { label: 'Our Products', path: '/products' },
+  { label: 'How to Use (Guide)', path: '/how-to-use' },
   { label: 'Quality Assurance', path: '/quality-testing' },
   { label: 'Certifications', path: '/about#certifications' },
   { label: 'Contact Us', path: '/contact' },
