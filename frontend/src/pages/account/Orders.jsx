@@ -128,7 +128,7 @@ const Orders = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchInput]);
 
-  // React Query Fetch (Automatic cache, staleTime 5m, cacheTime 15m)
+  // React Query Fetch — staleTime 0 so payment updates always show immediately
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     ['orders', currentPage, dateFilter, debouncedSearch],
     async () => {
@@ -146,14 +146,23 @@ const Orders = () => {
     {
       keepPreviousData: true,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000,
-      cacheTime: 10 * 60 * 1000,
+      staleTime: 0,         // Never serve stale data — especially critical post-payment
+      cacheTime: 5 * 60 * 1000,
       onError: (err) => {
         console.error('Failed to fetch orders:', err);
         setErrorState(err.response?.data?.message || 'Failed to load your orders.');
       }
     }
   );
+
+  // Force immediate refetch when returning from a confirmed payment sync
+  useEffect(() => {
+    if (location.state?.syncConfirmed) {
+      refetch();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const orders = data?.data || [];
   const totalPages = data?.pagination?.pages || 1;

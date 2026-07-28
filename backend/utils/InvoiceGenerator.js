@@ -24,6 +24,49 @@ export const buildInvoiceDataFromOrder = (order) => {
     formattedPhone = '+' + formattedPhone.substring(0, diff) + ' ' + formattedPhone.substring(diff);
   }
 
+  // ── Dynamic payment progress fields ─────────────────────────────────────────
+  // Always computed from actual order data — never from stale inputs
+  const totalAmount = order.totalAmount || 0;
+
+  // Prefer stored amountPaid; fall back to computing from milestones if needed
+  let amountPaid = order.amountPaid;
+  if (amountPaid === undefined || amountPaid === null) {
+    const milestones = order.paymentMilestones || [];
+    amountPaid = milestones.length > 0
+      ? milestones.filter(m => m.status === 'Paid').reduce((sum, m) => sum + (m.amount || 0), 0)
+      : (order.paymentProgress === 100 ? totalAmount : (totalAmount * (order.paymentProgress || 0)) / 100);
+  }
+
+  const remainingAmount = order.remainingAmount !== undefined && order.remainingAmount !== null
+    ? order.remainingAmount
+    : Math.max(0, totalAmount - amountPaid);
+
+  const paymentProgress = order.paymentProgress !== undefined
+    ? order.paymentProgress
+    : (totalAmount > 0 ? Math.min(100, Math.round((amountPaid / totalAmount) * 100)) : 0);
+
+  const invoiceStatus =
+    paymentProgress >= 100 ? 'PAID IN FULL' :
+    paymentProgress > 0    ? `PARTIALLY PAID (${paymentProgress}%)` :
+                             'PAYMENT PENDING';
+
+  // Last payment date from history
+  const paymentHistory = order.paymentHistory || [];
+  const lastPaymentEntry = paymentHistory.length ? paymentHistory[paymentHistory.length - 1] : null;
+  const lastPaymentDate = lastPaymentEntry?.paidAt
+    ? new Date(lastPaymentEntry.paidAt).toLocaleDateString()
+    : (order.paidAt ? new Date(order.paidAt).toLocaleDateString() : new Date().toLocaleDateString());
+
+  // Milestone summary for invoice display
+  const paymentMilestonesForInvoice = (order.paymentMilestones || []).map(m => ({
+    milestoneType: m.milestoneType,
+    percentage: m.percentage,
+    amount: m.amount,
+    status: m.status,
+    paidAt: m.paidAt ? new Date(m.paidAt).toLocaleDateString() : null,
+    transactionId: m.paymentId || null,
+  }));
+
   return {
     invoiceNumber: `INV-${order._id.toString().slice(-6).toUpperCase()}`,
     orderId: order._id.toString().slice(-8).toUpperCase(),
@@ -34,7 +77,7 @@ export const buildInvoiceDataFromOrder = (order) => {
     customerPhone: formattedPhone,
     shippingAddress: order.shippingAddress || {},
     containerType: order.shippingDetails?.containerType || order.recommendedContainer || '20 ft',
-    containerUtilization: order.assignedContainer ? 100 : 0, 
+    containerUtilization: order.assignedContainer ? 100 : 0,
     totalContainers: Math.ceil(order.totalContainers || 1),
     totalPieces: order.totalPieces || order.items.reduce((acc, curr) => acc + (curr.pieces || curr.quantity), 0),
     estimatedWeight: order.totalWeight || 0,
@@ -48,19 +91,28 @@ export const buildInvoiceDataFromOrder = (order) => {
       sku: item.product?.slug ? item.product.slug.toUpperCase().substring(0, 8) : (item.product?._id?.toString().slice(-6) || 'COCO-ITEM'),
       quantity: item.quantity,
       unitPrice: item.unitPrice || item.price || item.product?.price || 0,
-      pieces: item.pieces || item.quantity
+      pieces: item.pieces || item.quantity,
     })),
     subtotal: order.items.reduce((acc, curr) => acc + ((curr.pieces || curr.quantity) * (curr.unitPrice || curr.price || curr.product?.price || 0)), 0),
     discount: order.discount || 0,
     shippingCharge: order.shippingCharge || 0,
     tax: order.tax || 0,
-    totalAmount: order.totalAmount,
+    totalAmount,
     paymentMethod: order.paymentGateway || 'Card',
-    transactionId: order.paymentId || 'N/A',
-    paymentDate: order.paidAt ? new Date(order.paidAt).toLocaleDateString() : new Date().toLocaleDateString(),
+    transactionId: order.paymentId || (lastPaymentEntry?.transactionId) || 'N/A',
+    paymentDate: lastPaymentDate,
     paymentStatus: order.paymentStatus || 'PENDING',
     orderDate: new Date(order.createdAt).toLocaleDateString(),
-    status: order.orderStatus || 'PENDING'
+    status: order.orderStatus || 'PENDING',
+
+    // ── Payment progress fields (always accurate) ────────────────────────
+    paymentProgress,
+    amountPaid,
+    remainingAmount,
+    invoiceStatus,
+    paymentMilestones: paymentMilestonesForInvoice,
+    lastPaymentDate,
+    paymentSyncedAt: order.updatedAt ? new Date(order.updatedAt).toISOString() : new Date().toISOString(),
   };
 };
 

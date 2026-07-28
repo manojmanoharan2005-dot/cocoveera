@@ -276,7 +276,7 @@ export const getMyOrders = async (req, res) => {
 
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
-      .select('orderNumber items totalAmount currency paymentStatus orderStatus createdAt shippingAddress shippingDetails totalContainers totalPieces totalWeight totalVolume recommendedContainer paymentProgress paymentMilestones')
+      .select('orderNumber items totalAmount currency paymentStatus orderStatus createdAt shippingAddress shippingDetails totalContainers totalPieces totalWeight totalVolume recommendedContainer paymentProgress paymentMilestones amountPaid remainingAmount paymentHistory paymentId paymentGateway paymentVerified invoiceVersion productionStatus updatedAt')
       .populate('items.product', 'name slug images price category')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -437,6 +437,7 @@ export const cancelOrder = async (req, res) => {
 // @access  Private
 export const downloadInvoice = async (req, res) => {
   try {
+    // Always fetch a fresh (non-lean) order — never use a cached document
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email phone currency')
       .populate('items.product', 'name slug price palletCount');
@@ -454,9 +455,14 @@ export const downloadInvoice = async (req, res) => {
 
     const pdfBuffer = await generateInvoicePDF(invoiceData);
 
+    // No-cache headers: PDF must always reflect current payment state
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename=Invoice-${invoiceData.invoiceNumber}.pdf`);
-    
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+
     res.send(pdfBuffer);
   } catch (error) {
     console.error('Invoice generation failed:', error);

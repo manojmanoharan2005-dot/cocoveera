@@ -185,7 +185,8 @@ export const buildInvoiceDataFromQuote = (quote) => {
 };
 
 // Automate PDF generation, Cloudinary uploading, email notification & DB updates
-export const generateAndStoreDocument = async ({ orderId, quoteId, type, user, dataOverrides = {} }) => {
+// suppressEmail: when true, skips the per-document email (caller will send one consolidated email)
+export const generateAndStoreDocument = async ({ orderId, quoteId, type, user, dataOverrides = {}, suppressEmail = false }) => {
   try {
     let invoiceData = {};
     let order = null;
@@ -296,9 +297,9 @@ export const generateAndStoreDocument = async ({ orderId, quoteId, type, user, d
       });
     }
 
-    // Send email with PDF attachment for non-quotation documents
-    // (Quotation approval emails are dispatched via branded sendRFQApprovalEmail in quoteRequestController)
-    if (type !== 'quotationPdf') {
+    // Send per-document email ONLY if not suppressed.
+    // During payment flows, suppressEmail=true and the caller sends ONE consolidated email.
+    if (!suppressEmail && type !== 'quotationPdf') {
       const emailSubject = `${docName} Generated - Cocoveera Export`;
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
@@ -333,9 +334,11 @@ export const generateAndStoreDocument = async ({ orderId, quoteId, type, user, d
       }
     }
 
-    return documentRecord;
+    // Return both the document record AND the raw buffer so callers can attach it to emails
+    return { ...documentRecord.toObject(), url: documentRecord.url, pdfBuffer, docName };
   } catch (error) {
     console.error(`[documentService] Error generating/storing ${type}:`, error);
     throw error;
   }
 };
+

@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Lock, AlertCircle, CreditCard, ExternalLink, Activity, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Lock, AlertCircle, CreditCard, Check, Loader2, Wifi } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
+import usePaymentSync from '../../utils/usePaymentSync';
 import SEO from '../../components/SEO';
 
 const OrderPaymentMilestones = () => {
@@ -18,6 +19,9 @@ const OrderPaymentMilestones = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Duplicate-click guard — prevents two concurrent payment submissions
+  const isSubmitting = useRef(false);
 
   // Fetch the Order details
   const { data: order, isLoading, error, refetch } = useQuery(
@@ -32,56 +36,123 @@ const OrderPaymentMilestones = () => {
     }
   );
 
-  // Invalidate 'orders' cache to refresh general order list
+  // ── Success overlay state ──────────────────────────────────────────────
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [prevMilestonePercent, setPrevMilestonePercent] = useState(0);
+  const [targetMilestonePercent, setTargetMilestonePercent] = useState(0);
+  const [animatedPercent, setAnimatedPercent] = useState(0);
+  const [animationMinElapsed, setAnimationMinElapsed] = useState(false);
+
+  // Sync polling state — enabled only after payment success
+  const [syncEnabled, setSyncEnabled] = useState(false);
+  const [expectedProgress, setExpectedProgress] = useState(0);
+
+  const { syncConfirmed, latestProgress, latestData, timedOut } = usePaymentSync(
+    id,
+    expectedProgress,
+    syncEnabled
+  );
+
+  // ── Animated percentage counter ────────────────────────────────────────
+  // Smoothly increments from prevMilestonePercent → targetMilestonePercent
   useEffect(() => {
-    if (order) {
-      queryClient.invalidateQueries(['orders']);
-    }
-  }, [order, queryClient]);
+    if (!showSuccessOverlay) return;
 
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  const [successMilestonePercent, setSuccessMilestonePercent] = useState(40);
+    setAnimatedPercent(prevMilestonePercent);
+    const start = prevMilestonePercent;
+    const end = targetMilestonePercent;
+    const duration = 1800; // ms
+    const startTime = performance.now();
 
-  const triggerPaymentSuccessFlow = (milestoneIndex) => {
-    const percent = milestoneIndex === 0 ? 40 : (milestoneIndex === 1 ? 60 : (milestoneIndex === 2 ? 80 : 100));
-    setSuccessMilestonePercent(percent);
-    setShowSuccessAnimation(true);
-    
-    try {
-      confetti({
-        particleCount: 150,
-        spread: 90,
-        origin: { y: 0.5 }
-      });
-    } catch (cErr) {
-      console.error('Confetti error:', cErr);
-    }
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(start + (end - start) * eased);
+      setAnimatedPercent(current);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
 
+    const raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [showSuccessOverlay, prevMilestonePercent, targetMilestonePercent]);
+
+  // ── 2-second minimum animation timer ─────────────────────────────────
+  useEffect(() => {
+    if (!showSuccessOverlay) return;
+    setAnimationMinElapsed(false);
+    const timer = setTimeout(() => setAnimationMinElapsed(true), 2200);
+    return () => clearTimeout(timer);
+  }, [showSuccessOverlay]);
+
+  // ── Redirect gate — fires only when BOTH conditions are met ───────────
+  // 1. Minimum animation time elapsed (2.2s)
+  // 2. Backend sync confirmed (or timed out gracefully)
+  useEffect(() => {
+    if (!showSuccessOverlay) return;
+    if (!animationMinElapsed || !syncConfirmed) return;
+
+    // Invalidate all relevant caches
     queryClient.invalidateQueries(['orders']);
     queryClient.invalidateQueries(['order', id]);
     queryClient.invalidateQueries(['dashboard']);
+    queryClient.invalidateQueries(['payments']);
 
-    setTimeout(() => {
+    // Brief additional pause so user sees the "Synchronized ✓" state
+    const timer = setTimeout(() => {
       navigate('/orders', {
         state: {
           updatedOrderId: id,
           animateMilestone: true,
-          milestonePercent: percent
-        }
+          milestonePercent: targetMilestonePercent,
+          syncConfirmed: true,
+        },
       });
-    }, 2500);
-  };
+    }, 600);
 
+    return () => clearTimeout(timer);
+  }, [animationMinElapsed, syncConfirmed, showSuccessOverlay, id, targetMilestonePercent, navigate, queryClient]);
+
+  // ── Trigger the success flow ───────────────────────────────────────────
+  const triggerPaymentSuccessFlow = useCallback((milestoneIndex, currentOrderProgress) => {
+    const milestonePercents = [40, 60, 80, 100];
+    const newPercent = milestonePercents[milestoneIndex] ?? 100;
+    const oldPercent = currentOrderProgress ?? 0;
+
+    setPrevMilestonePercent(oldPercent);
+    setTargetMilestonePercent(newPercent);
+    setExpectedProgress(newPercent);
+    setShowSuccessOverlay(true);
+    setSyncEnabled(true);
+
+    // Confetti burst
+    try {
+      confetti({ particleCount: 160, spread: 90, origin: { y: 0.5 } });
+      setTimeout(() => confetti({ particleCount: 60, spread: 60, origin: { y: 0.4, x: 0.3 } }), 300);
+      setTimeout(() => confetti({ particleCount: 60, spread: 60, origin: { y: 0.4, x: 0.7 } }), 500);
+    } catch (cErr) {
+      console.warn('Confetti error:', cErr);
+    }
+  }, []);
+
+  // ── Payment handler ────────────────────────────────────────────────────
   const handlePayMilestone = async (milestoneIndex, amount) => {
+    // Duplicate-click guard
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
+
     setIsProcessing(true);
     setErrorMessage('');
     setSuccessMessage('');
+
+    const currentProgress = order?.paymentProgress || 0;
 
     try {
       // 1. Initiate payment session on the backend
       const initRes = await apiClient.post('/payments/initiate', {
         orderId: id,
-        gateway: 'razorpay', // default gateway
+        gateway: 'razorpay',
         milestoneIndex,
       });
 
@@ -91,91 +162,104 @@ const OrderPaymentMilestones = () => {
 
       const paymentData = initRes.data;
 
-      // 2. Razorpay checkout flow
       if (paymentData.gateway === 'razorpay') {
-        const isMock = !paymentData.key || paymentData.key.startsWith('mock_');
+        const isMock = !paymentData.key || paymentData.key.startsWith('mock_') || paymentData.id?.startsWith('mock_');
 
         if (isMock) {
-          // Simulation popup for quick testing
+          // Mock simulation for development/testing
           setTimeout(async () => {
             try {
               const confirmRes = await apiClient.post('/payments/confirm', {
                 orderId: id,
-                paymentId: 'mock_milestone_pay_' + Date.now(),
+                paymentId: 'mock_milestone_' + Date.now().toString(36),
                 gateway: 'mock',
                 status: 'success',
                 milestoneIndex,
               });
 
               if (confirmRes.data.success) {
-                triggerPaymentSuccessFlow(milestoneIndex);
+                setIsProcessing(false);
+                triggerPaymentSuccessFlow(milestoneIndex, currentProgress);
+                refetch();
               } else {
-                throw new Error(confirmRes.data.message || 'Failed to confirm mock payment');
+                throw new Error(confirmRes.data.message || 'Mock payment failed');
               }
             } catch (confirmErr) {
               setErrorMessage(confirmErr.message || 'Failed to process payment');
-            } finally {
               setIsProcessing(false);
+            } finally {
+              isSubmitting.current = false;
             }
-          }, 1200);
-          return;
+          }, 900);
+          return; // isSubmitting.current reset happens in finally above
         }
 
-        // Live/Test Razorpay checkout overlay
+        // Live / Test Razorpay checkout overlay
         const options = {
           key: paymentData.key,
           amount: paymentData.amount,
-          currency: paymentData.currency,
+          currency: paymentData.currency || 'INR',
           name: 'Cocoveera Export',
-          description: `Milestone ${milestoneIndex + 1} payment for Order #${order.orderNumber || id}`,
+          description: `Milestone ${milestoneIndex + 1} — Order #${order?.orderNumber || id}`,
           order_id: paymentData.id,
           handler: async function (response) {
             try {
-              const confirmRes = await apiClient.post('/payments/confirm', {
-                orderId: id,
+              // Call verify-payment (validates Razorpay HMAC signature)
+              const verifyRes = await apiClient.post('/payments/verify-payment', {
                 razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                paymentId: response.razorpay_payment_id,
-                gateway: 'razorpay',
-                status: 'success',
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_signature:  response.razorpay_signature,
+                orderId: id,
                 milestoneIndex,
               });
 
-              if (confirmRes.data.success) {
-                triggerPaymentSuccessFlow(milestoneIndex);
+              if (verifyRes.data.success) {
+                setIsProcessing(false);
+                triggerPaymentSuccessFlow(milestoneIndex, currentProgress);
+                refetch();
               } else {
-                throw new Error(confirmRes.data.message || 'Verification failed');
+                throw new Error(verifyRes.data.message || 'Signature verification failed');
               }
             } catch (err) {
               setErrorMessage(err.response?.data?.message || err.message || 'Verification failed.');
-            } finally {
               setIsProcessing(false);
+            } finally {
+              isSubmitting.current = false;
             }
           },
           prefill: {
-            name: user?.name || '',
-            email: user?.email || '',
-            contact: user?.phone || '',
+            name:    user?.name    || '',
+            email:   user?.email   || '',
+            contact: user?.phone   || '',
           },
           theme: { color: '#2E7D32' },
           modal: {
-            ondismiss: function () {
+            ondismiss: () => {
               setIsProcessing(false);
+              isSubmitting.current = false;
             },
           },
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response) {
-          setErrorMessage('Payment failed: ' + response.error.description);
+        rzp.on('payment.failed', (response) => {
+          setErrorMessage('Payment failed: ' + (response.error?.description || 'Unknown error'));
           setIsProcessing(false);
+          isSubmitting.current = false;
         });
         rzp.open();
+        // isSubmitting.current is reset inside handler/ondismiss/failed callbacks
+        return;
       }
+
     } catch (err) {
       setErrorMessage(err.response?.data?.message || err.message || 'Could not connect to payment gateway.');
       setIsProcessing(false);
+    } finally {
+      // Only reset the ref here if we didn't enter the Razorpay/mock async path
+      // (those reset it in their own callbacks)
+      // This catches synchronous throws
+      if (isProcessing) isSubmitting.current = false;
     }
   };
 
@@ -219,7 +303,7 @@ const OrderPaymentMilestones = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Quotation Payments & Milestones</h1>
+          <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Quotation Payments &amp; Milestones</h1>
           <p className="text-stone-500 font-semibold text-xs sm:text-sm">
             Order Reference: <strong className="text-stone-800">#{order.orderNumber || order._id.slice(-8).toUpperCase()}</strong>
           </p>
@@ -360,7 +444,7 @@ const OrderPaymentMilestones = () => {
                       {isPending && (
                         <button
                           onClick={() => handlePayMilestone(idx, milestone.amount)}
-                          disabled={isProcessing}
+                          disabled={isProcessing || showSuccessOverlay}
                           className="px-5 py-2.5 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] text-white text-xs font-black rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer border-none flex items-center gap-1.5 disabled:opacity-50"
                         >
                           <CreditCard className="w-3.5 h-3.5" /> Pay Now
@@ -392,42 +476,38 @@ const OrderPaymentMilestones = () => {
         </button>
       </div>
 
-      {/* Full-Screen Payment Success Modal (Requirement 8) */}
+      {/* ── Full-Screen Premium Payment Success Overlay ──────────────────────── */}
       <AnimatePresence>
-        {showSuccessAnimation && (
+        {showSuccessOverlay && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[300] bg-stone-900/80 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-[300] bg-stone-900/85 backdrop-blur-md flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              initial={{ scale: 0.82, opacity: 0, y: 24 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-              className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl border border-stone-100 text-center space-y-6 relative overflow-hidden"
+              transition={{ type: 'spring', stiffness: 220, damping: 22 }}
+              className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl border border-stone-100 text-center space-y-6 relative overflow-hidden"
             >
-              {/* Top Accent Ring */}
+              {/* Subtle background glow */}
+              <div className="absolute inset-0 bg-gradient-to-b from-green-50/60 to-transparent pointer-events-none" />
+
+              {/* Animated progress ring + check */}
               <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    stroke="#E8F5E9"
-                    strokeWidth="8"
-                    fill="transparent"
-                  />
+                  {/* Track */}
+                  <circle cx="50" cy="50" r="42" stroke="#E8F5E9" strokeWidth="7" fill="transparent" />
+                  {/* Animated fill */}
                   <motion.circle
-                    cx="50"
-                    cy="50"
-                    r="42"
+                    cx="50" cy="50" r="42"
                     stroke="#2E7D32"
-                    strokeWidth="8"
+                    strokeWidth="7"
                     strokeDasharray="264"
-                    initial={{ strokeDashoffset: 264 }}
-                    animate={{ strokeDashoffset: 0 }}
-                    transition={{ duration: 1.2, ease: "easeInOut" }}
+                    initial={{ strokeDashoffset: 264 - (264 * prevMilestonePercent / 100) }}
+                    animate={{ strokeDashoffset: 264 - (264 * targetMilestonePercent / 100) }}
+                    transition={{ duration: 1.8, ease: 'easeInOut' }}
                     strokeLinecap="round"
                     fill="transparent"
                   />
@@ -435,27 +515,84 @@ const OrderPaymentMilestones = () => {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ delay: 0.5, type: 'spring', stiffness: 300 }}
+                  transition={{ delay: 0.4, type: 'spring', stiffness: 320, damping: 18 }}
                   className="absolute inset-0 m-auto w-16 h-16 bg-[#2E7D32] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#2E7D32]/30"
                 >
                   <Check className="w-9 h-9 stroke-[3]" />
                 </motion.div>
               </div>
 
-              {/* Title & Info */}
-              <div className="space-y-2">
-                <h3 className="text-2xl font-poppins font-black text-stone-900 leading-tight">
-                  {successMilestonePercent}% Payment Successful
+              {/* Animated percentage counter */}
+              <div className="space-y-1">
+                <motion.div
+                  className="text-4xl font-black text-stone-900 tabular-nums"
+                  key={animatedPercent}
+                >
+                  {animatedPercent}%
+                </motion.div>
+                <h3 className="text-lg font-poppins font-black text-stone-900 leading-tight">
+                  Payment Received
                 </h3>
-                <p className="text-xs text-stone-500 font-semibold leading-relaxed">
-                  Your milestone payment has been verified and applied to Order #{order?.orderNumber || id.slice(-8).toUpperCase()}.
+                <p className="text-xs text-stone-500 font-semibold leading-relaxed px-2">
+                  Your milestone has been verified for Order{' '}
+                  <strong className="text-stone-700">
+                    #{order?.orderNumber || id.slice(-8).toUpperCase()}
+                  </strong>
                 </p>
               </div>
 
-              {/* Backend updating indicator */}
-              <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200/60 flex items-center justify-center gap-3">
-                <Loader2 className="w-5 h-5 text-[#2E7D32] animate-spin" />
-                <span className="text-xs font-bold text-stone-700">Updating your order...</span>
+              {/* Animated progress bar */}
+              <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden border border-stone-200/60">
+                <motion.div
+                  initial={{ width: `${prevMilestonePercent}%` }}
+                  animate={{ width: `${targetMilestonePercent}%` }}
+                  transition={{ duration: 1.8, ease: 'easeInOut' }}
+                  className="bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] h-full rounded-full"
+                />
+              </div>
+
+              {/* Backend sync status indicator */}
+              <div className={`p-3.5 rounded-2xl border flex items-center justify-center gap-3 transition-colors duration-500 ${
+                syncConfirmed
+                  ? 'bg-green-50 border-green-200/80'
+                  : 'bg-stone-50 border-stone-200/60'
+              }`}>
+                {syncConfirmed ? (
+                  <>
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 300 }}
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-[#2E7D32] shrink-0" />
+                    </motion.div>
+                    <span className="text-xs font-bold text-green-800">
+                      {timedOut ? 'Order updated — redirecting...' : 'Order synchronized ✓'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="w-4 h-4 text-[#2E7D32] animate-spin shrink-0" />
+                    <span className="text-xs font-bold text-stone-700">
+                      {latestProgress !== null
+                        ? `Syncing... ${latestProgress}% confirmed`
+                        : 'Updating your order...'}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Step indicators */}
+              <div className="flex justify-center gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="h-1 rounded-full bg-[#2E7D32]"
+                    initial={{ width: 8, opacity: 0.3 }}
+                    animate={{ width: i === 0 ? 24 : 8, opacity: i === 0 ? 1 : 0.4 }}
+                    transition={{ delay: i * 0.2, duration: 0.4 }}
+                  />
+                ))}
               </div>
             </motion.div>
           </motion.div>
