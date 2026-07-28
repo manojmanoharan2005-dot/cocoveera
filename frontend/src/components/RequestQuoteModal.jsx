@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, CheckCircle2, AlertCircle, Calendar, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../context/AuthContext';
@@ -21,6 +22,7 @@ export const RequestQuoteModal = ({
   onSuccess,
   showToast,
 }) => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { fetchProfile } = useAuth();
   const [rfqSubmitted, setRfqSubmitted] = useState(false);
@@ -285,12 +287,13 @@ export const RequestQuoteModal = ({
           console.error('Failed to sync profile after RFQ:', syncErr);
         }
 
-        // Automatically close modal after success and remain on the same page
+        // Automatically close modal after success animation and redirect to My Quotes
         setTimeout(() => {
           setRfqSubmitted(false);
           setRfqFormData(prev => ({ ...prev, requirementNote: '', quantity: '' }));
           onClose();
-        }, 2200);
+          navigate('/quotes');
+        }, 1500);
       }
     } catch (error) {
       const errMsg = error.response?.data?.message || error.message || 'Something went wrong';

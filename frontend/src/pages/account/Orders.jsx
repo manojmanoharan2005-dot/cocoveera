@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Eye, Download, Truck, RotateCcw, Package, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Search, Eye, Download, Truck, RotateCcw, Package, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { FixedSizeList as List } from 'react-window';
 
@@ -60,8 +60,29 @@ const OrdersSkeleton = () => (
 
 const Orders = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, fetchProfile } = useAuth();
   
+  // Highlight state for newly created/updated orders (Requirement 6 & 9)
+  const [highlightedOrderId, setHighlightedOrderId] = useState(location.state?.newOrderId || location.state?.updatedOrderId || null);
+  const [isNewOrderNotice, setIsNewOrderNotice] = useState(!!location.state?.animateEntry);
+
+  useEffect(() => {
+    if (location.state?.newOrderId || location.state?.updatedOrderId) {
+      setHighlightedOrderId(location.state.newOrderId || location.state.updatedOrderId);
+      setIsNewOrderNotice(!!location.state.animateEntry);
+      
+      const timer = setTimeout(() => {
+        setHighlightedOrderId(null);
+        setIsNewOrderNotice(false);
+        // Clear history state without reloading
+        window.history.replaceState({}, document.title);
+      }, 3500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
   // Filtering & Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState('all');
@@ -506,13 +527,31 @@ const Orders = () => {
       return null;
     };
 
+    const isHighlighted = order._id === highlightedOrderId;
+
     return (
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: isHighlighted ? 20 : 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: idx * 0.05 }}
-        className={`bg-white rounded-xl border overflow-hidden relative shadow-sm hover:shadow-md transition-shadow ${borderLeftColorClass}`}
+        transition={{ duration: 0.5, delay: isHighlighted ? 0 : idx * 0.05 }}
+        className={`bg-white rounded-xl border overflow-hidden relative transition-all duration-500 ${
+          isHighlighted
+            ? 'ring-4 ring-[#2E7D32]/40 shadow-2xl border-[#2E7D32] scale-[1.01]'
+            : `shadow-sm hover:shadow-md ${borderLeftColorClass}`
+        }`}
       >
+        {isHighlighted && (
+          <div className="bg-[#E8F5E9] border-b border-[#2E7D32]/20 px-4 py-2 flex items-center justify-between animate-pulse">
+            <div className="flex items-center gap-2 text-[#2E7D32] font-black text-xs font-poppins">
+              <div className="w-5 h-5 rounded-full bg-[#2E7D32] text-white flex items-center justify-center">
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+              </div>
+              <span>✓ Order Created Successfully</span>
+            </div>
+            <span className="text-[10px] text-[#2E7D32] font-extrabold uppercase tracking-wider">New Export Order</span>
+          </div>
+        )}
+
         {/* Card Header (Amazon/Flipkart Style) */}
         <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
           <div className="flex gap-6 md:gap-12">

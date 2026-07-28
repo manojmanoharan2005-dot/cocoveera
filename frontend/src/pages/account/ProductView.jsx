@@ -1286,15 +1286,22 @@ Timestamp: ${new Date().toLocaleString()}
                   type="button"
                   disabled={isQuoteButtonDisabled || hasActiveRfq}
                   onClick={() => setIsQuoteModalOpen(true)}
-                  className="w-full bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group active:scale-[0.98]"
+                  className={`w-full font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
+                    hasActiveRfq
+                      ? 'bg-stone-100 border border-stone-200 text-stone-600 cursor-not-allowed shadow-none'
+                      : 'bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white active:scale-[0.98]'
+                  }`}
                 >
                   {actionLoading ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : hasActiveRfq ? (
-                    <>
-                      <Check className="w-4 h-4 text-white" />
-                      Quote Requested
-                    </>
+                    <div className="flex flex-col items-center justify-center leading-tight">
+                      <div className="flex items-center gap-1.5 text-[#2E7D32] font-black text-xs">
+                        <Check className="w-4 h-4 text-[#2E7D32] stroke-[3]" />
+                        <span>✓ Quote Requested</span>
+                      </div>
+                      <span className="text-[10px] text-stone-500 font-bold mt-0.5">Waiting for Review</span>
+                    </div>
                   ) : (
                     <>
                       REQUEST QUOTE

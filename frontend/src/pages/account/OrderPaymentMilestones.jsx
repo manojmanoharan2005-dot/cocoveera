@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Lock, AlertCircle, CreditCard, ExternalLink, Activity } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Lock, AlertCircle, CreditCard, ExternalLink, Activity, Check, Loader2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
@@ -37,6 +38,39 @@ const OrderPaymentMilestones = () => {
       queryClient.invalidateQueries(['orders']);
     }
   }, [order, queryClient]);
+
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successMilestonePercent, setSuccessMilestonePercent] = useState(40);
+
+  const triggerPaymentSuccessFlow = (milestoneIndex) => {
+    const percent = milestoneIndex === 0 ? 40 : (milestoneIndex === 1 ? 60 : (milestoneIndex === 2 ? 80 : 100));
+    setSuccessMilestonePercent(percent);
+    setShowSuccessAnimation(true);
+    
+    try {
+      confetti({
+        particleCount: 150,
+        spread: 90,
+        origin: { y: 0.5 }
+      });
+    } catch (cErr) {
+      console.error('Confetti error:', cErr);
+    }
+
+    queryClient.invalidateQueries(['orders']);
+    queryClient.invalidateQueries(['order', id]);
+    queryClient.invalidateQueries(['dashboard']);
+
+    setTimeout(() => {
+      navigate('/orders', {
+        state: {
+          updatedOrderId: id,
+          animateMilestone: true,
+          milestonePercent: percent
+        }
+      });
+    }, 2500);
+  };
 
   const handlePayMilestone = async (milestoneIndex, amount) => {
     setIsProcessing(true);
@@ -74,8 +108,7 @@ const OrderPaymentMilestones = () => {
               });
 
               if (confirmRes.data.success) {
-                setSuccessMessage('Payment successful! Next milestone unlocked.');
-                refetch();
+                triggerPaymentSuccessFlow(milestoneIndex);
               } else {
                 throw new Error(confirmRes.data.message || 'Failed to confirm mock payment');
               }
@@ -84,7 +117,7 @@ const OrderPaymentMilestones = () => {
             } finally {
               setIsProcessing(false);
             }
-          }, 1500);
+          }, 1200);
           return;
         }
 
@@ -110,8 +143,7 @@ const OrderPaymentMilestones = () => {
               });
 
               if (confirmRes.data.success) {
-                setSuccessMessage('Payment completed successfully!');
-                refetch();
+                triggerPaymentSuccessFlow(milestoneIndex);
               } else {
                 throw new Error(confirmRes.data.message || 'Verification failed');
               }
@@ -359,6 +391,76 @@ const OrderPaymentMilestones = () => {
           Open Support Ticket
         </button>
       </div>
+
+      {/* Full-Screen Payment Success Modal (Requirement 8) */}
+      <AnimatePresence>
+        {showSuccessAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] bg-stone-900/80 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl border border-stone-100 text-center space-y-6 relative overflow-hidden"
+            >
+              {/* Top Accent Ring */}
+              <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="#E8F5E9"
+                    strokeWidth="8"
+                    fill="transparent"
+                  />
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="#2E7D32"
+                    strokeWidth="8"
+                    strokeDasharray="264"
+                    initial={{ strokeDashoffset: 264 }}
+                    animate={{ strokeDashoffset: 0 }}
+                    transition={{ duration: 1.2, ease: "easeInOut" }}
+                    strokeLinecap="round"
+                    fill="transparent"
+                  />
+                </svg>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: 'spring', stiffness: 300 }}
+                  className="absolute inset-0 m-auto w-16 h-16 bg-[#2E7D32] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#2E7D32]/30"
+                >
+                  <Check className="w-9 h-9 stroke-[3]" />
+                </motion.div>
+              </div>
+
+              {/* Title & Info */}
+              <div className="space-y-2">
+                <h3 className="text-2xl font-poppins font-black text-stone-900 leading-tight">
+                  {successMilestonePercent}% Payment Successful
+                </h3>
+                <p className="text-xs text-stone-500 font-semibold leading-relaxed">
+                  Your milestone payment has been verified and applied to Order #{order?.orderNumber || id.slice(-8).toUpperCase()}.
+                </p>
+              </div>
+
+              {/* Backend updating indicator */}
+              <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200/60 flex items-center justify-center gap-3">
+                <Loader2 className="w-5 h-5 text-[#2E7D32] animate-spin" />
+                <span className="text-xs font-bold text-stone-700">Updating your order...</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

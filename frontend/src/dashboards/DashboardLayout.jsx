@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, apiClient } from '../context/AuthContext';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -290,17 +291,35 @@ export const DashboardLayout = () => {
                 <p className="text-stone-400 text-xs font-bold mt-4 animate-pulse">Loading content...</p>
               </div>
             }>
-              <Outlet context={{
-                searchQuery,
-                setSearchQuery,
-                sortBy,
-                setSortBy,
-                filterDrawerOpen,
-                setFilterDrawerOpen,
-                user,
-                cartCount,
-                wishlistCount
-              }} />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={location.pathname}
+                  initial={() => {
+                    const path = location.pathname;
+                    if (path.includes('/quotes')) return { x: 30, opacity: 0 };
+                    if (path.includes('/orders') && location.state?.fromPayment) return { opacity: 0 };
+                    if (path.includes('/orders')) return { scale: 0.97, opacity: 0 };
+                    if (path.includes('/payment')) return { y: 30, opacity: 0 };
+                    return { opacity: 0 };
+                  }}
+                  animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="w-full h-full"
+                >
+                  <Outlet context={{
+                    searchQuery,
+                    setSearchQuery,
+                    sortBy,
+                    setSortBy,
+                    filterDrawerOpen,
+                    setFilterDrawerOpen,
+                    user,
+                    cartCount,
+                    wishlistCount
+                  }} />
+                </motion.div>
+              </AnimatePresence>
             </Suspense>
           </ErrorBoundary>
         </main>

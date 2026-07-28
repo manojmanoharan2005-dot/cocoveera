@@ -1,8 +1,9 @@
 import React, { useState, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, Download, MapPin, CheckCircle, Package, AlertCircle, RefreshCw, X, Check } from 'lucide-react';
+import { ArrowLeft, Eye, Download, MapPin, CheckCircle, Package, AlertCircle, RefreshCw, X, Check, Loader2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
@@ -146,16 +147,27 @@ const QuoteDetails = () => {
     }
   };
 
+  const [acceptAnimStage, setAcceptAnimStage] = useState('idle');
+
   const handleAcceptSubmit = async () => {
     if (actionLoading) return;
     try {
       setActionLoading(true);
+      setAcceptAnimStage('loading');
       setErrorState('');
       setSuccessMsg('');
       const res = await apiClient.put(`/quotes/${id}/accept`);
       if (res.data.success) {
-        setAcceptModalOpen(false);
-        setToastMessage('Quotation accepted successfully. Redirecting to Orders...');
+        setAcceptAnimStage('success');
+        try {
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        } catch (confettiErr) {
+          console.error('Confetti error:', confettiErr);
+        }
         
         // Invalidate and refetch immediately
         queryClient.invalidateQueries(['orders']);
@@ -163,22 +175,30 @@ const QuoteDetails = () => {
         queryClient.invalidateQueries(['dashboard']);
         queryClient.invalidateQueries(['customer']);
 
-        // Update global profile/counts
         try {
           await fetchProfile();
         } catch (authErr) {
           console.error('Failed to fetch profile stats:', authErr);
         }
 
-        // Wait 1 second and navigate
         setTimeout(() => {
-          setToastMessage('');
-          navigate('/orders');
-        }, 1000);
+          setAcceptAnimStage('collapsing');
+          setTimeout(() => {
+            setAcceptModalOpen(false);
+            setAcceptAnimStage('idle');
+            navigate('/orders', {
+              state: {
+                newOrderId: res.data.data?._id,
+                animateEntry: true
+              }
+            });
+          }, 600);
+        }, 1200);
       }
     } catch (err) {
       console.error('Failed to accept quote:', err);
       setErrorState(err.response?.data?.message || 'Failed to accept quotation.');
+      setAcceptAnimStage('idle');
       setAcceptModalOpen(false);
     } finally {
       setActionLoading(false);

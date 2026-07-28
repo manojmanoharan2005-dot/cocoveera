@@ -1,9 +1,10 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Eye, Download, FileText, X, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Check } from 'lucide-react';
+import { Search, Eye, Download, FileText, X, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FixedSizeList as List } from 'react-window';
+import confetti from 'canvas-confetti';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { convertCurrency } from '../../utils/currencyConverter';
@@ -223,39 +224,64 @@ const Quotes = () => {
     }
   };
 
+  const [acceptAnimStage, setAcceptAnimStage] = useState('idle'); // idle, loading, success, collapsing
+
   const handleAcceptSubmit = async () => {
     if (!selectedQuote || actionLoading) return;
 
     try {
       setActionLoading(true);
+      setAcceptAnimStage('loading');
       setErrorState('');
+      
       const res = await apiClient.put(`/quotes/${selectedQuote._id}/accept`);
       if (res.data.success) {
-        setAcceptModalOpen(false);
-        setToastMessage('Quotation accepted successfully. Redirecting to Orders...');
-        
-        // Invalidate and refetch immediately
+        // Stage 1: Success state + Checkmark + Confetti
+        setAcceptAnimStage('success');
+        try {
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        } catch (confettiErr) {
+          console.error('Confetti error:', confettiErr);
+        }
+
+        // Invalidate and refetch queries immediately
         queryClient.invalidateQueries(['orders']);
         queryClient.invalidateQueries(['quotes']);
         queryClient.invalidateQueries(['dashboard']);
         queryClient.invalidateQueries(['customer']);
 
-        // Update global profile/counts
         try {
           await fetchProfile();
         } catch (authErr) {
           console.error('Failed to fetch profile stats:', authErr);
         }
 
-        // Wait 1 second and navigate
+        // Stage 2: Card Collapse & Fade Out after 1s
         setTimeout(() => {
-          setToastMessage('');
-          navigate('/orders');
-        }, 1000);
+          setAcceptAnimStage('collapsing');
+          
+          // Stage 3: Redirect to My Orders after animation completes
+          setTimeout(() => {
+            setAcceptModalOpen(false);
+            setAcceptAnimStage('idle');
+            setSelectedQuote(null);
+            navigate('/orders', {
+              state: {
+                newOrderId: res.data.data?._id,
+                animateEntry: true
+              }
+            });
+          }, 600);
+        }, 1200);
       }
     } catch (err) {
       console.error('Failed to accept quote:', err);
       setErrorState(err.response?.data?.message || 'Failed to accept quotation.');
+      setAcceptAnimStage('idle');
       setAcceptModalOpen(false);
     } finally {
       setActionLoading(false);
@@ -711,65 +737,97 @@ const Quotes = () => {
       {acceptModalOpen && selectedQuote && (
         <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[210] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-stone-200 animate-slide-up space-y-4">
-            <div className="flex justify-between items-center mb-1">
-              <h3 className="text-base font-extrabold text-stone-900">Accept Quotation Proposal</h3>
-              <button onClick={() => setAcceptModalOpen(false)} className="text-stone-400 hover:text-stone-650 p-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            {/* Quote details */}
-            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100 text-xs font-semibold text-stone-600 space-y-2">
-              <div className="flex justify-between">
-                <span>Quote Reference</span>
-                <span className="text-stone-900 font-bold">#{selectedQuote.quoteNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Product Summary</span>
-                <div className="text-right">
-                  {selectedQuote.products && selectedQuote.products.length > 0 ? (
-                    selectedQuote.products.map((p, idx) => (
-                      <span key={idx} className="text-stone-900 font-bold block">{p.productName}</span>
-                    ))
-                  ) : (
-                    <span className="text-stone-900 font-bold">{selectedQuote.productDetails?.name || 'Coco Coir'}</span>
-                  )}
+            <div className={`transition-all duration-500 rounded-3xl ${
+              acceptAnimStage === 'success' || acceptAnimStage === 'collapsing'
+                ? 'bg-green-50/80 ring-4 ring-[#2E7D32]/30 border-2 border-[#2E7D32] p-2'
+                : ''
+            }`}>
+              {acceptAnimStage === 'success' || acceptAnimStage === 'collapsing' ? (
+                <div className="py-8 text-center space-y-4 flex flex-col items-center justify-center">
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                    className="w-16 h-16 bg-[#2E7D32] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#2E7D32]/30"
+                  >
+                    <Check className="w-10 h-10 stroke-[3]" />
+                  </motion.div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-poppins font-black text-stone-900 leading-tight">Quote Accepted Successfully</h3>
+                    <p className="text-xs text-[#2E7D32] font-extrabold uppercase tracking-wider">Order Created • Redirecting to My Orders...</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between text-sm pt-1 border-t border-stone-200">
-                <span className="font-extrabold text-stone-900">Total Price</span>
-                <span className="font-black text-[#2E7D32]">
-                  {selectedQuote.convertedAmount > 0
-                    ? convertCurrency(selectedQuote.originalInrAmount, selectedQuote.currency || user?.currency || 'USD').formatted
-                    : 'Awaiting Pricing'}
-                </span>
-              </div>
-            </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center mb-1">
+                    <h3 className="text-base font-extrabold text-stone-900">Accept Quotation Proposal</h3>
+                    <button onClick={() => setAcceptModalOpen(false)} className="text-stone-400 hover:text-stone-650 p-1.5 rounded-full hover:bg-stone-100 cursor-pointer">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  {/* Quote details */}
+                  <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100 text-xs font-semibold text-stone-600 space-y-2">
+                    <div className="flex justify-between">
+                      <span>Quote Reference</span>
+                      <span className="text-stone-900 font-bold">#{selectedQuote.quoteNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Product Summary</span>
+                      <div className="text-right">
+                        {selectedQuote.products && selectedQuote.products.length > 0 ? (
+                          selectedQuote.products.map((p, idx) => (
+                            <span key={idx} className="text-stone-900 font-bold block">{p.productName}</span>
+                          ))
+                        ) : (
+                          <span className="text-stone-900 font-bold">{selectedQuote.productDetails?.name || 'Coco Coir'}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-sm pt-1 border-t border-stone-200">
+                      <span className="font-extrabold text-stone-900">Total Price</span>
+                      <span className="font-black text-[#2E7D32]">
+                        {selectedQuote.convertedAmount > 0
+                          ? convertCurrency(selectedQuote.originalInrAmount, selectedQuote.currency || user?.currency || 'USD').formatted
+                          : 'Awaiting Pricing'}
+                      </span>
+                    </div>
+                  </div>
 
-            <p className="text-xs text-stone-500 font-semibold leading-relaxed">
-              "You are about to accept this quotation. Once accepted, your order will be created and you will proceed to the payment stage."
-            </p>
+                  <p className="text-xs text-stone-500 font-semibold leading-relaxed">
+                    You are about to accept this quotation proposal. Once accepted, your order will be created automatically and you will proceed to the payment stage.
+                  </p>
 
-            <div className="flex gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setAcceptModalOpen(false)}
-                disabled={actionLoading}
-                className="flex-1 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs rounded-xl cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAcceptSubmit}
-                disabled={actionLoading}
-                className="flex-1 px-4 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer border-none flex items-center justify-center min-h-[36px]"
-              >
-                {actionLoading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  'Accept Quote'
-                )}
-              </button>
+                  <div className="flex gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setAcceptModalOpen(false)}
+                      disabled={actionLoading}
+                      className="flex-1 px-4 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs rounded-xl cursor-pointer transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAcceptSubmit}
+                      disabled={actionLoading}
+                      className={`flex-1 px-4 py-3 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer border-none flex items-center justify-center transition-all duration-300 ${
+                        acceptAnimStage === 'loading'
+                          ? 'bg-[#1B5E20] cursor-not-allowed shadow-inner scale-[0.98]'
+                          : 'bg-[#2E7D32] hover:bg-[#1B5E20]'
+                      }`}
+                    >
+                      {acceptAnimStage === 'loading' ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
+                          <span>Processing...</span>
+                        </div>
+                      ) : (
+                        'Accept Quote'
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
