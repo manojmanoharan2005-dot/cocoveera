@@ -295,33 +295,50 @@ export const Sidebar = ({
         </button>
 
         {/* Premium Profile Card */}
-        <div className={isMobileDrawer
-          ? "p-4 bg-white rounded-[18px] border border-stone-200/70 shadow-sm flex items-center justify-between cursor-default select-none mb-1"
-          : "p-2.5 bg-white rounded-[16px] border border-stone-200/70 shadow-sm flex items-center gap-2.5 cursor-default select-none"
-        }>
-          <div className="flex items-center gap-3.5 min-w-0">
+        <div 
+          onClick={() => {
+            if (onClose) onClose();
+            window.location.href = '/profile';
+          }}
+          className={isMobileDrawer
+            ? "p-4 bg-white rounded-[16px] border border-[#E8E8E8] shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] hover:-translate-y-[2px] transition-all duration-200 flex items-center justify-between cursor-pointer select-none mb-1 group min-h-[72px]"
+            : "p-3 bg-white rounded-[16px] border border-[#E8E8E8] shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] hover:-translate-y-[2px] transition-all duration-200 flex items-center gap-3 cursor-pointer select-none group min-h-[72px]"
+          }
+        >
+          <div className="flex items-center gap-3 min-w-0 w-full">
+            {/* Rounded Square Avatar with Light Green Background (#EAF7EE) & Verified Badge */}
             <div className="relative shrink-0">
               <div className={isMobileDrawer
-                ? "w-11 h-11 rounded-full bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] text-white flex items-center justify-center font-poppins font-bold text-sm shadow-md shadow-[#2E7D32]/20"
-                : "w-8.5 h-8.5 rounded-full bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] text-white flex items-center justify-center font-poppins font-black text-xs shadow-md shadow-[#2E7D32]/20"
+                ? "w-11 h-11 rounded-[14px] bg-[#EAF7EE] flex items-center justify-center border border-[#2E7D32]/20 text-[#2E7D32] shadow-xs group-hover:bg-[#DDF2E3] transition-colors"
+                : "w-10 h-10 rounded-[12px] bg-[#EAF7EE] flex items-center justify-center border border-[#2E7D32]/20 text-[#2E7D32] shadow-xs group-hover:bg-[#DDF2E3] transition-colors"
               }>
-                {userInitials}
+                {/* Silhouette Profile Icon */}
+                <svg className="w-5 h-5 text-[#2E7D32]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
               </div>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" />
+
+              {/* Small Green Verified Badge on Bottom-Right */}
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#2E7D32] rounded-full border-2 border-white flex items-center justify-center shadow-xs">
+                <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
             </div>
+
+            {/* User Information */}
             <div className="min-w-0 flex-grow">
-              <p className={isMobileDrawer ? "text-sm font-bold text-stone-900 truncate leading-tight" : "text-[11.5px] font-extrabold text-stone-900 truncate leading-none mb-1"}>
-                {displayName}
+              <p className={isMobileDrawer 
+                ? "text-sm font-poppins font-black text-stone-900 truncate leading-tight group-hover:text-[#2E7D32] transition-colors" 
+                : "text-[12px] font-poppins font-black text-stone-900 truncate leading-tight mb-1 group-hover:text-[#2E7D32] transition-colors"
+              }>
+                {user?.name && user.name !== 'N/A' ? user.name.toUpperCase() : 'MANOJ KUMAR M'}
               </p>
-              <p className={isMobileDrawer ? "text-xs font-medium text-stone-500 truncate mt-0.5" : "hidden"}>
-                {user?.email || 'verified@cocoveera.com'}
-              </p>
-              {!isMobileDrawer && (
-                <div className="flex items-center gap-1 text-[9.5px] font-bold text-stone-400 uppercase tracking-wide">
-                  <ShieldCheck className="w-3 h-3 text-[#2E7D32] shrink-0" />
-                  <span className="truncate">Verified Buyer</span>
-                </div>
-              )}
+              
+              <div className="flex items-center gap-1 text-[10px] font-bold text-[#2E7D32]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#2E7D32] shrink-0" />
+                <span className="truncate tracking-tight">Verified Buyer</span>
+              </div>
             </div>
           </div>
         </div>
