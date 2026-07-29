@@ -3,6 +3,7 @@
  * Purpose: Admin dashboard view for tracking and managing RFQ Quote Requests.
  */
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { adminQuoteRequestService } from '../../services/adminService';
 import {
   Search,
@@ -18,17 +19,25 @@ import AdminLayout from '../../layouts/AdminLayout';
 import { formatDateFriendly } from '../../utils/dateFormatter';
 
 export default function AdminQuoteRequests() {
+  const [searchParams] = useSearchParams();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pagination, setPagination] = useState({});
 
-  // Filters & Search
+  // Filters & Search — seed status from URL ?status= param (sidebar deep-links)
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(searchParams.get('status') || '');
   const [country, setCountry] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+
+  // Sync status filter when URL ?status changes (browser back/forward or sidebar click)
+  useEffect(() => {
+    const urlStatus = searchParams.get('status') || '';
+    setStatus(urlStatus);
+    setPage(1);
+  }, [searchParams]);
 
   const fetchQuoteRequests = async () => {
     try {
