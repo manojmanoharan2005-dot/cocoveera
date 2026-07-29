@@ -61,9 +61,9 @@ export const Header = ({
       {/* ========================================================================= */}
       {/* MOBILE TOP NAVIGATION (< 1024px) - Clean 3-Row Professional Ecommerce Header */}
       {/* ========================================================================= */}
-      <header className="lg:hidden w-full bg-white border-b border-stone-200 sticky top-0 z-[100] px-4 pt-4 pb-3 shadow-xs select-none pt-[env(safe-area-inset-top,0px)]">
-        {/* ROW 1: Hamburger Menu | Centered Logo | Wishlist Icon */}
-        <div className="flex items-center justify-between gap-3 w-full">
+      <header className="lg:hidden w-full bg-white border-b border-stone-200 sticky top-0 z-[100] px-4 pt-3 pb-3 shadow-xs select-none pt-[env(safe-area-inset-top,0px)]">
+        {/* ROW 1: Height 60px - Hamburger Menu | Centered Logo | Wishlist Icon */}
+        <div className="flex items-center justify-between gap-3 w-full h-[60px]">
           {/* Left: Hamburger Menu */}
           {onMenuClick ? (
             <button
@@ -78,7 +78,7 @@ export const Header = ({
             <div className="w-10 h-10 shrink-0" />
           )}
 
-          {/* Center: Cocoveera Logo (slightly larger) */}
+          {/* Center: Cocoveera Logo + Wordmark */}
           <div 
             onClick={() => navigate('/dashboard')}
             className="flex items-center gap-2 cursor-pointer select-none"
@@ -87,7 +87,7 @@ export const Header = ({
             <img
               src="/logo.webp"
               alt="Cocoveera Logo"
-              className="w-10 h-10 object-contain rounded-xl"
+              className="w-9 h-9 object-contain rounded-xl"
             />
             <span className="font-poppins font-black text-lg tracking-wide leading-none">
               <span className="text-[#7B4F1E]">COCO</span><span className="text-[#2E7D32]">VEERA</span>
@@ -109,7 +109,7 @@ export const Header = ({
           </button>
         </div>
 
-        {/* ROW 2: Full Width Search Bar (48px height, 14px rounded, mt-3) */}
+        {/* ROW 2: Full Width Search Bar (46px height, 12px rounded, mt-3) */}
         {showSearchAndFilters && (
           <div className="relative w-full mt-3">
             <Search className="w-4 h-4 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -118,12 +118,12 @@ export const Header = ({
               placeholder="Search coir products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-[48px] bg-[#F7F9F7] border border-stone-200 rounded-[14px] pl-11 pr-4 text-xs font-semibold text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#2E7D32] focus:bg-white focus:shadow-[0_0_0_3px_rgba(46,125,50,0.08)] transition-all"
+              className="w-full h-[46px] bg-[#F7F9F7] border border-stone-200 rounded-[12px] pl-11 pr-4 text-xs font-semibold text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#2E7D32] focus:bg-white focus:shadow-[0_0_0_3px_rgba(46,125,50,0.08)] transition-all"
             />
           </div>
         )}
 
-        {/* ROW 3: Two Equal Buttons [ Filter ] [ Sort ] (Width: 50%, Height: 44px, Gap: 12px, Rounded: 12px) */}
+        {/* ROW 3: Filter Row - ONLY Two Buttons [ Filter ] [ Sort ] (Width: 50%, Height: 44px, Gap: 12px) */}
         {showSearchAndFilters && (
           <div className="flex items-center gap-3 w-full mt-3">
             {/* Filter Button (50% Width, 44px Height) */}

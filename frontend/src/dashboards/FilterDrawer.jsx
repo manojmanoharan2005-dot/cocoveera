@@ -41,46 +41,53 @@ export const FilterDrawer = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-[120] flex items-end lg:items-center justify-center lg:justify-end">
           {/* Backdrop blur overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-stone-950/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-stone-950/50 backdrop-blur-md cursor-pointer"
           />
 
-          {/* Drawer Panel Container */}
+          {/* Bottom Sheet on Mobile (<1024px) / Drawer on Desktop (>=1024px) */}
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="relative w-[85%] max-w-md bg-white h-full shadow-[0_12px_40px_rgba(0,0,0,0.15)] flex flex-col z-10"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            className="relative w-full lg:w-[85%] lg:max-w-md h-[80vh] lg:h-full bg-white rounded-t-[28px] lg:rounded-t-none shadow-2xl flex flex-col z-10 overflow-hidden"
           >
+            {/* Mobile Sheet Drag Indicator Pill */}
+            <div className="lg:hidden w-full pt-3 pb-1 flex justify-center shrink-0">
+              <div className="w-12 h-1.5 bg-stone-200 rounded-full" />
+            </div>
+
             {/* Header */}
-            <div className="px-6 py-5 border-b border-stone-150 flex items-center justify-between">
+            <div className="px-5 lg:px-6 py-4 border-b border-stone-150 flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-2.5">
-                <SlidersHorizontal className="w-4.5 h-4.5 text-[#2E7D32]" />
-                <h3 className="font-poppins font-extrabold text-stone-900 text-sm tracking-wide">
+                <SlidersHorizontal className="w-5 h-5 text-[#2E7D32]" />
+                <h3 className="font-poppins font-black text-stone-900 text-base tracking-tight">
                   Filter Catalog
                 </h3>
               </div>
               <button 
+                type="button"
                 onClick={onClose} 
-                className="p-1.5 text-stone-400 hover:text-stone-950 hover:bg-stone-50 rounded-full transition-all"
+                className="p-2 text-stone-400 hover:text-stone-950 hover:bg-stone-100 rounded-full transition-all cursor-pointer"
+                aria-label="Close filters"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Scrollable Filters Content Area */}
-            <form onSubmit={handleApply} className="flex-grow overflow-y-auto p-6 space-y-6 text-stone-900 text-xs font-semibold">
-              {/* Category Collections */}
+            {/* Scrollable Sheet Content */}
+            <form onSubmit={handleApply} className="flex-grow overflow-y-auto p-5 lg:p-6 space-y-6 text-stone-900 text-xs font-semibold">
+              {/* Category Collections Chips */}
               <div className="space-y-3">
-                <h4 className="text-[10px] font-extrabold text-[#6B7280] uppercase tracking-wider block">
-                  Collections / Categories
+                <h4 className="text-[11px] font-black text-[#2E7D32] uppercase tracking-wider block">
+                  Categories
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {collections.map((col) => {
@@ -90,10 +97,10 @@ export const FilterDrawer = ({
                         key={col}
                         type="button"
                         onClick={() => setSelectedCollection(col)}
-                        className={`py-2 px-3.5 rounded-[12px] text-xs font-bold border transition-all ${
+                        className={`py-2.5 px-4 rounded-[12px] text-xs font-extrabold border transition-all ${
                           isSelected
                             ? 'bg-[#2E7D32] border-[#2E7D32] text-white shadow-sm'
-                            : 'bg-white border-stone-200 text-stone-600 hover:bg-[#F7F9F7]'
+                            : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
                         }`}
                       >
                         {col}
@@ -103,14 +110,12 @@ export const FilterDrawer = ({
                 </div>
               </div>
 
-
-
               <hr className="border-stone-100" />
 
               {/* Stock Status Selection */}
               <div className="space-y-3">
-                <h4 className="text-[10px] font-extrabold text-[#6B7280] uppercase tracking-wider block">
-                  Stock Availability
+                <h4 className="text-[11px] font-black text-[#2E7D32] uppercase tracking-wider block">
+                  Availability
                 </h4>
                 <div className="grid grid-cols-3 gap-2">
                   {[
@@ -124,10 +129,10 @@ export const FilterDrawer = ({
                         key={status.id}
                         type="button"
                         onClick={() => setStockStatus(status.id)}
-                        className={`py-2 px-2.5 rounded-[12px] border text-center font-bold text-xs transition-all ${
+                        className={`py-2.5 px-2 rounded-[12px] border text-center font-extrabold text-xs transition-all ${
                           isSelected
                             ? 'bg-[#2E7D32]/10 border-[#2E7D32] text-[#2E7D32]'
-                            : 'bg-white border-stone-200 text-stone-500 hover:bg-[#F7F9F7]'
+                            : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
                         }`}
                       >
                         {status.label}
@@ -139,12 +144,12 @@ export const FilterDrawer = ({
 
               <hr className="border-stone-100" />
 
-              {/* Quality Rating stars selector */}
+              {/* Quality Rating selector */}
               <div className="space-y-3">
-                <h4 className="text-[10px] font-extrabold text-[#6B7280] uppercase tracking-wider block">
+                <h4 className="text-[11px] font-black text-[#2E7D32] uppercase tracking-wider block">
                   Quality Audit Rating
                 </h4>
-                <div className="flex flex-col space-y-1.5">
+                <div className="flex flex-col space-y-2">
                   {[0, 4.8, 4.5].map((rate) => {
                     const isSelected = ratingFilter === rate;
                     return (
@@ -152,15 +157,15 @@ export const FilterDrawer = ({
                         key={rate}
                         type="button"
                         onClick={() => setRatingFilter(rate)}
-                        className={`w-full flex items-center justify-between p-2.5 rounded-[12px] border transition-all ${
+                        className={`w-full flex items-center justify-between p-3 rounded-[12px] border transition-all ${
                           isSelected
                             ? 'bg-[#2E7D32]/5 border-[#2E7D32] text-[#2E7D32]'
-                            : 'bg-white border-stone-200 text-stone-600 hover:bg-[#F7F9F7]'
+                            : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
                         }`}
                       >
-                        <div className="flex items-center space-x-1">
-                          <Star className={`w-3.5 h-3.5 ${rate > 0 ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-stone-300'}`} />
-                          <span className="font-bold">
+                        <div className="flex items-center space-x-2">
+                          <Star className={`w-4 h-4 ${rate > 0 ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-stone-300'}`} />
+                          <span className="font-extrabold">
                             {rate === 0 ? 'All Ratings' : `${rate} Stars & Up`}
                           </span>
                         </div>
@@ -173,17 +178,17 @@ export const FilterDrawer = ({
             </form>
 
             {/* Bottom Actions Sticky bar */}
-            <div className="p-6 border-t border-stone-150 flex gap-4 bg-stone-50">
+            <div className="p-4 lg:p-6 border-t border-stone-200 flex gap-3 bg-white shrink-0">
               <button
                 type="button"
                 onClick={handleClear}
-                className="w-1/3 border border-stone-200 hover:bg-white text-stone-600 font-bold py-3.5 rounded-[16px] text-xs transition-colors shadow-sm"
+                className="w-1/3 border border-stone-300 hover:bg-stone-100 text-stone-700 font-bold py-3.5 rounded-[14px] text-xs transition-colors shadow-xs cursor-pointer"
               >
-                Clear All
+                Clear Filters
               </button>
               <button
                 onClick={handleApply}
-                className="w-2/3 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-bold py-3.5 rounded-[16px] transition-all shadow-md shadow-[#2E7D32]/10"
+                className="w-2/3 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins text-xs font-black py-3.5 rounded-[14px] transition-all shadow-md shadow-[#2E7D32]/20 cursor-pointer"
               >
                 Apply Filters
               </button>
