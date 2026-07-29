@@ -236,7 +236,7 @@ const Products = () => {
   }, []);
 
   return (
-    <div className="bg-[#F8FAF8] min-h-screen font-sans pb-8">
+    <div className="bg-[#F8FAF8] min-h-screen font-sans pb-24 sm:pb-8">
       <SEO 
         title="Products"
         description="Premium organic coconut substrates."
@@ -244,7 +244,7 @@ const Products = () => {
       />
 
       {/* TOP HEADER */}
-      <header className="sticky top-0 z-40 bg-white shadow-sm px-4 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white shadow-sm px-5 py-3 flex items-center justify-between min-h-[60px]">
         <div className="flex items-center space-x-2">
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center text-white font-bold mr-2 shadow-sm">
@@ -291,8 +291,8 @@ const Products = () => {
       </header>
 
       {/* SEARCH & FILTER */}
-      <div className="bg-white px-4 py-3 shadow-sm border-t border-gray-50 z-30 relative">
-        <div className="flex space-x-3 mb-3">
+      <div className="bg-white px-5 py-4 shadow-sm border-t border-gray-50 z-30 relative">
+        <div className="flex space-x-3 mb-3.5">
           <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
@@ -301,11 +301,11 @@ const Products = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border-none rounded-2xl text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/30 transition-all"
+              className="block w-full pl-10 pr-3 py-3 bg-gray-50 border-none rounded-2xl text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/30 transition-all"
               placeholder="Search coir products..."
             />
           </div>
-          <button className="bg-[#2E7D32] text-white px-4 py-2.5 rounded-2xl flex items-center space-x-2 shadow-sm font-semibold text-sm hover:bg-green-800 transition-colors">
+          <button className="bg-[#2E7D32] text-white px-4 py-3 rounded-2xl flex items-center space-x-2 shadow-sm font-semibold text-sm hover:bg-green-800 transition-colors whitespace-nowrap">
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filter</span>
           </button>
@@ -349,7 +349,7 @@ const Products = () => {
       </div>
 
       {/* PRODUCT LIST */}
-      <div className="px-4 mb-8">
+      <div className="px-5 mb-8">
         <ProductGrid loading={loading}>
           <AnimatePresence>
             {!loading && filteredProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((prod) => (

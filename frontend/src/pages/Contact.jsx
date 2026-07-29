@@ -96,7 +96,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="pb-16 bg-white min-h-screen">
+    <div className="pb-20 sm:pb-16 bg-white min-h-screen">
       <SEO 
         title="Contact Us"
         description="Get in touch with Cocoveera for premium inquiries, bulk orders, and container load planning."
@@ -110,9 +110,9 @@ const Contact = () => {
         breadcrumbs={[{ label: 'Contact', path: '/contact' }]}
       />
 
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 mt-12">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 mt-8 sm:mt-12">
         {/* Left Side: Premium Contact Form */}
-        <div className="lg:col-span-8 bg-white/70 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white">
+        <div className="lg:col-span-8 bg-white/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xl border border-white">
           <div className="mb-8 border-b border-stone-200 pb-4 flex items-center justify-between">
             <h3 className="text-2xl font-poppins font-black text-stone-900 tracking-tight">
               Export Inquiry Form

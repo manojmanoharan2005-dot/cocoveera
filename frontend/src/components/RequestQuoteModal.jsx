@@ -316,7 +316,7 @@ export const RequestQuoteModal = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4">
           {/* Backdrop Blur Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -332,7 +332,7 @@ export const RequestQuoteModal = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="relative w-full max-w-[500px] bg-white rounded-[20px] overflow-hidden shadow-2xl z-10 max-h-[90vh] flex flex-col border border-stone-200"
+            className="relative w-full sm:max-w-[500px] bg-white rounded-t-[24px] sm:rounded-[20px] overflow-hidden shadow-2xl z-10 max-h-[92vh] sm:max-h-[90vh] flex flex-col border border-stone-200"
           >
             {/* Close Button */}
             <button

@@ -283,7 +283,7 @@ export const DashboardLayout = () => {
           onMenuClick={() => setSidebarOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 md:py-6">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-5 lg:px-8 py-4 sm:py-5 md:py-6 pb-24 sm:pb-6 lg:pb-8">
           <ErrorBoundary>
             <Suspense fallback={
               <div className="w-full h-full flex flex-col items-center justify-center py-12">

@@ -340,7 +340,7 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 1: HERO — Full-screen factory illustration background
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-[600px] max-h-[900px] h-screen flex items-center bg-white overflow-hidden max-w-7xl mx-auto w-full">
+      <section className="relative min-h-[520px] sm:min-h-[600px] max-h-[900px] h-screen flex items-center bg-white overflow-hidden max-w-7xl mx-auto w-full">
         
         {/* ── RIGHT SIDE IMAGE (Restricted to right half so products stay on the side) ── */}
         <div className="absolute inset-y-0 right-0 w-full lg:w-[55%] z-0">
@@ -361,14 +361,14 @@ const Home = () => {
         </div>
 
         {/* ── HERO CONTENT ── */}
-        <motion.div style={{ y: yHeroText }} className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 pt-40 md:pt-48 pb-20">
+        <motion.div style={{ y: yHeroText }} className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-6 lg:px-12 pt-32 sm:pt-40 md:pt-48 pb-14 sm:pb-20">
           {/* Subtle glowing accent orb behind text */}
           <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center relative z-10">
 
             {/* LEFT: Text Content */}
-            <div className="flex flex-col space-y-7">
+            <div className="flex flex-col space-y-5 sm:space-y-7">
 
               {/* Badge */}
               <motion.div
@@ -382,7 +382,7 @@ const Home = () => {
               {/* Heading */}
               <motion.h1
                 initial="hidden" animate="visible" variants={fadeUp} custom={1}
-                className="text-5xl sm:text-6xl lg:text-7xl font-poppins font-extrabold text-stone-900 leading-[1.05] relative"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-poppins font-extrabold text-stone-900 leading-[1.08] sm:leading-[1.05] relative"
               >
                 Engineered<br />
                 <span className="text-primary relative inline-block">
@@ -395,7 +395,7 @@ const Home = () => {
               {/* Description */}
               <motion.p
                 initial="hidden" animate="visible" variants={fadeUp} custom={2}
-                className="text-stone-700 text-base leading-relaxed max-w-lg font-medium"
+                className="text-stone-700 text-base sm:text-base leading-relaxed max-w-lg font-medium"
               >
                 High-performance coconut coir solutions for hydroponics, greenhouses and nurseries. Exported worldwide with quality you can trust.
               </motion.p>
@@ -403,11 +403,11 @@ const Home = () => {
               {/* CTA Buttons */}
               <motion.div
                 initial="hidden" animate="visible" variants={fadeUp} custom={3}
-                className="flex flex-wrap gap-4 pt-1"
+                className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-1"
               >
                 <Link
                   to="/products"
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
                 >
                   EXPLORE PRODUCTS <ChevronRight className="w-4 h-4" />
                 </Link>
@@ -465,9 +465,9 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 2: STATS BAR
       ═══════════════════════════════════════════════════════════════════ */}
-      <section ref={statsRef} className="bg-white border-y border-stone-100 py-12">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section ref={statsRef} className="bg-white border-y border-stone-100 py-10 sm:py-12">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <StatCounter value={50} suffix="+" label="Countries Served" icon={Globe2} started={statsStarted} />
             <StatCounter value={1000} suffix="+" label="Happy Customers" icon={Users} started={statsStarted} />
             <StatCounter value={5000} suffix="+" label="Shipments Delivered" icon={Truck} started={statsStarted} />
@@ -479,8 +479,8 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 3: ABOUT / ROOTED IN NATURE
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-accent overflow-hidden">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent overflow-hidden">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
           {/* Left: image with play button */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
@@ -527,7 +527,7 @@ const Home = () => {
             </p>
 
             {/* Feature grid */}
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
               {[
                 { icon: Award, label: 'Premium Quality' },
                 { icon: Leaf, label: 'Sustainable Practice' },
@@ -556,10 +556,10 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 4: PRODUCTS
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex items-end justify-between mb-8 sm:mb-12">
             <div>
               <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-2">OUR PRODUCTS</span>
               <h2 className="text-4xl font-poppins font-extrabold text-stone-900">
@@ -578,13 +578,13 @@ const Home = () => {
           <div className="relative">
             <div
               ref={productRef}
-              className="flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory hide-scrollbar"
+              className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory hide-scrollbar"
               style={{ scrollbarWidth: 'none' }}
             >
               {isLoading ? (
                 // Skeleton Loaders
                 Array.from({ length: 6 }).map((_, i) => (
-                  <div key={`skel-${i}`} className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft flex-shrink-0 flex flex-col">
+                  <div key={`skel-${i}`} className="w-[85vw] xs:w-[75vw] sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft flex-shrink-0 flex flex-col">
                     <div className="h-48 w-full bg-stone-200 animate-pulse"></div>
                     <div className="p-5 flex flex-col flex-grow">
                       <div className="h-4 bg-stone-200 animate-pulse rounded w-2/3 mb-4"></div>
@@ -617,7 +617,7 @@ const Home = () => {
                     transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.5 }}
                     whileHover={{ y: -8, scale: 1.02, rotateX: 2, rotateY: -2, boxShadow: "0 0 40px rgba(46,125,50,0.25)" }}
                     style={{ transformStyle: "preserve-3d", perspective: 1000 }}
-                    className="w-full sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative cursor-pointer"
+                    className="w-[85vw] xs:w-[75vw] sm:w-[260px] md:w-[280px] snap-start bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-soft transition-all duration-300 group flex-shrink-0 flex flex-col relative cursor-pointer"
                   >
                     {/* Glass reflection highlight */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"></div>
@@ -669,13 +669,13 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 5: WHY CHOOSE COCOVEERA
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-accent">
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-2">WHY CHOOSE</span>
             <h2 className="text-4xl font-poppins font-extrabold text-stone-900">Why Choose COCOVEERA?</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
             {whyFeatures.map((f, i) => (
               <motion.div
                 key={i}
@@ -699,8 +699,8 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 6: QUALITY TESTING
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
           {/* Left: Content */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -768,7 +768,7 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 7: PRODUCTION PROCESS
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-accent border-t border-stone-100">
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent border-t border-stone-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
             <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-2">OUR PRODUCTION PROCESS</span>
@@ -777,7 +777,7 @@ const Home = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 relative">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-4 relative">
             {/* Connecting line */}
             <div className="absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent hidden lg:block" />
 
@@ -808,7 +808,7 @@ const Home = () => {
       <section className="py-0 bg-[#1a3d1a] relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#6BBE45_1px,transparent_1px)] [background-size:30px_30px]" />
 
-        <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-12 sm:py-16 grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center relative z-10">
           {/* Left: Text */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -885,9 +885,9 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 9: GLOBAL NETWORK
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12 items-start mb-10 sm:mb-12">
             <div className="lg:col-span-1">
               <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-3">GLOBAL NETWORK</span>
               <h2 className="text-4xl font-poppins font-extrabold text-stone-900 leading-tight">
@@ -914,9 +914,9 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 10: TESTIMONIALS
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-accent border-t border-stone-100">
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent border-t border-stone-100">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {testimonials.map((t, i) => (
               <motion.div
                 key={i}
@@ -959,12 +959,12 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 11: CTA BANNER
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 px-6 bg-gradient-to-br from-primary via-primary to-[#1B5E20] relative overflow-hidden">
+      <section className="py-14 sm:py-16 px-5 sm:px-6 bg-gradient-to-br from-primary via-primary to-[#1B5E20] relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px]" />
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5 blur-2xl" />
         <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-white/5 blur-2xl" />
 
-        <div className="max-w-3xl mx-auto text-center relative z-10 space-y-6">
+        <div className="max-w-3xl mx-auto text-center relative z-10 space-y-5 sm:space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -972,14 +972,14 @@ const Home = () => {
             transition={{ duration: 0.6 }}
           >
             <p className="text-primary-light text-xs font-bold uppercase tracking-widest mb-3">READY TO PARTNER WITH US?</p>
-            <h2 className="text-4xl sm:text-5xl font-poppins font-extrabold text-white leading-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-poppins font-extrabold text-white leading-tight">
               Ready To Grow Together?
             </h2>
             <p className="text-white/75 text-sm leading-relaxed mt-4 max-w-xl mx-auto">
               Let's build a sustainable future with premium coconut coir substrates. Contact our export team today.
             </p>
           </motion.div>
-          <div className="flex flex-wrap justify-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 pt-2">
             <a
               href="/cocoveera-brochure.pdf"
               target="_blank"

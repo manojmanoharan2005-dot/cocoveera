@@ -28,9 +28,9 @@ const MobileBottomNav = () => {
     <>
       {/* Global padding added dynamically to body when this component mounts, 
           but adding an invisible spacer here is safer for the React tree */}
-      <div className="h-[72px] md:hidden w-full shrink-0" aria-hidden="true" />
+      <div className="h-[76px] md:hidden w-full shrink-0" aria-hidden="true" />
       
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-white border-t border-stone-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[9999] px-2 flex items-center justify-between" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[9999] px-2 flex items-end justify-between" style={{ height: 'calc(72px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
         {navItems.map((item) => {
           const isActive = 
             location.pathname === item.path || 

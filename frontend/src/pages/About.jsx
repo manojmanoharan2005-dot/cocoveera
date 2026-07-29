@@ -26,8 +26,8 @@ const About = () => {
       />
 
       {/* 1. Legacy & Company Divisions */}
-      <section className="py-16 px-6 bg-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <section className="py-12 sm:py-16 px-5 sm:px-6 bg-white">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
           <div className="lg:col-span-7 space-y-6">
             <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest">
               OUR HERITAGE & DIVISIONS
@@ -88,8 +88,8 @@ const About = () => {
       </section>
 
       {/* 2. Solar Powered & Sustainability Commitments */}
-      <section className="py-16 px-6 bg-accent border-y border-stone-100">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <section className="py-12 sm:py-16 px-5 sm:px-6 bg-accent border-y border-stone-100">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
           <div className="lg:col-span-5 relative order-last lg:order-first">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden border border-stone-200 shadow-soft">
               <motion.img
@@ -139,7 +139,7 @@ const About = () => {
       </section>
 
       {/* 3. Production Facilities & Geographic Location */}
-      <section className="py-16 px-6 bg-white">
+      <section className="py-12 sm:py-16 px-5 sm:px-6 bg-white">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center max-w-xl mx-auto">
             <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest">
@@ -153,7 +153,7 @@ const About = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
             {[
               {
                 title: 'Coimbatore Export Facility',
@@ -173,7 +173,7 @@ const About = () => {
             ].map((item, idx) => {
               const Icon = item.icon;
               return (
-                <div key={idx} className="bg-accent border border-stone-200 p-6 rounded-2xl shadow-soft">
+                <div key={idx} className="bg-accent border border-stone-200 p-5 sm:p-6 rounded-2xl shadow-soft">
                   <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary mb-4">
                     <Icon className="w-5 h-5" />
                   </div>
@@ -187,8 +187,8 @@ const About = () => {
       </section>
 
       {/* 4. Technical Expertise / Custom Solutions */}
-      <section className="py-16 px-6 bg-accent border-t border-stone-100">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <section className="py-12 sm:py-16 px-5 sm:px-6 bg-accent border-t border-stone-100">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
           <div className="lg:col-span-7 space-y-6">
             <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest">
               CUSTOM SUBSTRATES MIXES
@@ -226,7 +226,7 @@ const About = () => {
       </section>
 
       {/* 5. Mission, Vision & Values Statements */}
-      <section className="py-16 px-6 bg-white border-t border-stone-100">
+      <section className="py-12 sm:py-16 px-5 sm:px-6 bg-white border-t border-stone-100">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center max-w-xl mx-auto">
             <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest">
@@ -237,7 +237,7 @@ const About = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
             {[
               {
                 title: 'Our Mission',
@@ -257,7 +257,7 @@ const About = () => {
             ].map((item, idx) => {
               const Icon = item.icon;
               return (
-                <div key={idx} className="bg-accent border border-stone-200 p-8 rounded-2xl shadow-soft">
+                <div key={idx} className="bg-accent border border-stone-200 p-6 sm:p-8 rounded-2xl shadow-soft">
                   <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-primary mb-6">
                     <Icon className="w-6 h-6" />
                   </div>

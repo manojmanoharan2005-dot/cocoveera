@@ -1,6 +1,7 @@
 /**
  * File: frontend/src/components/Navbar.jsx
  * Purpose: Reusable React UI component for the frontend.
+ * Mobile: Premium spacing, large tap targets, breathable drawer layout.
  */
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
@@ -15,8 +16,6 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [langDropdown, setLangDropdown] = useState(false);
   const [language, setLanguage] = useState('EN');
-
-
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 40);
@@ -53,13 +52,12 @@ const Navbar = () => {
           isScrolled ? 'max-h-0 py-0 opacity-0' : 'max-h-10 py-2 opacity-100'
         }`}
       >
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex justify-between items-center h-full">
+        <div className="max-w-screen-xl mx-auto px-5 sm:px-6 flex justify-between items-center h-full">
           <div className="flex items-center gap-3 sm:gap-6 flex-wrap justify-center w-full sm:w-auto">
             <a href="mailto:supportdesk@cocoveera.com" className="flex items-center gap-1.5 hover:text-green-200 transition-colors">
               <Mail className="w-3 h-3" />
               supportdesk@cocoveera.com
             </a>
-
           </div>
           <div className="hidden sm:flex items-center gap-1.5">
             <ShieldCheck className="w-3 h-3 text-green-300" />
@@ -69,15 +67,15 @@ const Navbar = () => {
       </div>
 
       {/* ── MAIN NAV ── */}
-      <nav className={`bg-transparent transition-all duration-500 ${isScrolled ? 'py-2' : 'py-4'}`}>
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex items-center gap-4 sm:gap-8">
+      <nav className={`bg-transparent transition-all duration-500 ${isScrolled ? 'py-2' : 'py-3 sm:py-4'}`}>
+        <div className="max-w-screen-xl mx-auto px-5 sm:px-6 flex items-center gap-4 sm:gap-8">
 
-          {/* LOGO – fixed width so nav links never overlap it */}
+          {/* LOGO */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <img
               src="/logo.webp"
               alt="Cocoveera"
-              className={`object-contain transition-all duration-300 ${isScrolled ? 'h-9' : 'h-12'}`}
+              className={`object-contain transition-all duration-300 ${isScrolled ? 'h-8 sm:h-9' : 'h-10 sm:h-12'}`}
             />
             <span className="font-poppins font-extrabold text-base tracking-wide hidden sm:block">
               <span className="text-[#8B4513]">COCO</span>
@@ -85,7 +83,7 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* CENTER NAV – flex-1 so it takes remaining space, hidden below xl */}
+          {/* CENTER NAV – hidden below xl */}
           <div className="hidden xl:flex flex-1 items-center justify-center gap-5">
             {navLinks.map((link) => (
               <NavLink
@@ -103,7 +101,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* RIGHT ACTIONS */}
+          {/* RIGHT ACTIONS – desktop */}
           <div className="hidden xl:flex items-center gap-4 flex-shrink-0">
             {/* Language picker */}
             <div className="relative">
@@ -165,7 +163,8 @@ const Navbar = () => {
           <div className="xl:hidden ml-auto">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg text-stone-700 hover:bg-stone-100 transition-colors"
+              aria-label={isOpen ? 'Close menu' : 'Open menu'}
+              className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-700 hover:bg-stone-100 transition-colors"
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -174,7 +173,7 @@ const Navbar = () => {
 
         {/* ── MOBILE DRAWER ── */}
         {isOpen && (
-          <div className="xl:hidden border-t border-stone-100 bg-white px-6 py-5 flex flex-col gap-1 animate-slide-down">
+          <div className="xl:hidden border-t border-stone-100 bg-white px-5 pt-5 pb-6 flex flex-col gap-1 animate-slide-down">
             {navLinks.map((link) => (
               <NavLink
                 key={link.name}
@@ -182,7 +181,7 @@ const Navbar = () => {
                 end={link.path === '/'}
                 onClick={() => setIsOpen(false)}
                 className={({ isActive }) =>
-                  `py-2.5 px-3 rounded-lg font-poppins font-semibold text-xs uppercase tracking-wide transition-colors ${
+                  `py-3.5 px-4 rounded-xl font-poppins font-semibold text-sm uppercase tracking-wide transition-colors ${
                     isActive
                       ? 'text-primary bg-primary/5'
                       : 'text-stone-700 hover:text-primary hover:bg-stone-50'
@@ -193,19 +192,19 @@ const Navbar = () => {
               </NavLink>
             ))}
 
-            <div className="border-t border-stone-100 mt-3 pt-4 flex flex-col gap-3">
+            <div className="border-t border-stone-100 mt-4 pt-5 flex flex-col gap-3">
               <>
                 <Link
                   to="/login"
                   onClick={() => setIsOpen(false)}
-                  className="w-full text-center border border-stone-200 text-stone-700 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:border-primary hover:text-primary transition-colors"
+                  className="w-full text-center border border-stone-200 text-stone-700 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide hover:border-primary hover:text-primary transition-colors"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setIsOpen(false)}
-                  className="w-full text-center border border-primary text-primary py-2.5 rounded-lg font-bold text-xs uppercase tracking-wide hover:bg-primary hover:text-white transition-all"
+                  className="w-full text-center border border-primary text-primary py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-primary hover:text-white transition-all"
                 >
                   Register
                 </Link>
@@ -215,9 +214,9 @@ const Navbar = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsOpen(false)}
-                className="w-full text-center bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-wide shadow"
+                className="w-full text-center bg-primary text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide shadow"
               >
-                Brochure
+                Download Brochure
               </a>
             </div>
           </div>

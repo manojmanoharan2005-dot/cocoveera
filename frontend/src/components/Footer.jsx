@@ -53,8 +53,8 @@ const Footer = () => {
       : FALLBACK_CATEGORIES;
 
   return (
-    <footer className="bg-[#1a2a1a] text-stone-300 pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+    <footer className="bg-[#1a2a1a] text-stone-300 pt-14 sm:pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-10">
         
         {/* Col 1: Brand */}
         <div className="lg:col-span-1">
@@ -160,7 +160,7 @@ const Footer = () => {
       </div>
 
       {/* Bottom bar */}
-      <div className="max-w-7xl mx-auto px-6 border-t border-white/10 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-stone-500 font-semibold uppercase tracking-wider gap-4">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 border-t border-white/10 mt-10 sm:mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-stone-500 font-semibold uppercase tracking-wider gap-4">
         <p>© 2026 Cocoveera Private Limited. All rights reserved.</p>
         <div className="flex space-x-6">
           <Link to="/privacy-policy" className="hover:text-primary-light transition-colors">

@@ -20,7 +20,7 @@ const PageHero = ({
   bgImage = '/hero-product.webp',
 }) => {
   return (
-    <section className="relative pt-24 pb-12 bg-white overflow-hidden">
+    <section className="relative pt-20 sm:pt-24 pb-10 sm:pb-12 bg-white overflow-hidden">
       {/* ── RIGHT SIDE IMAGE ── */}
       <div className="absolute inset-y-0 right-0 w-full lg:w-1/2 z-0">
         <img
@@ -37,7 +37,7 @@ const PageHero = ({
       </div>
 
       {/* ── CONTENT ── */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-16 text-left">
+      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-12 py-10 sm:py-16 text-left">
         <div className="w-full lg:w-3/5 pr-0 lg:pr-8">
 
         {/* Breadcrumb */}
@@ -83,7 +83,7 @@ const PageHero = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
-          className="text-4xl sm:text-5xl lg:text-6xl font-poppins font-extrabold text-stone-900 leading-tight"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-poppins font-extrabold text-stone-900 leading-tight"
         >
           {titleAccent ? (
             <>
@@ -101,7 +101,7 @@ const PageHero = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25 }}
-            className="text-stone-600 text-sm sm:text-base leading-relaxed max-w-lg mt-5 font-medium"
+            className="text-stone-600 text-base sm:text-base leading-relaxed max-w-lg mt-4 sm:mt-5 font-medium"
           >
             {subtitle}
           </motion.p>

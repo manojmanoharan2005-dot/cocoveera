@@ -17,7 +17,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-gradient-to-b from-[#F8FAFC] via-white to-[#F8FAFC] text-[#111827] font-sans selection:bg-[#2E7D32] selection:text-white pb-32">
       
       {/* ── ELEGANT STICKY HEADER ── */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-[#E5E7EB]/80 px-4 sm:px-8 py-4 sticky top-0 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+      <header className="bg-white/80 backdrop-blur-md border-b border-[#E5E7EB]/80 px-5 sm:px-8 py-4 sticky top-0 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D32] animate-ping" />
@@ -39,7 +39,7 @@ export default function Onboarding() {
       </header>
 
       {/* ── MAIN FLOW CONTAINER (MAX 1140PX WIDTH) ── */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-24">
+      <main className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 pt-8 sm:pt-10 space-y-16 sm:space-y-24">
 
         {/* ═══════════════════════════════════════════════════════════════════
             SECTION 1: HOW TO REQUEST A QUOTE (GREEN ACCENT IDENTITY)
@@ -49,7 +49,7 @@ export default function Onboarding() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeUpVariant}
-          className="bg-white rounded-[28px] border border-[#E5E7EB] shadow-[0_20px_50px_rgba(0,0,0,0.03)] p-6 sm:p-12 space-y-10 relative overflow-hidden"
+          className="bg-white rounded-[20px] sm:rounded-[28px] border border-[#E5E7EB] shadow-[0_20px_50px_rgba(0,0,0,0.03)] p-5 sm:p-12 space-y-8 sm:space-y-10 relative overflow-hidden"
         >
           {/* Subtle Ambient Section Glow */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#E8F5E9]/50 via-transparent to-transparent rounded-full pointer-events-none blur-3xl" />
