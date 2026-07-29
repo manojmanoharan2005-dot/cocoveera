@@ -238,12 +238,14 @@ export default function ContainerViewer3DCanvas({
         <OrbitControls 
           ref={controlsRef}
           enablePan={false}
+          enableZoom={false}
           minDistance={4}
           maxDistance={35}
           maxPolarAngle={Math.PI / 2 + 0.1}
           autoRotate={false}
           enableDamping={true}
           dampingFactor={0.05}
+          makeDefault
         />
       </Canvas>
     </CanvasErrorBoundary>

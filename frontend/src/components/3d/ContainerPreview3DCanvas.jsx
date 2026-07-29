@@ -657,9 +657,11 @@ function CameraController({ cameraPreset, autoRotate, oscillate, isMini }) {
       autoRotateSpeed={0.8}
       enableDamping
       dampingFactor={0.05}
+      enableZoom={false}
       maxPolarAngle={Math.PI / 2 - 0.05}
       minDistance={1.5}
       maxDistance={25}
+      makeDefault
     />
   );
 }

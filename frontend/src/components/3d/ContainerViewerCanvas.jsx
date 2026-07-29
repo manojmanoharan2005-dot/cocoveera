@@ -162,7 +162,7 @@ export default function ContainerViewerCanvas({
           </Center>
         </Suspense>
 
-        <OrbitControls enablePan={false} minDistance={3} maxDistance={20} />
+        <OrbitControls enablePan={false} enableZoom={false} minDistance={3} maxDistance={20} enableDamping={true} dampingFactor={0.05} makeDefault />
       </Canvas>
     </CanvasErrorBoundary>
   );
