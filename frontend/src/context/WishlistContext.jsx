@@ -48,7 +48,7 @@ export const WishlistProvider = ({ children }) => {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
-      const res = await apiClient.get('/api/wishlist');
+      const res = await apiClient.get('/wishlist');
       if (res.data?.success) {
         setWishlist(res.data.data || []);
       }
@@ -100,7 +100,7 @@ export const WishlistProvider = ({ children }) => {
 
     // 2. API Request
     try {
-      const res = await apiClient.post('/api/wishlist', { productId });
+      const res = await apiClient.post('/wishlist', { productId });
       if (res.data?.success && Array.isArray(res.data.data)) {
         setWishlist(res.data.data);
       }
@@ -146,7 +146,7 @@ export const WishlistProvider = ({ children }) => {
 
     // 2. API Request
     try {
-      const res = await apiClient.delete(`/api/wishlist/${productId}`);
+      const res = await apiClient.delete(`/wishlist/${productId}`);
       if (res.data?.success && Array.isArray(res.data.data)) {
         setWishlist(res.data.data);
       }
@@ -184,12 +184,13 @@ export const WishlistProvider = ({ children }) => {
     showToast('Wishlist cleared', 'info');
 
     try {
-      const res = await apiClient.delete('/api/wishlist');
-      if (res.data?.success && Array.isArray(res.data.data)) {
+      // apiClient already has baseURL = API_URL ('/api'), so use '/wishlist'
+      const res = await apiClient.delete('/wishlist');
+      if (res.data?.success) {
         setWishlist([]);
       }
     } catch (err) {
-      console.error('API Error clearing wishlist:', err);
+      console.error('Wishlist Clear Error Details:', err.response ? err.response.data : err.message);
       setWishlist(previousWishlist);
       showToast('Unable to clear Wishlist. Please try again.', 'error');
     }

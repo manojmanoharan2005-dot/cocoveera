@@ -71,13 +71,27 @@ export const removeFromWishlist = async (req, res) => {
 // @access  Private
 export const clearWishlist = async (req, res) => {
   try {
-    await User.updateOne(
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: 'Authentication required. req.user is undefined.' });
+    }
+
+    const result = await User.updateOne(
       { _id: req.user._id },
       { $set: { wishlist: [] } }
     );
 
-    res.status(200).json({ success: true, message: 'Wishlist cleared successfully', data: [] });
+    res.status(200).json({ 
+      success: true, 
+      message: 'Wishlist cleared successfully', 
+      deletedCount: result.modifiedCount || 0,
+      data: [] 
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Wishlist Clear Error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+    });
   }
 };
