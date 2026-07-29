@@ -62,6 +62,66 @@ const ProductView = () => {
   });
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
+  // Multi-Container Builder State Management
+  const [completedContainers, setCompletedContainers] = useState([]);
+  const [activeContainerIndex, setActiveContainerIndex] = useState(1);
+  const containerBuilderRef = useRef(null);
+
+  // Compute active container load (for current active container)
+  const activeContainerLoad = parseFloat((quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
+  const isActiveContainerComplete = activeContainerLoad >= 1.00;
+
+  // Auto-complete active container when it reaches 1.00 (100%) and create/open next container
+  useEffect(() => {
+    if (activeContainerLoad >= 1.00) {
+      // Build snapshot of active container selections
+      const currentItems = [];
+      if (quantity > 0 && product) {
+        currentItems.push({ product, quantity });
+      }
+      extraItems.forEach(item => {
+        if (item.quantity > 0) {
+          currentItems.push({ product: item.product, quantity: item.quantity });
+        }
+      });
+
+      const newCompletedContainer = {
+        containerNumber: activeContainerIndex,
+        containerType,
+        totalLoad: activeContainerLoad,
+        items: currentItems,
+        completedAt: new Date().toISOString()
+      };
+
+      setCompletedContainers(prev => [...prev, newCompletedContainer]);
+      setActiveContainerIndex(prev => prev + 1);
+
+      // Reset active container form state for the next container
+      setQuantity(0.00);
+      setExtraItems([]);
+
+      // Toast notification for container completion
+      setAddedMessage(`Container ${activeContainerIndex} (1.00 FCL) is 100% completed! Opened Container ${activeContainerIndex + 1}.`);
+      
+      // Smooth scroll to container builder
+      setTimeout(() => {
+        if (containerBuilderRef.current) {
+          containerBuilderRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 300);
+    }
+  }, [activeContainerLoad, activeContainerIndex, containerType, product, quantity, extraItems]);
+
+  // Toast auto-clear effect (2.5 seconds)
+  useEffect(() => {
+    if (addedMessage) {
+      const timer = setTimeout(() => {
+        setAddedMessage('');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [addedMessage]);
+
   // Sync state with sessionStorage when ID changes or state updates
   useEffect(() => {
     if (id) {
@@ -573,11 +633,12 @@ Timestamp: ${new Date().toLocaleString()}
   const discount = 20;
 
   // Container & subtotal calculations
-  const totalQuantity = parseFloat((quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
+  const activeLoad = parseFloat((quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
+  const totalQuantity = parseFloat((completedContainers.length + activeLoad).toFixed(2));
   const isWholeContainer = totalQuantity > 0 && Math.abs(totalQuantity - Math.round(totalQuantity)) < 0.001;
-  const capacityPercentage = totalQuantity === 0 ? 0 : Math.round(isWholeContainer ? 100 : ((totalQuantity % 1) * 100));
-  const remainingForNextFull = isWholeContainer ? 0 : parseFloat((1 - (totalQuantity % 1)).toFixed(2));
-  const isQuoteButtonDisabled = totalQuantity === 0 || !isWholeContainer;
+  const capacityPercentage = activeLoad === 0 ? 0 : Math.round(activeLoad >= 1.00 ? 100 : (activeLoad * 100));
+  const remainingForNextFull = activeLoad === 0 ? 1.00 : parseFloat((1.00 - activeLoad).toFixed(2));
+  const isQuoteButtonDisabled = totalQuantity === 0 || (!isWholeContainer && completedContainers.length === 0);
   const isOverCapacity = false; // No longer applicable as they can order multiple containers
   const palletItems = [{ product, quantity }, ...extraItems];
 
@@ -614,16 +675,16 @@ Timestamp: ${new Date().toLocaleString()}
       
 
 
-      {/* Toast Notification */}
+      {/* Floating Toast Notification */}
       <AnimatePresence>
         {addedMessage && (
           <motion.div 
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-6 right-6 z-50 bg-[#1A1A1A] text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border border-stone-800"
+            className="fixed top-6 right-6 z-[100] bg-[#1A1A1A] text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border border-stone-800 pointer-events-none"
           >
-            <div className="w-5 h-5 rounded-full bg-[#2E7D32] flex items-center justify-center text-white">
+            <div className="w-5 h-5 rounded-full bg-[#2E7D32] flex items-center justify-center text-white shrink-0">
               <Check className="w-3.5 h-3.5 stroke-[3]" />
             </div>
             <span className="text-xs font-poppins font-bold">{addedMessage}</span>
@@ -948,16 +1009,57 @@ Timestamp: ${new Date().toLocaleString()}
             </div>
 
             {/* CONTAINER CONFIGURATOR */}
-            <div id="container-configurator" className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden space-y-6 mb-6">
+            <div id="container-configurator" ref={containerBuilderRef} className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden space-y-6 mb-6">
               
-              {/* Header */}
+              {/* COMPLETED CONTAINERS SUMMARY CARDS */}
+              {completedContainers.length > 0 && (
+                <div className="space-y-3 border-b border-stone-100 pb-5">
+                  <h4 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
+                    Completed Containers ({completedContainers.length})
+                  </h4>
+
+                  {completedContainers.map((c) => (
+                    <div 
+                      key={c.containerNumber}
+                      className="bg-[#f0fdf4] border-2 border-[#22c55e]/60 rounded-2xl p-4 space-y-2 shadow-sm transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-[#22c55e] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                            ✓
+                          </span>
+                          <span className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wide">
+                            Container #{c.containerNumber} ({c.containerType})
+                          </span>
+                        </div>
+                        <span className="text-xs font-black text-[#15803d] font-poppins bg-[#dcfce7] px-2.5 py-0.5 rounded-full border border-[#86efac]">
+                          100% Filled (1.00 FCL)
+                        </span>
+                      </div>
+
+                      {/* Items list inside completed container */}
+                      <div className="pt-2 border-t border-[#86efac]/40 space-y-1.5">
+                        {c.items.map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-xs text-stone-700 font-bold">
+                            <span className="truncate max-w-[200px]">{item.product.name}</span>
+                            <span className="text-[#15803d] font-poppins">{item.quantity.toFixed(2)} Container</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Active Container Header */}
               <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                 <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
                   <Package className="w-4 h-4 text-[#2E7D32]" />
-                  Container Configuration
+                  Active Container #{activeContainerIndex} Configuration
                 </h3>
                 <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
-                  Premium Export Config
+                  Container #{activeContainerIndex}
                 </div>
               </div>
 
