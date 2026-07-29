@@ -366,15 +366,17 @@ const Quotes = () => {
             <div className="flex flex-col">
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Price Quoted</span>
               <span className="font-black text-stone-900 text-sm sm:text-base">
-                {quote.convertedAmount > 0
-                  ? convertCurrency(quote.originalInrAmount, quote.currency || user?.currency || 'USD').formatted
+                {(quote.originalInrAmount > 0 || quote.convertedAmount > 0)
+                  ? convertCurrency(quote.originalInrAmount || quote.convertedAmount, quote.currency || user?.currency || 'USD').formatted
                   : 'Under Review'}
               </span>
             </div>
 
             <div className="flex flex-col">
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Ship To</span>
-              <span className="font-bold text-stone-700">{user?.name || 'Customer'}</span>
+              <span className="font-bold text-stone-700">
+                {quote.shippingAddress?.country || quote.rfq?.country || user?.country || 'Destination Port'}
+              </span>
             </div>
 
             {quote.validUntil && quote.status === 'Quote Approved' && (

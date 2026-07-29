@@ -405,7 +405,7 @@ const Orders = () => {
                 {m.paid ? '✓' : '○'}
               </span>
               <span className={m.paid ? 'font-bold text-stone-800' : 'text-stone-500'}>
-                {m.name || `Milestone ${mIdx + 1}`}: {m.percentage || 0}% ({convertCurrency(m.amount || 0, user?.currency || 'INR').formatted})
+                {m.name || `Milestone ${mIdx + 1}`}: {m.percentage || 0}% ({convertCurrency(m.amount || 0, order.currency || user?.currency || 'USD').formatted})
               </span>
             </div>
           ))}
@@ -569,11 +569,11 @@ const Orders = () => {
             </div>
             <div className="flex flex-col">
               <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Total</span>
-              <span className="font-semibold text-stone-700">{convertCurrency((order.totalAmount || order.total || 0), user?.currency || 'INR').formatted}</span>
+              <span className="font-semibold text-stone-700">{convertCurrency((order.totalAmount || order.total || 0), order.currency || user?.currency || 'USD').formatted}</span>
             </div>
             <div className="flex flex-col">
               <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Ship to</span>
-              <span className="font-semibold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">{user?.name || 'Customer'}</span>
+              <span className="font-semibold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">{order.shippingDetails?.country || user?.country || 'Destination Port'}</span>
             </div>
           </div>
           <div className="flex flex-col md:items-end">
