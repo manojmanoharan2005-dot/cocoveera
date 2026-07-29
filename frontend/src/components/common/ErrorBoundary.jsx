@@ -12,9 +12,25 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Automatically reload on chunk loading error if not reloaded yet
+    const errorStr = String(error?.message || error || '');
+    const isChunkError = errorStr.includes('Failed to fetch dynamically imported module') ||
+                         errorStr.includes('Failed to load module script') ||
+                         errorStr.includes('Unexpected token');
+    
+    if (isChunkError) {
+      const reloaded = sessionStorage.getItem('cocoveera_eb_chunk_retry') === 'true';
+      if (!reloaded) {
+        sessionStorage.setItem('cocoveera_eb_chunk_retry', 'true');
+        console.warn('ErrorBoundary detected stale chunk loading error. Auto refreshing...');
+        window.location.reload();
+      }
+    }
   }
 
   handleReset = () => {
+    sessionStorage.removeItem('cocoveera_eb_chunk_retry');
     this.setState({ hasError: false, error: null });
     if (this.props.onReset) {
       this.props.onReset();

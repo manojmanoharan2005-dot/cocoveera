@@ -26,19 +26,20 @@ const queryClient = new QueryClient({
   },
 });
 
+import { lazyWithRetry } from './utils/lazyWithRetry';
+
 // Prefetching removed for optimization
 import Home from './pages/Home';
 import About from './pages/About';
 import Products from './pages/Products';
-const QualityTesting = lazy(() => import('./pages/QualityTesting'));
-const CoconutSubstrates = lazy(() => import('./pages/CoconutSubstrates'));
+const QualityTesting = lazyWithRetry(() => import('./pages/QualityTesting'), 'QualityTesting');
+const CoconutSubstrates = lazyWithRetry(() => import('./pages/CoconutSubstrates'), 'CoconutSubstrates');
 import Contact from './pages/Contact';
-const NotFound = lazy(() => import('./pages/NotFound'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const TermsConditions = lazy(() => import('./pages/TermsConditions'));
-const Onboarding = lazy(() => import('./pages/Onboarding'));
+const NotFound = lazyWithRetry(() => import('./pages/NotFound'), 'NotFound');
+const PrivacyPolicy = lazyWithRetry(() => import('./pages/PrivacyPolicy'), 'PrivacyPolicy');
+const TermsConditions = lazyWithRetry(() => import('./pages/TermsConditions'), 'TermsConditions');
+const Onboarding = lazyWithRetry(() => import('./pages/Onboarding'), 'Onboarding');
 
-// Eagerly load Authentication pages to prevent Suspend flickers during auth flow navigation
 // Eagerly load Authentication pages to prevent Suspend flickers during auth flow navigation
 import AuthLayout from './layouts/AuthLayout';
 import OTPForm from './components/auth/OTPForm';
@@ -46,47 +47,47 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 
 // Admin Pages
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const AdminProducts = lazy(() => import('./pages/AdminProducts'));
-const AdminCategories = lazy(() => import('./pages/AdminCategories'));
-const AdminOrders = lazy(() => import('./pages/AdminOrders'));
-const AdminUsers = lazy(() => import('./pages/AdminUsers'));
-const AdminInquiries = lazy(() => import('./pages/admin/AdminInquiries'));
-const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'));
-const AdminRefunds = lazy(() => import('./pages/admin/AdminRefunds'));
-const AdminTesting = lazy(() => import('./pages/AdminTesting'));
-const AdminReports = lazy(() => import('./pages/AdminReports'));
-const AdminSettings = lazy(() => import('./pages/AdminSettings'));
-const AdminCurrencyManagement = lazy(() => import('./pages/AdminCurrencyManagement'));
-const AdminShippingManagement = lazy(() => import('./pages/AdminShippingManagement'));
-const AdminDiscounts = lazy(() => import('./pages/AdminDiscounts'));
-const AdminQuoteRequests = lazy(() => import('./pages/admin/AdminQuoteRequests'));
-const AdminQuoteRequestDetails = lazy(() => import('./pages/admin/AdminQuoteRequestDetails'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'), 'AdminDashboard');
+const AdminProducts = lazyWithRetry(() => import('./pages/AdminProducts'), 'AdminProducts');
+const AdminCategories = lazyWithRetry(() => import('./pages/AdminCategories'), 'AdminCategories');
+const AdminOrders = lazyWithRetry(() => import('./pages/AdminOrders'), 'AdminOrders');
+const AdminUsers = lazyWithRetry(() => import('./pages/AdminUsers'), 'AdminUsers');
+const AdminInquiries = lazyWithRetry(() => import('./pages/admin/AdminInquiries'), 'AdminInquiries');
+const AdminPayments = lazyWithRetry(() => import('./pages/admin/AdminPayments'), 'AdminPayments');
+const AdminRefunds = lazyWithRetry(() => import('./pages/admin/AdminRefunds'), 'AdminRefunds');
+const AdminTesting = lazyWithRetry(() => import('./pages/AdminTesting'), 'AdminTesting');
+const AdminReports = lazyWithRetry(() => import('./pages/AdminReports'), 'AdminReports');
+const AdminSettings = lazyWithRetry(() => import('./pages/AdminSettings'), 'AdminSettings');
+const AdminCurrencyManagement = lazyWithRetry(() => import('./pages/AdminCurrencyManagement'), 'AdminCurrencyManagement');
+const AdminShippingManagement = lazyWithRetry(() => import('./pages/AdminShippingManagement'), 'AdminShippingManagement');
+const AdminDiscounts = lazyWithRetry(() => import('./pages/AdminDiscounts'), 'AdminDiscounts');
+const AdminQuoteRequests = lazyWithRetry(() => import('./pages/admin/AdminQuoteRequests'), 'AdminQuoteRequests');
+const AdminQuoteRequestDetails = lazyWithRetry(() => import('./pages/admin/AdminQuoteRequestDetails'), 'AdminQuoteRequestDetails');
 
 // User Protected Route
-const Marketplace = lazy(() => import('./dashboards/Marketplace'));
-const DashboardLayout = lazy(() => import('./dashboards/DashboardLayout'));
-const Orders = lazy(() => import('./pages/account/Orders'));
-const OrderDetails = lazy(() => import('./pages/account/OrderDetails'));
-const OrderPaymentMilestones = lazy(() => import('./pages/account/OrderPaymentMilestones'));
+const Marketplace = lazyWithRetry(() => import('./dashboards/Marketplace'), 'Marketplace');
+const DashboardLayout = lazyWithRetry(() => import('./dashboards/DashboardLayout'), 'DashboardLayout');
+const Orders = lazyWithRetry(() => import('./pages/account/Orders'), 'Orders');
+const OrderDetails = lazyWithRetry(() => import('./pages/account/OrderDetails'), 'OrderDetails');
+const OrderPaymentMilestones = lazyWithRetry(() => import('./pages/account/OrderPaymentMilestones'), 'OrderPaymentMilestones');
 import Cart from './pages/account/Cart';
-const Checkout = lazy(() => import('./pages/account/Checkout'));
-const OrderSummary = lazy(() => import('./pages/account/OrderSummary'));
-const Payment = lazy(() => import('./pages/account/Payment'));
-const OrderSuccess = lazy(() => import('./pages/account/OrderSuccess'));
-const TrackOrder = lazy(() => import('./pages/account/TrackOrder'));
-const SavedCart = lazy(() => import('./pages/account/SavedCart'));
-const Address = lazy(() => import('./pages/account/Address'));
-const Settings = lazy(() => import('./pages/account/Settings'));
-const Profile = lazy(() => import('./pages/account/Profile'));
+const Checkout = lazyWithRetry(() => import('./pages/account/Checkout'), 'Checkout');
+const OrderSummary = lazyWithRetry(() => import('./pages/account/OrderSummary'), 'OrderSummary');
+const Payment = lazyWithRetry(() => import('./pages/account/Payment'), 'Payment');
+const OrderSuccess = lazyWithRetry(() => import('./pages/account/OrderSuccess'), 'OrderSuccess');
+const TrackOrder = lazyWithRetry(() => import('./pages/account/TrackOrder'), 'TrackOrder');
+const SavedCart = lazyWithRetry(() => import('./pages/account/SavedCart'), 'SavedCart');
+const Address = lazyWithRetry(() => import('./pages/account/Address'), 'Address');
+const Settings = lazyWithRetry(() => import('./pages/account/Settings'), 'Settings');
+const Profile = lazyWithRetry(() => import('./pages/account/Profile'), 'Profile');
 import ProductView from './pages/account/ProductView';
-const Quotes = lazy(() => import('./pages/account/Quotes'));
-const QuoteDetails = lazy(() => import('./pages/account/QuoteDetails'));
-const Notifications = lazy(() => import('./pages/account/Notifications'));
-const PaymentHistory = lazy(() => import('./pages/account/PaymentHistory'));
-const CustomerTestingReports = lazy(() => import('./pages/account/CustomerTestingReports'));
-const HelpCenter = lazy(() => import('./pages/account/HelpCenter'));
-const MobileAccount = lazy(() => import('./pages/account/MobileAccount'));
+const Quotes = lazyWithRetry(() => import('./pages/account/Quotes'), 'Quotes');
+const QuoteDetails = lazyWithRetry(() => import('./pages/account/QuoteDetails'), 'QuoteDetails');
+const Notifications = lazyWithRetry(() => import('./pages/account/Notifications'), 'Notifications');
+const PaymentHistory = lazyWithRetry(() => import('./pages/account/PaymentHistory'), 'PaymentHistory');
+const CustomerTestingReports = lazyWithRetry(() => import('./pages/account/CustomerTestingReports'), 'CustomerTestingReports');
+const HelpCenter = lazyWithRetry(() => import('./pages/account/HelpCenter'), 'HelpCenter');
+const MobileAccount = lazyWithRetry(() => import('./pages/account/MobileAccount'), 'MobileAccount');
 
 import { Ship } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
