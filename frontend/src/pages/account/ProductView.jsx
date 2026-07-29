@@ -862,16 +862,18 @@ Timestamp: ${new Date().toLocaleString()}
                         exit={{ opacity: 0, scale: 0.95, y: 5 }}
                         className="absolute bottom-full right-4 mb-2 z-50 bg-white rounded-2xl shadow-xl border border-stone-200/80 p-2 w-56 text-stone-800 space-y-1"
                       >
-                        <button
-                          onClick={() => {
-                            setShowMoreMenu(false);
-                            setIsQuoteModalOpen(true);
-                          }}
-                          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
-                        >
-                          <FileText className="w-4 h-4 text-[#2E7D32]" />
-                          <span>Request Wholesale Quote</span>
-                        </button>
+                        {user && (
+                          <button
+                            onClick={() => {
+                              setShowMoreMenu(false);
+                              setIsQuoteModalOpen(true);
+                            }}
+                            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-stone-100/80 text-xs font-bold text-stone-750 transition-colors"
+                          >
+                            <FileText className="w-4 h-4 text-[#2E7D32]" />
+                            <span>Request Wholesale Quote</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setShowMoreMenu(false);
@@ -1024,415 +1026,458 @@ Timestamp: ${new Date().toLocaleString()}
               <span className="text-xs font-semibold text-stone-500">18 Verified Technical Audits</span>
             </div>
 
-            {/* CONTAINER CONFIGURATOR */}
-            <div id="container-configurator" ref={containerBuilderRef} className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden space-y-6 mb-6">
-              
-              {/* COMPLETED CONTAINERS SUMMARY CARDS */}
-              {completedContainers.length > 0 && (
-                <div className="space-y-3 border-b border-stone-100 pb-5">
-                  <h4 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
-                    Completed Containers ({completedContainers.length})
-                  </h4>
+            {/* CONTAINER CONFIGURATOR & PURCHASE/RFQ ACTIONS */}
+            {user ? (
+              <div id="container-configurator" ref={containerBuilderRef} className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden space-y-6 mb-6">
+                
+                {/* COMPLETED CONTAINERS SUMMARY CARDS */}
+                {completedContainers.length > 0 && (
+                  <div className="space-y-3 border-b border-stone-100 pb-5">
+                    <h4 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
+                      Completed Containers ({completedContainers.length})
+                    </h4>
 
-                  {completedContainers.map((c) => (
-                    <div 
-                      key={c.containerNumber}
-                      className="bg-[#f0fdf4] border-2 border-[#22c55e]/60 rounded-2xl p-4 space-y-2 shadow-sm transition-all"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-[#22c55e] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                            ✓
-                          </span>
-                          <span className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wide">
-                            Container #{c.containerNumber} ({c.containerType})
+                    {completedContainers.map((c) => (
+                      <div 
+                        key={c.containerNumber}
+                        className="bg-[#f0fdf4] border-2 border-[#22c55e]/60 rounded-2xl p-4 space-y-2 shadow-sm transition-all"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-[#22c55e] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                              ✓
+                            </span>
+                            <span className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wide">
+                              Container #{c.containerNumber} ({c.containerType})
+                            </span>
+                          </div>
+                          <span className="text-xs font-black text-[#15803d] font-poppins bg-[#dcfce7] px-2.5 py-0.5 rounded-full border border-[#86efac]">
+                            100% Filled (1.00 FCL)
                           </span>
                         </div>
-                        <span className="text-xs font-black text-[#15803d] font-poppins bg-[#dcfce7] px-2.5 py-0.5 rounded-full border border-[#86efac]">
-                          100% Filled (1.00 FCL)
-                        </span>
+
+                        {/* Items list inside completed container */}
+                        <div className="pt-2 border-t border-[#86efac]/40 space-y-1.5">
+                          {c.items.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-xs text-stone-700 font-bold">
+                              <span className="truncate max-w-[200px]">{item.product.name}</span>
+                              <span className="text-[#15803d] font-poppins">{item.quantity.toFixed(2)} Container</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-
-                      {/* Items list inside completed container */}
-                      <div className="pt-2 border-t border-[#86efac]/40 space-y-1.5">
-                        {c.items.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-xs text-stone-700 font-bold">
-                            <span className="truncate max-w-[200px]">{item.product.name}</span>
-                            <span className="text-[#15803d] font-poppins">{item.quantity.toFixed(2)} Container</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Active Container Header */}
-              <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
-                  <Package className="w-4 h-4 text-[#2E7D32]" />
-                  Active Container #{activeContainerIndex} Configuration
-                </h3>
-                <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
-                  Container #{activeContainerIndex}
-                </div>
-              </div>
-
-              {/* Selection size & main quantity input */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                {/* Container Type Selection */}
-                <div className="space-y-2.5 flex flex-col justify-end">
-                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Select Container Size</span>
-                  <div className="flex gap-2 sm:gap-3 h-full max-h-[64px]">
-                    <button 
-                      type="button"
-                      onClick={() => setContainerType('20FT')}
-                      className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
-                        containerType === '20FT' 
-                          ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
-                          : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
-                      }`}
-                    >
-                      {containerType === '20FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
-                      <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '20FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>20FT FCL</span>
-                      <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">Standard</span>
-                    </button>
-                    
-                    <button 
-                      type="button"
-                      onClick={() => setContainerType('40FT')}
-                      className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
-                        containerType === '40FT' 
-                          ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
-                          : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
-                      }`}
-                    >
-                      {containerType === '40FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
-                      <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '40FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>40FT FCL</span>
-                      <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">High Vol</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Adjust Quantity Control */}
-                <div className="space-y-2.5 flex flex-col justify-end">
-                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Fractional Quantity</span>
-                  <div className="flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-1.5 sm:p-2 shadow-sm h-full max-h-[64px]">
-                    <button 
-                      type="button"
-                      onClick={() => setQuantity(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))))}
-                      className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 active:scale-95"
-                    >
-                      <Minus className="w-5 h-5" />
-                    </button>
-                    
-                    <div className="flex flex-col items-center justify-center px-4">
-                      <input
-                        type="number"
-                        step="0.25"
-                        min="0.00"
-                        max="100.00"
-                        value={quantity === 0 ? "0.00" : quantity}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          setQuantity(isNaN(val) ? 0.00 : Math.max(0.00, parseFloat(val.toFixed(2))));
-                        }}
-                        className="w-20 text-center text-2xl font-poppins font-black text-stone-900 focus:outline-none focus:ring-0 bg-transparent border-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mt-1">Containers</span>
-                    </div>
-
-                    <button 
-                      type="button"
-                      onClick={() => setQuantity(q => parseFloat((q + 0.25).toFixed(2)))}
-                      className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] rounded-xl transition-all duration-200 active:scale-95"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sticky Selected Products Summary Banner */}
-              {(() => {
-                const selectedTypesCount = (quantity > 0 ? 1 : 0) + extraItems.filter(i => i.quantity > 0).length;
-                const totalContainerSum = quantity + extraItems.reduce((acc, i) => acc + i.quantity, 0);
-
-                if (selectedTypesCount === 0) return null;
-
-                return (
-                  <div className="sticky top-2 z-10 bg-[#f0fdf4] border-2 border-[#22c55e] rounded-2xl p-3 sm:p-4 shadow-[0_8px_20px_rgba(34,197,94,0.15)] flex items-center justify-between gap-3 mb-3 backdrop-blur-md transition-all duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#22c55e] text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
-                        <CheckCircle2 className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-black text-stone-900 font-poppins">
-                          {selectedTypesCount} Product {selectedTypesCount === 1 ? 'Type' : 'Types'} Selected
-                        </h4>
-                        <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
-                          Live Container Load Configured
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-black text-[#15803d] font-poppins block">
-                        {totalContainerSum.toFixed(2)}
-                      </span>
-                      <span className="text-[9px] font-extrabold text-stone-500 uppercase tracking-wider block">
-                        Containers
-                      </span>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Accordion list */}
-              <div className="space-y-2 border-t border-stone-100 pt-4">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2 block">
-                  Container Product Categories
-                </span>
-                
-                <div className="space-y-2.5">
-                  {categories.map((cat) => {
-                    const catProducts = groupedProducts[cat.name] || [];
-                    const selectedCatCount = catProducts.filter(p => {
-                      if (p._id === product._id) return quantity > 0;
-                      const extra = extraItems.find(item => item.product._id === p._id);
-                      return extra && extra.quantity > 0;
-                    }).length;
-
-                    const isSelectedCategory = selectedCatCount > 0;
-                    const isExpanded = expandedCategory === cat.name || isSelectedCategory;
-                    
-                    return (
-                      <div 
-                        key={cat._id} 
-                        className={`bg-white border rounded-[20px] overflow-hidden transition-all duration-300 shadow-sm ${
-                          isSelectedCategory ? 'border-[#22c55e]/60 ring-1 ring-[#22c55e]/20' : 'border-stone-200'
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setExpandedCategory(isExpanded && !isSelectedCategory ? null : cat.name)}
-                          className={`w-full flex items-center justify-between p-4 text-left font-poppins font-black text-xs sm:text-sm transition-colors ${
-                            isSelectedCategory ? 'bg-[#f0fdf4]/70 hover:bg-[#f0fdf4] text-[#15803d]' : 'bg-stone-50/50 hover:bg-stone-50 text-stone-850'
-                          }`}
-                        >
-                          <span className="flex items-center gap-2">
-                            {isSelectedCategory ? (
-                              <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
-                            ) : (
-                              <span>{isExpanded ? '▼' : '►'}</span>
-                            )}
-                            {cat.name}
-                          </span>
-
-                          {isSelectedCategory ? (
-                            <span className="text-[10px] text-[#15803d] font-black bg-[#dcfce7] border border-[#86efac] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                              <Check className="w-3 h-3 stroke-[3]" />
-                              {selectedCatCount} Selected
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-[#2E7D32] font-extrabold bg-[#E8F5E9] px-2 py-0.5 rounded-full">
-                              {catProducts.length} Products
-                            </span>
-                          )}
-                        </button>
-                        
-                        <AnimatePresence initial={false}>
-                          {isExpanded && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.3 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="p-3 border-t border-stone-100 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
-                                {catProducts.length === 0 ? (
-                                  <p className="text-xs text-stone-400 font-semibold py-2">
-                                    No products in this category.
-                                  </p>
-                                ) : (
-                                  catProducts.map((p) => {
-                                    const isMainProduct = p._id === product._id;
-                                    const existingExtra = extraItems.find(item => item.product._id === p._id);
-                                    const currentQty = isMainProduct ? quantity : (existingExtra ? existingExtra.quantity : 0);
-                                    const isItemSelected = currentQty > 0;
-                                    
-                                    return (
-                                      <div 
-                                        key={p._id} 
-                                        className={`flex items-center justify-between gap-3 p-3 rounded-2xl transition-all duration-200 text-xs ${
-                                          isItemSelected 
-                                            ? 'bg-[#f0fdf4] border-2 border-[#22c55e] shadow-[0_4px_14px_rgba(34,197,94,0.15)] scale-[1.01]' 
-                                            : 'bg-stone-50 border border-stone-200/60 hover:border-stone-300'
-                                        }`}
-                                      >
-                                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                          {isItemSelected && (
-                                            <div className="w-5 h-5 rounded-full bg-[#22c55e] text-white flex items-center justify-center shrink-0 shadow-sm animate-in fade-in zoom-in duration-200">
-                                              <Check className="w-3 h-3 stroke-[3]" />
-                                            </div>
-                                          )}
-                                          <div className="w-10 h-10 bg-white rounded-xl overflow-hidden border border-stone-200 shrink-0 p-1 flex items-center justify-center">
-                                            <ImageWithFallback 
-                                              src={p.images?.[0]} 
-                                              alt={p.name} 
-                                              className="w-full h-full object-contain mix-blend-multiply" 
-                                            />
-                                          </div>
-                                          <div className="min-w-0 flex-1">
-                                            <h4 className="font-extrabold text-stone-850 truncate leading-snug">
-                                              {p.name}
-                                            </h4>
-                                            <p className="text-[9px] text-stone-500 font-semibold mt-0.5">
-                                              Dims: {p.length || 30}x{p.width || 30}x{p.height || 12} cm
-                                            </p>
-                                            <p className="text-[9px] text-[#2E7D32] font-black mt-0.5">
-                                              Capacity: {p.stock || 100} Containers
-                                            </p>
-                                          </div>
-                                        </div>
-                                        
-                                        <div className="flex items-center bg-white border border-stone-200 rounded-xl p-0.5 shrink-0">
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              if (isMainProduct) {
-                                                setQuantity(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))));
-                                              } else {
-                                                setExtraItems(prev => {
-                                                  const existing = prev.find(item => item.product._id === p._id);
-                                                  if (existing) {
-                                                    if (existing.quantity > 0.25) {
-                                                      return prev.map(item => item.product._id === p._id ? { ...item, quantity: parseFloat((item.quantity - 0.25).toFixed(2)) } : item);
-                                                    } else {
-                                                      return prev.filter(item => item.product._id !== p._id);
-                                                    }
-                                                  }
-                                                  return prev;
-                                                });
-                                              }
-                                            }}
-                                            className="w-6 h-6 flex items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-red-650 rounded-lg transition-colors"
-                                          >
-                                            <Minus className="w-3 h-3" />
-                                          </button>
-                                          <span className={`w-9 text-center font-black text-[11px] ${isItemSelected ? 'text-[#15803d]' : 'text-stone-800'}`}>
-                                            {currentQty.toFixed(2)}
-                                          </span>
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              if (isMainProduct) {
-                                                setQuantity(q => parseFloat((q + 0.25).toFixed(2)));
-                                              } else {
-                                                setExtraItems(prev => {
-                                                  const existing = prev.find(item => item.product._id === p._id);
-                                                  if (existing) {
-                                                    return prev.map(item => item.product._id === p._id ? { ...item, quantity: parseFloat((item.quantity + 0.25).toFixed(2)) } : item);
-                                                  } else {
-                                                    return [...prev, { product: p, quantity: 0.25 }];
-                                                  }
-                                                });
-                                              }
-                                            }}
-                                            className="w-6 h-6 flex items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-[#2E7D32] rounded-lg transition-colors"
-                                          >
-                                            <Plus className="w-3 h-3" />
-                                          </button>
-                                        </div>
-                                      </div>
-                                    );
-                                  })
-                                )}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className={`p-4 rounded-2xl border-2 transition-colors duration-500 ${!isWholeContainer ? 'bg-orange-50/50 border-orange-100' : 'bg-green-50/50 border-green-100'}`}>
-                <div className="flex justify-between items-end mb-3">
-                  <div>
-                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1.5 ${!isWholeContainer ? 'text-orange-600' : 'text-[#2E7D32]'}`}>
-                      {!isWholeContainer ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                      {!isWholeContainer ? 'Full Container Required' : 'Requirement Met'}
-                    </p>
-                    <p className="text-sm font-black text-stone-900 font-poppins">
-                      Current Total: {totalQuantity.toFixed(2)} <span className="text-xs text-stone-500 font-bold">Containers</span>
-                    </p>
-                  </div>
-                  <div className={`text-xl font-black font-poppins ${!isWholeContainer ? 'text-orange-500' : 'text-[#2E7D32]'}`}>
-                    {capacityPercentage}%
-                  </div>
-                </div>
-
-                <div className="relative w-full h-3 bg-stone-200/50 rounded-full overflow-hidden shadow-inner">
-                  <div 
-                    className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${
-                      !isWholeContainer ? 'bg-orange-500' : 'bg-gradient-to-r from-[#43A047] to-[#2E7D32] shadow-[0_0_10px_rgba(46,125,50,0.5)]'
-                    }`}
-                    style={{ width: `${capacityPercentage}%` }}
-                  />
-                </div>
-                {!isWholeContainer && (
-                  <div className="mt-3">
-                    <p className="text-[10px] font-bold text-orange-600 text-center">
-                      Add {remainingForNextFull.toFixed(2)} more container to complete the next full container.
-                    </p>
-                    <p className="text-[9px] font-semibold text-orange-500 text-center mt-0.5 opacity-80">
-                      Checkout is available only for full container quantities. Please complete the remaining container capacity.
-                    </p>
+                    ))}
                   </div>
                 )}
-              </div>
 
-              {/* 3D Container Preview (Mobile Only) */}
-              <div className="lg:hidden relative w-full mt-4 border border-stone-200/50 rounded-2xl overflow-hidden shadow-sm h-64 bg-[#F7F9F7]">
-                <ContainerViewer3D containerType={containerType} totalQuantity={viewerQuantity} autoRotate={true} palletItems={viewerPallets} />
-              </div>
+                {/* Active Container Header */}
+                <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                  <h3 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
+                    <Package className="w-4 h-4 text-[#2E7D32]" />
+                    Active Container #{activeContainerIndex} Configuration
+                  </h3>
+                  <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
+                    Container #{activeContainerIndex}
+                  </div>
+                </div>
 
-              {/* REQUEST QUOTE ACTIONS (Desktop Only) */}
-              <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:block">
-                <button
-                  type="button"
-                  disabled={isQuoteButtonDisabled || hasActiveRfq}
-                  onClick={handleRequestQuoteClick}
-                  className={`w-full font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
-                    hasActiveRfq
-                      ? 'bg-stone-100 border border-stone-200 text-stone-600 cursor-not-allowed shadow-none'
-                      : 'bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white active:scale-[0.98]'
-                  }`}
-                >
-                  {actionLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : hasActiveRfq ? (
-                    <div className="flex flex-col items-center justify-center leading-tight">
-                      <div className="flex items-center gap-1.5 text-[#2E7D32] font-black text-xs">
-                        <Check className="w-4 h-4 text-[#2E7D32] stroke-[3]" />
-                        <span>✓ Quote Requested</span>
-                      </div>
-                      <span className="text-[10px] text-stone-500 font-bold mt-0.5">Waiting for Review</span>
+                {/* Selection size & main quantity input */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Container Type Selection */}
+                  <div className="space-y-2.5 flex flex-col justify-end">
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Select Container Size</span>
+                    <div className="flex gap-2 sm:gap-3 h-full max-h-[64px]">
+                      <button 
+                        type="button"
+                        onClick={() => setContainerType('20FT')}
+                        className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
+                          containerType === '20FT' 
+                            ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
+                            : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
+                        }`}
+                      >
+                        {containerType === '20FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
+                        <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '20FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>20FT FCL</span>
+                        <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">Standard</span>
+                      </button>
+                      
+                      <button 
+                        type="button"
+                        onClick={() => setContainerType('40FT')}
+                        className={`relative flex-1 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border-2 overflow-hidden group ${
+                          containerType === '40FT' 
+                            ? 'border-[#2E7D32] bg-[#2E7D32]/5 shadow-md shadow-[#2E7D32]/10 scale-[1.02]' 
+                            : 'border-stone-100 bg-stone-50 hover:border-stone-300 hover:bg-stone-100'
+                        }`}
+                      >
+                        {containerType === '40FT' && <div className="absolute top-0 right-0 w-8 h-8 bg-[#2E7D32] rounded-bl-2xl flex items-center justify-center"><Check className="w-4 h-4 text-white" /></div>}
+                        <span className={`block text-xs sm:text-sm font-black uppercase tracking-wider transition-colors ${containerType === '40FT' ? 'text-[#2E7D32]' : 'text-stone-600'}`}>40FT FCL</span>
+                        <span className="block text-[9px] sm:text-[10px] font-semibold text-stone-500 mt-0.5">High Vol</span>
+                      </button>
                     </div>
-                  ) : (
-                    <>
-                      REQUEST QUOTE
-                      <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                    </>
-                  )}
-                </button>
-              </div>
+                  </div>
 
-            </div>
+                  {/* Adjust Quantity Control */}
+                  <div className="space-y-2.5 flex flex-col justify-end">
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Fractional Quantity</span>
+                    <div className="flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-1.5 sm:p-2 shadow-sm h-full max-h-[64px]">
+                      <button 
+                        type="button"
+                        onClick={() => setQuantity(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))))}
+                        className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 active:scale-95"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </button>
+                      
+                      <div className="flex flex-col items-center justify-center px-4">
+                        <input
+                          type="number"
+                          step="0.25"
+                          min="0.00"
+                          max="100.00"
+                          value={quantity === 0 ? "0.00" : quantity}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setQuantity(isNaN(val) ? 0.00 : Math.max(0.00, parseFloat(val.toFixed(2))));
+                          }}
+                          className="w-20 text-center text-2xl font-poppins font-black text-stone-900 focus:outline-none focus:ring-0 bg-transparent border-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mt-1">Containers</span>
+                      </div>
+
+                      <button 
+                        type="button"
+                        onClick={() => setQuantity(q => parseFloat((q + 0.25).toFixed(2)))}
+                        className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] rounded-xl transition-all duration-200 active:scale-95"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sticky Selected Products Summary Banner */}
+                {(() => {
+                  const selectedTypesCount = (quantity > 0 ? 1 : 0) + extraItems.filter(i => i.quantity > 0).length;
+                  const totalContainerSum = quantity + extraItems.reduce((acc, i) => acc + i.quantity, 0);
+
+                  if (selectedTypesCount === 0) return null;
+
+                  return (
+                    <div className="sticky top-2 z-10 bg-[#f0fdf4] border-2 border-[#22c55e] rounded-2xl p-3 sm:p-4 shadow-[0_8px_20px_rgba(34,197,94,0.15)] flex items-center justify-between gap-3 mb-3 backdrop-blur-md transition-all duration-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#22c55e] text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+                          <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-stone-900 font-poppins">
+                            {selectedTypesCount} Product {selectedTypesCount === 1 ? 'Type' : 'Types'} Selected
+                          </h4>
+                          <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                            Live Container Load Configured
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-black text-[#15803d] font-poppins block">
+                          {totalContainerSum.toFixed(2)}
+                        </span>
+                        <span className="text-[9px] font-extrabold text-stone-500 uppercase tracking-wider block">
+                          Containers
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Accordion list */}
+                <div className="space-y-2 border-t border-stone-100 pt-4">
+                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-2 block">
+                    Container Product Categories
+                  </span>
+                  
+                  <div className="space-y-2.5">
+                    {categories.map((cat) => {
+                      const catProducts = groupedProducts[cat.name] || [];
+                      const selectedCatCount = catProducts.filter(p => {
+                        if (p._id === product._id) return quantity > 0;
+                        const extra = extraItems.find(item => item.product._id === p._id);
+                        return extra && extra.quantity > 0;
+                      }).length;
+
+                      const isSelectedCategory = selectedCatCount > 0;
+                      const isExpanded = expandedCategory === cat.name || isSelectedCategory;
+                      
+                      return (
+                        <div 
+                          key={cat._id} 
+                          className={`bg-white border rounded-[20px] overflow-hidden transition-all duration-300 shadow-sm ${
+                            isSelectedCategory ? 'border-[#22c55e]/60 ring-1 ring-[#22c55e]/20' : 'border-stone-200'
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setExpandedCategory(isExpanded && !isSelectedCategory ? null : cat.name)}
+                            className={`w-full flex items-center justify-between p-4 text-left font-poppins font-black text-xs sm:text-sm transition-colors ${
+                              isSelectedCategory ? 'bg-[#f0fdf4]/70 hover:bg-[#f0fdf4] text-[#15803d]' : 'bg-stone-50/50 hover:bg-stone-50 text-stone-850'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              {isSelectedCategory ? (
+                                <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
+                              ) : (
+                                <span>{isExpanded ? '▼' : '►'}</span>
+                              )}
+                              {cat.name}
+                            </span>
+
+                            {isSelectedCategory ? (
+                              <span className="text-[10px] text-[#15803d] font-black bg-[#dcfce7] border border-[#86efac] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                                {selectedCatCount} Selected
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-[#2E7D32] font-extrabold bg-[#E8F5E9] px-2 py-0.5 rounded-full">
+                                {catProducts.length} Products
+                              </span>
+                            )}
+                          </button>
+                          
+                          <AnimatePresence initial={false}>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="p-3 border-t border-stone-100 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                  {catProducts.length === 0 ? (
+                                    <p className="text-xs text-stone-400 font-semibold py-2">
+                                      No products in this category.
+                                    </p>
+                                  ) : (
+                                    catProducts.map((p) => {
+                                      const isMainProduct = p._id === product._id;
+                                      const existingExtra = extraItems.find(item => item.product._id === p._id);
+                                      const currentQty = isMainProduct ? quantity : (existingExtra ? existingExtra.quantity : 0);
+                                      const isItemSelected = currentQty > 0;
+                                      
+                                      return (
+                                        <div 
+                                          key={p._id} 
+                                          className={`flex items-center justify-between gap-3 p-3 rounded-2xl transition-all duration-200 text-xs ${
+                                            isItemSelected 
+                                              ? 'bg-[#f0fdf4] border-2 border-[#22c55e] shadow-[0_4px_14px_rgba(34,197,94,0.15)] scale-[1.01]' 
+                                              : 'bg-stone-50 border border-stone-200/60 hover:border-stone-300'
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                            {isItemSelected && (
+                                              <div className="w-5 h-5 rounded-full bg-[#22c55e] text-white flex items-center justify-center shrink-0 shadow-sm animate-in fade-in zoom-in duration-200">
+                                                <Check className="w-3 h-3 stroke-[3]" />
+                                              </div>
+                                            )}
+                                            <div className="w-10 h-10 bg-[#f8faf8] rounded-xl overflow-hidden border border-stone-200 shrink-0 p-1 flex items-center justify-center">
+                                              <ImageWithFallback 
+                                                src={p.images?.[0]} 
+                                                alt={p.name} 
+                                                className="w-full h-full object-contain mix-blend-multiply" 
+                                              />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                              <h4 className="font-extrabold text-stone-850 truncate leading-snug">
+                                                {p.name}
+                                              </h4>
+                                              <p className="text-[9px] text-stone-500 font-semibold mt-0.5">
+                                                Dims: {p.length || 30}x{p.width || 30}x{p.height || 12} cm
+                                              </p>
+                                              <p className="text-[9px] text-[#2E7D32] font-black mt-0.5">
+                                                Capacity: {p.stock || 100} Containers
+                                              </p>
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="flex items-center bg-white border border-stone-200 rounded-xl p-0.5 shrink-0">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                if (isMainProduct) {
+                                                  setQuantity(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))));
+                                                } else {
+                                                  setExtraItems(prev => {
+                                                    const existing = prev.find(item => item.product._id === p._id);
+                                                    if (existing) {
+                                                      if (existing.quantity > 0.25) {
+                                                        return prev.map(item => item.product._id === p._id ? { ...item, quantity: parseFloat((item.quantity - 0.25).toFixed(2)) } : item);
+                                                      } else {
+                                                        return prev.filter(item => item.product._id !== p._id);
+                                                      }
+                                                    }
+                                                    return prev;
+                                                  });
+                                                }
+                                              }}
+                                              className="w-6 h-6 flex items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-red-650 rounded-lg transition-colors"
+                                            >
+                                              <Minus className="w-3 h-3" />
+                                            </button>
+                                            <span className={`w-9 text-center font-black text-[11px] ${isItemSelected ? 'text-[#15803d]' : 'text-stone-800'}`}>
+                                              {currentQty.toFixed(2)}
+                                            </span>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                if (isMainProduct) {
+                                                  setQuantity(q => parseFloat((q + 0.25).toFixed(2)));
+                                                } else {
+                                                  setExtraItems(prev => {
+                                                    const existing = prev.find(item => item.product._id === p._id);
+                                                    if (existing) {
+                                                      return prev.map(item => item.product._id === p._id ? { ...item, quantity: parseFloat((item.quantity + 0.25).toFixed(2)) } : item);
+                                                    } else {
+                                                      return [...prev, { product: p, quantity: 0.25 }];
+                                                    }
+                                                  });
+                                                }
+                                              }}
+                                              className="w-6 h-6 flex items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-[#2E7D32] rounded-lg transition-colors"
+                                            >
+                                              <Plus className="w-3 h-3" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className={`p-4 rounded-2xl border-2 transition-colors duration-500 ${!isWholeContainer ? 'bg-orange-50/50 border-orange-100' : 'bg-green-50/50 border-green-100'}`}>
+                  <div className="flex justify-between items-end mb-3">
+                    <div>
+                      <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1.5 ${!isWholeContainer ? 'text-orange-600' : 'text-[#2E7D32]'}`}>
+                        {!isWholeContainer ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                        {!isWholeContainer ? 'Full Container Required' : 'Requirement Met'}
+                      </p>
+                      <p className="text-sm font-black text-stone-900 font-poppins">
+                        Current Total: {totalQuantity.toFixed(2)} <span className="text-xs text-stone-500 font-bold">Containers</span>
+                      </p>
+                    </div>
+                    <div className={`text-xl font-black font-poppins ${!isWholeContainer ? 'text-orange-500' : 'text-[#2E7D32]'}`}>
+                      {capacityPercentage}%
+                    </div>
+                  </div>
+
+                  <div className="relative w-full h-3 bg-stone-200/50 rounded-full overflow-hidden shadow-inner">
+                    <div 
+                      className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${
+                        !isWholeContainer ? 'bg-orange-500' : 'bg-gradient-to-r from-[#43A047] to-[#2E7D32] shadow-[0_0_10px_rgba(46,125,50,0.5)]'
+                      }`}
+                      style={{ width: `${capacityPercentage}%` }}
+                    />
+                  </div>
+                  {!isWholeContainer && (
+                    <div className="mt-3">
+                      <p className="text-[10px] font-bold text-orange-600 text-center">
+                        Add {remainingForNextFull.toFixed(2)} more container to complete the next full container.
+                      </p>
+                      <p className="text-[9px] font-semibold text-orange-500 text-center mt-0.5 opacity-80">
+                        Checkout is available only for full container quantities. Please complete the remaining container capacity.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3D Container Preview (Mobile Only) */}
+                <div className="lg:hidden relative w-full mt-4 border border-stone-200/50 rounded-2xl overflow-hidden shadow-sm h-64 bg-[#F7F9F7]">
+                  <ContainerViewer3D containerType={containerType} totalQuantity={viewerQuantity} autoRotate={true} palletItems={viewerPallets} />
+                </div>
+
+                {/* REQUEST QUOTE ACTIONS (Desktop Only) */}
+                <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:block">
+                  <button
+                    type="button"
+                    disabled={isQuoteButtonDisabled || hasActiveRfq}
+                    onClick={handleRequestQuoteClick}
+                    className={`w-full font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
+                      hasActiveRfq
+                        ? 'bg-stone-100 border border-stone-200 text-stone-600 cursor-not-allowed shadow-none'
+                        : 'bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white active:scale-[0.98]'
+                    }`}
+                  >
+                    {actionLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : hasActiveRfq ? (
+                      <div className="flex flex-col items-center justify-center leading-tight">
+                        <div className="flex items-center gap-1.5 text-[#2E7D32] font-black text-xs">
+                          <Check className="w-4 h-4 text-[#2E7D32] stroke-[3]" />
+                          <span>✓ Quote Requested</span>
+                        </div>
+                        <span className="text-[10px] text-stone-500 font-bold mt-0.5">Waiting for Review</span>
+                      </div>
+                    ) : (
+                      <>
+                        REQUEST QUOTE
+                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+              </div>
+            ) : (
+              /* GUEST B2B CATALOGUE CARD */
+              <div className="bg-gradient-to-br from-stone-900 via-[#1A261C] to-stone-900 text-white rounded-3xl p-6 sm:p-8 border border-stone-800 shadow-xl space-y-5 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-[#2E7D32]/20 border border-[#2E7D32]/40 text-[#43A047] flex items-center justify-center">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#43A047]">
+                    B2B Catalogue Mode
+                  </span>
+                  <h3 className="font-poppins font-black text-lg sm:text-xl text-white leading-tight">
+                    Wholesale Quotation & Order Portal
+                  </h3>
+                  <p className="text-xs text-stone-300 font-medium leading-relaxed">
+                    Custom container quantity configuration, instant multi-product loading calculations, and formal RFQ quotation workflows are reserved for verified business accounts.
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-stone-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentPath = `${location.pathname}${location.search}`;
+                      sessionStorage.setItem('postLoginRedirect', currentPath);
+                      navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] text-white font-poppins text-xs font-black py-3.5 px-5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group active:scale-[0.98]"
+                  >
+                    <span>Login to Request Quote</span>
+                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => navigate('/register')}
+                    className="bg-white/10 hover:bg-white/15 text-stone-200 border border-stone-700/80 font-poppins text-xs font-bold py-3.5 px-5 rounded-xl transition-all flex items-center justify-center active:scale-[0.98]"
+                  >
+                    Register Account
+                  </button>
+                </div>
+              </div>
+            )}
 
 
 
@@ -1567,27 +1612,29 @@ Timestamp: ${new Date().toLocaleString()}
         </div>
       )}
 
-      {/* Mobile Sticky Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-2 items-center backdrop-blur-md bg-white/95">
-        <button
-          type="button"
-          disabled={isQuoteButtonDisabled || hasActiveRfq}
-          onClick={handleRequestQuoteClick}
-          className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-3 rounded-xl flex items-center justify-center shadow-md gap-1 active:scale-[0.98]"
-        >
-          {hasActiveRfq ? (
-            <>
-              <Check className="w-4 h-4 text-white" />
-              Quote Requested
-            </>
-          ) : (
-            <>
-              REQUEST QUOTE
-              <ChevronRight className="w-4 h-4" />
-            </>
-          )}
-        </button>
-      </div>
+      {/* Mobile Sticky Action Bar (Authenticated Users Only) */}
+      {user && (
+        <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-2 items-center backdrop-blur-md bg-white/95">
+          <button
+            type="button"
+            disabled={isQuoteButtonDisabled || hasActiveRfq}
+            onClick={handleRequestQuoteClick}
+            className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-3 rounded-xl flex items-center justify-center shadow-md gap-1 active:scale-[0.98]"
+          >
+            {hasActiveRfq ? (
+              <>
+                <Check className="w-4 h-4 text-white" />
+                Quote Requested
+              </>
+            ) : (
+              <>
+                REQUEST QUOTE
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Testing Modal */}
       <AnimatePresence>

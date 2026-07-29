@@ -21,8 +21,8 @@ const router = express.Router();
 // Brevo Webhook Endpoint (Public, processed safely)
 router.post('/webhook/brevo', handleBrevoWebhook);
 
-// Public RFQ submission
-router.post('/', securitySanitizers, submitQuoteRequest);
+// Protected RFQ submission
+router.post('/', protect, securitySanitizers, submitQuoteRequest);
 
 // Protected Admin Endpoints
 router.get('/', protect, admin, getAdminQuoteRequests);

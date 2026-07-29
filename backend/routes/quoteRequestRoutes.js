@@ -14,6 +14,6 @@ const router = express.Router();
 router.get('/active-check', protect, checkActiveRFQ);
 
 router.route('/')
-  .post(quoteRequestLimiter, securitySanitizers, validateQuoteRequest, submitQuoteRequest);
+  .post(protect, quoteRequestLimiter, securitySanitizers, validateQuoteRequest, submitQuoteRequest);
 
 export default router;
