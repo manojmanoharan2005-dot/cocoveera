@@ -57,7 +57,7 @@ export const Header = ({
     .slice(0, 2) || 'U';
 
   return (
-    <header className="w-full h-16 bg-white/95 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-60 px-2.5 sm:px-4 md:px-6 flex items-center justify-between gap-2 sm:gap-4 shadow-sm shadow-stone-100/80 select-none">
+    <header className="w-full h-16 bg-white/95 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-[100] px-2.5 sm:px-4 md:px-6 flex items-center justify-between gap-2 sm:gap-4 shadow-sm shadow-stone-100/80 select-none">
       
       {/* Left: Brand Logo & Mobile Menu Toggle */}
       <div className="flex items-center gap-2 shrink-0">
@@ -247,13 +247,13 @@ export const Header = ({
           <AnimatePresence>
             {dropdownOpen && window.innerWidth >= 1024 && (
               <>
-                <div className="fixed inset-0 z-40 bg-black/5 sm:bg-transparent cursor-pointer" onClick={() => setDropdownOpen(false)} onTouchStart={() => setDropdownOpen(false)} />
+                <div className="fixed inset-0 z-[90] bg-black/5 sm:bg-transparent cursor-pointer" onClick={() => setDropdownOpen(false)} onTouchStart={() => setDropdownOpen(false)} />
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-3 w-56 bg-white border border-stone-200/80 rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] py-2 z-50"
+                  className="absolute right-0 mt-3 w-56 bg-white border border-stone-200/80 rounded-[20px] shadow-[0_16px_48px_rgba(0,0,0,0.18)] py-2 z-[100]"
                 >
                   {/* Profile summary */}
                   <div className="px-4 py-3.5 border-b border-stone-100 flex items-center gap-3">
