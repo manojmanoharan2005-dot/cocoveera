@@ -53,11 +53,13 @@ const OrderDetails = () => {
   };
 
   const handlePreviewInvoice = () => {
-    if (!backendOrder?._id) return;
-    const token = sessionStorage.getItem('cocoveera_token');
-    const viewUrl = `${apiClient.defaults.baseURL}/orders/${id}/invoice?token=${token}&_t=${Date.now()}`;
-    setPdfViewUrl(viewUrl);
-    setPdfModalOpen(true);
+    if (!backendOrder?._id) {
+      alert('Invoice PDF is not available yet.');
+      return;
+    }
+    const token = sessionStorage.getItem('cocoveera_token') || '';
+    const viewUrl = `${apiClient.defaults.baseURL}/orders/${id}/invoice?token=${encodeURIComponent(token)}&_t=${Date.now()}`;
+    window.open(viewUrl, '_blank', 'noopener,noreferrer');
   };
 
   if (isLoading) return <div className="p-12 text-center text-stone-500 font-bold">Loading order details...</div>;
@@ -314,16 +316,7 @@ const OrderDetails = () => {
         </div>
       </div>
 
-      {/* Lazy Invoice PDF Viewer Modal */}
-      <Suspense fallback={null}>
-        <PDFModal
-          isOpen={pdfModalOpen}
-          onClose={() => setPdfModalOpen(false)}
-          pdfUrl={pdfViewUrl}
-          quoteNumber={backendOrder.orderNumber || backendOrder._id}
-          title="Invoice Preview"
-        />
-      </Suspense>
+
 
       <div className="mt-16">
         <RecommendedProducts />

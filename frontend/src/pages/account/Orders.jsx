@@ -168,12 +168,13 @@ const Orders = () => {
   const totalPages = data?.pagination?.pages || 1;
 
   const handlePreviewInvoice = (orderId, orderNumber) => {
-    if (!orderId) return;
-    const token = sessionStorage.getItem('cocoveera_token');
-    const viewUrl = `${apiClient.defaults.baseURL}/orders/${orderId}/invoice?token=${token}&_t=${Date.now()}`;
-    setActivePdfUrl(viewUrl);
-    setActiveOrderNum(orderNumber);
-    setPdfModalOpen(true);
+    if (!orderId) {
+      alert('Invoice PDF is not available yet.');
+      return;
+    }
+    const token = sessionStorage.getItem('cocoveera_token') || '';
+    const viewUrl = `${apiClient.defaults.baseURL}/orders/${orderId}/invoice?token=${encodeURIComponent(token)}&_t=${Date.now()}`;
+    window.open(viewUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleDownloadInvoice = async (orderId, orderNumber) => {
@@ -879,16 +880,7 @@ const Orders = () => {
         </div>
       )}
 
-      {/* Lazy Invoice PDF Viewer Modal */}
-      <Suspense fallback={null}>
-        <PDFModal
-          isOpen={pdfModalOpen}
-          onClose={() => setPdfModalOpen(false)}
-          pdfUrl={activePdfUrl}
-          quoteNumber={activeOrderNum}
-          title="Invoice Preview"
-        />
-      </Suspense>
+
 
       <Suspense fallback={<div className="h-10 animate-pulse bg-stone-100 rounded-xl" />}>
         <div className="mt-16">

@@ -186,9 +186,13 @@ const Quotes = () => {
   };
 
   const handleViewPDF = (quoteId, quoteNumber) => {
+    if (!quoteId) {
+      alert('Quotation PDF is not available yet.');
+      return;
+    }
     const token = sessionStorage.getItem('cocoveera_token') || '';
     const base = apiClient.defaults.baseURL?.replace(/\/$/, '');
-    window.open(`${base}/quotes/${quoteId}/view-pdf?token=${encodeURIComponent(token)}`, '_blank');
+    window.open(`${base}/quotes/${quoteId}/view-pdf?token=${encodeURIComponent(token)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleOpenRejectModal = (quote) => {
@@ -840,16 +844,7 @@ const Quotes = () => {
         </div>
       )}
 
-      {/* PDF Modal Container */}
-      <Suspense fallback={null}>
-        <PDFModal
-          isOpen={pdfModalOpen}
-          onClose={() => setPdfModalOpen(false)}
-          pdfUrl={activePdfUrl}
-          quoteNumber={activeQuoteNum}
-          title="Quotation Viewer"
-        />
-      </Suspense>
+
 
       {/* SUCCESS ORDER REDIRECT MODAL */}
       <SuccessModal
