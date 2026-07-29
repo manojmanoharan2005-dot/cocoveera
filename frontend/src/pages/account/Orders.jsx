@@ -352,9 +352,14 @@ const Orders = () => {
 
   // Reusable Single Order Card Item
   const OrderCardItem = React.memo(({ order, idx }) => {
-    const rawStatus = order.orderStatus ? order.orderStatus.toLowerCase() : 'pending';
+    if (!order) return null;
+
+    const rawStatus = order.orderStatus ? String(order.orderStatus).toLowerCase() : 'pending';
     const progress = order.paymentProgress || 0;
     const [isExpanded, setIsExpanded] = useState(false);
+    const shortOrderId = order.orderNumber || (order._id ? String(order._id).slice(-8).toUpperCase() : 'N/A');
+    const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Recent';
+    const safeItems = Array.isArray(order.items) ? order.items : [];
     
     let displayStatusText = 'Pending';
     let statusColorClass = 'text-stone-900';
@@ -378,74 +383,56 @@ const Orders = () => {
         statusColorClass = 'text-[#067D62]';
         borderLeftColorClass = 'border-l-4 border-l-[#067D62] border-stone-200';
       } else if (progress === 80) {
-        displayStatusText = '🟢 Shipment Ready';
+        displayStatusText = '🟢 Shipped & In Transit';
         statusColorClass = 'text-[#067D62]';
         borderLeftColorClass = 'border-l-4 border-l-[#067D62] border-stone-200';
       } else if (progress === 100) {
-        displayStatusText = '🟢 Completed';
+        displayStatusText = '🟢 Delivered Successfully';
         statusColorClass = 'text-[#067D62]';
         borderLeftColorClass = 'border-l-4 border-l-[#067D62] border-stone-200';
       }
     }
 
-    const shortOrderId = (order.orderNumber || order._id).slice(-8).toUpperCase();
-
     // Render dynamic checklist icons
     const renderProgressChecklist = () => {
-      const steps = [40, 60, 80, 100];
+      const milestones = Array.isArray(order.paymentMilestones) ? order.paymentMilestones : [];
+      if (milestones.length === 0) return null;
       return (
-        <div className="flex flex-col gap-1 mt-2 text-xs font-bold text-stone-600">
-          {steps.map((step) => {
-            let marker = '🔒';
-            if (progress >= step) {
-              marker = '✔';
-            } else if (progress === 0 && step === 40) {
-              marker = '⭕';
-            } else if (progress === 40 && step === 60) {
-              marker = '⭕';
-            } else if (progress === 60 && step === 80) {
-              marker = '⭕';
-            } else if (progress === 80 && step === 100) {
-              marker = '⭕';
-            }
-            return (
-              <span key={step} className="flex items-center gap-1.5">
-                <span>{marker}</span>
-                <span className="font-poppins">{step}%</span>
+        <div className="space-y-1 mt-1">
+          {milestones.map((m, mIdx) => (
+            <div key={mIdx} className="flex items-center gap-2 text-xs">
+              <span className={m.paid ? 'text-green-600 font-bold' : 'text-stone-400'}>
+                {m.paid ? '✓' : '○'}
               </span>
-            );
-          })}
+              <span className={m.paid ? 'font-bold text-stone-800' : 'text-stone-500'}>
+                {m.name || `Milestone ${mIdx + 1}`}: {m.percentage || 0}% ({convertCurrency(m.amount || 0, user?.currency || 'INR').formatted})
+              </span>
+            </div>
+          ))}
         </div>
       );
     };
 
     // Render Card-Level Action Buttons
     const renderCardActionButtons = () => {
-      if (rawStatus === 'cancelled') {
-        return (
-          <button 
-            onClick={() => handleReorder(order._id)} 
-            className="px-3 py-1.5 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors w-fit flex items-center gap-1.5"
-          >
-            <RotateCcw className="w-3.5 h-3.5" /> Reorder
-          </button>
-        );
-      }
+      if (rawStatus === 'cancelled') return null;
 
       if (progress === 0) {
         return (
           <>
             <button
-              onClick={() => navigate('/checkout', { state: { orderId: order._id, milestoneIndex: 0 } })}
-              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit animate-pulse"
+              onClick={() => handlePayMilestone(order._id, 0, order.orderNumber || order._id)}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
             >
-              Pay 40% Advance
+              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>Pay 40% Advance & Start Production</span>
             </button>
             <button
-              onClick={() => navigate(`/orders/${order._id}`)}
-              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+              onClick={() => handleCancelClick(order._id)}
+              className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-red-600 text-xs font-semibold rounded-full transition-colors cursor-pointer"
             >
-              View Order
+              Cancel Order
             </button>
           </>
         );
@@ -455,16 +442,18 @@ const Orders = () => {
         return (
           <>
             <button
-              onClick={() => navigate('/checkout', { state: { orderId: order._id, milestoneIndex: 1 } })}
-              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit"
+              onClick={() => handlePayMilestone(order._id, 1, order.orderNumber || order._id)}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
             >
-              Pay 60%
+              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>Pay 20% Second Milestone</span>
             </button>
             <button
-              onClick={() => navigate(`/track/${order._id}`)}
-              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+              onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
             >
-              Track Production
+              Invoice
             </button>
           </>
         );
@@ -474,16 +463,18 @@ const Orders = () => {
         return (
           <>
             <button
-              onClick={() => navigate('/checkout', { state: { orderId: order._id, milestoneIndex: 2 } })}
-              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit"
+              onClick={() => handlePayMilestone(order._id, 2, order.orderNumber || order._id)}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
             >
-              Pay 80%
+              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>Pay 20% Third Milestone</span>
             </button>
             <button
-              onClick={() => navigate(`/track/${order._id}`)}
-              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+              onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
             >
-              Track Order
+              Invoice
             </button>
           </>
         );
@@ -493,14 +484,22 @@ const Orders = () => {
         return (
           <>
             <button
-              onClick={() => navigate('/checkout', { state: { orderId: order._id, milestoneIndex: 3 } })}
-              className="px-4 py-2 bg-[#FFD814] hover:bg-[#F7CA00] text-stone-900 text-xs font-black rounded-full border border-[#FCD200] shadow-sm transition-colors cursor-pointer w-fit"
+              onClick={() => handlePayMilestone(order._id, 3, order.orderNumber || order._id)}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
             >
-              Pay Final Amount
+              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>Pay Final 20% Balance</span>
+            </button>
+            <button
+              onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
+            >
+              Invoice
             </button>
             <button
               onClick={() => navigate(`/track/${order._id}`)}
-              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
             >
               Track Shipment
             </button>
@@ -513,19 +512,19 @@ const Orders = () => {
           <>
             <button
               onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}
-              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
             >
               Invoice
             </button>
             <button
               onClick={() => alert("Shipping documents (Bill of Lading, Packing List) are being prepared by the export officer. You will receive an email notification once finalized.")}
-              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
             >
               Shipping Documents
             </button>
             <button
               onClick={() => navigate(`/track/${order._id}`)}
-              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer w-fit"
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
             >
               Track Shipment
             </button>
@@ -566,7 +565,7 @@ const Orders = () => {
           <div className="flex gap-6 md:gap-12">
             <div className="flex flex-col">
               <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order placed</span>
-              <span className="font-semibold text-stone-700">{new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              <span className="font-semibold text-stone-700">{orderDate}</span>
             </div>
             <div className="flex flex-col">
               <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Total</span>
@@ -621,7 +620,7 @@ const Orders = () => {
             )}
           </div>
 
-          {(isExpanded ? order.items : order.items.slice(0, 3)).map((item, itemIdx) => (
+          {(isExpanded ? safeItems : safeItems.slice(0, 3)).map((item, itemIdx) => (
             <div key={itemIdx} className="flex flex-col md:flex-row gap-6 border-b border-stone-100 last:border-b-0 pb-5 last:pb-0">
               {/* Product Image */}
               <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
@@ -644,7 +643,7 @@ const Orders = () => {
                 </h4>
                 <div className="text-xs text-stone-500 mt-1 mb-2 space-y-1">
                   <p>Quantity: {item.pieces || 0} Pieces</p>
-                  <p>Container Quantity: {item.quantity}</p>
+                  <p>Container Quantity: {item.quantity || 1}</p>
                   <p>Container Type: {order.shippingDetails?.containerType || '20 FT FCL'}</p>
                 </div>
               </div>
@@ -652,13 +651,13 @@ const Orders = () => {
           ))}
 
           {/* Expand / Collapse Toggle */}
-          {order.items.length > 3 && (
+          {safeItems.length > 3 && (
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-xs font-black text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer border-none bg-transparent p-0 flex items-center mt-2"
             >
-              {isExpanded ? 'Show Less Products' : `+${order.items.length - 3} More Products`}
+              {isExpanded ? 'Show Less Products' : `+${safeItems.length - 3} More Products`}
             </button>
           )}
 

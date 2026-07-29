@@ -313,16 +313,18 @@ const Quotes = () => {
   };
 
   const QuoteCardItem = React.memo(({ quote, idx }) => {
+    if (!quote) return null;
+
     const hasPdf = !!quote.pdfUrl;
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const displayProducts = quote.products && quote.products.length > 0
+    const displayProducts = Array.isArray(quote.products) && quote.products.length > 0
       ? quote.products.map(item => ({
-          product: item.product,
-          productName: item.productName,
-          quantity: item.quantity,
-          containerQty: item.quantity,
-          categoryName: item.categoryName
+          product: item?.product,
+          productName: item?.productName || 'Export Product',
+          quantity: item?.quantity || 1,
+          containerQty: item?.quantity || 1,
+          categoryName: item?.categoryName || 'Substrate'
         }))
       : (quote.productDetails?.name ? [{
           product: quote.productDetails.productId,
@@ -333,6 +335,9 @@ const Quotes = () => {
         }] : []);
 
     const visibleProducts = isExpanded ? displayProducts : displayProducts.slice(0, 3);
+    const requestDateStr = (quote.rfq?.createdAt || quote.createdAt) 
+      ? new Date(quote.rfq?.createdAt || quote.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+      : 'Recent';
 
     return (
       <motion.div
@@ -347,7 +352,7 @@ const Quotes = () => {
             <div className="flex flex-col">
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Request Date</span>
               <span className="font-bold text-stone-700">
-                {new Date(quote.rfq?.createdAt || quote.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {requestDateStr}
               </span>
             </div>
 
