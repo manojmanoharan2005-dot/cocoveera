@@ -26,21 +26,53 @@ export const CURRENCY_SYMBOLS = {
   JPY: '¥',
 };
 
-export const convertCurrency = (amountInINR, targetCurrency) => {
+export const CURRENCY_LOCALES = {
+  INR: 'en-IN',
+  USD: 'en-US',
+  EUR: 'de-DE',
+  GBP: 'en-GB',
+  AED: 'en-AE',
+  AUD: 'en-AU',
+  CAD: 'en-CA',
+  SGD: 'en-SG',
+  JPY: 'ja-JP',
+};
+
+export const formatCurrency = (amount, currencyCode, locale) => {
+  const code = (currencyCode || 'USD').toUpperCase();
+  const loc = locale || CURRENCY_LOCALES[code] || 'en-US';
+  const symbol = CURRENCY_SYMBOLS[code] || '$';
+  
+  try {
+    return new Intl.NumberFormat(loc, {
+      style: 'currency',
+      currency: code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount || 0);
+  } catch (err) {
+    return `${symbol}${Number((amount || 0).toFixed(2)).toLocaleString(loc)}`;
+  }
+};
+
+export const convertCurrency = (amountInINR, targetCurrency, userRegisteredCurrency) => {
+  const activeCurrency = (targetCurrency || userRegisteredCurrency || 'USD').toUpperCase();
+  
   if (!amountInINR || isNaN(amountInINR)) {
-    const symbol = CURRENCY_SYMBOLS[targetCurrency?.toUpperCase()] || '$';
-    return { value: 0, symbol, formatted: `${symbol}0.00` };
+    const symbol = CURRENCY_SYMBOLS[activeCurrency] || '$';
+    return { value: 0, symbol, currencyCode: activeCurrency, formatted: `${symbol}0.00` };
   }
   
-  const currency = targetCurrency?.toUpperCase() || 'USD';
-  const rate = CURRENCY_RATES[currency] || 1;
-  const symbol = CURRENCY_SYMBOLS[currency] || '$';
-  
+  const rate = CURRENCY_RATES[activeCurrency] || 1;
+  const symbol = CURRENCY_SYMBOLS[activeCurrency] || '$';
   const convertedAmount = amountInINR * rate;
-  
+  const locale = CURRENCY_LOCALES[activeCurrency] || 'en-US';
+
   return {
     value: convertedAmount,
     symbol,
-    formatted: `${symbol}${Number(convertedAmount.toFixed(2)).toLocaleString('en-US')}`
+    currencyCode: activeCurrency,
+    locale,
+    formatted: formatCurrency(convertedAmount, activeCurrency, locale)
   };
 };
