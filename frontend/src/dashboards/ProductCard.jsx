@@ -9,9 +9,11 @@ import { useAuth } from '../context/AuthContext';
 import { convertCurrency } from '../utils/currencyConverter';
 import ImageWithFallback from '../components/common/ImageWithFallback';
 
+import { useWishlist } from '../context/WishlistContext';
+
 export const ProductCard = React.memo(({
   product,
-  isWishlisted,
+  isWishlisted: propIsWishlisted,
   onWishlistToggle,
   onAddToCart,
   onBuyNow,
@@ -20,6 +22,9 @@ export const ProductCard = React.memo(({
 }) => {
   const [addedToCart, setAddedToCart] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const { isWishlisted: contextIsWishlisted, toggleWishlist } = useWishlist();
+
+  const isWishlisted = contextIsWishlisted(product);
   
   // Base price is assuming INR from DB (modify if DB stores differently)
   const basePrice = product.price || 0;
@@ -43,11 +48,13 @@ export const ProductCard = React.memo(({
     }
   };
 
-  const handleAddToCart = (e) => {
+  const handleWishlistClick = (e) => {
     e.stopPropagation();
-    onAddToCart(product);
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+    if (onWishlistToggle) {
+      onWishlistToggle(product);
+    } else {
+      toggleWishlist(product);
+    }
   };
 
   return (
@@ -92,18 +99,16 @@ export const ProductCard = React.memo(({
             {product.name}
           </h3>
           {isAuthenticated && !hideWishlist && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onWishlistToggle(product);
-              }}
+            <motion.button
+              whileTap={{ scale: 0.8 }}
+              onClick={handleWishlistClick}
               className="action-btn flex-shrink-0 -mt-1 -mr-1 p-1.5 text-stone-400 hover:text-red-500 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full"
               aria-label="Wishlist"
             >
               <Heart
-                className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`}
+                className={`w-4 h-4 transition-all duration-200 ${isWishlisted ? 'fill-red-500 text-red-500 scale-110' : ''}`}
               />
-            </button>
+            </motion.button>
           )}
         </div>
 
@@ -116,12 +121,6 @@ export const ProductCard = React.memo(({
 
       </div>
     </motion.div>
-  );
-}, (prevProps, nextProps) => {
-  // Custom comparison to prevent re-render unless wishlist status or product itself changes
-  return (
-    prevProps.isWishlisted === nextProps.isWishlisted &&
-    prevProps.product._id === nextProps.product._id
   );
 });
 

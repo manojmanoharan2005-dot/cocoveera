@@ -202,11 +202,6 @@ export const addAddress = async (req, res) => {
       user.addresses.push(req.body);
     }
 
-    // Automatically sync phone number to main user profile if it's missing or N/A
-    if (req.body.phone && (!user.phone || user.phone === 'N/A')) {
-      user.phone = req.body.phone;
-    }
-    
     await user.save();
     res.status(200).json({ success: true, data: user.addresses });
   } catch (error) {
@@ -289,7 +284,7 @@ export const toggleWishlist = async (req, res) => {
     // Explicit Clear All
     if (action === 'clear') {
       await User.updateOne({ _id: req.user._id }, { $set: { wishlist: [] } });
-      return res.status(200).json({ success: true, message: 'Wishlist cleared' });
+      return res.status(200).json({ success: true, message: 'Wishlist cleared', data: [] });
     }
 
     if (!productId) {
@@ -312,7 +307,8 @@ export const toggleWishlist = async (req, res) => {
       }
     }
     
-    res.status(200).json({ success: true, message: 'Wishlist updated' });
+    const updatedUser = await User.findById(req.user._id).populate('wishlist', 'name price images slug category stock packageSize weight');
+    res.status(200).json({ success: true, message: 'Wishlist updated', data: updatedUser.wishlist || [] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

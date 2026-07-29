@@ -10,21 +10,17 @@ import { sendOTPNotification } from '../utils/NotificationService.js';
 // @route   POST /api/auth/register
 // @access  Public
 export const register = async (req, res) => {
-  const { name, email, phone, password, country, countryCode, currency, companyName } = req.body;
+  const { name, email, password, country, countryCode, currency, companyName } = req.body;
 
   try {
-    let userExists = await User.findOne({ $or: [{ email }, { phone }] });
+    let userExists = await User.findOne({ email });
 
     if (userExists) {
       // If user exists but is not verified, allow re-registration to regenerate OTP
       if (!userExists.isVerified) {
         await User.deleteOne({ _id: userExists._id });
       } else {
-        if (userExists.phone === phone) {
-          return res.status(400).json({ success: false, message: 'This phone number is already registered.' });
-        } else {
-          return res.status(400).json({ success: false, message: 'This email is already registered.' });
-        }
+        return res.status(400).json({ success: false, message: 'This email is already registered.' });
       }
     }
 
@@ -35,7 +31,6 @@ export const register = async (req, res) => {
     const user = await User.create({
       name,
       email,
-      phone,
       password,
       country,
       countryCode,
@@ -45,7 +40,7 @@ export const register = async (req, res) => {
       otpExpires,
     });
 
-    // Send OTP Email and WhatsApp
+    // Send OTP Email
     await sendOTPNotification(email, user.phone, name, otpCode);
 
     res.status(201).json({
@@ -62,10 +57,10 @@ export const register = async (req, res) => {
 // @route   POST /api/auth/verify-otp
 // @access  Public
 export const verifyOtp = async (req, res) => {
-  const { phone, otp } = req.body;
+  const { email, otp } = req.body;
 
   try {
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({ success: false, message: 'User not found' });
@@ -94,7 +89,7 @@ export const verifyOtp = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || '',
         role: user.role,
         country: user.country,
         countryCode: user.countryCode,
@@ -111,14 +106,12 @@ export const verifyOtp = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 export const login = async (req, res) => {
-  let { email, password } = req.body; // 'email' holds the identifier (email or phone)
+  let { email, password } = req.body;
 
   try {
-    const identifier = email.toLowerCase().trim();
+    const identifier = email ? email.toLowerCase().trim() : '';
 
-    const user = await User.findOne({ 
-      $or: [{ email: identifier }, { phone: identifier }] 
-    }).select('+password');
+    const user = await User.findOne({ email: identifier }).select('+password');
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials. User not found.' });
@@ -153,8 +146,6 @@ export const login = async (req, res) => {
 
     // Intercept admins
     if (['admin', 'manager', 'support'].includes(user.role)) {
-      // Use the same logic as adminLogin Step 1
-      const tempToken = user.getSignedJwtToken(); // Wait, temp token should be 5 mins and include step1
       const jwt = (await import('jsonwebtoken')).default;
       const adminTempToken = jwt.sign(
         { id: user._id, role: user.role, step1: true },
@@ -177,7 +168,7 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || '',
         role: user.role,
         country: user.country,
         countryCode: user.countryCode,
@@ -205,7 +196,6 @@ export const googleLogin = async (req, res) => {
       user = await User.create({
         name,
         email,
-        phone: `google_${googleId}`, // Unique placeholder until user updates profile
         password: Math.random().toString(36).slice(-8), // random temp password
         isVerified: true,
       });
@@ -221,7 +211,7 @@ export const googleLogin = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || '',
         role: user.role,
         country: user.country,
         countryCode: user.countryCode,
@@ -238,10 +228,10 @@ export const googleLogin = async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 export const forgotPassword = async (req, res) => {
-  const { phone } = req.body;
+  const { email } = req.body;
 
   try {
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -259,7 +249,7 @@ export const forgotPassword = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Reset instructions sent to email',
-      email: email,
+      email: user.email,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -270,11 +260,11 @@ export const forgotPassword = async (req, res) => {
 // @route   POST /api/auth/reset-password
 // @access  Public
 export const resetPassword = async (req, res) => {
-  const { phone, token, password } = req.body;
+  const { email, token, password } = req.body;
 
   try {
     const user = await User.findOne({
-      phone,
+      email,
       resetPasswordToken: token,
       resetPasswordExpire: { $gt: Date.now() },
     });
@@ -302,10 +292,10 @@ export const resetPassword = async (req, res) => {
 // @route   POST /api/auth/resend-otp
 // @access  Public
 export const resendOtp = async (req, res) => {
-  const { phone } = req.body;
+  const { email } = req.body;
 
   try {
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -321,7 +311,7 @@ export const resendOtp = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     await user.save();
 
-    // Send OTP Email and WhatsApp
+    // Send OTP Email
     await sendOTPNotification(user.email, user.phone, user.name, otpCode);
 
     res.status(200).json({

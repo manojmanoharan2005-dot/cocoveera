@@ -44,7 +44,7 @@ const MobileAccount = () => {
 
   const quickActions = [
     { name: 'Orders', icon: Package, path: '/orders' },
-    { name: 'Wishlist', icon: Heart, path: '/saved' },
+    { name: 'Wishlist', icon: Heart, path: '/wishlist' },
     { name: 'Cart', icon: ShoppingCart, path: '/cart' },
     { name: 'Help Center', icon: HelpCircle, path: '/support' },
   ];

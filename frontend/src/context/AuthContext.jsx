@@ -132,10 +132,10 @@ export const AuthProvider = ({ children }) => {
     fetchProfile();
   }, [token]);
 
-  const register = async (name, email, phone, password, country, countryCode, currency, companyName) => {
+  const register = async (name, email, password, country, currency, companyName) => {
     setError(null);
     try {
-      const res = await apiClient.post('/auth/register', { name, email, phone, password, country, countryCode, currency, companyName });
+      const res = await apiClient.post('/auth/register', { name, email, password, country, currency, companyName });
       return res.data;
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Registration failed';
@@ -144,10 +144,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const verifyOtp = async (phone, otp) => {
+  const verifyOtp = async (email, otp) => {
     setError(null);
     try {
-      const res = await apiClient.post('/auth/verify-otp', { phone, otp });
+      const res = await apiClient.post('/auth/verify-otp', { email, otp });
       if (res.data.success) {
         sessionStorage.setItem('cocoveera_token', res.data.token);
         sessionStorage.setItem('cocoveera_user', JSON.stringify(res.data.user));

@@ -5,9 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, Lock, Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
+import { User, Mail, MapPin, Lock, Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 
 const Settings = () => {
   const { user, login, logout } = useAuth(); // login function updates the auth state
@@ -26,7 +24,6 @@ const Settings = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     country: '',
     companyName: '',
     currentPassword: '',
@@ -43,7 +40,6 @@ const Settings = () => {
           setFormData({
             name: profile.name || '',
             email: profile.email || '',
-            phone: profile.phone || '',
             country: profile.country || '',
             password: '',
             confirmPassword: ''
@@ -85,7 +81,6 @@ const Settings = () => {
     try {
       const payload = {
         name: formData.name,
-        phone: formData.phone,
         country: formData.country,
       };
 
@@ -197,7 +192,7 @@ const Settings = () => {
               </label>
               <input 
                 type="text" name="name" value={formData.name} onChange={handleChange} required
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" 
+                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-[#FFF] focus:border-[#2E7D32] outline-none transition-all" 
               />
             </div>
 
@@ -212,24 +207,6 @@ const Settings = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5" /> Phone Number
-              </label>
-              <div title="Phone number cannot be changed directly" className="cursor-not-allowed">
-                <PhoneInput
-                  country={'us'}
-                  value={formData.phone}
-                  onChange={(phone) => setFormData({ ...formData, phone })}
-                  disabled={true}
-                  enableSearch={true}
-                  searchPlaceholder="Search country or code..."
-                  inputClass="!w-full !bg-stone-100 !border-stone-200 !text-stone-500 !rounded-xl !h-[46px] !pl-12 !pr-4 !text-sm !font-semibold !cursor-not-allowed outline-none transition-all"
-                  buttonClass="!bg-stone-100 !border-stone-200 !rounded-l-xl !pl-2 !cursor-not-allowed"
-                  dropdownClass="!hidden"
-                />
-              </div>
-            </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5" /> Country

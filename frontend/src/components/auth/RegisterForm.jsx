@@ -8,18 +8,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link as LinkIcon, Eye, EyeOff, Briefcase, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { COUNTRIES_LIST, getPhoneCountry } from '../../utils/countryHelpers';
+import { COUNTRIES_LIST } from '../../utils/countryHelpers';
 
 const formVariants = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.05 } }
 };
-
-
 
 export const RegisterForm = () => {
   const { register: authRegister, verifyOtp } = useAuth();
@@ -29,11 +25,10 @@ export const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
-  const [phone, setPhone] = useState('');
   
   // Inline OTP states
   const [otpSent, setOtpSent] = useState(false);
-  const [registeredPhone, setRegisteredPhone] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -102,7 +97,6 @@ export const RegisterForm = () => {
         const parsed = JSON.parse(cached);
         if (parsed.name) setValue('name', parsed.name);
         if (parsed.email) setValue('email', parsed.email);
-        if (parsed.phone) setPhone(parsed.phone);
         if (parsed.countryCode) {
           setValue('country', parsed.countryCode);
           const cData = COUNTRIES_LIST.find(c => c.code === parsed.countryCode);
@@ -130,11 +124,6 @@ export const RegisterForm = () => {
   }, [otpSent, timer]);
 
   const handleRegisterSubmit = async (data) => {
-    if (!phone || phone.length < 5) {
-      setApiError('Please enter a valid mobile number.');
-      return;
-    }
-
     setLoading(true);
     setApiError(null);
     setSuccessMsg(null);
@@ -145,7 +134,6 @@ export const RegisterForm = () => {
       JSON.stringify({
         name: data.name,
         email: data.email,
-        phone,
         countryCode: data.country,
         country: COUNTRIES_LIST.find(c => c.code === data.country)?.name || data.country,
       })
@@ -156,15 +144,13 @@ export const RegisterForm = () => {
       const res = await authRegister(
         data.name,
         data.email,
-        phone,
         data.password,
         countryName,
-        data.country, // countryCode
         data.currency,
         'N/A' // Send N/A for companyName automatically
       );
       if (res.success) {
-        setRegisteredPhone(phone);
+        setRegisteredEmail(data.email);
         setSuccessMsg('Registration request processed. Please enter the 6-digit OTP code sent to your email.');
         setOtpSent(true);
         setTimer(60);
@@ -224,7 +210,7 @@ export const RegisterForm = () => {
     setSuccessMsg(null);
 
     try {
-      const res = await verifyOtp(registeredPhone, fullOtp);
+      const res = await verifyOtp(registeredEmail, fullOtp);
       if (res.success) {
         localStorage.removeItem('cocoveera_register_cache');
         setSuccessMsg('Verification successful. Welcome to Cocoveera!');
@@ -248,7 +234,7 @@ export const RegisterForm = () => {
     setOtpValues(['', '', '', '', '', '']);
 
     try {
-      await authService.resendOTP(registeredPhone);
+      await authService.resendOTP(registeredEmail);
       setSuccessMsg('A new 6-digit OTP code has been sent successfully.');
     } catch (err) {
       setApiError(err.message || 'Failed to resend OTP.');
@@ -258,8 +244,6 @@ export const RegisterForm = () => {
       setLoading(false);
     }
   };
-
-  // Removed showAnimation block to avoid double animation
 
   return (
     <div className="bg-white border border-stone-200/85 rounded-3xl p-6 shadow-soft text-stone-900 max-w-md w-full mx-auto">
@@ -334,25 +318,6 @@ export const RegisterForm = () => {
               {errors.email.message}
             </span>
           )}
-        </div>
-
-        {/* Mobile Number */}
-        <div>
-          <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
-            MOBILE NUMBER
-          </label>
-          <PhoneInput
-            country={getPhoneCountry(selectedCountry) || 'us'}
-            value={phone}
-            onChange={phone => setPhone(phone)}
-            disabled={otpSent}
-            enableSearch={true}
-            searchPlaceholder="Search country or code..."
-            inputClass={`!w-full !bg-[#EEF2F6] !border-transparent !text-stone-900 !rounded-xl !h-[42px] !pl-12 !pr-4 !text-xs !font-semibold focus:!outline-none focus:!border-primary/60 focus:!bg-white transition-all ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
-            buttonClass={`!bg-[#EEF2F6] !border-transparent !rounded-l-xl !pl-2 ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
-            dropdownClass="!rounded-xl !border-stone-200/80 !shadow-soft !text-xs !font-semibold"
-            searchClass="!bg-[#EEF2F6] !border-transparent !text-xs !font-semibold !rounded-lg !mb-2"
-          />
         </div>
 
         {/* Country & Currency Grid */}

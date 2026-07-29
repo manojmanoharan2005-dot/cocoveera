@@ -79,16 +79,6 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#F0FAF0] text-[#2E7D32] flex items-center justify-center shrink-0 mt-0.5">
-                <Phone className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Phone Number</p>
-                <p className="text-sm font-bold text-stone-900 mt-0.5">{formatPhone(user.phone)}</p>
-              </div>
-            </div>
-
 
 
             <div className="flex items-start gap-3">

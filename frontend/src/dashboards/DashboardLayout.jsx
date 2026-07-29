@@ -330,7 +330,7 @@ export const DashboardLayout = () => {
         <>
           {/* Overlay */}
           <div
-            className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ease-in-out ${
+            className={`fixed inset-0 bg-black/45 z-50 transition-opacity duration-250 ease-in-out ${
               sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
             onClick={() => setSidebarOpen(false)}
@@ -343,7 +343,7 @@ export const DashboardLayout = () => {
             aria-modal="true"
             aria-label="Navigation Menu"
             tabIndex="-1"
-            className={`fixed top-0 left-0 h-screen w-80 max-w-[85vw] z-50 bg-[#F7FAF7] shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-in-out will-change-transform outline-none ${
+            className={`fixed top-0 left-0 h-full w-[85vw] max-w-[360px] z-[60] bg-white rounded-r-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden transition-transform duration-250 ease-in-out will-change-transform outline-none ${
               sidebarOpen ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'
             }`}
             onTouchStart={handleTouchStart}

@@ -15,9 +15,9 @@ export const OTPForm = () => {
   const { verifyOtp, register: authRegister } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const phoneParam = searchParams.get('phone') || '';
+  const emailParam = searchParams.get('email') || searchParams.get('phone') || '';
 
-  const [phone, setPhone] = useState(phoneParam);
+  const [email, setEmail] = useState(emailParam);
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -31,10 +31,10 @@ export const OTPForm = () => {
   const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
   useEffect(() => {
-    if (phoneParam) {
-      setPhone(phoneParam);
+    if (emailParam) {
+      setEmail(emailParam);
     }
-  }, [phoneParam]);
+  }, [emailParam]);
 
   // Timer for OTP countdown
   useEffect(() => {
@@ -98,7 +98,7 @@ export const OTPForm = () => {
     setSuccessMsg(null);
 
     try {
-      const res = await verifyOtp(phone, fullOtp);
+      const res = await verifyOtp(email, fullOtp);
       if (res.success) {
         setSuccessMsg('Account verified successfully!');
         setUserRole(res.user?.role);
@@ -134,8 +134,8 @@ export const OTPForm = () => {
     setOtpValues(['', '', '', '', '', '']);
 
     try {
-      await authService.resendOTP(phone);
-      setSuccessMsg('OTP code has been resent successfully. Please check your SMS/Email.');
+      await authService.resendOTP(email);
+      setSuccessMsg('OTP code has been resent successfully. Please check your Email.');
     } catch (err) {
       setApiError(err.message || 'Failed to resend verification code.');
       setCanResend(true);

@@ -27,8 +27,11 @@ const optimizeImage = (url) => {
 // ─── Fetcher for SWR ────────────────────────────────────────────────────────
 const fetcher = url => apiClient.get(url).then(res => res.data.data);
 
+import { useWishlist } from '../context/WishlistContext';
+
 const Products = () => {
-  const { user, fetchProfile, toggleWishlist } = useAuth();
+  const { user, fetchProfile } = useAuth();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const navigate = useNavigate();
   const location = useLocation();
   

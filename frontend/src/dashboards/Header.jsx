@@ -8,6 +8,8 @@ import { Search, Bell, ShoppingCart, ChevronDown, LogOut, Settings, SlidersHoriz
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useWishlist } from '../context/WishlistContext';
+
 export const Header = ({
   searchQuery,
   setSearchQuery,
@@ -23,11 +25,11 @@ export const Header = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { wishlistCount } = useWishlist();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const wishlistCount = user?.wishlist?.length || 0;
   const isProductPage = location.pathname.includes('/product/') || location.pathname.includes('/productview/');
 
   React.useEffect(() => {

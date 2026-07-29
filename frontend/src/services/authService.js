@@ -5,14 +5,14 @@
 import { apiClient } from '../context/AuthContext';
 
 export const authService = {
-  async register(name, email, phone, password, country, currency) {
+  async register(name, email, password, country, currency, companyName) {
     const response = await apiClient.post('/auth/register', {
       name,
       email,
-      phone,
       password,
       country,
       currency,
+      companyName,
     });
     return response.data;
   },
@@ -26,8 +26,8 @@ export const authService = {
     return response.data;
   },
 
-  async verifyOTP(phone, otp) {
-    const response = await apiClient.post('/auth/verify-otp', { phone, otp });
+  async verifyOTP(email, otp) {
+    const response = await apiClient.post('/auth/verify-otp', { email, otp });
     if (response.data.success && response.data.token) {
       sessionStorage.setItem('cocoveera_token', response.data.token);
       localStorage.removeItem('cocoveera_token');
@@ -35,19 +35,19 @@ export const authService = {
     return response.data;
   },
 
-  async resendOTP(phone) {
-    const response = await apiClient.post('/auth/resend-otp', { phone });
+  async resendOTP(email) {
+    const response = await apiClient.post('/auth/resend-otp', { email });
     return response.data;
   },
 
-  async forgotPassword(phone) {
-    const response = await apiClient.post('/auth/forgot-password', { phone });
+  async forgotPassword(email) {
+    const response = await apiClient.post('/auth/forgot-password', { email });
     return response.data;
   },
 
-  async resetPassword(phone, token, password) {
+  async resetPassword(email, token, password) {
     const response = await apiClient.post('/auth/reset-password', {
-      phone,
+      email,
       token,
       password,
     });

@@ -105,7 +105,7 @@ export const LoginForm = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      phone: '',
+      email: '',
       password: '',
       rememberMe: false,
     },
@@ -127,14 +127,11 @@ export const LoginForm = () => {
       sessionStorage.removeItem('auth_error_message');
     }
 
-    const savedPhone = localStorage.getItem('cocoveera_auth_login_phone');
-    if (savedPhone) {
-      setValue('phone', savedPhone);
+    const savedEmail = localStorage.getItem('cocoveera_auth_login_email');
+    if (savedEmail) {
+      setValue('email', savedEmail);
       setValue('rememberMe', true);
     }
-    // Clean up old buggy key
-    localStorage.removeItem('cocoveera_remember_email');
-    localStorage.removeItem('cocoveera_auth_login_email');
   }, [setValue, location.state]);
 
   const onSubmit = async (data) => {
@@ -142,12 +139,12 @@ export const LoginForm = () => {
     setApiError(null);
     setFailureActive(false);
     try {
-      const res = await login(data.phone, data.password);
+      const res = await login(data.email, data.password);
       
       if (data.rememberMe) {
-        localStorage.setItem('cocoveera_auth_login_phone', data.phone);
+        localStorage.setItem('cocoveera_auth_login_email', data.email);
       } else {
-        localStorage.removeItem('cocoveera_auth_login_phone');
+        localStorage.removeItem('cocoveera_auth_login_email');
       }
 
       if (res.requiresAdminVerification) {
@@ -182,7 +179,7 @@ export const LoginForm = () => {
     } catch (err) {
       const errorMsg = parseErrorMessage(err, 'Incorrect credentials. Please try again.');
       if (errorMsg.toLowerCase().includes('not verified') || errorMsg.toLowerCase().includes('otp')) {
-        navigate(`/verify-otp?phone=${encodeURIComponent(data.phone)}`);
+        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
       } else {
         setApiError(errorMsg);
         setFailureActive(true);
@@ -344,33 +341,37 @@ export const LoginForm = () => {
 
       {mode === 'login' && (
         <motion.form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Phone or Email */}
+          {/* Email */}
           <motion.div 
             variants={itemVariants}
             initial="hidden"
-            animate={errors.phone ? { x: [0, -4, 4, -4, 4, 0] } : "visible"}
+            animate={errors.email ? { x: [0, -4, 4, -4, 4, 0] } : "visible"}
             transition={{ duration: 0.4 }}
           >
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
-              PHONE NUMBER (OR EMAIL)
+              EMAIL ADDRESS
             </label>
             <div className="relative group">
               <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
               <input
-                type="text"
+                type="email"
                 autoComplete="username"
-                {...register('phone', {
-                  required: 'Phone Number or Email is required',
+                {...register('email', {
+                  required: 'Email address is required',
+                  pattern: {
+                    value: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+                    message: 'Please enter a valid email address',
+                  },
                 })}
                 className={`w-full bg-[#F3F6F8] border text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-400/80 ${
-                  errors.phone ? 'border-red-300' : 'border-transparent'
+                  errors.email ? 'border-red-300' : 'border-transparent'
                 }`}
-                placeholder="+123456... or you@email.com"
+                placeholder="you@email.com"
               />
             </div>
-            {errors.phone && (
+            {errors.email && (
               <span className="text-[10px] font-bold text-red-500 mt-1 block">
-                {errors.phone.message}
+                {errors.email.message}
               </span>
             )}
           </motion.div>

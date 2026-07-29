@@ -149,9 +149,6 @@ export default function AdminUsers() {
                       Email
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Phone
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                       Country
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
@@ -172,7 +169,6 @@ export default function AdminUsers() {
                         {user.name}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{user.phone}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{user.country}</td>
                       <td className="px-6 py-4">
                         <span

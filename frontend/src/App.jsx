@@ -493,15 +493,19 @@ function AppContent() {
   );
 }
 
+import { WishlistProvider } from './context/WishlistContext';
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <Router>
           <AuthProvider>
-            <AdminAuthProvider>
-              <AppContent />
-            </AdminAuthProvider>
+            <WishlistProvider>
+              <AdminAuthProvider>
+                <AppContent />
+              </AdminAuthProvider>
+            </WishlistProvider>
           </AuthProvider>
         </Router>
       </HelmetProvider>

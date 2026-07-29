@@ -18,11 +18,14 @@ import ImageWithFallback from '../../components/common/ImageWithFallback';
 import SEO from '../../components/SEO';
 import RequestQuoteModal from '../../components/RequestQuoteModal';
 
+import { useWishlist } from '../../context/WishlistContext';
+
 const ProductView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, fetchProfile, toggleWishlist } = useAuth();
+  const { user, fetchProfile } = useAuth();
+  const { isWishlisted: checkIsWishlisted, toggleWishlist } = useWishlist();
 
   // State management with sessionStorage persistence across 3D Viewer navigation
   const [product, setProduct] = useState(null);
@@ -38,7 +41,7 @@ const ProductView = () => {
   });
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const isWishlisted = user?.wishlist?.some(item => (item._id || item) === product?._id) || false;
+  const isWishlisted = checkIsWishlisted(product);
   const [actionLoading, setActionLoading] = useState(false);
   const [addedMessage, setAddedMessage] = useState('');
   const [containerType, setContainerType] = useState(() => {
