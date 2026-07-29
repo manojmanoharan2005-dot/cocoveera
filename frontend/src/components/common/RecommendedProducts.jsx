@@ -5,10 +5,13 @@ import { apiClient, useAuth } from '../../context/AuthContext';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import ProductCard from '../../dashboards/ProductCard';
 
+import { useWishlist } from '../../context/WishlistContext';
+
 const RecommendedProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user, fetchProfile, toggleWishlist } = useAuth();
+  const { user, fetchProfile } = useAuth();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
@@ -62,10 +65,6 @@ const RecommendedProducts = () => {
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const isWishlisted = (id) => {
-    return user?.wishlist?.some((item) => item._id === id);
   };
 
   if (loading || products.length === 0) return null;

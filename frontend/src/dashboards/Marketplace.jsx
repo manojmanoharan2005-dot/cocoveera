@@ -18,8 +18,11 @@ import useSWR from 'swr';
 
 const fetcher = url => axios.get(url).then(res => res.data.data);
 
+import { useWishlist } from '../context/WishlistContext';
+
 export const Marketplace = () => {
-  const { user, fetchProfile, toggleWishlist } = useAuth();
+  const { user, fetchProfile } = useAuth();
+  const { wishlist, toggleWishlist } = useWishlist();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -33,7 +36,6 @@ export const Marketplace = () => {
     revalidateOnFocus: false,
     dedupingInterval: 60000 
   });
-  const wishlist = user?.wishlist || [];
 
   const onWishlistToggle = async (product) => {
     toggleWishlist(product);
