@@ -632,29 +632,29 @@ Timestamp: ${new Date().toLocaleString()}
       </AnimatePresence>
 
       {/* Breadcrumbs and navigation */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-sm sm:text-base font-poppins font-extrabold min-w-0 flex-1">
-          <Link to="/dashboard" className="flex items-center gap-1.5 text-stone-600 hover:text-[#2E7D32] transition-colors shrink-0">
-            <Home className="w-4 h-4 sm:w-[18px] sm:h-[18px] mb-0.5" />
+      <div className="flex flex-wrap items-center justify-between gap-3 w-full max-w-full overflow-hidden">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-poppins font-extrabold min-w-0 flex-1">
+          <Link to="/dashboard" className="flex items-center gap-1 text-stone-600 hover:text-[#2E7D32] transition-colors shrink-0">
+            <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
             <span className="inline">Marketplace</span>
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-400 shrink-0" />
+          <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-stone-400 shrink-0" />
           <span 
             onClick={() => navigate(`/dashboard?category=${encodeURIComponent(product.category)}`)}
-            className="text-stone-600 hover:text-[#2E7D32] transition-colors cursor-pointer shrink-0 truncate max-w-[120px] sm:max-w-[200px]"
+            className="text-stone-600 hover:text-[#2E7D32] transition-colors cursor-pointer shrink-0 truncate max-w-[100px] sm:max-w-[180px]"
           >
             {product.category}
           </span>
-          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-400 shrink-0" />
-          <span className="text-[#2E7D32] truncate">
+          <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-stone-400 shrink-0" />
+          <span className="text-[#2E7D32] truncate max-w-[110px] sm:max-w-[220px]">
             {product.name}
           </span>
         </div>
       </div>
 
       {/* Main product layout */}
-      <div className="bg-white rounded-[28px] border border-stone-200/60 shadow-[0_4px_30px_rgba(0,0,0,0.02)] p-6 sm:p-8 md:p-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      <div className="bg-white rounded-[24px] sm:rounded-[28px] border border-stone-200/60 shadow-[0_4px_30px_rgba(0,0,0,0.02)] p-4 sm:p-8 md:p-10 w-full max-w-full overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-start w-full max-w-full">
           
           {/* Left: Product Image Gallery, Features, Live 3D Container, & Specification Report */}
           <div className="lg:col-span-5 space-y-4">
@@ -732,45 +732,45 @@ Timestamp: ${new Date().toLocaleString()}
               )}
 
               {/* Action Row below Product Images */}
-              <div className="flex items-center justify-around py-3 px-4 bg-[#F7F9F7] rounded-2xl border border-stone-200/60 my-4 shadow-sm relative">
+              <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-2 py-2 px-3 sm:px-4 bg-[#F7F9F7] rounded-2xl border border-stone-200/60 my-4 shadow-sm relative w-full">
                 <button
                   onClick={handleWishlistToggle}
-                  className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-red-500 transition-colors py-1 px-3 rounded-xl active:scale-95"
+                  className="flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-red-500 transition-colors py-1 px-2.5 rounded-xl active:scale-95 shrink-0"
                 >
-                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-stone-600'}`} />
+                  <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-stone-600'}`} />
                   <span>{isWishlisted ? 'Wishlisted' : 'Wishlist'}</span>
                 </button>
 
-                <div className="h-4 w-px bg-stone-300/60" />
+                <div className="h-4 w-px bg-stone-300/60 hidden xs:block" />
 
                 <button
                   onClick={handleShareProduct}
-                  className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
+                  className="flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-2.5 rounded-xl active:scale-95 shrink-0"
                 >
-                  <Share2 className="w-4 h-4 text-stone-600" />
+                  <Share2 className="w-3.5 h-3.5 text-stone-600" />
                   <span>Share</span>
                 </button>
 
-                <div className="h-4 w-px bg-stone-300/60" />
+                <div className="h-4 w-px bg-stone-300/60 hidden xs:block" />
 
                 <button
                   onClick={() => {
                     setFullscreenImageIndex(activeImageIndex);
                     setIsFullscreenOpen(true);
                   }}
-                  className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
+                  className="flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-2.5 rounded-xl active:scale-95 shrink-0"
                 >
-                  <Maximize2 className="w-4 h-4 text-stone-600" />
+                  <Maximize2 className="w-3.5 h-3.5 text-stone-600" />
                   <span>Fullscreen</span>
                 </button>
 
-                <div className="h-4 w-px bg-stone-300/60" />
+                <div className="h-4 w-px bg-stone-300/60 hidden xs:block" />
 
                 <button
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-3 rounded-xl active:scale-95"
+                  className="flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-[#2E7D32] transition-colors py-1 px-2.5 rounded-xl active:scale-95 shrink-0"
                 >
-                  <MoreVertical className="w-4 h-4 text-stone-600" />
+                  <MoreVertical className="w-3.5 h-3.5 text-stone-600" />
                   <span>More</span>
                 </button>
 
