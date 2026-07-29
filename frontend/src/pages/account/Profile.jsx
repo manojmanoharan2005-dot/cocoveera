@@ -16,7 +16,9 @@ const Profile = () => {
     return <div className="p-8 text-center text-stone-500 font-bold">Loading Profile...</div>;
   }
 
-  const userInitials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
+  const userInitials = user?.name 
+    ? String(user.name).split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) 
+    : 'U';
 
   const formatPhone = (phone) => {
     if (!phone) return 'Not Provided';

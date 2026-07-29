@@ -79,15 +79,16 @@ export default function HelpCenter() {
             const o = res.data.data;
             setContextOrder(o);
             
-            const status = o.orderStatus.charAt(0).toUpperCase() + o.orderStatus.slice(1);
-            const paymentStatus = o.paymentStatus.charAt(0).toUpperCase() + o.paymentStatus.slice(1);
+            const status = o?.orderStatus ? (String(o.orderStatus).charAt(0).toUpperCase() + String(o.orderStatus).slice(1)) : 'Pending';
+            const paymentStatus = o?.paymentStatus ? (String(o.paymentStatus).charAt(0).toUpperCase() + String(o.paymentStatus).slice(1)) : 'Pending';
             const name = user?.name?.split(' ')[0] || 'Customer';
+            const shortId = o?._id ? String(o._id).substring(0,8).toUpperCase() : 'N/A';
             
             setMessages([
               {
                 id: 'welcome_context',
                 type: 'bot',
-                content: `Hello ${name}! I can see you're requesting support for Order #${o._id.substring(0,8).toUpperCase()}.\n\nCurrent Order Status: ${status}\nPayment Status: ${paymentStatus}\n\nHow can I help you today?`,
+                content: `Hello ${name}! I can see you're requesting support for Order #${shortId}.\n\nCurrent Order Status: ${status}\nPayment Status: ${paymentStatus}\n\nHow can I help you today?`,
                 timestamp: new Date()
               }
             ]);
