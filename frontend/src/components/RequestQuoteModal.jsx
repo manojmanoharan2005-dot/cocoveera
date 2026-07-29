@@ -276,7 +276,11 @@ export const RequestQuoteModal = ({
       if (res.data.success) {
         if (showToast) showToast('Quote request submitted successfully.');
         if (onSuccess) onSuccess();
+        
+        // Show success state inside modal immediately
         setRfqSubmitted(true);
+        setRfqSubmitLoading(false);
+        
         // Invalidate the quotes query cache so the "My Quotes" page fetches the new request immediately
         queryClient.invalidateQueries(['quotes']);
         
@@ -287,10 +291,10 @@ export const RequestQuoteModal = ({
           console.error('Failed to sync profile after RFQ:', syncErr);
         }
 
-        // Automatically close modal after success animation and redirect to My Quotes
+        // Smoothly close modal after success animation (1.5s) and navigate
         setTimeout(() => {
-          setRfqSubmitted(false);
           setRfqFormData(prev => ({ ...prev, requirementNote: '', quantity: '' }));
+          setRfqSubmitted(false);
           onClose();
           navigate('/quotes');
         }, 1500);
@@ -299,7 +303,6 @@ export const RequestQuoteModal = ({
       const errMsg = error.response?.data?.message || error.message || 'Something went wrong';
       setRfqError(errMsg);
       if (showToast) showToast(errMsg);
-    } finally {
       setRfqSubmitLoading(false);
     }
   };
@@ -675,7 +678,8 @@ export const RequestQuoteModal = ({
                       <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 font-bold py-2.5 rounded-[12px] text-xs transition-colors cursor-pointer"
+                        disabled={rfqSubmitLoading}
+                        className="flex-1 bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 font-bold py-2.5 rounded-[12px] text-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Cancel
                       </button>
