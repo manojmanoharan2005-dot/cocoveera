@@ -328,22 +328,22 @@ export const DashboardLayout = () => {
       {/* Mobile Drawer (Only rendered if on mobile < 1024px) */}
       {!isDesktop && (
         <>
-          {/* Overlay */}
+          {/* Overlay - z-[9999] covers bottom nav completely */}
           <div
-            className={`fixed inset-0 bg-black/45 z-50 transition-opacity duration-250 ease-in-out ${
+            className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-[9999] transition-opacity duration-300 ease-in-out ${
               sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
             onClick={() => setSidebarOpen(false)}
           />
 
-          {/* Drawer Container */}
+          {/* Drawer Container - z-[10000] covers bottom nav completely */}
           <div
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label="Navigation Menu"
             tabIndex="-1"
-            className={`fixed top-0 left-0 h-full w-[85vw] max-w-[360px] z-[60] bg-white rounded-r-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden transition-transform duration-250 ease-in-out will-change-transform outline-none ${
+            className={`fixed top-0 left-0 h-[100dvh] w-[90vw] max-w-[360px] z-[10000] bg-white rounded-r-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.25)] flex flex-col overflow-hidden transition-transform duration-300 ease-in-out will-change-transform outline-none ${
               sidebarOpen ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'
             }`}
             onTouchStart={handleTouchStart}

@@ -85,18 +85,18 @@ export const Sidebar = ({
   }, [activeTab, cartCount, wishlistCount]);
 
   return (
-    <aside className={isMobileDrawer ? "w-full h-full bg-white flex flex-col justify-between select-none overflow-hidden" : "hidden lg:flex w-[272px] shrink-0 bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] border border-stone-200/80 rounded-[28px] overflow-hidden h-full shadow-[0_10px_35px_rgba(46,125,50,0.08)] flex-col justify-between select-none"}>
+    <aside className={isMobileDrawer ? "w-full h-full bg-white flex flex-col select-none overflow-hidden" : "hidden lg:flex w-[272px] shrink-0 bg-gradient-to-b from-white via-[#F7FAF7] to-[#EEF5EE] border border-stone-200/80 rounded-[28px] overflow-hidden h-full shadow-[0_10px_35px_rgba(46,125,50,0.08)] flex-col justify-between select-none"}>
       {/* 1. Header */}
       <div className={isMobileDrawer 
-        ? "bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#388E3C] px-5 h-[95px] flex items-center justify-between shrink-0 shadow-sm" 
+        ? "bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#388E3C] px-5 h-[85px] flex items-center justify-between shrink-0 shadow-sm pt-[env(safe-area-inset-top,0px)]" 
         : "bg-gradient-to-br from-[#1B5E20] via-[#2E7D32] to-[#388E3C] px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between shrink-0 shadow-sm"
       }>
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-3">
           <img
             src="/logo.webp"
             alt="Cocoveera Logo"
             className={isMobileDrawer 
-              ? "w-[52px] h-[52px] object-contain rounded-xl bg-white/10 p-1 flex-shrink-0 shadow-inner" 
+              ? "w-10 h-10 object-contain rounded-xl bg-white/10 p-1 flex-shrink-0 shadow-inner" 
               : "w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl bg-white/10 p-1 flex-shrink-0 shadow-inner"
             }
           />
@@ -108,7 +108,7 @@ export const Sidebar = ({
               <span className="text-[#D4A843]">COCO</span>VEERA
             </span>
             <span className={isMobileDrawer
-              ? "text-[10px] font-bold text-emerald-100 uppercase tracking-widest block mt-0.5"
+              ? "text-[9.5px] font-bold text-emerald-100 uppercase tracking-widest block mt-0.5"
               : "text-[9.5px] sm:text-[10px] font-bold text-emerald-100 uppercase tracking-widest block mt-1"
             }>
               Export Portal
@@ -122,10 +122,10 @@ export const Sidebar = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors min-w-[48px] min-h-[48px]"
+              className="w-10 h-10 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors min-w-[40px] min-h-[40px] cursor-pointer"
               aria-label="Close Drawer"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -133,7 +133,7 @@ export const Sidebar = ({
 
       {/* 2. Navigation (flex-grow: 1, scrollable) */}
       <div className={isMobileDrawer 
-        ? "flex-grow flex flex-col justify-start py-4 px-4 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        ? "flex-grow flex flex-col justify-start py-3 px-4 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         : "flex-grow flex flex-col justify-start py-2.5 px-3 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       }>
         <nav className={`flex flex-col relative z-0 ${isMobileDrawer ? 'gap-2' : 'gap-1'}`}>
