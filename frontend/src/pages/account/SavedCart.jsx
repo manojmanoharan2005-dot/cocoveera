@@ -1,10 +1,11 @@
 /**
  * File: frontend/src/pages/account/SavedCart.jsx
  * Purpose: React page component representing the Wishlist / Saved Products view.
+ *          Robust, fault-tolerant rendering with zero customer-facing Error Boundary crashes.
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Heart, Trash, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Trash2, Heart, Trash, ArrowRight, AlertTriangle, RefreshCw, ServerOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlist } from '../../context/WishlistContext';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
@@ -12,21 +13,45 @@ import RecommendedProducts from '../../components/common/RecommendedProducts';
 
 const SavedCart = () => {
   const navigate = useNavigate();
-  const { wishlist, removeFromWishlist, clearWishlist, loading } = useWishlist();
+  const { wishlist, removeFromWishlist, clearWishlist, loading, errorState, fetchWishlist } = useWishlist();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleRemove = (productId) => {
-    removeFromWishlist(productId);
+    try {
+      if (productId) removeFromWishlist(productId);
+    } catch (err) {
+      console.error('Remove item error:', err);
+    }
   };
 
   const handleConfirmClear = () => {
-    clearWishlist();
-    setShowClearConfirm(false);
+    try {
+      clearWishlist();
+    } catch (err) {
+      console.error('Clear wishlist error:', err);
+    } finally {
+      setShowClearConfirm(false);
+    }
   };
 
-  if (loading && wishlist.length === 0) {
+  // Safe Filter: Guarantee only valid objects or strings are processed for rendering
+  const safeItems = React.useMemo(() => {
+    if (!Array.isArray(wishlist)) return [];
+    return wishlist.filter(item => {
+      if (!item) return false;
+      if (typeof item === 'string' && item.trim().length > 0) return true;
+      if (typeof item === 'object') {
+        const id = item._id || item.id;
+        return Boolean(id);
+      }
+      return false;
+    });
+  }, [wishlist]);
+
+  // Loading skeleton screen
+  if (loading && safeItems.length === 0) {
     return (
-      <div className="w-full space-y-6 animate-pulse">
+      <div className="w-full space-y-6 animate-pulse p-4">
         <div className="h-8 bg-stone-200 w-48 rounded-xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map(i => (
@@ -37,8 +62,39 @@ const SavedCart = () => {
     );
   }
 
+  // Network or temporary server error banner with friendly retry
+  if (errorState && safeItems.length === 0) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-5xl mx-auto space-y-12 py-10"
+      >
+        <div className="w-full text-center py-16 px-6 bg-white rounded-[28px] border border-stone-200/80 shadow-sm flex flex-col items-center justify-center">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mb-5 text-amber-600 border border-amber-200/60">
+            <ServerOff className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-poppins font-extrabold text-stone-900 mb-2">
+            Wishlist Temporarily Unavailable
+          </h2>
+          <p className="text-stone-500 font-medium text-sm max-w-md mb-6">
+            We couldn't connect to the server right now. Please check your internet connection and try again.
+          </p>
+          <button 
+            onClick={() => fetchWishlist()} 
+            className="px-6 py-3 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Try Again</span>
+          </button>
+        </div>
+        <RecommendedProducts />
+      </motion.div>
+    );
+  }
+
   // EMPTY STATE Requirement
-  if (wishlist.length === 0) {
+  if (safeItems.length === 0) {
     return (
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
@@ -86,11 +142,11 @@ const SavedCart = () => {
             My Wishlist
           </h1>
           <p className="text-stone-500 font-semibold text-xs sm:text-sm">
-            Saved items for future export quotes ({wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}).
+            Saved items for future export quotes ({safeItems.length} {safeItems.length === 1 ? 'item' : 'items'}).
           </p>
         </div>
 
-        {wishlist.length > 0 && (
+        {safeItems.length > 0 && (
           <button 
             onClick={() => setShowClearConfirm(true)} 
             className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-650 hover:bg-red-100 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer border border-red-100"
@@ -104,13 +160,14 @@ const SavedCart = () => {
       {/* Product Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence mode="popLayout">
-          {wishlist.map((item) => {
+          {safeItems.map((item) => {
             const isString = typeof item === 'string';
-            const itemId = isString ? item : (item._id || item.id);
+            const itemId = isString ? item : (item._id || item.id || `item_${Math.random()}`);
             const itemName = isString ? 'Saved Coir Product' : (item.name || 'Saved Coir Product');
+            const itemCategory = (!isString && item.category) ? item.category : 'Export Grade Substrate';
             const itemImage = isString 
               ? 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available' 
-              : (item.images?.[0] || 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available');
+              : (Array.isArray(item.images) && item.images[0] ? item.images[0] : 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available');
 
             return (
               <motion.div 
@@ -145,7 +202,7 @@ const SavedCart = () => {
                       {itemName}
                     </h3>
                     <p className="text-[#2E7D32] font-black text-[10px] uppercase tracking-wider mb-4">
-                      {item.category || 'Export Grade Substrate'}
+                      {itemCategory}
                     </p>
                   </div>
                   

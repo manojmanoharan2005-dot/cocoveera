@@ -1,6 +1,6 @@
 /**
  * File: frontend/src/context/WishlistContext.jsx
- * Purpose: Centralized Wishlist Store & Single Source of Truth for all frontend components.
+ * Purpose: Robust, Fault-Tolerant Centralized Wishlist Store for all frontend components.
  */
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth, apiClient } from './AuthContext';
@@ -10,7 +10,20 @@ const WishlistContext = createContext();
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (!context) {
-    throw new Error('useWishlist must be used within a WishlistProvider');
+    // Return safe fallback instead of throwing error to prevent component crashes
+    return {
+      wishlist: [],
+      wishlistCount: 0,
+      loading: false,
+      isWishlisted: () => false,
+      addToWishlist: async () => false,
+      removeFromWishlist: async () => false,
+      toggleWishlist: async () => false,
+      clearWishlist: async () => {},
+      fetchWishlist: async () => {},
+      errorState: null,
+      toast: null
+    };
   }
   return context;
 };
@@ -19,6 +32,7 @@ export const WishlistProvider = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errorState, setErrorState] = useState(null);
   const [pendingOps, setPendingOps] = useState(new Set());
   const [toast, setToast] = useState(null);
 
@@ -31,177 +45,237 @@ export const WishlistProvider = ({ children }) => {
   }, [toast]);
 
   const showToast = useCallback((message, type = 'success') => {
-    setToast({ message, type, id: Date.now() });
+    try {
+      setToast({ message, type, id: Date.now() });
+    } catch (e) {
+      console.error('Toast Error:', e);
+    }
   }, []);
 
-  // Synchronize initial wishlist state from Auth user context or fetch from REST API
+  // Safe item sanitization helper: Filters out null/undefined or corrupt objects
+  const sanitizeWishlistData = useCallback((rawData) => {
+    if (!Array.isArray(rawData)) return [];
+    return rawData.filter(item => {
+      if (!item) return false;
+      if (typeof item === 'string' && item.trim().length > 0) return true;
+      if (typeof item === 'object') {
+        const hasId = Boolean(item._id || item.id);
+        return hasId;
+      }
+      return false;
+    });
+  }, []);
+
+  // Synchronize initial wishlist state safely from Auth user context
   useEffect(() => {
-    if (isAuthenticated && user?.wishlist) {
-      setWishlist(user.wishlist || []);
-    } else if (!isAuthenticated) {
+    try {
+      if (isAuthenticated && user?.wishlist) {
+        setWishlist(sanitizeWishlistData(user.wishlist));
+      } else if (!isAuthenticated) {
+        setWishlist([]);
+      }
+    } catch (err) {
+      console.error('Wishlist auth sync error:', err);
       setWishlist([]);
     }
-  }, [isAuthenticated, user?.wishlist]);
+  }, [isAuthenticated, user?.wishlist, sanitizeWishlistData]);
 
   // Initial fetch from GET /api/wishlist on auth startup
   const fetchWishlist = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
+    setErrorState(null);
     try {
       const res = await apiClient.get('/wishlist');
-      if (res.data?.success) {
-        setWishlist(res.data.data || []);
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setWishlist(sanitizeWishlistData(res.data.data));
+      } else if (Array.isArray(res.data)) {
+        setWishlist(sanitizeWishlistData(res.data));
       }
     } catch (err) {
-      console.error('Failed to fetch wishlist:', err.message);
+      console.error('Failed to fetch wishlist:', err);
+      setErrorState('Unable to connect to server. Using cached data.');
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, sanitizeWishlistData]);
 
   useEffect(() => {
     fetchWishlist();
   }, [fetchWishlist]);
 
-  // Helper check if a product is in wishlist (accepts ID or Product Object)
+  // Helper check if a product is in wishlist safely
   const isWishlisted = useCallback((productOrId) => {
-    if (!productOrId) return false;
-    const targetId = typeof productOrId === 'string' ? productOrId : (productOrId._id || productOrId.id);
-    return wishlist.some(item => {
-      const itemId = typeof item === 'string' ? item : (item._id || item.id);
-      return itemId === targetId;
-    });
+    try {
+      if (!productOrId) return false;
+      const targetId = typeof productOrId === 'string' ? productOrId : (productOrId._id || productOrId.id);
+      if (!targetId) return false;
+
+      return wishlist.some(item => {
+        if (!item) return false;
+        const itemId = typeof item === 'string' ? item : (item._id || item.id);
+        return itemId === targetId;
+      });
+    } catch (e) {
+      console.error('isWishlisted check error:', e);
+      return false;
+    }
   }, [wishlist]);
 
   // Add Product to Wishlist with Optimistic UI Update
   const addToWishlist = useCallback(async (product) => {
-    if (!isAuthenticated) {
-      showToast('Please login to save items to your wishlist', 'error');
-      return false;
-    }
-
-    const productId = typeof product === 'string' ? product : (product._id || product.id);
-    if (!productId) return false;
-    if (pendingOps.has(productId)) return true;
-
-    setPendingOps(prev => new Set(prev).add(productId));
-
-    // 1. Optimistic UI update
-    setWishlist(prev => {
-      const exists = prev.some(item => {
-        const id = typeof item === 'string' ? item : (item._id || item.id);
-        return id === productId;
-      });
-      if (exists) return prev;
-      return [...prev, product];
-    });
-
-    showToast('Added to Wishlist!', 'success');
-
-    // 2. API Request
     try {
-      const res = await apiClient.post('/wishlist', { productId });
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setWishlist(res.data.data);
+      if (!isAuthenticated) {
+        showToast('Please login to save items to your wishlist', 'error');
+        return false;
       }
-      return true;
-    } catch (err) {
-      console.error('API Error adding to wishlist:', err);
-      // Rollback
-      setWishlist(prev => prev.filter(item => {
-        const id = typeof item === 'string' ? item : (item._id || item.id);
-        return id !== productId;
-      }));
-      showToast('Unable to update Wishlist. Please try again.', 'error');
-      return false;
-    } finally {
-      setPendingOps(prev => {
-        const next = new Set(prev);
-        next.delete(productId);
-        return next;
+
+      const productId = typeof product === 'string' ? product : (product?._id || product?.id);
+      if (!productId) return false;
+      if (pendingOps.has(productId)) return true;
+
+      setPendingOps(prev => new Set(prev).add(productId));
+
+      // 1. Optimistic UI update
+      setWishlist(prev => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+        const exists = safePrev.some(item => {
+          if (!item) return false;
+          const id = typeof item === 'string' ? item : (item._id || item.id);
+          return id === productId;
+        });
+        if (exists) return safePrev;
+        return [...safePrev, product];
       });
+
+      showToast('Added to Wishlist!', 'success');
+
+      // 2. API Request
+      try {
+        const res = await apiClient.post('/wishlist', { productId });
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          setWishlist(sanitizeWishlistData(res.data.data));
+        }
+        return true;
+      } catch (err) {
+        console.error('API Error adding to wishlist:', err);
+        // Rollback
+        setWishlist(prev => (Array.isArray(prev) ? prev : []).filter(item => {
+          if (!item) return false;
+          const id = typeof item === 'string' ? item : (item._id || item.id);
+          return id !== productId;
+        }));
+        showToast('Unable to update Wishlist. Please try again.', 'error');
+        return false;
+      } finally {
+        setPendingOps(prev => {
+          const next = new Set(prev);
+          next.delete(productId);
+          return next;
+        });
+      }
+    } catch (fatalErr) {
+      console.error('addToWishlist unhandled error:', fatalErr);
+      return false;
     }
-  }, [isAuthenticated, pendingOps, showToast]);
+  }, [isAuthenticated, pendingOps, showToast, sanitizeWishlistData]);
 
   // Remove Product from Wishlist with Optimistic UI Update
   const removeFromWishlist = useCallback(async (productOrId) => {
-    if (!isAuthenticated) return false;
-
-    const productId = typeof productOrId === 'string' ? productOrId : (productOrId._id || productOrId.id);
-    if (!productId) return false;
-    if (pendingOps.has(productId)) return true;
-
-    setPendingOps(prev => new Set(prev).add(productId));
-
-    // Preserve previous item in case rollback is needed
-    const previousWishlist = [...wishlist];
-
-    // 1. Optimistic UI removal
-    setWishlist(prev => prev.filter(item => {
-      const id = typeof item === 'string' ? item : (item._id || item.id);
-      return id !== productId;
-    }));
-
-    showToast('Removed from Wishlist', 'info');
-
-    // 2. API Request
     try {
-      const res = await apiClient.delete(`/wishlist/${productId}`);
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setWishlist(res.data.data);
+      if (!isAuthenticated) return false;
+
+      const productId = typeof productOrId === 'string' ? productOrId : (productOrId?._id || productOrId?.id);
+      if (!productId) return false;
+      if (pendingOps.has(productId)) return true;
+
+      setPendingOps(prev => new Set(prev).add(productId));
+
+      // Preserve previous item in case rollback is needed
+      const previousWishlist = [...wishlist];
+
+      // 1. Optimistic UI removal
+      setWishlist(prev => (Array.isArray(prev) ? prev : []).filter(item => {
+        if (!item) return false;
+        const id = typeof item === 'string' ? item : (item._id || item.id);
+        return id !== productId;
+      }));
+
+      showToast('Removed from Wishlist', 'info');
+
+      // 2. API Request
+      try {
+        const res = await apiClient.delete(`/wishlist/${productId}`);
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          setWishlist(sanitizeWishlistData(res.data.data));
+        }
+        return true;
+      } catch (err) {
+        console.error('API Error removing from wishlist:', err);
+        // Rollback
+        setWishlist(previousWishlist);
+        showToast('Unable to update Wishlist. Please try again.', 'error');
+        return false;
+      } finally {
+        setPendingOps(prev => {
+          const next = new Set(prev);
+          next.delete(productId);
+          return next;
+        });
       }
-      return true;
-    } catch (err) {
-      console.error('API Error removing from wishlist:', err);
-      // Rollback
-      setWishlist(previousWishlist);
-      showToast('Unable to update Wishlist. Please try again.', 'error');
+    } catch (fatalErr) {
+      console.error('removeFromWishlist unhandled error:', fatalErr);
       return false;
-    } finally {
-      setPendingOps(prev => {
-        const next = new Set(prev);
-        next.delete(productId);
-        return next;
-      });
     }
-  }, [isAuthenticated, wishlist, pendingOps, showToast]);
+  }, [isAuthenticated, wishlist, pendingOps, showToast, sanitizeWishlistData]);
 
   // Toggle Product Wishlist state
   const toggleWishlist = useCallback((productOrId) => {
-    if (isWishlisted(productOrId)) {
-      return removeFromWishlist(productOrId);
-    } else {
-      return addToWishlist(productOrId);
+    try {
+      if (isWishlisted(productOrId)) {
+        return removeFromWishlist(productOrId);
+      } else {
+        return addToWishlist(productOrId);
+      }
+    } catch (e) {
+      console.error('toggleWishlist error:', e);
+      return false;
     }
   }, [isWishlisted, removeFromWishlist, addToWishlist]);
 
   // Clear All Wishlist Items with Optimistic UI Update
   const clearWishlist = useCallback(async () => {
-    if (!isAuthenticated || wishlist.length === 0) return;
-
-    const previousWishlist = [...wishlist];
-    setWishlist([]);
-    showToast('Wishlist cleared', 'info');
-
     try {
-      // apiClient already has baseURL = API_URL ('/api'), so use '/wishlist'
-      const res = await apiClient.delete('/wishlist');
-      if (res.data?.success) {
-        setWishlist([]);
+      if (!isAuthenticated || wishlist.length === 0) return;
+
+      const previousWishlist = [...wishlist];
+      setWishlist([]);
+      showToast('Wishlist cleared', 'info');
+
+      try {
+        const res = await apiClient.delete('/wishlist');
+        if (res.data?.success) {
+          setWishlist([]);
+        }
+      } catch (err) {
+        console.error('Wishlist Clear Error Details:', err.response ? err.response.data : err.message);
+        setWishlist(previousWishlist);
+        showToast('Unable to clear Wishlist. Please try again.', 'error');
       }
-    } catch (err) {
-      console.error('Wishlist Clear Error Details:', err.response ? err.response.data : err.message);
-      setWishlist(previousWishlist);
-      showToast('Unable to clear Wishlist. Please try again.', 'error');
+    } catch (fatalErr) {
+      console.error('clearWishlist unhandled error:', fatalErr);
     }
   }, [isAuthenticated, wishlist, showToast]);
 
-  const wishlistCount = useMemo(() => wishlist.length, [wishlist]);
+  const wishlistCount = useMemo(() => {
+    return Array.isArray(wishlist) ? wishlist.length : 0;
+  }, [wishlist]);
 
   const value = useMemo(() => ({
     wishlist,
     wishlistCount,
     loading,
+    errorState,
     isWishlisted,
     addToWishlist,
     removeFromWishlist,
@@ -209,7 +283,7 @@ export const WishlistProvider = ({ children }) => {
     clearWishlist,
     fetchWishlist,
     toast
-  }), [wishlist, wishlistCount, loading, isWishlisted, addToWishlist, removeFromWishlist, toggleWishlist, clearWishlist, fetchWishlist, toast]);
+  }), [wishlist, wishlistCount, loading, errorState, isWishlisted, addToWishlist, removeFromWishlist, toggleWishlist, clearWishlist, fetchWishlist, toast]);
 
   return (
     <WishlistContext.Provider value={value}>
