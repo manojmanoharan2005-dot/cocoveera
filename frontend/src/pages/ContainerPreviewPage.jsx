@@ -87,9 +87,15 @@ export default function ContainerPreviewPage() {
 
   const canvasRef = useRef(null);
 
-  // Silent WebGL Detection
+  // Silent WebGL Detection & Body Scroll Guard Cleanup
   useEffect(() => {
     setHasWebGL(isWebGLAvailable());
+    document.body.style.overflowY = 'auto';
+    document.documentElement.style.overflowY = 'auto';
+    return () => {
+      document.body.style.overflowY = 'auto';
+      document.documentElement.style.overflowY = 'auto';
+    };
   }, []);
 
   // Exact loading step strings requested
