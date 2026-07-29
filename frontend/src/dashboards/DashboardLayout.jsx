@@ -245,7 +245,7 @@ export const DashboardLayout = () => {
     if (path.includes('/settings')) return 'Settings';
     if (path.includes('/profile')) return 'Profile';
     if (path.includes('/mobile')) return 'Account';
-    if (path.includes('/quotes')) return 'Quotes';
+    if (path.includes('/quotes') || path.includes('/request-quote')) return 'Quotes';
     if (path.includes('/notifications')) return 'Notifications';
     if (path.includes('/product/') || path.includes('/productview/')) return 'Product Details';
     return 'Marketplace';

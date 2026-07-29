@@ -153,8 +153,16 @@ const QuoteRequestSchema = new mongoose.Schema(
     },
     shippingTerms: {
       type: String,
-      enum: ['FOB', 'CIF', 'EXW', ''],
+      enum: ['FOB', 'CIF', 'CFR', 'EXW', 'DDP', ''],
       default: '',
+    },
+    preferredPort: {
+      type: String,
+      default: '',
+    },
+    attachments: {
+      type: [String],
+      default: [],
     },
     deliveryDate: {
       type: String,

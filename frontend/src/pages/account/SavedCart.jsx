@@ -265,8 +265,8 @@ const SavedCart = () => {
                   
                   <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
                     <button 
-                      onClick={() => navigate(`/product/${itemId}`, { state: { scrollToRfq: true } })}
-                      className="w-full py-2.5 bg-[#F0FAF0] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white text-xs font-black uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      onClick={() => navigate(`/dashboard/request-quote?productId=${itemId}`)}
+                      className="w-full py-2.5 bg-[#F0FAF0] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-[#2E7D32] hover:bg-[#E8F5E9] text-xs font-black uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <span>Request Quote</span>
                       <ArrowRight className="w-3.5 h-3.5" />

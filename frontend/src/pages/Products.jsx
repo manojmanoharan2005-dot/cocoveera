@@ -94,15 +94,19 @@ const Products = () => {
 
 
   const openQuoteModal = (product) => {
+    const rfqPayload = {
+      productId: product._id,
+      quantity: 1,
+      containerType: '20FT',
+      product
+    };
+
     if (!user) {
-      navigate('/login?redirect=products');
-      return;
+      sessionStorage.setItem('pendingRFQ', JSON.stringify(rfqPayload));
+      navigate(`/login?redirect=${encodeURIComponent(`/dashboard/request-quote?productId=${product._id}`)}`);
+    } else {
+      navigate(`/dashboard/request-quote?productId=${product._id}`, { state: rfqPayload });
     }
-    setSelectedProduct(product);
-    setCustomPh(product.specifications.ph);
-    setCustomEc(product.specifications.ec);
-    setCustomMoisture(product.specifications.moisture);
-    setIsModalOpen(true);
   };
 
   const handleAddToCart = (product) => {

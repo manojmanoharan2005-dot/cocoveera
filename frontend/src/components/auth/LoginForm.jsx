@@ -169,10 +169,21 @@ export const LoginForm = () => {
             navigate(storedRedirect, { replace: true });
             return;
           }
+          if (redirect) {
+            const decodedRedirect = decodeURIComponent(redirect);
+            const targetPath = decodedRedirect.startsWith('/') ? decodedRedirect : `/${decodedRedirect}`;
+            navigate(targetPath, { replace: true });
+            return;
+          }
+          const pendingRfq = sessionStorage.getItem('pendingRFQ');
+          if (pendingRfq) {
+            navigate('/dashboard/request-quote', { replace: true });
+            return;
+          }
           const fromState = location.state?.from;
           const fromPath = fromState 
             ? `${fromState.pathname}${fromState.search || ''}` 
-            : (redirect ? `/${redirect}` : '/dashboard');
+            : '/dashboard';
           navigate(fromPath, { replace: true });
         }, 1450);
       }

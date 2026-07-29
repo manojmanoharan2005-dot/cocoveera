@@ -38,6 +38,9 @@ export const submitQuoteRequest = async (req, res) => {
       address,
       quantity,
       shippingAddress,
+      shippingTerms,
+      preferredPort,
+      attachments,
     } = req.body;
 
     // Validate structured shipping address
@@ -130,6 +133,9 @@ export const submitQuoteRequest = async (req, res) => {
         postalCode,
         country: shippingCountry,
       },
+      shippingTerms: shippingTerms || '',
+      preferredPort: preferredPort || '',
+      attachments: Array.isArray(attachments) ? attachments : [],
       quantity: quantityStr,
       status: 'NEW',
     });

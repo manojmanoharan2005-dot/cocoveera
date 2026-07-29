@@ -108,9 +108,12 @@ export const OTPForm = () => {
           setIsSuccessAnimated(true);
           setTimeout(() => {
             const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+            const pendingRfq = sessionStorage.getItem('pendingRFQ');
             if (storedRedirect && res.user.role !== 'admin') {
               sessionStorage.removeItem('postLoginRedirect');
               navigate(storedRedirect, { replace: true });
+            } else if (pendingRfq && res.user.role !== 'admin') {
+              navigate('/dashboard/request-quote', { replace: true });
             } else {
               navigate(res.user.role === 'admin' ? '/admin' : '/address');
             }
@@ -150,9 +153,12 @@ export const OTPForm = () => {
       <RegistrationSuccessAnimation 
         onComplete={() => {
           const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+          const pendingRfq = sessionStorage.getItem('pendingRFQ');
           if (storedRedirect && userRole !== 'admin') {
             sessionStorage.removeItem('postLoginRedirect');
             navigate(storedRedirect, { replace: true });
+          } else if (pendingRfq && userRole !== 'admin') {
+            navigate('/dashboard/request-quote', { replace: true });
           } else {
             navigate(userRole === 'admin' ? '/admin' : '/address', { replace: true });
           }

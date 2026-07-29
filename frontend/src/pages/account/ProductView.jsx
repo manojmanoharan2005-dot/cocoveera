@@ -16,7 +16,6 @@ import { convertCurrency } from '../../utils/currencyConverter';
 import { ContainerViewer3D } from '../../components/3d/ContainerViewer3D';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import SEO from '../../components/SEO';
-import RequestQuoteModal from '../../components/RequestQuoteModal';
 
 import { useWishlist } from '../../context/WishlistContext';
 
@@ -305,8 +304,7 @@ Timestamp: ${new Date().toLocaleString()}
   const [testingLoading, setTestingLoading] = useState(false);
   const [packagesLoading, setPackagesLoading] = useState(false);
 
-  // RFQ Modal state
-  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  // RFQ state & workflow handler
   const [hasActiveRfq, setHasActiveRfq] = useState(false);
 
   useEffect(() => {
@@ -324,13 +322,31 @@ Timestamp: ${new Date().toLocaleString()}
     checkRfqStatus();
   }, [product, user]);
 
-  useEffect(() => {
-    if (location.state?.scrollToRfq && product) {
-      // Clear location state to prevent reopening modal on reload
-      window.history.replaceState({}, document.title);
-      setIsQuoteModalOpen(true);
+  const handleRequestQuoteClick = () => {
+    if (!product) return;
+    const rfqPayload = {
+      productId: product._id,
+      quantity: quantity || 1,
+      containerType: containerType || '20FT',
+      product: {
+        _id: product._id,
+        name: product.name,
+        category: product.category,
+        images: product.images,
+        packageSize: product.packageSize,
+        specifications: product.specifications,
+      }
+    };
+
+    if (!user) {
+      sessionStorage.setItem('pendingRFQ', JSON.stringify(rfqPayload));
+      navigate(`/login?redirect=${encodeURIComponent(`/dashboard/request-quote?productId=${product._id}&quantity=${quantity || 1}&containerType=${containerType || '20FT'}`)}`);
+    } else {
+      navigate(`/dashboard/request-quote?productId=${product._id}&quantity=${quantity || 1}&containerType=${containerType || '20FT'}`, {
+        state: rfqPayload
+      });
     }
-  }, [location.state, product]);
+  };
 
   // Fullscreen modal keyboard navigation (Escape, ArrowLeft, ArrowRight)
   useEffect(() => {
@@ -1390,7 +1406,7 @@ Timestamp: ${new Date().toLocaleString()}
                 <button
                   type="button"
                   disabled={isQuoteButtonDisabled || hasActiveRfq}
-                  onClick={() => setIsQuoteModalOpen(true)}
+                  onClick={handleRequestQuoteClick}
                   className={`w-full font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
                     hasActiveRfq
                       ? 'bg-stone-100 border border-stone-200 text-stone-600 cursor-not-allowed shadow-none'
@@ -1503,22 +1519,6 @@ Timestamp: ${new Date().toLocaleString()}
 
       </div>
 
-      {/* Request Quote Modal */}
-      <RequestQuoteModal
-        isOpen={isQuoteModalOpen}
-        onClose={() => setIsQuoteModalOpen(false)}
-        product={product}
-        user={user}
-        quantity={quantity}
-        extraItems={extraItems}
-        setQuantity={setQuantity}
-        setExtraItems={setExtraItems}
-        containerType={containerType}
-        hasActiveRfq={hasActiveRfq}
-        onSuccess={() => setHasActiveRfq(true)}
-        showToast={(msg) => setAddedMessage(msg)}
-      />
-
       {/* Related Products Carousel */}
       {relatedProducts.length > 0 && (
         <div className="space-y-5">
@@ -1572,7 +1572,7 @@ Timestamp: ${new Date().toLocaleString()}
         <button
           type="button"
           disabled={isQuoteButtonDisabled || hasActiveRfq}
-          onClick={() => setIsQuoteModalOpen(true)}
+          onClick={handleRequestQuoteClick}
           className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-3 rounded-xl flex items-center justify-center shadow-md gap-1 active:scale-[0.98]"
         >
           {hasActiveRfq ? (

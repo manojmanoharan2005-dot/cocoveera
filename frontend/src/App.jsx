@@ -83,6 +83,7 @@ const Profile = lazyWithRetry(() => import('./pages/account/Profile'), 'Profile'
 import ProductView from './pages/account/ProductView';
 const Quotes = lazyWithRetry(() => import('./pages/account/Quotes'), 'Quotes');
 const QuoteDetails = lazyWithRetry(() => import('./pages/account/QuoteDetails'), 'QuoteDetails');
+const RequestQuotePage = lazyWithRetry(() => import('./pages/account/RequestQuotePage'), 'RequestQuotePage');
 const Notifications = lazyWithRetry(() => import('./pages/account/Notifications'), 'Notifications');
 const PaymentHistory = lazyWithRetry(() => import('./pages/account/PaymentHistory'), 'PaymentHistory');
 const CustomerTestingReports = lazyWithRetry(() => import('./pages/account/CustomerTestingReports'), 'CustomerTestingReports');
@@ -339,6 +340,8 @@ function AppContent() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/quotes/:id" element={<QuoteDetails />} />
+          <Route path="/dashboard/request-quote" element={<RequestQuotePage />} />
+          <Route path="/request-quote" element={<RequestQuotePage />} />
           <Route path="/payments" element={<PaymentHistory />} />
           <Route path="/testing-reports" element={<CustomerTestingReports />} />
           <Route path="/dashboard/how-to-use" element={<Onboarding />} />
