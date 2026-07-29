@@ -37,6 +37,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/frontend/dist/index.html" }
+    { "source": "/((?!assets/|.*\\.(?:js|css|webp|png|jpg|jpeg|svg|avif|ico|woff|woff2|ttf|eot|json)$).*)" , "destination": "/frontend/dist/index.html" }
   ]
 }
