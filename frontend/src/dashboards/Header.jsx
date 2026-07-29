@@ -38,11 +38,16 @@ export const Header = ({
     setMoreMenuOpen(false);
   }, [location.pathname]);
 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to log out of Cocoveera?')) {
-      logout();
-      navigate('/');
-    }
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
+    logout();
+    navigate('/');
   };
 
   const displayName = user?.companyName && user.companyName !== 'N/A' 
@@ -409,6 +414,49 @@ export const Header = ({
           </div>
         </div>
       </header>
+
+      {/* Logout Permission Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[999999] bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-[24px] p-6 max-w-sm w-full shadow-2xl border border-stone-150 text-center space-y-4 relative overflow-hidden"
+          >
+            <div className="w-14 h-14 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto border border-red-100 shadow-xs">
+              <LogOut className="w-7 h-7 text-red-600" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="font-poppins font-black text-stone-900 text-lg">
+                Confirm Logout
+              </h3>
+              <p className="text-stone-500 font-medium text-xs max-w-xs mx-auto leading-relaxed">
+                Are you sure you want to log out of your Cocoveera account?
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-3">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-poppins font-bold text-xs rounded-[14px] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-poppins font-black text-xs rounded-[14px] transition-all shadow-md shadow-red-600/20 cursor-pointer active:scale-95"
+              >
+                Logout
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </>
   );
 };
