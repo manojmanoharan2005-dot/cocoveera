@@ -93,59 +93,8 @@ const SavedCart = () => {
     );
   }
 
-  // EMPTY STATE Requirement: Modern B2B E-Commerce Layout (Apple / Notion / Shopify Inspired)
+  // EMPTY STATE Requirement: Modern B2B E-Commerce Layout (Hero -> Recommended Products)
   if (safeItems.length === 0) {
-    const popularCategories = [
-      {
-        title: 'Cocopeat Blocks',
-        desc: 'High quality compressed cocopeat blocks',
-        icon: (
-          <div className="w-12 h-12 rounded-2xl bg-[#7A4E1D]/10 flex items-center justify-center text-[#7A4E1D] group-hover:bg-[#7A4E1D] group-hover:text-white transition-colors duration-300">
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
-            </svg>
-          </div>
-        ),
-        category: 'Cocopeat Blocks'
-      },
-      {
-        title: 'Grow Bags',
-        desc: 'Durable grow bags for healthy cultivation',
-        icon: (
-          <div className="w-12 h-12 rounded-2xl bg-[#2E7D32]/10 flex items-center justify-center text-[#2E7D32] group-hover:bg-[#2E7D32] group-hover:text-white transition-colors duration-300">
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.2 19.54 10.56 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/>
-            </svg>
-          </div>
-        ),
-        category: 'Grow Bags'
-      },
-      {
-        title: 'Coco Cubes',
-        desc: 'Buffered coco cubes for optimal growth',
-        icon: (
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-700 group-hover:bg-amber-600 group-hover:text-white transition-colors duration-300">
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 13h-6v6h6v-6zm0-8h-6v6h6V5zm-8 8H5v6h6v-6zm0-8H5v6h6V5z"/>
-            </svg>
-          </div>
-        ),
-        category: 'Coco Cubes'
-      },
-      {
-        title: 'Coir Fibre',
-        desc: 'Natural coir fibre for multiple applications',
-        icon: (
-          <div className="w-12 h-12 rounded-2xl bg-emerald-600/10 flex items-center justify-center text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white transition-colors duration-300">
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-            </svg>
-          </div>
-        ),
-        category: 'Coir Fibre'
-      }
-    ];
-
     return (
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
@@ -232,89 +181,9 @@ const SavedCart = () => {
           </div>
         </div>
 
-        {/* Section 2: Popular Categories */}
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg sm:text-xl font-poppins font-black text-stone-900 flex items-center gap-2">
-              <span className="text-[#2E7D32]">🌱</span>
-              <span>Popular Categories</span>
-            </h3>
-            <button 
-              onClick={() => navigate('/dashboard?view=categories')}
-              className="text-xs font-bold text-[#2E7D32] hover:text-[#1B5E20] flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              <span>View All Categories</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {popularCategories.map((cat, idx) => (
-              <motion.div
-                key={idx}
-                whileHover={{ y: -5 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => navigate(`/dashboard?category=${encodeURIComponent(cat.category)}`)}
-                className="group cursor-pointer bg-white rounded-[20px] p-5 border border-stone-200 hover:border-[#2E7D32]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  {cat.icon}
-                  <div className="w-8 h-8 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-poppins font-extrabold text-stone-900 text-base group-hover:text-[#2E7D32] transition-colors">
-                    {cat.title}
-                  </h4>
-                  <p className="text-xs text-stone-500 font-medium mt-1 line-clamp-2">
-                    {cat.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Section 3: Recently Viewed Products */}
-        <div className="space-y-5 pt-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg sm:text-xl font-poppins font-black text-stone-900 flex items-center gap-2">
-              <span className="text-[#7A4E1D]">👁️</span>
-              <span>Recently Viewed Products</span>
-            </h3>
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="text-xs font-bold text-[#2E7D32] hover:text-[#1B5E20] flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              <span>Explore Marketplace</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Skeleton placeholders */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div 
-                key={i} 
-                className="bg-white rounded-[20px] p-4 border border-stone-200/80 shadow-xs flex flex-col space-y-3 relative group"
-              >
-                <div className="h-40 bg-stone-100/90 rounded-[14px] w-full animate-pulse flex items-center justify-center text-stone-300">
-                  <svg className="w-10 h-10" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                  </svg>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-stone-200 rounded-md w-3/4 animate-pulse" />
-                  <div className="h-3 bg-stone-100 rounded-md w-1/2 animate-pulse" />
-                </div>
-                <div className="absolute top-6 right-6 w-7 h-7 bg-white/80 rounded-full flex items-center justify-center text-stone-300">
-                  <Heart className="w-4 h-4" />
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* Section 2: Recommended Products (Dynamically Fetched) */}
+        <div className="pt-2">
+          <RecommendedProducts />
         </div>
       </motion.div>
     );
