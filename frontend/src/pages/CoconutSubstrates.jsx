@@ -249,21 +249,6 @@ const CoconutSubstrates = () => {
                     </div>
                   </div>
 
-                  {/* Products */}
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
-                      Products Exported
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(dest.products || ['Cocopeat Substrates']).map((prod, idx) => (
-                        <span
-                          key={idx}
-                          className="text-[11px] font-medium text-stone-700 bg-stone-100 px-2.5 py-1 rounded-md"
-                        >
-                          {prod}
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 </div>
 
