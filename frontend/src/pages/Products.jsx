@@ -56,33 +56,35 @@ const Products = () => {
         </p>
       </div>
 
-      {/* CATALOGUE PREVIEW GRID */}
+      {/* CATALOGUE PREVIEW GRID / MOBILE LIST */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-xs flex flex-col items-center animate-pulse"
+                className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-stone-200/80 shadow-xs flex flex-row sm:flex-col items-center gap-4 sm:gap-0 animate-pulse"
               >
-                <div className="w-full h-48 bg-stone-100 rounded-2xl mb-4"></div>
-                <div className="h-5 bg-stone-200 rounded-md w-2/3 mb-4"></div>
-                <div className="h-10 bg-stone-100 rounded-xl w-full"></div>
+                <div className="w-24 h-24 sm:w-full sm:h-48 bg-stone-100 rounded-xl sm:rounded-2xl flex-shrink-0"></div>
+                <div className="flex-1 w-full flex flex-col justify-center sm:items-center">
+                  <div className="h-5 bg-stone-200 rounded-md w-3/4 sm:w-2/3 mb-3"></div>
+                  <div className="h-9 bg-stone-100 rounded-xl w-full"></div>
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {products.map((product) => (
               <motion.div
                 key={product._id}
-                whileHover={{ y: -6 }}
+                whileHover={{ y: -4 }}
                 transition={{ duration: 0.25 }}
-                className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] transition-all flex flex-col items-center group cursor-pointer"
+                className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] transition-all flex flex-row sm:flex-col items-center gap-3.5 sm:gap-0 group cursor-pointer"
                 onClick={() => handleViewDetails(product)}
               >
-                {/* Product Image */}
-                <div className="w-full h-48 sm:h-52 bg-stone-50/60 rounded-2xl overflow-hidden flex items-center justify-center p-3 mb-4 relative">
+                {/* Product Image - Compact on Mobile, Square Grid on Desktop */}
+                <div className="w-28 h-24 sm:w-full sm:h-52 bg-stone-50/70 rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center p-2 sm:p-3 sm:mb-4 flex-shrink-0 relative">
                   <ImageWithFallback
                     src={product.images?.[0]}
                     alt={product.name}
@@ -90,59 +92,62 @@ const Products = () => {
                   />
                 </div>
 
-                {/* Product Name */}
-                <h3 className="font-poppins font-extrabold text-stone-900 text-base sm:text-lg mb-4 text-center leading-snug">
-                  {product.name}
-                </h3>
+                {/* Right side content on mobile, Center aligned on desktop */}
+                <div className="flex-1 w-full flex flex-col justify-center sm:items-center min-w-0">
+                  {/* Product Name */}
+                  <h3 className="font-poppins font-extrabold text-stone-900 text-sm sm:text-lg mb-2 sm:mb-4 sm:text-center leading-tight sm:leading-snug truncate sm:whitespace-normal">
+                    {product.name}
+                  </h3>
 
-                {/* View Product Details Action */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewDetails(product);
-                  }}
-                  className="w-full bg-[#FAF9F6] border border-stone-200 group-hover:border-[#2E7D32] text-stone-800 group-hover:text-[#2E7D32] group-hover:bg-[#E8F5E9]/40 font-bold text-xs sm:text-sm py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 mt-auto"
-                >
-                  <span>View Product Details</span>
-                  <ArrowRight className="w-4 h-4 text-[#2E7D32] group-hover:translate-x-1 transition-transform" />
-                </button>
+                  {/* View Product Details Action */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewDetails(product);
+                    }}
+                    className="w-full sm:w-full bg-[#FAF9F6] border border-stone-200 group-hover:border-[#2E7D32] text-stone-800 group-hover:text-[#2E7D32] group-hover:bg-[#E8F5E9]/40 font-bold text-[11px] sm:text-sm py-2 sm:py-3 px-3 sm:px-4 rounded-xl sm:rounded-2xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 mt-auto"
+                  >
+                    <span className="truncate">View Product Details</span>
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2E7D32] group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                  </button>
+                </div>
               </motion.div>
             ))}
           </div>
         )}
 
-        {/* BOTTOM ACCREDITATION BANNER */}
-        <div className="mt-12 bg-white rounded-3xl p-6 border border-stone-200/80 shadow-xs grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        {/* BOTTOM ACCREDITATION BANNER - Matches Reference 2 Bottom Bar */}
+        <div className="mt-8 sm:mt-12 bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-stone-200/80 shadow-xs grid grid-cols-4 gap-2 sm:gap-4 text-center">
           <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-2">
-              <span className="text-lg">🌿</span>
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-1.5 sm:mb-2">
+              <span className="text-base sm:text-xl">🌿</span>
             </div>
-            <div className="font-bold text-xs text-stone-900">100% Natural</div>
-            <div className="text-[10px] text-stone-500">Eco-friendly & sustainable</div>
+            <div className="font-bold text-[11px] sm:text-xs text-stone-900 leading-tight">100% Natural</div>
+            <div className="hidden sm:block text-[10px] text-stone-500 mt-0.5">Eco-friendly &amp; sustainable</div>
           </div>
 
           <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-2">
-              <span className="text-lg">🏅</span>
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-1.5 sm:mb-2">
+              <span className="text-base sm:text-xl">🏅</span>
             </div>
-            <div className="font-bold text-xs text-stone-900">Premium Quality</div>
-            <div className="text-[10px] text-stone-500">Tested & verified products</div>
+            <div className="font-bold text-[11px] sm:text-xs text-stone-900 leading-tight">Premium Quality</div>
+            <div className="hidden sm:block text-[10px] text-stone-500 mt-0.5">Tested &amp; verified products</div>
           </div>
 
           <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-2">
-              <span className="text-lg">🌐</span>
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-1.5 sm:mb-2">
+              <span className="text-base sm:text-xl">🌐</span>
             </div>
-            <div className="font-bold text-xs text-stone-900">Global Export</div>
-            <div className="text-[10px] text-stone-500">Worldwide shipping</div>
+            <div className="font-bold text-[11px] sm:text-xs text-stone-900 leading-tight">Global Export</div>
+            <div className="hidden sm:block text-[10px] text-stone-500 mt-0.5">Worldwide shipping</div>
           </div>
 
           <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-2">
-              <span className="text-lg">🤝</span>
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-1.5 sm:mb-2">
+              <span className="text-base sm:text-xl">🤝</span>
             </div>
-            <div className="font-bold text-xs text-stone-900">Trusted Partner</div>
-            <div className="text-[10px] text-stone-500">Reliable & consistent supply</div>
+            <div className="font-bold text-[11px] sm:text-xs text-stone-900 leading-tight">Trusted Partner</div>
+            <div className="hidden sm:block text-[10px] text-stone-500 mt-0.5">Reliable &amp; consistent supply</div>
           </div>
         </div>
       </div>
