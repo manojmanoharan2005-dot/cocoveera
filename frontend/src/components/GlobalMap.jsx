@@ -2,26 +2,20 @@
  * File: frontend/src/components/GlobalMap.jsx
  * Purpose: Enterprise "Global Supply Chain Network" component for Cocoveera B2B Export Website.
  * Uses real latitude and longitude geographic projection (geoMercator) via react-simple-maps.
+ * Features Apple-style interactive country cards with marker highlights & auto-scroll (NO modals/overlays).
  */
 
-import React, { useState, useId } from 'react';
+import React, { useState, useRef, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simple-maps';
 import {
-  Globe,
   Anchor,
-  Users,
-  Compass,
-  Package,
-  X,
-  ChevronRight,
   Sparkles,
 } from 'lucide-react';
 
 const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 
 // Manufacturing HQ (Coimbatore, Tamil Nadu, India)
-// Real Geographic Coordinates: [longitude, latitude]
 const ORIGIN = {
   id: 'coimbatore',
   name: 'Coimbatore',
@@ -30,7 +24,7 @@ const ORIGIN = {
   coordinates: [76.9558, 11.0168],
 };
 
-// Real Destination Coordinates: [longitude, latitude]
+// Destination Data with Real Longitude/Latitude
 const DESTINATIONS = [
   {
     id: 'usa',
@@ -39,7 +33,6 @@ const DESTINATIONS = [
     port: 'Los Angeles Port',
     secondaryPorts: ['Los Angeles Port', 'Houston Port'],
     region: 'North America',
-    majorOnMobile: true,
     coordinates: [-118.2437, 34.0522],
     products: ['Cocopeat Blocks', 'Grow Bags'],
     labelOffset: { x: 10, y: 4, textAnchor: 'start' },
@@ -51,7 +44,6 @@ const DESTINATIONS = [
     port: 'Toronto Port',
     secondaryPorts: ['Toronto Port'],
     region: 'North America',
-    majorOnMobile: false,
     coordinates: [-79.3832, 43.6532],
     products: ['Cocopeat Blocks', 'Coir Pith'],
     labelOffset: { x: 10, y: -6, textAnchor: 'start' },
@@ -63,10 +55,9 @@ const DESTINATIONS = [
     port: 'London Port',
     secondaryPorts: ['London Port'],
     region: 'Europe',
-    majorOnMobile: false,
     coordinates: [-0.1276, 51.5072],
     products: ['Cocopeat Blocks', 'Coco Chips'],
-    labelOffset: { x: -10, y: -8, textAnchor: 'end' }, // Offset to avoid Netherlands/Germany
+    labelOffset: { x: -10, y: -8, textAnchor: 'end' },
   },
   {
     id: 'netherlands',
@@ -75,10 +66,9 @@ const DESTINATIONS = [
     port: 'Rotterdam Port',
     secondaryPorts: ['Rotterdam Port'],
     region: 'Europe',
-    majorOnMobile: false,
     coordinates: [4.4777, 51.9244],
     products: ['Cocopeat Blocks', 'Grow Bags'],
-    labelOffset: { x: 8, y: 12, textAnchor: 'start' }, // Offset to avoid UK/Germany
+    labelOffset: { x: 8, y: 12, textAnchor: 'start' },
   },
   {
     id: 'germany',
@@ -87,10 +77,9 @@ const DESTINATIONS = [
     port: 'Hamburg Port',
     secondaryPorts: ['Hamburg Port'],
     region: 'Europe',
-    majorOnMobile: true,
     coordinates: [9.9937, 53.5511],
     products: ['Grow Bags', 'Coco Chips'],
-    labelOffset: { x: 10, y: -6, textAnchor: 'start' }, // Separate offset
+    labelOffset: { x: 10, y: -6, textAnchor: 'start' },
   },
   {
     id: 'spain',
@@ -99,7 +88,6 @@ const DESTINATIONS = [
     port: 'Valencia Port',
     secondaryPorts: ['Valencia Port'],
     region: 'Europe',
-    majorOnMobile: false,
     coordinates: [-0.3763, 39.4699],
     products: ['Grow Bags', 'Coir Pith'],
     labelOffset: { x: -10, y: 8, textAnchor: 'end' },
@@ -111,7 +99,6 @@ const DESTINATIONS = [
     port: 'Jebel Ali Port',
     secondaryPorts: ['Jebel Ali Port'],
     region: 'Middle East',
-    majorOnMobile: true,
     coordinates: [55.1713, 25.0657],
     products: ['Cocopeat Blocks', 'Grow Bags'],
     labelOffset: { x: -10, y: 12, textAnchor: 'end' },
@@ -123,7 +110,6 @@ const DESTINATIONS = [
     port: 'Jeddah Port',
     secondaryPorts: ['Jeddah Port'],
     region: 'Middle East',
-    majorOnMobile: false,
     coordinates: [39.1925, 21.4858],
     products: ['Cocopeat Blocks', 'Coir Pith'],
     labelOffset: { x: -10, y: 10, textAnchor: 'end' },
@@ -135,7 +121,6 @@ const DESTINATIONS = [
     port: 'Singapore Port',
     secondaryPorts: ['Singapore Port'],
     region: 'Asia Pacific',
-    majorOnMobile: false,
     coordinates: [103.8198, 1.3521],
     products: ['Cocopeat Blocks', 'Grow Bags'],
     labelOffset: { x: 10, y: 10, textAnchor: 'start' },
@@ -147,10 +132,9 @@ const DESTINATIONS = [
     port: 'Busan Port',
     secondaryPorts: ['Busan Port'],
     region: 'Asia Pacific',
-    majorOnMobile: false,
     coordinates: [129.0756, 35.1796],
     products: ['Grow Bags', 'Coco Chips'],
-    labelOffset: { x: -10, y: -8, textAnchor: 'end' }, // Separate offset from Japan
+    labelOffset: { x: -10, y: -8, textAnchor: 'end' },
   },
   {
     id: 'japan',
@@ -159,10 +143,9 @@ const DESTINATIONS = [
     port: 'Tokyo Port',
     secondaryPorts: ['Tokyo Port'],
     region: 'Asia Pacific',
-    majorOnMobile: true,
     coordinates: [139.6503, 35.6762],
     products: ['Cocopeat Blocks', 'Grow Bags'],
-    labelOffset: { x: 10, y: -6, textAnchor: 'start' }, // Separate offset from SKorea
+    labelOffset: { x: 10, y: -6, textAnchor: 'start' },
   },
   {
     id: 'australia',
@@ -171,7 +154,6 @@ const DESTINATIONS = [
     port: 'Melbourne Port',
     secondaryPorts: ['Melbourne Port'],
     region: 'Asia Pacific',
-    majorOnMobile: true,
     coordinates: [144.9631, -37.8136],
     products: ['Cocopeat Blocks', 'Grow Bags'],
     labelOffset: { x: 10, y: 4, textAnchor: 'start' },
@@ -183,7 +165,6 @@ const DESTINATIONS = [
     port: 'Auckland Port',
     secondaryPorts: ['Auckland Port'],
     region: 'Oceania',
-    majorOnMobile: false,
     coordinates: [174.7633, -36.8485],
     products: ['Cocopeat Blocks', 'Coco Husk Chips'],
     labelOffset: { x: 10, y: 6, textAnchor: 'start' },
@@ -216,8 +197,19 @@ const REGION_CARDS = [
 
 const GlobalMap = () => {
   const [hoveredDest, setHoveredDest] = useState(null);
-  const [selectedDestMobile, setSelectedDestMobile] = useState(null);
+  const [selectedDestId, setSelectedDestId] = useState('usa');
   const filterId = useId();
+
+  const cardRefs = useRef({});
+
+  // Handler when a marker or country card is selected
+  const handleSelectCountry = (dest) => {
+    setSelectedDestId(dest.id);
+    const cardEl = cardRefs.current[dest.id];
+    if (cardEl) {
+      cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  };
 
   return (
     <section className="w-full font-inter bg-[#FAF9F6] text-stone-800 antialiased selection:bg-[#2E7D32]/20">
@@ -261,7 +253,7 @@ const GlobalMap = () => {
         </div>
 
         {/* =========================================================================
-            2. MAIN INTERACTIVE MAP SECTION (MERCATOR PROJECTION WITH REAL LAT/LONG)
+            2. MAIN INTERACTIVE MAP SECTION
         ========================================================================= */}
         <div className="relative w-full bg-[#F5F7F4] rounded-[16px] border border-stone-200/70 overflow-hidden shadow-inner mb-8">
           {/* Subtle Grid overlay */}
@@ -274,7 +266,6 @@ const GlobalMap = () => {
               style={{ width: "100%", height: "auto" }}
             >
               <defs>
-                {/* Glow Filter for HQ Origin */}
                 <filter id={`glow-${filterId}`} x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur stdDeviation="5" result="coloredBlur" />
                   <feMerge>
@@ -304,28 +295,27 @@ const GlobalMap = () => {
                 }
               </Geographies>
 
-              {/* REAL CURVED GEOGRAPHIC SHIPPING ROUTES (ORIGINATING EXACTLY FROM COIMBATORE) */}
+              {/* REAL CURVED SHIPPING ROUTES */}
               {DESTINATIONS.map((dest) => {
+                const isSelected = selectedDestId === dest.id;
                 const isHovered = hoveredDest?.id === dest.id;
+                const active = isSelected || isHovered;
 
                 return (
                   <g key={`route-${dest.id}`}>
-                    {/* Base Curve Line */}
                     <Line
                       from={ORIGIN.coordinates}
                       to={dest.coordinates}
-                      stroke={isHovered ? "#2E7D32" : "#A26B3D"}
-                      strokeWidth={isHovered ? 2.5 : 1.5}
-                      strokeOpacity={isHovered ? 0.9 : 0.3}
+                      stroke={active ? "#2E7D32" : "#A26B3D"}
+                      strokeWidth={active ? 2.5 : 1.5}
+                      strokeOpacity={active ? 0.9 : 0.25}
                       strokeLinecap="round"
                     />
-
-                    {/* Animated Pulse Flow Line */}
                     <Line
                       from={ORIGIN.coordinates}
                       to={dest.coordinates}
                       stroke="#2E7D32"
-                      strokeWidth={isHovered ? 3 : 2}
+                      strokeWidth={active ? 3 : 2}
                       strokeDasharray="6 8"
                       strokeLinecap="round"
                       className="animate-pulse"
@@ -334,10 +324,10 @@ const GlobalMap = () => {
                 );
               })}
 
-              {/* DESTINATION MARKERS WITH NON-OVERLAPPING OFFSET LABELS */}
+              {/* DESTINATION MARKERS (INTERACTIVE HIGHLIGHT ON SELECTION) */}
               {DESTINATIONS.map((dest) => {
+                const isSelected = selectedDestId === dest.id;
                 const isHovered = hoveredDest?.id === dest.id;
-                const isMajor = dest.majorOnMobile;
 
                 return (
                   <Marker
@@ -345,31 +335,45 @@ const GlobalMap = () => {
                     coordinates={dest.coordinates}
                     onMouseEnter={() => setHoveredDest(dest)}
                     onMouseLeave={() => setHoveredDest(null)}
-                    onClick={() => {
-                      setHoveredDest(dest);
-                      setSelectedDestMobile(dest);
-                    }}
-                    className={`cursor-pointer outline-none transition-transform duration-300 ${
-                      !isMajor ? 'hidden sm:block' : 'block'
-                    }`}
+                    onClick={() => handleSelectCountry(dest)}
+                    className="cursor-pointer outline-none transition-transform duration-300"
                   >
-                    {/* Touch Ripple / Pulse on Hover */}
-                    {isHovered && (
-                      <circle r="14" fill="#F59E0B" opacity="0.25" />
+                    {/* Active Selected Marker Pulse Animation */}
+                    {isSelected && (
+                      <circle r="16" fill="#2E7D32" opacity="0.3">
+                        <animate attributeName="r" values="8;18;8" dur="1.6s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.5;0.1;0.5" dur="1.6s" repeatCount="indefinite" />
+                      </circle>
                     )}
 
                     {/* Outer Pin Halo */}
-                    <circle r="7" fill="#F59E0B" opacity="0.35" />
-                    {/* Inner Center Dot */}
-                    <circle r="4" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <circle
+                      r={isSelected ? 8 : 6}
+                      fill={isSelected ? '#2E7D32' : '#F59E0B'}
+                      opacity={isSelected ? 0.9 : 0.4}
+                      className="transition-all duration-300"
+                    />
 
-                    {/* Non-overlapping Geographic Label */}
+                    {/* Inner Center Dot */}
+                    <circle
+                      r={isSelected ? 5 : 3.5}
+                      fill={isSelected ? '#2E7D32' : '#F59E0B'}
+                      stroke="#FFFFFF"
+                      strokeWidth={isSelected ? 2 : 1.5}
+                      className="transition-all duration-300"
+                    />
+
+                    {/* Country Label */}
                     <text
                       x={dest.labelOffset.x}
                       y={dest.labelOffset.y}
                       textAnchor={dest.labelOffset.textAnchor}
-                      className="hidden lg:block fill-stone-800 text-[10px] font-extrabold tracking-tight pointer-events-none drop-shadow-xs"
-                      style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}
+                      className={`hidden lg:block transition-all duration-300 ${
+                        isSelected
+                          ? 'fill-[#2E7D32] text-[11px] font-black'
+                          : 'fill-stone-700 text-[10px] font-bold'
+                      } pointer-events-none drop-shadow-xs`}
+                      style={{ fontFamily: 'Inter, sans-serif' }}
                     >
                       {dest.country}
                     </text>
@@ -377,9 +381,8 @@ const GlobalMap = () => {
                 );
               })}
 
-              {/* MANUFACTURING HQ MARKER (COIMBATORE, TAMIL NADU, INDIA) */}
+              {/* MANUFACTURING HQ MARKER (COIMBATORE) */}
               <Marker coordinates={ORIGIN.coordinates} className="cursor-pointer">
-                {/* Multi-layered Animated Pulse Halo */}
                 <circle r="18" fill="#2E7D32" opacity="0.2" filter={`url(#glow-${filterId})`}>
                   <animate attributeName="r" values="12;24;12" dur="2.2s" repeatCount="indefinite" />
                   <animate attributeName="opacity" values="0.4;0.05;0.4" dur="2.2s" repeatCount="indefinite" />
@@ -389,7 +392,6 @@ const GlobalMap = () => {
                 <circle r="6" fill="#2E7D32" stroke="#FFFFFF" strokeWidth="2" />
                 <circle r="2" fill="#FFFFFF" />
 
-                {/* HQ Label */}
                 <g transform="translate(0, -22)">
                   <rect
                     x="-48"
@@ -446,7 +448,7 @@ const GlobalMap = () => {
 
                     <div className="pt-2 border-t border-stone-100">
                       <div className="text-[10px] font-bold uppercase text-stone-400 tracking-wider mb-1">
-                        Supplied Products:
+                        Products:
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {hoveredDest.products.map((prod, idx) => (
@@ -467,121 +469,83 @@ const GlobalMap = () => {
         </div>
 
         {/* =========================================================================
-            3. MOBILE HORIZONTAL SWIPE CARDS (VISIBLE ONLY ON MOBILE 320px–767px)
+            3. INTERACTIVE COUNTRY CARDS (SWIPEABLE / COLLAPSIBLE, NO POPUPS/MODALS)
         ========================================================================= */}
-        <div className="block sm:hidden mb-8">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <span className="text-xs font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#2E7D32]" /> Major Global Hubs
-            </span>
-            <span className="text-[11px] text-stone-400 font-medium">Swipe cards →</span>
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-extrabold uppercase text-stone-400 tracking-widest flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#2E7D32]" /> Export Destinations
+            </h3>
+            <span className="text-[11px] text-stone-400 font-medium">Select country or tap marker →</span>
           </div>
 
-          <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-none -mx-4 px-4">
-            {DESTINATIONS.filter((d) => d.majorOnMobile).map((dest) => (
-              <div
-                key={`mob-card-${dest.id}`}
-                onClick={() => setSelectedDestMobile(dest)}
-                className="min-w-[82vw] snap-center bg-[#FAF9F6] border border-stone-200/90 rounded-2xl p-4 shadow-sm active:scale-98 transition-transform"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{dest.flag}</span>
-                    <span className="font-extrabold text-stone-900 text-base">{dest.country}</span>
+          {/* Horizontally Swipeable Country Cards */}
+          <div className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+            {DESTINATIONS.map((dest) => {
+              const isSelected = selectedDestId === dest.id;
+
+              return (
+                <div
+                  key={`card-${dest.id}`}
+                  ref={(el) => (cardRefs.current[dest.id] = el)}
+                  onClick={() => handleSelectCountry(dest)}
+                  className={`min-w-[280px] sm:min-w-[320px] snap-center rounded-2xl p-5 border transition-all duration-300 cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-white border-[#2E7D32] shadow-[0_8px_24px_rgba(46,125,50,0.12)] ring-2 ring-[#2E7D32]/20'
+                      : 'bg-[#FAF9F6] border-stone-200/80 hover:border-stone-300 hover:bg-white shadow-xs'
+                  }`}
+                >
+                  <div>
+                    {/* Header: Flag, Country & Badge */}
+                    <div className="flex items-center justify-between mb-3 border-b border-stone-100 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-2xl">{dest.flag}</span>
+                        <h4 className="font-extrabold text-stone-900 text-base">{dest.country}</h4>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#F59E0B] bg-[#F59E0B]/10 px-2.5 py-1 rounded-full border border-[#F59E0B]/20">
+                        Export Destination
+                      </span>
+                    </div>
+
+                    {/* Primary Seaport */}
+                    <div className="mb-3">
+                      <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
+                        Primary Seaport
+                      </label>
+                      <div className="flex items-center gap-2 text-xs font-bold text-stone-800 bg-white/80 border border-stone-200/60 p-2.5 rounded-xl">
+                        <Anchor className="w-4 h-4 text-[#2E7D32] flex-shrink-0" />
+                        <span>{dest.port}</span>
+                      </div>
+                    </div>
+
+                    {/* Products (Expanded when selected) */}
+                    <div>
+                      <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
+                        Products Exported
+                      </label>
+                      <ul className="space-y-1">
+                        {dest.products.map((prod, idx) => (
+                          <li key={idx} className="text-xs text-stone-600 font-medium flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32]"></span>
+                            <span>{prod}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-bold text-[#F59E0B] bg-[#F59E0B]/10 px-2 py-0.5 rounded-full border border-[#F59E0B]/20">
-                    Export Destination
-                  </span>
-                </div>
 
-                <div className="flex items-center gap-2 text-xs font-semibold text-[#2E7D32] bg-white border border-stone-200/60 p-2.5 rounded-xl mb-3">
-                  <Anchor className="w-4 h-4 flex-shrink-0" />
-                  <span>{dest.port}</span>
+                  {/* Active Indicator Footer */}
+                  {isSelected && (
+                    <div className="mt-4 pt-2 border-t border-[#2E7D32]/10 text-[11px] font-extrabold text-[#2E7D32] flex items-center justify-between">
+                      <span>• Active Network Hub</span>
+                      <span className="w-2 h-2 rounded-full bg-[#2E7D32] animate-ping"></span>
+                    </div>
+                  )}
                 </div>
-
-                <div className="flex items-center justify-between text-[11px] text-stone-500 font-medium">
-                  <span>Products: {dest.products.join(', ')}</span>
-                  <span className="text-[#2E7D32] font-bold flex items-center">
-                    Tap details <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
-
-        {/* MOBILE BOTTOM SHEET MODAL */}
-        <AnimatePresence>
-          {selectedDestMobile && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:hidden"
-              onClick={() => setSelectedDestMobile(null)}
-            >
-              <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="w-full bg-white rounded-t-3xl p-6 border-t border-stone-200 shadow-2xl space-y-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{selectedDestMobile.flag}</span>
-                    <div>
-                      <h3 className="font-extrabold text-stone-900 text-lg">{selectedDestMobile.country}</h3>
-                      <span className="text-xs text-[#F59E0B] font-semibold">Export Destination</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedDestMobile(null)}
-                    className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
-                      Primary Seaport
-                    </label>
-                    <div className="flex items-center gap-2 bg-[#FAF9F6] border border-stone-200 p-3 rounded-xl font-bold text-stone-800 text-sm">
-                      <Anchor className="w-4 h-4 text-[#2E7D32]" />
-                      {selectedDestMobile.port}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
-                      Supplied Products
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedDestMobile.products.map((prod, idx) => (
-                        <span
-                          key={idx}
-                          className="bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 font-semibold text-xs px-3 py-1.5 rounded-lg"
-                        >
-                          {prod}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setSelectedDestMobile(null)}
-                  className="w-full bg-[#2E7D32] text-white font-bold text-sm py-3 rounded-xl shadow-md mt-2"
-                >
-                  Close Network Details
-                </button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* =========================================================================
             4. BOTTOM REGION CARDS (5 CLEAN CARDS)
