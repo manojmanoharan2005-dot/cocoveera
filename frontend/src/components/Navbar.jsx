@@ -37,8 +37,7 @@ const Navbar = () => {
     { name: 'Home', path: '/' },
     { name: 'About Us', path: '/about' },
     { name: 'Products', path: '/products' },
-    { name: 'How to Use', path: '/how-to-use' },
-    { name: 'Production Process', path: '/quality-testing' },
+    { name: 'Production Process', path: '/production-process' },
     { name: 'Global Network', path: '/global-network' },
     { name: 'Contact', path: '/contact' },
   ];

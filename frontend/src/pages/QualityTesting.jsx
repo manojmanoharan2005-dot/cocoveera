@@ -95,7 +95,7 @@ const QualityTesting = () => {
         title="Production Process"
         titleAccent="& QA"
         subtitle="From raw husks to certified substrates: Review our manufacturing infrastructure and verify batch analysis scores."
-        breadcrumbs={[{ label: 'Production Process', path: '/quality-testing' }]}
+        breadcrumbs={[{ label: 'Production Process', path: '/production-process' }]}
       />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">

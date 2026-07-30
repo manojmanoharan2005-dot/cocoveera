@@ -305,12 +305,11 @@ function AppContent() {
           <Route path="/about" element={<About />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<Navigate to="/login" replace />} />
-          <Route path="/quality-testing" element={<QualityTesting />} />
+          <Route path="/production-process" element={<QualityTesting />} />
+          <Route path="/quality-testing" element={<Navigate to="/production-process" replace />} />
           <Route path="/global-network" element={<CoconutSubstrates />} />
           <Route path="/substrates" element={<Navigate to="/global-network" replace />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/how-to-use" element={<Onboarding />} />
-          <Route path="/how-it-works" element={<Onboarding />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
           
