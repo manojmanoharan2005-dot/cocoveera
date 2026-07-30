@@ -208,7 +208,8 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       if (mobile) {
-        setPosition({ coordinates: [18, 12], zoom: 1.1 });
+        // Position & zoom tuned to auto-fit all export destinations + Coimbatore HQ on mobile
+        setPosition({ coordinates: [25, 5], zoom: 1.05 });
       } else {
         setPosition({ coordinates: [20, 18], zoom: 1 });
       }
@@ -239,8 +240,8 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
 
   const handleResetZoom = () => {
     setPosition({
-      coordinates: [20, isMobile ? 12 : 18],
-      zoom: isMobile ? 1.1 : 1,
+      coordinates: isMobile ? [25, 5] : [20, 18],
+      zoom: isMobile ? 1.05 : 1,
     });
   };
 
@@ -278,11 +279,11 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
         </div>
       )}
 
-      {/* Map Canvas Container - Mobile Height: 480px, Desktop: 650px */}
+      {/* Map Canvas Container - Mobile Height: 480px (450–500px), Desktop: 650px */}
       <div className="w-full relative select-none bg-[#FAF9F6] h-[480px] md:h-[500px] lg:h-[550px] xl:h-[650px] flex items-center justify-center">
         <ComposableMap
           projection="geoMercator"
-          projectionConfig={{ scale: isMobile ? 140 : 135 }}
+          projectionConfig={{ scale: isMobile ? 120 : 135 }}
           style={{ width: "100%", height: "100%", backgroundColor: "#FAF9F6" }}
         >
           <ZoomableGroup
@@ -323,19 +324,19 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                   <Line
                     from={ORIGIN.coordinates}
                     to={dest.coordinates}
-                    stroke={active ? "#2E7D32" : "#2E7D32"}
-                    strokeWidth={isMobile ? (active ? 2.5 : 1.5) : (active ? 2 : 1)}
-                    strokeOpacity={active ? 0.95 : (isMobile ? 0.45 : 0.3)}
+                    stroke={active ? "#1B5E20" : "#2E7D32"}
+                    strokeWidth={isMobile ? (active ? 3 : 2) : (active ? 2 : 1)}
+                    strokeOpacity={active ? 0.95 : (isMobile ? 0.65 : 0.3)}
                     strokeLinecap="round"
                   />
                   <Line
                     from={ORIGIN.coordinates}
                     to={dest.coordinates}
-                    stroke={active ? "#2E7D32" : "#4CAF50"}
-                    strokeWidth={isMobile ? (active ? 3 : 1.8) : (active ? 2.2 : 1.2)}
+                    stroke={active ? "#2E7D32" : "#388E3C"}
+                    strokeWidth={isMobile ? (active ? 3.5 : 2.2) : (active ? 2.2 : 1.2)}
                     strokeDasharray="4 6"
                     strokeLinecap="round"
-                    opacity={active ? 1 : (isMobile ? 0.6 : 0.4)}
+                    opacity={active ? 1 : (isMobile ? 0.8 : 0.4)}
                   />
                 </g>
               );
@@ -344,7 +345,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
             {/* Destination Markers */}
             {DESTINATIONS.map((dest) => {
               const isSelected = activeDestId === dest.id || tappedDest?.id === dest.id;
-              const markerRadius = isMobile ? (isSelected ? 8.5 : 6.5) : (isSelected ? 6 : 4.5);
+              const markerRadius = isMobile ? (isSelected ? 9 : 7) : (isSelected ? 6 : 4.5);
 
               return (
                 <Marker
@@ -356,9 +357,9 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                   className="cursor-pointer outline-none"
                 >
                   {/* Outer pulse animation */}
-                  <circle r={isMobile ? (isSelected ? 16 : 10) : (isSelected ? 14 : 8)} fill="#F59E0B" opacity={isSelected ? 0.4 : 0.25}>
-                    <animate attributeName="r" values={isMobile ? "8;18;8" : "6;14;6"} dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite" />
+                  <circle r={isMobile ? (isSelected ? 18 : 12) : (isSelected ? 14 : 8)} fill="#F59E0B" opacity={isSelected ? 0.45 : 0.3}>
+                    <animate attributeName="r" values={isMobile ? "10;20;10" : "6;14;6"} dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.6;0.15;0.6" dur="2s" repeatCount="indefinite" />
                   </circle>
 
                   {/* Marker Dot */}
@@ -366,7 +367,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                     r={markerRadius}
                     fill="#F59E0B"
                     stroke="#FFFFFF"
-                    strokeWidth={isMobile ? 2 : 1.5}
+                    strokeWidth={isMobile ? 2.5 : 1.5}
                     className="transition-all duration-300 shadow-sm"
                   />
 
@@ -396,14 +397,14 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
               onClick={() => isMobile && setTappedDest(ORIGIN)}
               className="cursor-pointer z-30"
             >
-              <circle r={isMobile ? 24 : 22} fill="#2E7D32" opacity="0.25">
-                <animate attributeName="r" values={isMobile ? "12;26;12" : "10;24;10"} dur="2.2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.4;0.05;0.4" dur="2.2s" repeatCount="indefinite" />
+              <circle r={isMobile ? 26 : 22} fill="#2E7D32" opacity="0.3">
+                <animate attributeName="r" values={isMobile ? "14;28;14" : "10;24;10"} dur="2.2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.2s" repeatCount="indefinite" />
               </circle>
 
-              <circle r={isMobile ? 10 : 9} fill="#2E7D32" opacity="0.35" />
-              <circle r={isMobile ? 7 : 6} fill="#2E7D32" stroke="#FFFFFF" strokeWidth={isMobile ? 2 : 2} />
-              <circle r={isMobile ? 2.5 : 2} fill="#FFFFFF" />
+              <circle r={isMobile ? 11 : 9} fill="#2E7D32" opacity="0.4" />
+              <circle r={isMobile ? 8 : 6} fill="#2E7D32" stroke="#FFFFFF" strokeWidth={isMobile ? 2.5 : 2} />
+              <circle r={isMobile ? 3 : 2} fill="#FFFFFF" />
 
               {!isMobile && (
                 <g transform="translate(0, -22)">
@@ -443,7 +444,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
             className="absolute top-4 right-4 z-40 pointer-events-none"
           >
             <div className="bg-white/95 backdrop-blur-md text-stone-900 rounded-[14px] p-3.5 shadow-md border border-stone-200 w-56 text-xs">
-              <div className="flex items-center gap-2 font-bold text-stone-900 mb-1">
+              <div className="flex items-center gap-2 font-bold text-[#1C1917] mb-1">
                 <span className="text-base">{hoveredDest.flag}</span>
                 <span>{hoveredDest.country}</span>
               </div>
