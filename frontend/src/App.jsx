@@ -306,7 +306,8 @@ function AppContent() {
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<Navigate to="/login" replace />} />
           <Route path="/quality-testing" element={<QualityTesting />} />
-          <Route path="/substrates" element={<CoconutSubstrates />} />
+          <Route path="/global-network" element={<CoconutSubstrates />} />
+          <Route path="/substrates" element={<Navigate to="/global-network" replace />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/how-to-use" element={<Onboarding />} />
           <Route path="/how-it-works" element={<Onboarding />} />

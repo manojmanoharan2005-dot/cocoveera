@@ -39,7 +39,7 @@ const Navbar = () => {
     { name: 'Products', path: '/products' },
     { name: 'How to Use', path: '/how-to-use' },
     { name: 'Production Process', path: '/quality-testing' },
-    { name: 'Global Network', path: '/substrates' },
+    { name: 'Global Network', path: '/global-network' },
     { name: 'Contact', path: '/contact' },
   ];
 
