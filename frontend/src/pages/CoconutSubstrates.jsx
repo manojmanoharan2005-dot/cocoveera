@@ -255,7 +255,7 @@ const CoconutSubstrates = () => {
                       Products Exported
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {dest.products.map((prod, idx) => (
+                      {(dest.products || ['Cocopeat Substrates']).map((prod, idx) => (
                         <span
                           key={idx}
                           className="text-[11px] font-medium text-stone-700 bg-stone-100 px-2.5 py-1 rounded-md"
