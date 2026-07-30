@@ -462,19 +462,7 @@ const Home = () => {
         </motion.div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 2: STATS BAR
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section ref={statsRef} className="bg-white border-y border-stone-100 py-10 sm:py-12">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-            <StatCounter value={50} suffix="+" label="Countries Served" icon={Globe2} started={statsStarted} />
-            <StatCounter value={1000} suffix="+" label="Happy Customers" icon={Users} started={statsStarted} />
-            <StatCounter value={5000} suffix="+" label="Shipments Delivered" icon={Truck} started={statsStarted} />
-            <StatCounter value={99} suffix="%" label="Quality Consistency" icon={Award} started={statsStarted} />
-          </div>
-        </div>
-      </section>
+
 
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 3: ABOUT / ROOTED IN NATURE
