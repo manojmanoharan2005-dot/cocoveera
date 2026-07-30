@@ -1,13 +1,14 @@
 /**
  * File: frontend/src/components/GlobalMap.jsx
  * Purpose: Enterprise "Global Supply Chain Network" map component for Cocoveera B2B Export Website.
- * Enhanced for Mobile-First & Desktop Responsiveness with Zoom/Pan, Mobile Bottom Sheet Card, and Tapped Marker Details.
+ * Clean, map-focused mobile experience with native gesture pan/zoom, no floating UI/popups/buttons on mobile,
+ * and compact single-line touch tooltips. Full desktop UI completely preserved.
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } from 'react-simple-maps';
-import { Anchor, X, MapPin, Package, ArrowRight, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Anchor, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 
@@ -27,10 +28,9 @@ export const DESTINATIONS = [
   {
     id: 'usa',
     country: 'USA',
-    city: 'Los Angeles / Houston',
+    city: 'Los Angeles Port',
     flag: '🇺🇸',
     port: 'Los Angeles Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Los Angeles Port', 'Houston Port'],
     region: 'North America',
     coordinates: [-118.2437, 34.0522],
@@ -41,10 +41,9 @@ export const DESTINATIONS = [
   {
     id: 'canada',
     country: 'Canada',
-    city: 'Toronto',
+    city: 'Toronto Port',
     flag: '🇨🇦',
     port: 'Toronto Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Toronto Port'],
     region: 'North America',
     coordinates: [-79.3832, 43.6532],
@@ -55,10 +54,9 @@ export const DESTINATIONS = [
   {
     id: 'uk',
     country: 'UK',
-    city: 'London',
+    city: 'London Port',
     flag: '🇬🇧',
     port: 'London Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['London Port'],
     region: 'Europe',
     coordinates: [-0.1276, 51.5072],
@@ -69,10 +67,9 @@ export const DESTINATIONS = [
   {
     id: 'netherlands',
     country: 'Netherlands',
-    city: 'Rotterdam',
+    city: 'Rotterdam Port',
     flag: '🇳🇱',
     port: 'Rotterdam Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Rotterdam Port'],
     region: 'Europe',
     coordinates: [4.4777, 51.9244],
@@ -83,10 +80,9 @@ export const DESTINATIONS = [
   {
     id: 'germany',
     country: 'Germany',
-    city: 'Hamburg',
+    city: 'Hamburg Port',
     flag: '🇩🇪',
     port: 'Hamburg Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Hamburg Port'],
     region: 'Europe',
     coordinates: [9.9937, 53.5511],
@@ -97,10 +93,9 @@ export const DESTINATIONS = [
   {
     id: 'spain',
     country: 'Spain',
-    city: 'Valencia',
+    city: 'Valencia Port',
     flag: '🇪🇸',
     port: 'Valencia Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Valencia Port'],
     region: 'Europe',
     coordinates: [-0.3763, 39.4699],
@@ -111,10 +106,9 @@ export const DESTINATIONS = [
   {
     id: 'uae',
     country: 'UAE',
-    city: 'Dubai',
+    city: 'Jebel Ali Port',
     flag: '🇦🇪',
     port: 'Jebel Ali Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Jebel Ali Port'],
     region: 'Middle East',
     coordinates: [55.1713, 25.0657],
@@ -125,10 +119,9 @@ export const DESTINATIONS = [
   {
     id: 'saudi',
     country: 'Saudi Arabia',
-    city: 'Jeddah',
+    city: 'Jeddah Port',
     flag: '🇸🇦',
     port: 'Jeddah Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Jeddah Port'],
     region: 'Middle East',
     coordinates: [39.1925, 21.4858],
@@ -139,10 +132,9 @@ export const DESTINATIONS = [
   {
     id: 'singapore',
     country: 'Singapore',
-    city: 'Singapore',
+    city: 'Singapore Port',
     flag: '🇸🇬',
     port: 'Singapore Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Singapore Port'],
     region: 'Asia Pacific',
     coordinates: [103.8198, 1.3521],
@@ -153,10 +145,9 @@ export const DESTINATIONS = [
   {
     id: 'skorea',
     country: 'South Korea',
-    city: 'Busan',
+    city: 'Busan Port',
     flag: '🇰🇷',
     port: 'Busan Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Busan Port'],
     region: 'Asia Pacific',
     coordinates: [129.0756, 35.1796],
@@ -167,10 +158,9 @@ export const DESTINATIONS = [
   {
     id: 'japan',
     country: 'Japan',
-    city: 'Tokyo',
+    city: 'Tokyo Port',
     flag: '🇯🇵',
     port: 'Tokyo Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Tokyo Port'],
     region: 'Asia Pacific',
     coordinates: [139.6503, 35.6762],
@@ -181,10 +171,9 @@ export const DESTINATIONS = [
   {
     id: 'australia',
     country: 'Australia',
-    city: 'Melbourne',
+    city: 'Melbourne Port',
     flag: '🇦🇺',
     port: 'Melbourne Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Melbourne Port'],
     region: 'Asia Pacific',
     coordinates: [144.9631, -37.8136],
@@ -195,10 +184,9 @@ export const DESTINATIONS = [
   {
     id: 'nz',
     country: 'New Zealand',
-    city: 'Auckland',
+    city: 'Auckland Port',
     flag: '🇳🇿',
     port: 'Auckland Port',
-    status: 'Active Export Hub',
     secondaryPorts: ['Auckland Port'],
     region: 'Oceania',
     coordinates: [174.7633, -36.8485],
@@ -214,13 +202,13 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [position, setPosition] = useState({ coordinates: [20, 18], zoom: 1 });
 
-  // Screen size detector
+  // Mobile detection
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       if (mobile) {
-        setPosition({ coordinates: [20, 15], zoom: 1.15 });
+        setPosition({ coordinates: [18, 12], zoom: 1.1 });
       } else {
         setPosition({ coordinates: [20, 18], zoom: 1 });
       }
@@ -229,14 +217,6 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Update selected item state
-  useEffect(() => {
-    if (activeDestId) {
-      const match = DESTINATIONS.find((d) => d.id === activeDestId);
-      if (match) setTappedDest(match);
-    }
-  }, [activeDestId]);
 
   const handleMarkerClick = (dest) => {
     setTappedDest(dest);
@@ -259,8 +239,8 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
 
   const handleResetZoom = () => {
     setPosition({
-      coordinates: [20, isMobile ? 15 : 18],
-      zoom: isMobile ? 1.15 : 1,
+      coordinates: [20, isMobile ? 12 : 18],
+      zoom: isMobile ? 1.1 : 1,
     });
   };
 
@@ -268,41 +248,41 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
     setPosition(newPosition);
   };
 
-  const selectedOrTapped = tappedDest || DESTINATIONS.find(d => d.id === activeDestId);
-
   return (
-    <div className="relative w-full bg-[#FAF9F6] rounded-[20px] border border-stone-200/80 overflow-hidden shadow-sm touch-none">
+    <div className="relative w-full bg-[#FAF9F6] rounded-[20px] border border-stone-200/80 overflow-hidden shadow-sm touch-pan-x touch-pan-y">
       
-      {/* Zoom Controls */}
-      <div className="absolute top-4 left-4 z-40 flex flex-col gap-2 bg-white/90 backdrop-blur-md p-1.5 rounded-[14px] shadow-sm border border-stone-200">
-        <button
-          onClick={handleZoomIn}
-          aria-label="Zoom in"
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
-        >
-          <ZoomIn className="w-4 h-4" />
-        </button>
-        <button
-          onClick={handleZoomOut}
-          aria-label="Zoom out"
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
-        >
-          <ZoomOut className="w-4 h-4" />
-        </button>
-        <button
-          onClick={handleResetZoom}
-          aria-label="Reset zoom"
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      {/* DESKTOP ONLY Zoom Controls */}
+      {!isMobile && (
+        <div className="absolute top-4 left-4 z-40 flex flex-col gap-2 bg-white/90 backdrop-blur-md p-1.5 rounded-[14px] shadow-sm border border-stone-200">
+          <button
+            onClick={handleZoomIn}
+            aria-label="Zoom in"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleZoomOut}
+            aria-label="Zoom out"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleResetZoom}
+            aria-label="Reset zoom"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
-      {/* Map Canvas Container - Heights: Mobile 450px, Tablet 500px, Laptop 550px, Desktop 650px */}
-      <div className="w-full relative select-none bg-[#FAF9F6] h-[450px] md:h-[500px] lg:h-[550px] xl:h-[650px] flex items-center justify-center">
+      {/* Map Canvas Container - Mobile Height: 480px, Desktop: 650px */}
+      <div className="w-full relative select-none bg-[#FAF9F6] h-[480px] md:h-[500px] lg:h-[550px] xl:h-[650px] flex items-center justify-center">
         <ComposableMap
           projection="geoMercator"
-          projectionConfig={{ scale: isMobile ? 145 : 135 }}
+          projectionConfig={{ scale: isMobile ? 140 : 135 }}
           style={{ width: "100%", height: "100%", backgroundColor: "#FAF9F6" }}
         >
           <ZoomableGroup
@@ -332,7 +312,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
               }
             </Geographies>
 
-            {/* Export Route Lines */}
+            {/* Export Route Lines - Visible with high contrast */}
             {DESTINATIONS.map((dest) => {
               const isSelected = activeDestId === dest.id || tappedDest?.id === dest.id;
               const isHovered = hoveredDest?.id === dest.id;
@@ -364,7 +344,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
             {/* Destination Markers */}
             {DESTINATIONS.map((dest) => {
               const isSelected = activeDestId === dest.id || tappedDest?.id === dest.id;
-              const markerRadius = isMobile ? (isSelected ? 9 : 7) : (isSelected ? 6 : 4.5);
+              const markerRadius = isMobile ? (isSelected ? 8.5 : 6.5) : (isSelected ? 6 : 4.5);
 
               return (
                 <Marker
@@ -375,9 +355,9 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                   onClick={() => handleMarkerClick(dest)}
                   className="cursor-pointer outline-none"
                 >
-                  {/* Outer pulse */}
-                  <circle r={isMobile ? (isSelected ? 18 : 12) : (isSelected ? 14 : 8)} fill="#F59E0B" opacity={isSelected ? 0.4 : 0.2}>
-                    <animate attributeName="r" values={isMobile ? "10;20;10" : "6;14;6"} dur="2s" repeatCount="indefinite" />
+                  {/* Outer pulse animation */}
+                  <circle r={isMobile ? (isSelected ? 16 : 10) : (isSelected ? 14 : 8)} fill="#F59E0B" opacity={isSelected ? 0.4 : 0.25}>
+                    <animate attributeName="r" values={isMobile ? "8;18;8" : "6;14;6"} dur="2s" repeatCount="indefinite" />
                     <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite" />
                   </circle>
 
@@ -386,11 +366,11 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                     r={markerRadius}
                     fill="#F59E0B"
                     stroke="#FFFFFF"
-                    strokeWidth={isMobile ? 2.5 : 1.5}
+                    strokeWidth={isMobile ? 2 : 1.5}
                     className="transition-all duration-300 shadow-sm"
                   />
 
-                  {/* Desktop Only Inline Country Labels */}
+                  {/* DESKTOP ONLY Inline Country Labels */}
                   {!isMobile && (
                     <text
                       x={dest.labelOffset.x}
@@ -410,16 +390,20 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
               );
             })}
 
-            {/* Manufacturing HQ Marker (Green Pulse on Coimbatore) */}
-            <Marker coordinates={ORIGIN.coordinates} className="cursor-pointer z-30">
-              <circle r={isMobile ? 26 : 22} fill="#2E7D32" opacity="0.25">
-                <animate attributeName="r" values={isMobile ? "14;30;14" : "10;24;10"} dur="2.2s" repeatCount="indefinite" />
+            {/* Manufacturing HQ Marker (Green pulse on Coimbatore) */}
+            <Marker
+              coordinates={ORIGIN.coordinates}
+              onClick={() => isMobile && setTappedDest(ORIGIN)}
+              className="cursor-pointer z-30"
+            >
+              <circle r={isMobile ? 24 : 22} fill="#2E7D32" opacity="0.25">
+                <animate attributeName="r" values={isMobile ? "12;26;12" : "10;24;10"} dur="2.2s" repeatCount="indefinite" />
                 <animate attributeName="opacity" values="0.4;0.05;0.4" dur="2.2s" repeatCount="indefinite" />
               </circle>
 
-              <circle r={isMobile ? 12 : 9} fill="#2E7D32" opacity="0.35" />
-              <circle r={isMobile ? 8 : 6} fill="#2E7D32" stroke="#FFFFFF" strokeWidth={isMobile ? 2.5 : 2} />
-              <circle r={isMobile ? 3 : 2} fill="#FFFFFF" />
+              <circle r={isMobile ? 10 : 9} fill="#2E7D32" opacity="0.35" />
+              <circle r={isMobile ? 7 : 6} fill="#2E7D32" stroke="#FFFFFF" strokeWidth={isMobile ? 2 : 2} />
+              <circle r={isMobile ? 2.5 : 2} fill="#FFFFFF" />
 
               {!isMobile && (
                 <g transform="translate(0, -22)">
@@ -449,7 +433,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
         </ComposableMap>
       </div>
 
-      {/* Desktop Hover Card */}
+      {/* DESKTOP ONLY Hover Card */}
       <AnimatePresence>
         {!isMobile && hoveredDest && (
           <motion.div
@@ -475,65 +459,23 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
         )}
       </AnimatePresence>
 
-      {/* Mobile Bottom Sheet Card when Tapped */}
+      {/* MOBILE ONLY Small Tapped Tooltip (Only Country / City) */}
       <AnimatePresence>
-        {isMobile && selectedOrTapped && (
+        {isMobile && tappedDest && (
           <motion.div
-            initial={{ y: '100%', opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-            className="absolute bottom-3 left-3 right-3 z-50 bg-white/95 backdrop-blur-lg rounded-[18px] p-4 shadow-xl border border-stone-200/90 text-stone-900"
+            initial={{ opacity: 0, y: 6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
           >
-            {/* Header: Flag, Country & Close button */}
-            <div className="flex items-center justify-between border-b border-stone-100 pb-3 mb-3">
-              <div className="flex items-center gap-2.5">
-                <span className="text-2xl">{selectedOrTapped.flag}</span>
-                <div>
-                  <h4 className="font-extrabold text-base text-stone-900 leading-tight">
-                    {selectedOrTapped.country}
-                  </h4>
-                  <span className="text-[11px] text-stone-500 font-medium flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#2E7D32]" />
-                    {selectedOrTapped.city || selectedOrTapped.port}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-full border border-[#2E7D32]/20">
-                  {selectedOrTapped.status || 'Active Export Hub'}
-                </span>
-                <button
-                  onClick={() => setTappedDest(null)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-stone-100 text-stone-500 hover:text-stone-900"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Details: Port & Products */}
-            <div className="grid grid-cols-2 gap-3 text-xs mb-2">
-              <div className="bg-[#FAF9F6] p-2.5 rounded-[12px] border border-stone-100">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-0.5">
-                  Primary Port
-                </span>
-                <div className="font-bold text-stone-800 flex items-center gap-1.5">
-                  <Anchor className="w-3.5 h-3.5 text-[#2E7D32]" />
-                  <span className="truncate">{selectedOrTapped.port}</span>
-                </div>
-              </div>
-
-              <div className="bg-[#FAF9F6] p-2.5 rounded-[12px] border border-stone-100">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-0.5">
-                  Product Categories
-                </span>
-                <div className="font-bold text-stone-800 flex items-center gap-1.5 truncate">
-                  <Package className="w-3.5 h-3.5 text-[#F59E0B]" />
-                  <span className="truncate">{selectedOrTapped.products.join(', ')}</span>
-                </div>
-              </div>
+            <div
+              onClick={() => setTappedDest(null)}
+              className="bg-stone-900/90 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-lg border border-white/20 flex items-center gap-2 text-xs font-bold"
+            >
+              {tappedDest.flag && <span>{tappedDest.flag}</span>}
+              <span>{tappedDest.country || tappedDest.name}</span>
+              {tappedDest.city && <span className="opacity-70 font-normal">({tappedDest.city})</span>}
             </div>
           </motion.div>
         )}

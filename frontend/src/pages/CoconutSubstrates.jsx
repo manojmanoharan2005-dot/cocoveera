@@ -163,8 +163,8 @@ const CoconutSubstrates = () => {
             </h2>
           </div>
 
-          {/* Legend */}
-          <div className="flex items-center gap-6 bg-white px-5 py-3 rounded-[20px] border border-stone-200/80 shadow-sm text-xs font-semibold text-stone-700">
+          {/* Legend - hidden on mobile screens below 768px */}
+          <div className="hidden md:flex items-center gap-6 bg-white px-5 py-3 rounded-[20px] border border-stone-200/80 shadow-sm text-xs font-semibold text-stone-700">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#2E7D32] animate-pulse" />
               <span>Manufacturing HQ</span>
