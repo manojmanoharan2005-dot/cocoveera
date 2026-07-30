@@ -166,13 +166,20 @@ export const LoginForm = () => {
           const storedRedirect = sessionStorage.getItem('postLoginRedirect');
           if (storedRedirect) {
             sessionStorage.removeItem('postLoginRedirect');
-            navigate(storedRedirect, { replace: true });
+            // If stored redirect is a public route, route it into dashboard
+            const cleanPath = storedRedirect.startsWith('/products/')
+              ? storedRedirect.replace('/products/', '/product/')
+              : storedRedirect;
+            navigate(cleanPath, { replace: true });
             return;
           }
           if (redirect) {
             const decodedRedirect = decodeURIComponent(redirect);
             const targetPath = decodedRedirect.startsWith('/') ? decodedRedirect : `/${decodedRedirect}`;
-            navigate(targetPath, { replace: true });
+            const cleanPath = targetPath.startsWith('/products/')
+              ? targetPath.replace('/products/', '/product/')
+              : targetPath;
+            navigate(cleanPath, { replace: true });
             return;
           }
           const pendingRfq = sessionStorage.getItem('pendingRFQ');

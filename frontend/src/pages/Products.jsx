@@ -1,377 +1,151 @@
 /**
  * File: frontend/src/pages/Products.jsx
- * Purpose: React page component representing the Products view.
+ * Purpose: Public Product Catalogue Preview.
+ * Displays ONLY Product Image, Product Name, and "View Product Details" button.
+ * Redirects unauthenticated users to Login -> Customer Dashboard Product View.
  */
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useMemo } from 'react';
 import { useAuth, apiClient } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Check, Info, X, Layers, Droplet, Wind, Compass, Sparkles, Heart, ShoppingBag, Search, SlidersHorizontal, ChevronDown, ChevronRight, Home as HomeIcon, LayoutGrid, TestTube, ShoppingCart, User as UserIcon, Star } from 'lucide-react';
-import PageHero from '../components/PageHero';
-import ImageWithFallback from '../components/common/ImageWithFallback';
+import { motion } from 'framer-motion';
+import { ArrowRight, Lock } from 'lucide-react';
 import SEO from '../components/SEO';
 import useSWR from 'swr';
-import ProductGrid from '../dashboards/ProductGrid';
-import ProductCard from '../dashboards/ProductCard';
+import ImageWithFallback from '../components/common/ImageWithFallback';
 
-// ─── Helper: Optimize Cloudinary Image ──────────────────────────────────────
-const optimizeImage = (url) => {
-  if (!url) return '';
-  // Inject transformation if it's a cloudinary URL and doesn't already have one
-  if (url.includes('cloudinary.com') && !url.includes('/upload/f_auto,q_auto')) {
-    return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
-  }
-  return url;
-};
-
-// ─── Fetcher for SWR ────────────────────────────────────────────────────────
-const fetcher = url => apiClient.get(url).then(res => res.data.data);
-
-import { useWishlist } from '../context/WishlistContext';
+const fetcher = (url) => apiClient.get(url).then((res) => res.data.data);
 
 const Products = () => {
-  const { user, fetchProfile } = useAuth();
-  const { toggleWishlist, isWishlisted } = useWishlist();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  const { data: products = [], error, isLoading: loading } = useSWR(
+
+  const { data: products = [], isLoading: loading } = useSWR(
     '/products',
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 600000 }
   );
 
-  // Blend selector state
-  const [selectedBlend, setSelectedBlend] = useState('natural');
-
-  // Filtering states
-  const [selectedCategory, setSelectedCategory] = useState('All');
-
-  // Sync category from URL
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const cat = params.get('category');
-    if (cat) {
-      setSelectedCategory(cat);
-    } else {
-      setSelectedCategory('All');
-    }
-  }, [location.search]);
-  
-  // Quote Modal states
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedBlendOption, setSelectedBlendOption] = useState('Natural');
-  const [quantity, setQuantity] = useState(10);
-  const [unitType, setUnitType] = useState('Tons');
-  const [customPh, setCustomPh] = useState('5.5 - 6.5');
-  const [customEc, setCustomEc] = useState('< 0.5 mS/cm');
-  const [customMoisture, setCustomMoisture] = useState('< 20%');
-  const [customNotes, setCustomNotes] = useState('');
-  const [shippingAddress, setShippingAddress] = useState({
-    addressLine: '',
-    city: '',
-    country: '',
-    postalCode: '',
-  });
-  
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-
-
-  const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
-    return ['All', ...uniqueCategories];
-  }, [products]);
-
-  const filteredProducts = useMemo(() => {
-    if (selectedCategory === 'All') {
-      return products;
-    }
-    return products.filter(p => p.category === selectedCategory);
-  }, [selectedCategory, products]);
-
-
-
-  const openQuoteModal = (product) => {
-    const rfqPayload = {
-      productId: product._id,
-      quantity: 1,
-      containerType: '20FT',
-      product
-    };
+  const handleViewDetails = (product) => {
+    const targetProductPath = `/product/${product.slug || product._id}`;
 
     if (!user) {
-      sessionStorage.setItem('pendingRFQ', JSON.stringify(rfqPayload));
-      navigate(`/login?redirect=${encodeURIComponent(`/dashboard/request-quote?productId=${product._id}`)}`);
+      // Store intended destination inside Customer Dashboard
+      sessionStorage.setItem('postLoginRedirect', targetProductPath);
+      navigate(`/login?redirect=${encodeURIComponent(targetProductPath)}`);
     } else {
-      navigate(`/dashboard/request-quote?productId=${product._id}`, { state: rfqPayload });
+      navigate(targetProductPath);
     }
   };
-
-  const handleAddToCart = (product) => {
-    if (!user) {
-      navigate('/login?redirect=products');
-      return;
-    }
-    
-    let existingCart = [];
-    try {
-      const stored = localStorage.getItem('cocoveera_cart');
-      if (stored) existingCart = JSON.parse(stored);
-    } catch (e) {
-      console.error('Failed to parse cart:', e);
-    }
-
-    const existsIdx = existingCart.findIndex(item => item._id === product._id && item.containerType === '20FT');
-    if (existsIdx > -1) {
-      existingCart[existsIdx].quantity += 0.25;
-    } else {
-      existingCart.push({
-        _id: product._id,
-        name: product.name,
-        price: product.price,
-        images: product.images || [],
-        containerType: '20FT',
-        quantity: 0.25
-      });
-    }
-
-    localStorage.setItem('cocoveera_cart', JSON.stringify(existingCart));
-    navigate('/dashboard', { state: { activeTab: 'Cart' } });
-  };
-
-  const handleAddToWishlist = async (product) => {
-    if (!user) {
-      navigate('/login?redirect=products');
-      return;
-    }
-    toggleWishlist(product);
-  };
-
-  const handleQuoteSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitLoading(true);
-    setError(null);
-    try {
-      const payload = {
-        productId: selectedProduct._id,
-        quantity: Number(quantity),
-        unitType,
-        ph: customPh,
-        ec: customEc,
-        moisture: customMoisture,
-        notes: `Selected Blend: ${selectedBlendOption}. ${customNotes}`,
-        shippingAddress,
-      };
-      
-      const res = await apiClient.post('/quotes', payload);
-      if (res.data.success) {
-        setSubmitSuccess(true);
-        setTimeout(() => {
-          setIsModalOpen(false);
-          setSubmitSuccess(false);
-          navigate('/dashboard', { state: { activeTab: 'My Orders' } });
-        }, 2000);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error submitting quote request');
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
-
-  const [quoteError, setQuoteError] = useState(null);
-
-  const blendsData = {
-    natural: {
-      name: 'Natural Blend (100% Cocopeat)',
-      ratio: '100% Coco Pith / 0% Chips',
-      aeration: 'Low-Medium',
-      retention: 'Very High',
-      bestFor: 'Seedling germination, propagation plugs, leafy greens, and cut flowers.',
-      desc: 'Double sieved to remove fine particles under 1mm. Delivers maximum water holding capacity for rapid germination.'
-    },
-    mix: {
-      name: 'Mix Blend (75/25 Standard)',
-      ratio: '75% Coco Pith / 25% Husk Chips',
-      aeration: 'Medium',
-      retention: 'High',
-      bestFor: 'Standard greenhouse vegetables (peppers, eggplant) and small nurseries.',
-      desc: 'Our most popular professional blend. Balanced air porosity with excellent water distribution to prevent dry spots.'
-    },
-    pro: {
-      name: 'Pro Blend (50/50 Balanced)',
-      ratio: '50% Coco Pith / 50% Husk Chips',
-      aeration: 'High',
-      retention: 'Medium-High',
-      bestFor: 'Hydroponic tomatoes, cucumbers, and medium-term vine crops.',
-      desc: 'Optimized drainage allows daily irrigation cycles and rapid nutrient flushing without root suffocation.'
-    },
-    premium: {
-      name: 'Premium Blend (30/70 High Drainage)',
-      ratio: '30% Coco Pith / 70% Husk Chips',
-      aeration: 'Very High',
-      retention: 'Medium',
-      bestFor: 'Soft fruits, blueberries, raspberries, and long-term woody plants.',
-      desc: 'Designed for plants sensitive to water-logging. Prevents root rot in highly humid greenhouse climates.'
-    },
-    supreme: {
-      name: 'Supreme Blend (100% Chips)',
-      ratio: '0% Coco Pith / 100% Husk Chips',
-      aeration: 'Maximum',
-      retention: 'Low-Medium',
-      bestFor: 'Orchids, bromeliads, and industrial soil aerating agents.',
-      desc: 'Crushed and sieved husk chips. Delivers maximum air-filled porosity for plants requiring rapid drainage.'
-    }
-  };
-
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const cartCount = useMemo(() => {
-    try {
-      const stored = localStorage.getItem('cocoveera_cart');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed.length;
-      }
-    } catch (e) {}
-    return 0;
-  }, []);
 
   return (
-    <div className="bg-[#F8FAF8] min-h-screen font-sans pb-24 sm:pb-8">
-      <SEO 
-        title="Products"
-        description="Premium organic coconut substrates."
+    <div className="bg-[#FAF9F6] min-h-screen font-sans">
+      <SEO
+        title="Our Products - Cocoveera"
+        description="Premium organic coconut substrates for global agriculture and horticulture."
         url="/products"
       />
 
-      {/* TOP HEADER */}
-      <header className="sticky top-0 z-40 bg-white shadow-sm px-5 py-3 flex items-center justify-between min-h-[60px]">
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center text-white font-bold mr-2 shadow-sm">
-              <span className="text-sm">C</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-green-800 font-extrabold text-lg leading-tight tracking-tight">cocoveera</span>
-              <span className="text-[8px] text-gray-500 font-medium">Premium Coir Products</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <>
-              <button className="text-gray-600 hover:text-[#2E7D32] transition-colors" onClick={() => navigate('/dashboard', { state: { activeTab: 'Wishlist' } })}>
-                <Heart className="w-6 h-6" />
-              </button>
-              <button className="text-gray-600 hover:text-[#2E7D32] transition-colors relative" onClick={() => navigate('/dashboard', { state: { activeTab: 'Cart' } })}>
-                <ShoppingCart className="w-6 h-6" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1.5 bg-[#2E7D32] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-              <div className="flex items-center space-x-1 cursor-pointer" onClick={() => navigate('/dashboard')}>
-                <div className="w-7 h-7 rounded-full bg-[#2E7D32] text-white flex items-center justify-center text-xs font-bold">
-                  {user.firstName?.[0]?.toUpperCase() || 'U'}
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+      {/* HEADER HERO */}
+      <div className="pt-12 pb-8 px-4 sm:px-6 lg:px-8 text-center max-w-4xl mx-auto">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-stone-900 font-poppins tracking-tight mb-3">
+          Our Products
+        </h1>
+        <p className="text-stone-600 text-sm sm:text-base font-medium max-w-2xl mx-auto leading-relaxed">
+          Premium coco based products for global agriculture and horticulture
+        </p>
+      </div>
+
+      {/* CATALOGUE PREVIEW GRID */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-xs flex flex-col items-center animate-pulse"
+              >
+                <div className="w-full h-48 bg-stone-100 rounded-2xl mb-4"></div>
+                <div className="h-5 bg-stone-200 rounded-md w-2/3 mb-4"></div>
+                <div className="h-10 bg-stone-100 rounded-xl w-full"></div>
               </div>
-            </>
-          ) : (
-            <div className="flex items-center space-x-3">
-              <button onClick={() => navigate('/login')} className="text-xs font-bold text-gray-600 hover:text-[#2E7D32]">
-                Login
-              </button>
-              <button onClick={() => navigate('/register')} className="bg-[#2E7D32] text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-green-800 transition-colors">
-                Register
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* SEARCH & FILTER */}
-      <div className="bg-white px-5 py-4 shadow-sm border-t border-gray-50 z-30 relative">
-        <div className="flex space-x-3 mb-3.5">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-3 bg-gray-50 border-none rounded-2xl text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/30 transition-all"
-              placeholder="Search coir products..."
-            />
+            ))}
           </div>
-          <button className="bg-[#2E7D32] text-white px-4 py-3 rounded-2xl flex items-center space-x-2 shadow-sm font-semibold text-sm hover:bg-green-800 transition-colors whitespace-nowrap">
-            <SlidersHorizontal className="w-4 h-4" />
-            <span>Filter</span>
-          </button>
-        </div>
-        
-        {/* Category Dropdown */}
-        <div className="flex relative">
-          <select 
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-              if (e.target.value === 'All') {
-                navigate('/products');
-              } else {
-                navigate(`/products?category=${encodeURIComponent(e.target.value)}`);
-              }
-            }}
-            className="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-200 rounded-full text-xs font-semibold text-gray-700 bg-white shadow-sm appearance-none pr-8 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/50"
-          >
-            {categories.map(cat => (
-              <option key={cat} value={cat}>
-                {cat === 'All' ? 'All Categories' : cat}
-              </option>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <motion.div
+                key={product._id}
+                whileHover={{ y: -6 }}
+                transition={{ duration: 0.25 }}
+                className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] transition-all flex flex-col items-center group cursor-pointer"
+                onClick={() => handleViewDetails(product)}
+              >
+                {/* Product Image */}
+                <div className="w-full h-48 sm:h-52 bg-stone-50/60 rounded-2xl overflow-hidden flex items-center justify-center p-3 mb-4 relative">
+                  <ImageWithFallback
+                    src={product.images?.[0]}
+                    alt={product.name}
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+
+                {/* Product Name */}
+                <h3 className="font-poppins font-extrabold text-stone-900 text-base sm:text-lg mb-4 text-center leading-snug">
+                  {product.name}
+                </h3>
+
+                {/* View Product Details Action */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewDetails(product);
+                  }}
+                  className="w-full bg-[#FAF9F6] border border-stone-200 group-hover:border-[#2E7D32] text-stone-800 group-hover:text-[#2E7D32] group-hover:bg-[#E8F5E9]/40 font-bold text-xs sm:text-sm py-3 px-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 mt-auto"
+                >
+                  <span>View Product Details</span>
+                  <ArrowRight className="w-4 h-4 text-[#2E7D32] group-hover:translate-x-1 transition-transform" />
+                </button>
+              </motion.div>
             ))}
-          </select>
-          <ChevronDown className="w-3 h-3 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        )}
+
+        {/* BOTTOM ACCREDITATION BANNER */}
+        <div className="mt-12 bg-white rounded-3xl p-6 border border-stone-200/80 shadow-xs grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-2">
+              <span className="text-lg">🌿</span>
+            </div>
+            <div className="font-bold text-xs text-stone-900">100% Natural</div>
+            <div className="text-[10px] text-stone-500">Eco-friendly & sustainable</div>
+          </div>
+
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-2">
+              <span className="text-lg">🏅</span>
+            </div>
+            <div className="font-bold text-xs text-stone-900">Premium Quality</div>
+            <div className="text-[10px] text-stone-500">Tested & verified products</div>
+          </div>
+
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-2">
+              <span className="text-lg">🌐</span>
+            </div>
+            <div className="font-bold text-xs text-stone-900">Global Export</div>
+            <div className="text-[10px] text-stone-500">Worldwide shipping</div>
+          </div>
+
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center mb-2">
+              <span className="text-lg">🤝</span>
+            </div>
+            <div className="font-bold text-xs text-stone-900">Trusted Partner</div>
+            <div className="text-[10px] text-stone-500">Reliable & consistent supply</div>
+          </div>
         </div>
       </div>
-
-      {/* BREADCRUMB */}
-      <div className="flex items-center justify-between px-5 py-4">
-        <div className="flex items-center space-x-2 text-xs font-bold">
-          <HomeIcon className="w-4 h-4 text-gray-500" />
-          <span className="text-gray-700">Marketplace</span>
-          <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
-          <span className="text-[#2E7D32]">{selectedCategory !== 'All' ? selectedCategory : 'All Categories'}</span>
-        </div>
-        <div className="bg-green-50 text-[#2E7D32] border border-green-100 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-          {filteredProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).length} items
-        </div>
-      </div>
-
-      {/* PRODUCT LIST */}
-      <div className="px-5 mb-8">
-        <ProductGrid loading={loading}>
-          <AnimatePresence>
-            {!loading && filteredProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((prod) => (
-              <ProductCard 
-                key={prod._id}
-                product={prod}
-                isWishlisted={user?.wishlist?.some(item => (item._id || item) === prod._id)}
-                onWishlistToggle={handleAddToWishlist}
-                onCardClick={(p) => {
-                  navigate(`/products/${p.slug || p._id}`);
-                }}
-                hideWishlist={true}
-              />
-            ))}
-          </AnimatePresence>
-        </ProductGrid>
-      </div>
-
     </div>
   );
 };
