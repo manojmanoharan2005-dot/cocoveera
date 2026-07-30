@@ -248,8 +248,6 @@ const CoconutSubstrates = () => {
                       <span>{dest.port}</span>
                     </div>
                   </div>
-
-                  </div>
                 </div>
 
                 {/* View Details Link */}
