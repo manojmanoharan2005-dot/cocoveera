@@ -885,29 +885,9 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 9: GLOBAL NETWORK
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white">
+      <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#FAF9F6]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12 items-start mb-10 sm:mb-12">
-            <div className="lg:col-span-1">
-              <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-3">GLOBAL NETWORK</span>
-              <h2 className="text-4xl font-poppins font-extrabold text-stone-900 leading-tight">
-                Serving Growers<br />
-                <span className="text-primary">Across The World.</span>
-              </h2>
-              <p className="text-stone-600 text-sm leading-relaxed mt-4">
-                Our products are distributed to growers in more than 50+ countries across 6 continents.
-              </p>
-              <Link
-                to="/substrates"
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg mt-6 hover:-translate-y-0.5"
-              >
-                OUR GLOBAL PRESENCE <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <div className="lg:col-span-2">
-              <GlobalMap />
-            </div>
-          </div>
+          <GlobalMap />
         </div>
       </section>
 
