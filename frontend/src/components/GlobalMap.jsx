@@ -1,486 +1,456 @@
 /**
  * File: frontend/src/components/GlobalMap.jsx
  * Purpose: Enterprise "Global Supply Chain Network" map component for Cocoveera B2B Export Website.
- * Clean, map-focused mobile experience with native gesture pan/zoom, no floating UI/popups/buttons on mobile,
- * and compact single-line touch tooltips. Full desktop UI completely preserved.
+ * Clean, modern, export-focused interactive logistics map with SVG curved routes, static layout cards,
+ * clear marker labels, responsive proportional scaling, and premium enterprise styling.
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ComposableMap, Geographies, Geography, Marker, Line, ZoomableGroup } from 'react-simple-maps';
-import { Anchor, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+import { MapPin, Factory, Ship } from 'lucide-react';
 
 const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 
 // Manufacturing HQ (Coimbatore, Tamil Nadu, India)
 export const ORIGIN = {
   id: 'coimbatore',
-  name: 'Coimbatore',
+  name: 'COIMBATORE',
+  sub: 'Manufacturing HQ',
   city: 'Coimbatore',
-  sub: 'Tamil Nadu, India',
-  role: 'Manufacturing HQ',
-  status: 'Active Export Hub',
   coordinates: [76.9558, 11.0168],
 };
 
-// 13 Destination Markets with Real Geographic Coordinates
+// 13 Export Destinations with custom label offsets & curve curvature parameters
 export const DESTINATIONS = [
   {
     id: 'usa',
     country: 'USA',
     city: 'Los Angeles Port',
-    flag: '🇺🇸',
-    port: 'Los Angeles Port',
-    secondaryPorts: ['Los Angeles Port', 'Houston Port'],
-    region: 'North America',
     coordinates: [-118.2437, 34.0522],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    image: 'https://images.unsplash.com/photo-1580655653885-65763b2597d0?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: 8, y: 3, textAnchor: 'start' },
+    labelDx: 12,
+    labelDy: -12,
+    mobileDx: 10,
+    mobileDy: -10,
+    curveOffset: -40,
+    shipPos: 0.45,
   },
   {
     id: 'canada',
     country: 'Canada',
     city: 'Toronto Port',
-    flag: '🇨🇦',
-    port: 'Toronto Port',
-    secondaryPorts: ['Toronto Port'],
-    region: 'North America',
     coordinates: [-79.3832, 43.6532],
-    products: ['Cocopeat Blocks', 'Coir Pith'],
-    image: 'https://images.unsplash.com/photo-1517935703635-27c57d382432?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: 8, y: -6, textAnchor: 'start' },
+    labelDx: 12,
+    labelDy: -28,
+    mobileDx: 10,
+    mobileDy: -24,
+    curveOffset: -50,
+    shipPos: 0.5,
   },
   {
     id: 'uk',
     country: 'UK',
     city: 'London Port',
-    flag: '🇬🇧',
-    port: 'London Port',
-    secondaryPorts: ['London Port'],
-    region: 'Europe',
     coordinates: [-0.1276, 51.5072],
-    products: ['Cocopeat Blocks', 'Coco Chips'],
-    image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: -8, y: -6, textAnchor: 'end' },
+    labelDx: -105,
+    labelDy: -24,
+    mobileDx: -80,
+    mobileDy: -22,
+    curveOffset: 35,
+    shipPos: 0.4,
   },
   {
     id: 'netherlands',
     country: 'Netherlands',
     city: 'Rotterdam Port',
-    flag: '🇳🇱',
-    port: 'Rotterdam Port',
-    secondaryPorts: ['Rotterdam Port'],
-    region: 'Europe',
     coordinates: [4.4777, 51.9244],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    image: 'https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: 8, y: 10, textAnchor: 'start' },
+    labelDx: 12,
+    labelDy: -26,
+    mobileDx: 10,
+    mobileDy: -20,
+    curveOffset: 30,
+    shipPos: 0.45,
   },
   {
     id: 'germany',
     country: 'Germany',
     city: 'Hamburg Port',
-    flag: '🇩🇪',
-    port: 'Hamburg Port',
-    secondaryPorts: ['Hamburg Port'],
-    region: 'Europe',
     coordinates: [9.9937, 53.5511],
-    products: ['Grow Bags', 'Coco Chips'],
-    image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: 8, y: -6, textAnchor: 'start' },
+    labelDx: 12,
+    labelDy: -8,
+    mobileDx: 10,
+    mobileDy: -6,
+    curveOffset: 25,
+    shipPos: 0.5,
   },
   {
     id: 'spain',
     country: 'Spain',
     city: 'Valencia Port',
-    flag: '🇪🇸',
-    port: 'Valencia Port',
-    secondaryPorts: ['Valencia Port'],
-    region: 'Europe',
     coordinates: [-0.3763, 39.4699],
-    products: ['Grow Bags', 'Coir Pith'],
-    image: 'https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: -8, y: 8, textAnchor: 'end' },
+    labelDx: -105,
+    labelDy: 10,
+    mobileDx: -80,
+    mobileDy: 8,
+    curveOffset: 30,
+    shipPos: 0.45,
   },
   {
     id: 'uae',
     country: 'UAE',
     city: 'Jebel Ali Port',
-    flag: '🇦🇪',
-    port: 'Jebel Ali Port',
-    secondaryPorts: ['Jebel Ali Port'],
-    region: 'Middle East',
     coordinates: [55.1713, 25.0657],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: -8, y: 10, textAnchor: 'end' },
+    labelDx: -95,
+    labelDy: -22,
+    mobileDx: -75,
+    mobileDy: -18,
+    curveOffset: 15,
+    shipPos: 0.5,
   },
   {
     id: 'saudi',
     country: 'Saudi Arabia',
     city: 'Jeddah Port',
-    flag: '🇸🇦',
-    port: 'Jeddah Port',
-    secondaryPorts: ['Jeddah Port'],
-    region: 'Middle East',
     coordinates: [39.1925, 21.4858],
-    products: ['Cocopeat Blocks', 'Coir Pith'],
-    image: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: -8, y: 10, textAnchor: 'end' },
+    labelDx: -105,
+    labelDy: 12,
+    mobileDx: -80,
+    mobileDy: 10,
+    curveOffset: 20,
+    shipPos: 0.5,
   },
   {
     id: 'singapore',
     country: 'Singapore',
     city: 'Singapore Port',
-    flag: '🇸🇬',
-    port: 'Singapore Port',
-    secondaryPorts: ['Singapore Port'],
-    region: 'Asia Pacific',
     coordinates: [103.8198, 1.3521],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: 8, y: 10, textAnchor: 'start' },
+    labelDx: 12,
+    labelDy: 12,
+    mobileDx: 8,
+    mobileDy: 10,
+    curveOffset: -15,
+    shipPos: 0.5,
   },
   {
     id: 'skorea',
     country: 'South Korea',
     city: 'Busan Port',
-    flag: '🇰🇷',
-    port: 'Busan Port',
-    secondaryPorts: ['Busan Port'],
-    region: 'Asia Pacific',
     coordinates: [129.0756, 35.1796],
-    products: ['Grow Bags', 'Coco Chips'],
-    image: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: -8, y: -6, textAnchor: 'end' },
+    labelDx: 12,
+    labelDy: -24,
+    mobileDx: 10,
+    mobileDy: -20,
+    curveOffset: -30,
+    shipPos: 0.55,
   },
   {
     id: 'japan',
     country: 'Japan',
     city: 'Tokyo Port',
-    flag: '🇯🇵',
-    port: 'Tokyo Port',
-    secondaryPorts: ['Tokyo Port'],
-    region: 'Asia Pacific',
     coordinates: [139.6503, 35.6762],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: 8, y: -6, textAnchor: 'start' },
+    labelDx: 12,
+    labelDy: 8,
+    mobileDx: 10,
+    mobileDy: 6,
+    curveOffset: -35,
+    shipPos: 0.5,
   },
   {
     id: 'australia',
     country: 'Australia',
     city: 'Melbourne Port',
-    flag: '🇦🇺',
-    port: 'Melbourne Port',
-    secondaryPorts: ['Melbourne Port'],
-    region: 'Asia Pacific',
     coordinates: [144.9631, -37.8136],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    image: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: 8, y: 4, textAnchor: 'start' },
+    labelDx: 12,
+    labelDy: -10,
+    mobileDx: 10,
+    mobileDy: -8,
+    curveOffset: -40,
+    shipPos: 0.5,
   },
   {
     id: 'nz',
     country: 'New Zealand',
     city: 'Auckland Port',
-    flag: '🇳🇿',
-    port: 'Auckland Port',
-    secondaryPorts: ['Auckland Port'],
-    region: 'Oceania',
     coordinates: [174.7633, -36.8485],
-    products: ['Cocopeat Blocks', 'Coco Husk Chips'],
-    image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=600&q=80',
-    labelOffset: { x: 8, y: 6, textAnchor: 'start' },
+    labelDx: -110,
+    labelDy: 12,
+    mobileDx: -85,
+    mobileDy: 10,
+    curveOffset: -50,
+    shipPos: 0.55,
   },
 ];
 
-const GlobalMap = ({ onSelectDestination, activeDestId }) => {
-  const [hoveredDest, setHoveredDest] = useState(null);
-  const [tappedDest, setTappedDest] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [position, setPosition] = useState({ coordinates: [20, 18], zoom: 1 });
+// Helper to project geographic coordinates [long, lat] to SVG Mercator space
+const projectCoord = ([long, lat], scale, center, width, height) => {
+  const rad = Math.PI / 180;
+  const lambda = long * rad;
+  const phi = lat * rad;
+  const lambda0 = center[0] * rad;
+  const phi0 = center[1] * rad;
 
-  // Mobile detection
+  // Mercator formula
+  const x = width / 2 + (scale / (2 * Math.PI)) * (lambda - lambda0);
+  const y = height / 2 - (scale / (2 * Math.PI)) * (Math.log(Math.tan(Math.PI / 4 + phi / 2)) - Math.log(Math.tan(Math.PI / 4 + phi0 / 2)));
+  return [x, y];
+};
+
+// Quadratic Bezier Curve path string & interpolation helper
+const getCurvedPath = (start, end, offset = -30) => {
+  const midX = (start[0] + end[0]) / 2;
+  const midY = (start[1] + end[1]) / 2;
+  
+  // Normal perpendicular vector for smooth arching
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+
+  const ctrlX = midX + nx * offset;
+  const ctrlY = midY + ny * offset;
+
+  return {
+    d: `M ${start[0]} ${start[1]} Q ${ctrlX} ${ctrlY} ${end[0]} ${end[1]}`,
+    ctrl: [ctrlX, ctrlY],
+  };
+};
+
+const getPointOnQuadraticBezier = (start, ctrl, end, t) => {
+  const x = (1 - t) * (1 - t) * start[0] + 2 * (1 - t) * t * ctrl[0] + t * t * end[0];
+  const y = (1 - t) * (1 - t) * start[1] + 2 * (1 - t) * t * ctrl[1] + t * t * end[1];
+  return [x, y];
+};
+
+const GlobalMap = ({ onSelectDestination, activeDestId }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        // Position & zoom tuned to auto-fit all export destinations + Coimbatore HQ on mobile
-        setPosition({ coordinates: [25, 5], zoom: 1.05 });
-      } else {
-        setPosition({ coordinates: [20, 18], zoom: 1 });
-      }
+      setIsMobile(window.innerWidth < 768);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleMarkerClick = (dest) => {
-    setTappedDest(dest);
-    if (onSelectDestination) {
-      onSelectDestination(dest);
-    }
-  };
+  // Viewport projection parameters
+  // Mobile width 800 (viewBox), Desktop 1000
+  const width = isMobile ? 800 : 1000;
+  const height = isMobile ? 480 : 650;
+  const scale = isMobile ? 125 : 160;
+  const center = isMobile ? [20, 10] : [20, 18];
 
-  const handleZoomIn = () => {
-    if (position.zoom < 4) {
-      setPosition((prev) => ({ ...prev, zoom: prev.zoom * 1.3 }));
-    }
-  };
-
-  const handleZoomOut = () => {
-    if (position.zoom > 0.8) {
-      setPosition((prev) => ({ ...prev, zoom: prev.zoom / 1.3 }));
-    }
-  };
-
-  const handleResetZoom = () => {
-    setPosition({
-      coordinates: isMobile ? [25, 5] : [20, 18],
-      zoom: isMobile ? 1.05 : 1,
-    });
-  };
-
-  const handleMoveEnd = (newPosition) => {
-    setPosition(newPosition);
-  };
+  const hqPos = projectCoord(ORIGIN.coordinates, scale, center, width, height);
 
   return (
-    <div className="relative w-full bg-[#FAF9F6] rounded-[20px] border border-stone-200/80 overflow-hidden shadow-sm touch-pan-x touch-pan-y">
+    <div className="w-full bg-white rounded-[24px] border border-stone-200/80 p-5 sm:p-8 lg:p-10 shadow-lg shadow-stone-100/70 overflow-hidden font-sans">
       
-      {/* DESKTOP ONLY Zoom Controls */}
-      {!isMobile && (
-        <div className="absolute top-4 left-4 z-40 flex flex-col gap-2 bg-white/90 backdrop-blur-md p-1.5 rounded-[14px] shadow-sm border border-stone-200">
-          <button
-            onClick={handleZoomIn}
-            aria-label="Zoom in"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleZoomOut}
-            aria-label="Zoom out"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleResetZoom}
-            aria-label="Reset zoom"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-700 hover:bg-stone-100 active:scale-95 transition-all"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
+      {/* ═══════════════════════════════════════════════════════════════════
+          HEADER SECTION
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
+        <div>
+          {/* Small Green Subtitle */}
+          <span className="text-[#2E7D32] text-xs font-extrabold uppercase tracking-widest block mb-2">
+            LOGISTICS &amp; DISTRIBUTION
+          </span>
+
+          {/* Main Heading with Highlighted "Supply Chain" */}
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#1C1917] tracking-tight mb-3">
+            Global <span className="text-[#2E7D32]">Supply Chain</span> Network
+          </h2>
+
+          {/* Subtitle Description */}
+          <p className="text-stone-500 text-xs sm:text-sm max-w-xl leading-relaxed">
+            Cocoveera exports premium coco peat, coir products, and coconut growing substrates to customers across multiple international destinations.
+          </p>
         </div>
-      )}
 
-      {/* Map Canvas Container - Mobile Height: 480px (450–500px), Desktop: 650px */}
-      <div className="w-full relative select-none bg-[#FAF9F6] h-[480px] md:h-[500px] lg:h-[550px] xl:h-[650px] flex items-center justify-center">
-        <ComposableMap
-          projection="geoMercator"
-          projectionConfig={{ scale: isMobile ? 120 : 135 }}
-          style={{ width: "100%", height: "100%", backgroundColor: "#FAF9F6" }}
-        >
-          <ZoomableGroup
-            zoom={position.zoom}
-            center={position.coordinates}
-            onMoveEnd={handleMoveEnd}
-            minZoom={0.8}
-            maxZoom={5}
-          >
-            {/* World Vector Map - Light grey continents */}
-            <Geographies geography={geoUrl}>
-              {({ geographies }) =>
-                geographies.map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill="#E5E7EB"
-                    stroke="#D1D5DB"
-                    strokeWidth={0.4}
-                    style={{
-                      default: { outline: "none" },
-                      hover: { fill: "#D1D5DB", outline: "none", transition: "all 200ms" },
-                      pressed: { outline: "none" },
-                    }}
-                  />
-                ))
-              }
-            </Geographies>
+        {/* Clean Top-Right Legend */}
+        <div className="flex items-center gap-6 bg-stone-50/90 border border-stone-200/80 px-4 py-2.5 rounded-full shadow-sm text-xs font-semibold text-stone-700 self-start md:self-auto">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2E7D32] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#2E7D32]"></span>
+            </span>
+            <span>Origin (Manufacturing HQ)</span>
+          </div>
 
-            {/* Export Route Lines - Visible with high contrast */}
-            {DESTINATIONS.map((dest) => {
-              const isSelected = activeDestId === dest.id || tappedDest?.id === dest.id;
-              const isHovered = hoveredDest?.id === dest.id;
-              const active = isSelected || isHovered;
-
-              return (
-                <g key={`route-${dest.id}`}>
-                  <Line
-                    from={ORIGIN.coordinates}
-                    to={dest.coordinates}
-                    stroke={active ? "#1B5E20" : "#2E7D32"}
-                    strokeWidth={isMobile ? (active ? 3 : 2) : (active ? 2 : 1)}
-                    strokeOpacity={active ? 0.95 : (isMobile ? 0.65 : 0.3)}
-                    strokeLinecap="round"
-                  />
-                  <Line
-                    from={ORIGIN.coordinates}
-                    to={dest.coordinates}
-                    stroke={active ? "#2E7D32" : "#388E3C"}
-                    strokeWidth={isMobile ? (active ? 3.5 : 2.2) : (active ? 2.2 : 1.2)}
-                    strokeDasharray="4 6"
-                    strokeLinecap="round"
-                    opacity={active ? 1 : (isMobile ? 0.8 : 0.4)}
-                  />
-                </g>
-              );
-            })}
-
-            {/* Destination Markers */}
-            {DESTINATIONS.map((dest) => {
-              const isSelected = activeDestId === dest.id || tappedDest?.id === dest.id;
-              const markerRadius = isMobile ? (isSelected ? 9 : 7) : (isSelected ? 6 : 4.5);
-
-              return (
-                <Marker
-                  key={`marker-${dest.id}`}
-                  coordinates={dest.coordinates}
-                  onMouseEnter={() => !isMobile && setHoveredDest(dest)}
-                  onMouseLeave={() => !isMobile && setHoveredDest(null)}
-                  onClick={() => handleMarkerClick(dest)}
-                  className="cursor-pointer outline-none"
-                >
-                  {/* Outer pulse animation */}
-                  <circle r={isMobile ? (isSelected ? 18 : 12) : (isSelected ? 14 : 8)} fill="#F59E0B" opacity={isSelected ? 0.45 : 0.3}>
-                    <animate attributeName="r" values={isMobile ? "10;20;10" : "6;14;6"} dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.6;0.15;0.6" dur="2s" repeatCount="indefinite" />
-                  </circle>
-
-                  {/* Marker Dot */}
-                  <circle
-                    r={markerRadius}
-                    fill="#F59E0B"
-                    stroke="#FFFFFF"
-                    strokeWidth={isMobile ? 2.5 : 1.5}
-                    className="transition-all duration-300 shadow-sm"
-                  />
-
-                  {/* DESKTOP ONLY Inline Country Labels */}
-                  {!isMobile && (
-                    <text
-                      x={dest.labelOffset.x}
-                      y={dest.labelOffset.y}
-                      textAnchor={dest.labelOffset.textAnchor}
-                      className={`transition-all duration-300 ${
-                        isSelected
-                          ? 'fill-[#2E7D32] text-[10px] font-bold'
-                          : 'fill-stone-600 text-[9px] font-medium'
-                      } pointer-events-none`}
-                      style={{ fontFamily: 'Inter, sans-serif' }}
-                    >
-                      {dest.country}
-                    </text>
-                  )}
-                </Marker>
-              );
-            })}
-
-            {/* Manufacturing HQ Marker (Green pulse on Coimbatore) */}
-            <Marker
-              coordinates={ORIGIN.coordinates}
-              onClick={() => isMobile && setTappedDest(ORIGIN)}
-              className="cursor-pointer z-30"
-            >
-              <circle r={isMobile ? 26 : 22} fill="#2E7D32" opacity="0.3">
-                <animate attributeName="r" values={isMobile ? "14;28;14" : "10;24;10"} dur="2.2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.2s" repeatCount="indefinite" />
-              </circle>
-
-              <circle r={isMobile ? 11 : 9} fill="#2E7D32" opacity="0.4" />
-              <circle r={isMobile ? 8 : 6} fill="#2E7D32" stroke="#FFFFFF" strokeWidth={isMobile ? 2.5 : 2} />
-              <circle r={isMobile ? 3 : 2} fill="#FFFFFF" />
-
-              {!isMobile && (
-                <g transform="translate(0, -22)">
-                  <rect
-                    x="-48"
-                    y="-12"
-                    width="96"
-                    height="18"
-                    rx="4"
-                    fill="#2E7D32"
-                    stroke="#FFFFFF"
-                    strokeWidth="1.2"
-                  />
-                  <text
-                    x="0"
-                    y="0"
-                    textAnchor="middle"
-                    fill="#FFFFFF"
-                    style={{ fontSize: '8.5px', fontFamily: 'Inter, sans-serif', fontWeight: '700' }}
-                  >
-                    Manufacturing HQ
-                  </text>
-                </g>
-              )}
-            </Marker>
-          </ZoomableGroup>
-        </ComposableMap>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#F59E0B] border border-white shadow-xs" />
+            <span>Export Destinations</span>
+          </div>
+        </div>
       </div>
 
-      {/* DESKTOP ONLY Hover Card */}
-      <AnimatePresence>
-        {!isMobile && hoveredDest && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            className="absolute top-4 right-4 z-40 pointer-events-none"
-          >
-            <div className="bg-white/95 backdrop-blur-md text-stone-900 rounded-[14px] p-3.5 shadow-md border border-stone-200 w-56 text-xs">
-              <div className="flex items-center gap-2 font-bold text-[#1C1917] mb-1">
-                <span className="text-base">{hoveredDest.flag}</span>
-                <span>{hoveredDest.country}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-stone-600 font-medium mb-1">
-                <Anchor className="w-3.5 h-3.5 text-[#2E7D32]" />
-                <span>{hoveredDest.port}</span>
-              </div>
-              <div className="text-[10px] text-stone-500 font-medium">
-                Products: {hoveredDest.products.join(', ')}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ═══════════════════════════════════════════════════════════════════
+          MAP CONTAINER
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div className="relative w-full bg-[#FAF9F6] rounded-[20px] border border-stone-200/60 overflow-hidden shadow-inner h-[450px] sm:h-[500px] lg:h-[650px] flex items-center justify-center">
+        
+        {/* React Simple Maps World Vector Layer */}
+        <ComposableMap
+          projection="geoMercator"
+          projectionConfig={{ scale, center }}
+          width={width}
+          height={height}
+          style={{ width: "100%", height: "100%", backgroundColor: "#FAF9F6" }}
+        >
+          <Geographies geography={geoUrl}>
+            {({ geographies }) =>
+              geographies.map((geo) => (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill="#E5E7EB"
+                  stroke="#D1D5DB"
+                  strokeWidth={0.5}
+                  style={{
+                    default: { outline: "none" },
+                    hover: { fill: "#E2E8F0", outline: "none" },
+                    pressed: { outline: "none" },
+                  }}
+                />
+              ))
+            }
+          </Geographies>
+        </ComposableMap>
 
-      {/* MOBILE ONLY Small Tapped Tooltip (Only Country / City) */}
-      <AnimatePresence>
-        {isMobile && tappedDest && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
-          >
-            <div
-              onClick={() => setTappedDest(null)}
-              className="bg-stone-900/90 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-lg border border-white/20 flex items-center gap-2 text-xs font-bold"
-            >
-              {tappedDest.flag && <span>{tappedDest.flag}</span>}
-              <span>{tappedDest.country || tappedDest.name}</span>
-              {tappedDest.city && <span className="opacity-70 font-normal">({tappedDest.city})</span>}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* SVG Curved Export Lines & Cargo Ships Layer */}
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="absolute inset-0 w-full h-full pointer-events-none z-10"
+        >
+          <defs>
+            <linearGradient id="routeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#2E7D32" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#81C784" stopOpacity="0.6" />
+            </linearGradient>
+          </defs>
+
+          {/* Export Curved Routes */}
+          {DESTINATIONS.map((dest) => {
+            const destPos = projectCoord(dest.coordinates, scale, center, width, height);
+            const { d, ctrl } = getCurvedPath(hqPos, destPos, dest.curveOffset || -30);
+            const isSelected = activeDestId === dest.id;
+
+            // Interpolated ship position along curve
+            const shipCoords = getPointOnQuadraticBezier(hqPos, ctrl, destPos, dest.shipPos || 0.5);
+
+            return (
+              <g key={`route-group-${dest.id}`}>
+                {/* Curved SVG Line with route animation */}
+                <motion.path
+                  d={d}
+                  fill="none"
+                  stroke={isSelected ? "#1B5E20" : "url(#routeGrad)"}
+                  strokeWidth={isSelected ? (isMobile ? 2.5 : 3) : (isMobile ? 1.5 : 2)}
+                  strokeLinecap="round"
+                  strokeDasharray="4 4"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ duration: 1.5, ease: "easeInOut" }}
+                />
+
+                {/* Optional tiny cargo ship icon on ocean route */}
+                <g transform={`translate(${shipCoords[0] - 6}, ${shipCoords[1] - 6})`}>
+                  <rect width="12" height="12" rx="6" fill="#FFFFFF" opacity="0.9" />
+                  <Ship className="w-3 h-3 text-[#2E7D32] p-0.5" />
+                </g>
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Static HTML Overlay Markers & Always-Visible Information Cards */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none z-20">
+          
+          {/* MANUFACTURING HQ MARKER (COIMBATORE) */}
+          {(() => {
+            const [x, y] = hqPos;
+            const leftPct = (x / width) * 100;
+            const topPct = (y / height) * 100;
+
+            return (
+              <div
+                key="hq-marker"
+                className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-auto flex flex-col items-center group cursor-pointer"
+                style={{ left: `${leftPct}%`, top: `${topPct}%` }}
+              >
+                {/* Green Pulsing Glow Rings */}
+                <div className="relative flex items-center justify-center">
+                  <span className="animate-ping absolute inline-flex h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-[#2E7D32] opacity-50"></span>
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#2E7D32] border-2 border-white shadow-md flex items-center justify-center text-white">
+                    <Factory className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                  </div>
+                </div>
+
+                {/* Always-Visible HQ Information Card */}
+                <div className="mt-1.5 bg-[#2E7D32] text-white px-2.5 py-1 rounded-lg shadow-md border border-white/30 text-center whitespace-nowrap">
+                  <div className="text-[10px] sm:text-[11px] font-extrabold tracking-wider leading-tight">
+                    {ORIGIN.name}
+                  </div>
+                  <div className="text-[8.5px] sm:text-[9.5px] text-white/90 font-medium leading-tight">
+                    {ORIGIN.sub}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 13 EXPORT DESTINATION MARKERS & CARDS */}
+          {DESTINATIONS.map((dest) => {
+            const destPos = projectCoord(dest.coordinates, scale, center, width, height);
+            const leftPct = (destPos[0] / width) * 100;
+            const topPct = (destPos[1] / height) * 100;
+
+            const dx = isMobile ? dest.mobileDx : dest.labelDx;
+            const dy = isMobile ? dest.mobileDy : dest.labelDy;
+            const isSelected = activeDestId === dest.id;
+
+            return (
+              <div
+                key={`dest-${dest.id}`}
+                className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-auto"
+                style={{ left: `${leftPct}%`, top: `${topPct}%` }}
+                onClick={() => onSelectDestination && onSelectDestination(dest)}
+              >
+                {/* Orange Location Pin Marker */}
+                <div className="relative flex items-center justify-center cursor-pointer group">
+                  <span className="animate-pulse absolute inline-flex h-5 w-5 rounded-full bg-[#F59E0B] opacity-40"></span>
+                  <div className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-white shadow-sm flex items-center justify-center transition-all ${
+                    isSelected ? 'bg-[#1B5E20] scale-125' : 'bg-[#F59E0B]'
+                  }`}>
+                    <MapPin className="w-2.5 h-2.5 text-white stroke-[3]" />
+                  </div>
+                </div>
+
+                {/* Always-Visible White Marker Information Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className={`absolute bg-white/95 backdrop-blur-xs text-stone-900 px-2 sm:px-2.5 py-1 rounded-md shadow-md border text-left whitespace-nowrap pointer-events-none transition-all ${
+                    isSelected ? 'border-[#2E7D32] ring-2 ring-[#2E7D32]/20' : 'border-stone-200/90'
+                  }`}
+                  style={{
+                    transform: `translate(${dx}px, ${dy}px)`,
+                  }}
+                >
+                  <div className="text-[9.5px] sm:text-[11px] font-extrabold text-[#1C1917] leading-tight flex items-center gap-1">
+                    <span>{dest.country}</span>
+                  </div>
+                  <div className="text-[8px] sm:text-[9.5px] text-stone-500 font-medium leading-tight">
+                    {dest.city}
+                  </div>
+                </motion.div>
+              </div>
+            );
+          })}
+
+        </div>
+      </div>
 
     </div>
   );
