@@ -445,22 +445,6 @@ const GlobalMap = () => {
                       <Anchor className="w-3.5 h-3.5 text-[#2E7D32]" />
                       <span>{hoveredDest.port}</span>
                     </div>
-
-                    <div className="pt-2 border-t border-stone-100">
-                      <div className="text-[10px] font-bold uppercase text-stone-400 tracking-wider mb-1">
-                        Products:
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {hoveredDest.products.map((prod, idx) => (
-                          <span
-                            key={idx}
-                            className="text-[10px] bg-stone-100 text-stone-700 font-medium px-2 py-0.5 rounded"
-                          >
-                            • {prod}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -508,7 +492,7 @@ const GlobalMap = () => {
                     </div>
 
                     {/* Primary Seaport */}
-                    <div className="mb-3">
+                    <div>
                       <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
                         Primary Seaport
                       </label>
@@ -516,21 +500,6 @@ const GlobalMap = () => {
                         <Anchor className="w-4 h-4 text-[#2E7D32] flex-shrink-0" />
                         <span>{dest.port}</span>
                       </div>
-                    </div>
-
-                    {/* Products (Expanded when selected) */}
-                    <div>
-                      <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
-                        Products Exported
-                      </label>
-                      <ul className="space-y-1">
-                        {dest.products.map((prod, idx) => (
-                          <li key={idx} className="text-xs text-stone-600 font-medium flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32]"></span>
-                            <span>{prod}</span>
-                          </li>
-                        ))}
-                      </ul>
                     </div>
                   </div>
 
