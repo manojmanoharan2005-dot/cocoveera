@@ -1,8 +1,8 @@
 /**
  * File: frontend/src/components/GlobalMap.jsx
- * Purpose: Enterprise "Global Supply Chain Network" component for Cocoveera B2B Export Website.
+ * Purpose: Enterprise "Global Supply Chain Network" logistics section for Cocoveera.
+ * Designed like enterprise logistics leaders (Maersk, DP World, DHL, Flexport).
  * Uses real latitude and longitude geographic projection (geoMercator) via react-simple-maps.
- * Features Apple-style interactive country cards with marker highlights & auto-scroll (NO modals/overlays).
  */
 
 import React, { useState, useRef, useId } from 'react';
@@ -11,11 +11,13 @@ import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simpl
 import {
   Anchor,
   Sparkles,
+  MapPin,
+  Globe2,
 } from 'lucide-react';
 
 const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 
-// Manufacturing HQ (Coimbatore, Tamil Nadu, India)
+// Manufacturing HQ (Coimbatore, Tamil Nadu, India) - Primary Visual Anchor
 const ORIGIN = {
   id: 'coimbatore',
   name: 'Coimbatore',
@@ -34,8 +36,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Los Angeles Port', 'Houston Port'],
     region: 'North America',
     coordinates: [-118.2437, 34.0522],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    labelOffset: { x: 10, y: 4, textAnchor: 'start' },
+    labelOffset: { x: 10, y: 3, textAnchor: 'start' },
   },
   {
     id: 'canada',
@@ -45,7 +46,6 @@ const DESTINATIONS = [
     secondaryPorts: ['Toronto Port'],
     region: 'North America',
     coordinates: [-79.3832, 43.6532],
-    products: ['Cocopeat Blocks', 'Coir Pith'],
     labelOffset: { x: 10, y: -6, textAnchor: 'start' },
   },
   {
@@ -56,8 +56,7 @@ const DESTINATIONS = [
     secondaryPorts: ['London Port'],
     region: 'Europe',
     coordinates: [-0.1276, 51.5072],
-    products: ['Cocopeat Blocks', 'Coco Chips'],
-    labelOffset: { x: -10, y: -8, textAnchor: 'end' },
+    labelOffset: { x: -8, y: -8, textAnchor: 'end' },
   },
   {
     id: 'netherlands',
@@ -67,7 +66,6 @@ const DESTINATIONS = [
     secondaryPorts: ['Rotterdam Port'],
     region: 'Europe',
     coordinates: [4.4777, 51.9244],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
     labelOffset: { x: 8, y: 12, textAnchor: 'start' },
   },
   {
@@ -78,8 +76,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Hamburg Port'],
     region: 'Europe',
     coordinates: [9.9937, 53.5511],
-    products: ['Grow Bags', 'Coco Chips'],
-    labelOffset: { x: 10, y: -6, textAnchor: 'start' },
+    labelOffset: { x: 8, y: -6, textAnchor: 'start' },
   },
   {
     id: 'spain',
@@ -89,8 +86,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Valencia Port'],
     region: 'Europe',
     coordinates: [-0.3763, 39.4699],
-    products: ['Grow Bags', 'Coir Pith'],
-    labelOffset: { x: -10, y: 8, textAnchor: 'end' },
+    labelOffset: { x: -8, y: 8, textAnchor: 'end' },
   },
   {
     id: 'uae',
@@ -100,8 +96,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Jebel Ali Port'],
     region: 'Middle East',
     coordinates: [55.1713, 25.0657],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    labelOffset: { x: -10, y: 12, textAnchor: 'end' },
+    labelOffset: { x: -8, y: 12, textAnchor: 'end' },
   },
   {
     id: 'saudi',
@@ -111,8 +106,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Jeddah Port'],
     region: 'Middle East',
     coordinates: [39.1925, 21.4858],
-    products: ['Cocopeat Blocks', 'Coir Pith'],
-    labelOffset: { x: -10, y: 10, textAnchor: 'end' },
+    labelOffset: { x: -8, y: 10, textAnchor: 'end' },
   },
   {
     id: 'singapore',
@@ -122,8 +116,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Singapore Port'],
     region: 'Asia Pacific',
     coordinates: [103.8198, 1.3521],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    labelOffset: { x: 10, y: 10, textAnchor: 'start' },
+    labelOffset: { x: 8, y: 10, textAnchor: 'start' },
   },
   {
     id: 'skorea',
@@ -133,8 +126,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Busan Port'],
     region: 'Asia Pacific',
     coordinates: [129.0756, 35.1796],
-    products: ['Grow Bags', 'Coco Chips'],
-    labelOffset: { x: -10, y: -8, textAnchor: 'end' },
+    labelOffset: { x: -8, y: -6, textAnchor: 'end' },
   },
   {
     id: 'japan',
@@ -144,8 +136,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Tokyo Port'],
     region: 'Asia Pacific',
     coordinates: [139.6503, 35.6762],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    labelOffset: { x: 10, y: -6, textAnchor: 'start' },
+    labelOffset: { x: 8, y: -6, textAnchor: 'start' },
   },
   {
     id: 'australia',
@@ -155,8 +146,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Melbourne Port'],
     region: 'Asia Pacific',
     coordinates: [144.9631, -37.8136],
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    labelOffset: { x: 10, y: 4, textAnchor: 'start' },
+    labelOffset: { x: 8, y: 4, textAnchor: 'start' },
   },
   {
     id: 'nz',
@@ -166,8 +156,7 @@ const DESTINATIONS = [
     secondaryPorts: ['Auckland Port'],
     region: 'Oceania',
     coordinates: [174.7633, -36.8485],
-    products: ['Cocopeat Blocks', 'Coco Husk Chips'],
-    labelOffset: { x: 10, y: 6, textAnchor: 'start' },
+    labelOffset: { x: 8, y: 6, textAnchor: 'start' },
   },
 ];
 
@@ -202,7 +191,6 @@ const GlobalMap = () => {
 
   const cardRefs = useRef({});
 
-  // Handler when a marker or country card is selected
   const handleSelectCountry = (dest) => {
     setSelectedDestId(dest.id);
     const cardEl = cardRefs.current[dest.id];
@@ -212,9 +200,9 @@ const GlobalMap = () => {
   };
 
   return (
-    <section className="w-full font-inter bg-[#FAF9F6] text-stone-800 antialiased selection:bg-[#2E7D32]/20">
+    <section className="w-full font-inter bg-white text-stone-800 antialiased selection:bg-[#2E7D32]/20">
       {/* Outer Card Container */}
-      <div className="w-full bg-white rounded-[20px] p-4 sm:p-6 lg:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-stone-200/80 overflow-hidden">
+      <div className="w-full bg-white rounded-[20px] p-4 sm:p-6 lg:p-10 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-stone-200/80 overflow-hidden">
         
         {/* =========================================================================
             1. TOP HEADER & LEGEND
@@ -239,7 +227,7 @@ const GlobalMap = () => {
           </div>
 
           {/* Top Right Legend */}
-          <div className="flex flex-wrap items-center gap-4 bg-[#FAF9F6] border border-stone-200/80 px-4 py-2.5 rounded-xl self-start">
+          <div className="flex flex-wrap items-center gap-4 bg-stone-50 border border-stone-200/80 px-4 py-2.5 rounded-xl self-start">
             <div className="flex items-center gap-2 text-xs font-semibold text-stone-700">
               <span className="w-3 h-3 rounded-full bg-[#2E7D32] shadow-[0_0_8px_rgba(46,125,50,0.6)] animate-pulse"></span>
               <span>Manufacturing HQ</span>
@@ -253,21 +241,19 @@ const GlobalMap = () => {
         </div>
 
         {/* =========================================================================
-            2. MAIN INTERACTIVE MAP SECTION
+            2. MAIN ENTERPRISE LOGISTICS MAP CANVAS (PURE WHITE BG & LIGHT GREY CONTINENTS)
         ========================================================================= */}
-        <div className="relative w-full bg-[#F5F7F4] rounded-[16px] border border-stone-200/70 overflow-hidden shadow-inner mb-8">
-          {/* Subtle Grid overlay */}
-          <div className="absolute inset-0 bg-[radial-gradient(#2E7D32_0.75px,transparent_0.75px)] [background-size:24px_24px] opacity-10 pointer-events-none z-10"></div>
-
-          <div className="w-full relative select-none">
+        <div className="relative w-full bg-white rounded-[16px] border border-stone-200/90 overflow-hidden shadow-xs mb-8">
+          <div className="w-full relative select-none bg-white">
             <ComposableMap
               projection="geoMercator"
               projectionConfig={{ scale: 135, center: [20, 18] }}
-              style={{ width: "100%", height: "auto" }}
+              style={{ width: "100%", height: "auto", backgroundColor: "#FFFFFF" }}
             >
               <defs>
+                {/* Glow Filter for Coimbatore HQ */}
                 <filter id={`glow-${filterId}`} x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="5" result="coloredBlur" />
+                  <feGaussianBlur stdDeviation="4" result="coloredBlur" />
                   <feMerge>
                     <feMergeNode in="coloredBlur" />
                     <feMergeNode in="SourceGraphic" />
@@ -275,19 +261,19 @@ const GlobalMap = () => {
                 </filter>
               </defs>
 
-              {/* Real World Atlas Geographies */}
+              {/* Clean Vector World Map - Light Grey Continents on Pure White */}
               <Geographies geography={geoUrl}>
                 {({ geographies }) =>
                   geographies.map((geo) => (
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
-                      fill="#E8F5E9"
-                      stroke="#C8E6C9"
+                      fill="#EEEEEE"
+                      stroke="#E0E0E0"
                       strokeWidth={0.5}
                       style={{
                         default: { outline: "none" },
-                        hover: { fill: "#C8E6C9", outline: "none", transition: "all 200ms" },
+                        hover: { fill: "#E2E8F0", outline: "none", transition: "all 200ms" },
                         pressed: { outline: "none" },
                       }}
                     />
@@ -295,7 +281,7 @@ const GlobalMap = () => {
                 }
               </Geographies>
 
-              {/* REAL CURVED SHIPPING ROUTES */}
+              {/* ELEGANT THIN CURVED SHIPPING ROUTES (ORIGINATING EXACTLY FROM COIMBATORE) */}
               {DESTINATIONS.map((dest) => {
                 const isSelected = selectedDestId === dest.id;
                 const isHovered = hoveredDest?.id === dest.id;
@@ -303,28 +289,32 @@ const GlobalMap = () => {
 
                 return (
                   <g key={`route-${dest.id}`}>
+                    {/* Base Solid Route Line */}
                     <Line
                       from={ORIGIN.coordinates}
                       to={dest.coordinates}
-                      stroke={active ? "#2E7D32" : "#A26B3D"}
-                      strokeWidth={active ? 2.5 : 1.5}
-                      strokeOpacity={active ? 0.9 : 0.25}
+                      stroke={active ? "#2E7D32" : "#94A3B8"}
+                      strokeWidth={active ? 1.8 : 1}
+                      strokeOpacity={active ? 0.9 : 0.4}
                       strokeLinecap="round"
                     />
+
+                    {/* Thin Dash Overlay */}
                     <Line
                       from={ORIGIN.coordinates}
                       to={dest.coordinates}
-                      stroke="#2E7D32"
-                      strokeWidth={active ? 3 : 2}
-                      strokeDasharray="6 8"
+                      stroke={active ? "#2E7D32" : "#64748B"}
+                      strokeWidth={active ? 2 : 1.2}
+                      strokeDasharray="4 6"
                       strokeLinecap="round"
-                      className="animate-pulse"
+                      opacity={active ? 1 : 0.5}
+                      className={active ? "animate-pulse" : ""}
                     />
                   </g>
                 );
               })}
 
-              {/* DESTINATION MARKERS (INTERACTIVE HIGHLIGHT ON SELECTION) */}
+              {/* DESTINATION MARKERS (ACCURATE LAT/LONG) */}
               {DESTINATIONS.map((dest) => {
                 const isSelected = selectedDestId === dest.id;
                 const isHovered = hoveredDest?.id === dest.id;
@@ -338,41 +328,41 @@ const GlobalMap = () => {
                     onClick={() => handleSelectCountry(dest)}
                     className="cursor-pointer outline-none transition-transform duration-300"
                   >
-                    {/* Active Selected Marker Pulse Animation */}
+                    {/* Pulse aura when selected */}
                     {isSelected && (
-                      <circle r="16" fill="#2E7D32" opacity="0.3">
-                        <animate attributeName="r" values="8;18;8" dur="1.6s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.5;0.1;0.5" dur="1.6s" repeatCount="indefinite" />
+                      <circle r="14" fill="#2E7D32" opacity="0.25">
+                        <animate attributeName="r" values="6;16;6" dur="1.8s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.4;0.05;0.4" dur="1.8s" repeatCount="indefinite" />
                       </circle>
                     )}
 
                     {/* Outer Pin Halo */}
                     <circle
-                      r={isSelected ? 8 : 6}
+                      r={isSelected ? 6.5 : 4.5}
                       fill={isSelected ? '#2E7D32' : '#F59E0B'}
-                      opacity={isSelected ? 0.9 : 0.4}
+                      opacity={isSelected ? 0.95 : 0.6}
                       className="transition-all duration-300"
                     />
 
-                    {/* Inner Center Dot */}
+                    {/* Inner Center Point */}
                     <circle
-                      r={isSelected ? 5 : 3.5}
+                      r={isSelected ? 4 : 2.5}
                       fill={isSelected ? '#2E7D32' : '#F59E0B'}
                       stroke="#FFFFFF"
-                      strokeWidth={isSelected ? 2 : 1.5}
+                      strokeWidth={1.5}
                       className="transition-all duration-300"
                     />
 
-                    {/* Country Label */}
+                    {/* Non-overlapping Label */}
                     <text
                       x={dest.labelOffset.x}
                       y={dest.labelOffset.y}
                       textAnchor={dest.labelOffset.textAnchor}
                       className={`hidden lg:block transition-all duration-300 ${
                         isSelected
-                          ? 'fill-[#2E7D32] text-[11px] font-black'
-                          : 'fill-stone-700 text-[10px] font-bold'
-                      } pointer-events-none drop-shadow-xs`}
+                          ? 'fill-[#2E7D32] text-[10px] font-black'
+                          : 'fill-stone-600 text-[9px] font-semibold'
+                      } pointer-events-none`}
                       style={{ fontFamily: 'Inter, sans-serif' }}
                     >
                       {dest.country}
@@ -381,27 +371,29 @@ const GlobalMap = () => {
                 );
               })}
 
-              {/* MANUFACTURING HQ MARKER (COIMBATORE) */}
-              <Marker coordinates={ORIGIN.coordinates} className="cursor-pointer">
-                <circle r="18" fill="#2E7D32" opacity="0.2" filter={`url(#glow-${filterId})`}>
-                  <animate attributeName="r" values="12;24;12" dur="2.2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.4;0.05;0.4" dur="2.2s" repeatCount="indefinite" />
+              {/* MANUFACTURING HQ MARKER (COIMBATORE) - PROMINENT VISUAL FOCUS */}
+              <Marker coordinates={ORIGIN.coordinates} className="cursor-pointer z-30">
+                {/* Large Pulsing Primary Aura */}
+                <circle r="22" fill="#2E7D32" opacity="0.2" filter={`url(#glow-${filterId})`}>
+                  <animate attributeName="r" values="14;28;14" dur="2.4s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.35;0.05;0.35" dur="2.4s" repeatCount="indefinite" />
                 </circle>
 
-                <circle r="10" fill="#2E7D32" opacity="0.3" />
-                <circle r="6" fill="#2E7D32" stroke="#FFFFFF" strokeWidth="2" />
-                <circle r="2" fill="#FFFFFF" />
+                <circle r="12" fill="#2E7D32" opacity="0.35" />
+                <circle r="7" fill="#2E7D32" stroke="#FFFFFF" strokeWidth="2.5" />
+                <circle r="2.5" fill="#FFFFFF" />
 
-                <g transform="translate(0, -22)">
+                {/* HQ Badge Label */}
+                <g transform="translate(0, -24)">
                   <rect
-                    x="-48"
-                    y="-12"
-                    width="96"
-                    height="18"
-                    rx="4"
+                    x="-50"
+                    y="-13"
+                    width="100"
+                    height="20"
+                    rx="5"
                     fill="#2E7D32"
                     stroke="#FFFFFF"
-                    strokeWidth="1"
+                    strokeWidth="1.5"
                     className="shadow-md"
                   />
                   <text
@@ -409,8 +401,8 @@ const GlobalMap = () => {
                     y="0"
                     textAnchor="middle"
                     fill="#FFFFFF"
-                    className="text-[9px] font-extrabold tracking-tight pointer-events-none"
-                    style={{ fontSize: '9px', fontFamily: 'Inter, sans-serif', fontWeight: '800' }}
+                    className="text-[9px] font-black tracking-tight pointer-events-none"
+                    style={{ fontSize: '9px', fontFamily: 'Inter, sans-serif', fontWeight: '900' }}
                   >
                     Manufacturing HQ
                   </text>
@@ -473,10 +465,10 @@ const GlobalMap = () => {
                   key={`card-${dest.id}`}
                   ref={(el) => (cardRefs.current[dest.id] = el)}
                   onClick={() => handleSelectCountry(dest)}
-                  className={`min-w-[280px] sm:min-w-[320px] snap-center rounded-2xl p-5 border transition-all duration-300 cursor-pointer flex flex-col justify-between ${
+                  className={`min-w-[260px] sm:min-w-[300px] snap-center rounded-2xl p-5 border transition-all duration-300 cursor-pointer flex flex-col justify-between ${
                     isSelected
                       ? 'bg-white border-[#2E7D32] shadow-[0_8px_24px_rgba(46,125,50,0.12)] ring-2 ring-[#2E7D32]/20'
-                      : 'bg-[#FAF9F6] border-stone-200/80 hover:border-stone-300 hover:bg-white shadow-xs'
+                      : 'bg-stone-50 border-stone-200/80 hover:border-stone-300 hover:bg-white shadow-xs'
                   }`}
                 >
                   <div>
@@ -496,7 +488,7 @@ const GlobalMap = () => {
                       <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
                         Primary Seaport
                       </label>
-                      <div className="flex items-center gap-2 text-xs font-bold text-stone-800 bg-white/80 border border-stone-200/60 p-2.5 rounded-xl">
+                      <div className="flex items-center gap-2 text-xs font-bold text-stone-800 bg-white border border-stone-200/60 p-2.5 rounded-xl">
                         <Anchor className="w-4 h-4 text-[#2E7D32] flex-shrink-0" />
                         <span>{dest.port}</span>
                       </div>
