@@ -48,11 +48,11 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'About Us', path: '/about' },
-    { name: 'Products', path: '/products' },
-    { name: 'Production Process', path: '/production-process' },
     { name: 'Global Network', path: '/global-network' },
+    { name: 'Products', path: '/products' },
     { name: 'Contact', path: '/contact' },
+    { name: 'Production Process', path: '/production-process' },
+    { name: 'About Us', path: '/about' },
   ];
 
   return (
@@ -80,16 +80,16 @@ const Navbar = () => {
 
       {/* ── MAIN NAV ── */}
       <nav className="bg-white shadow-[0_3px_12px_rgba(0,0,0,0.04)] border-b border-stone-200/60 transition-all duration-500">
-        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 flex items-center h-[95px] gap-4 sm:gap-8">
+        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 flex items-center h-[60px] gap-4 sm:gap-8">
 
           {/* LOGO */}
-          <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <img
               src="/logo.webp"
               alt="Cocoveera"
-              className="h-10 sm:h-12 object-contain transition-transform duration-300 hover:scale-105"
+              className="h-8 sm:h-10 object-contain transition-transform duration-300 hover:scale-105"
             />
-            <span className="font-poppins font-extrabold text-lg sm:text-xl tracking-wide hidden sm:block">
+            <span className="font-poppins font-extrabold text-base sm:text-lg tracking-wide hidden sm:block">
               <span className="text-[#8B4513]">COCO</span>
               <span className="text-[#2E7D32]">VEERA</span>
             </span>
@@ -103,7 +103,7 @@ const Navbar = () => {
                 to={link.path}
                 end={link.path === '/'}
                 className={({ isActive }) =>
-                  `font-poppins text-xs uppercase tracking-wider whitespace-nowrap relative py-1 transition-colors duration-300 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-[#2E7D32] after:transition-transform after:duration-300 ${
+                  `font-poppins text-xs uppercase tracking-wider whitespace-nowrap relative py-0.5 transition-colors duration-300 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-[#2E7D32] after:transition-transform after:duration-300 ${
                     isActive
                       ? 'text-[#2E7D32] font-bold after:scale-x-100'
                       : 'text-[#4A3A1F] font-semibold hover:text-[#2E7D32] after:scale-x-0 hover:after:scale-x-100'
@@ -116,7 +116,7 @@ const Navbar = () => {
           </div>
 
           {/* RIGHT ACTIONS – desktop */}
-          <div className="hidden xl:flex items-center gap-5 flex-shrink-0">
+          <div className="hidden xl:flex items-center gap-4 flex-shrink-0">
             {/* Language picker */}
             <div className="relative">
               <button
@@ -151,7 +151,7 @@ const Navbar = () => {
               <div className="flex items-center gap-3">
                 <Link
                   to={user.role === 'admin' ? '/admin' : '/dashboard'}
-                  className="flex items-center gap-2 text-xs font-bold text-[#4A3A1F] hover:text-[#2E7D32] bg-white/50 px-3.5 py-2 rounded-xl border border-[#E0D0AB] transition-colors"
+                  className="flex items-center gap-2 text-xs font-bold text-[#4A3A1F] hover:text-[#2E7D32] bg-white/50 px-3 py-1.5 rounded-xl border border-[#E0D0AB] transition-colors"
                 >
                   <User className="w-4 h-4 text-[#2E7D32]" />
                   <span>Dashboard</span>
@@ -167,28 +167,18 @@ const Navbar = () => {
               <>
                 <Link
                   to="/login"
-                  className="text-xs font-bold uppercase tracking-wider text-[#4A3A1F] hover:text-[#2E7D32] transition-colors px-2 py-1"
+                  className="text-xs font-bold uppercase tracking-wider text-[#4A3A1F] hover:text-[#2E7D32] transition-colors px-2 py-0.5"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-transparent border-2 border-[#2E7D32] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white font-poppins text-xs font-bold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-sm"
+                  className="bg-transparent border-2 border-[#2E7D32] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white font-poppins text-xs font-bold px-4 py-1.5 rounded-xl transition-all duration-300 shadow-sm"
                 >
                   Register
                 </Link>
               </>
             )}
-
-            {/* Brochure CTA */}
-            <a
-              href="/cocoveera-brochure.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#2E7D32] hover:bg-[#256528] text-white font-poppins text-xs font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-300 whitespace-nowrap active:scale-95"
-            >
-              Brochure
-            </a>
           </div>
 
           {/* MOBILE TOGGLE */}
@@ -196,9 +186,9 @@ const Navbar = () => {
             <button
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? 'Close menu' : 'Open menu'}
-              className="w-11 h-11 flex items-center justify-center rounded-xl text-[#4A3A1F] hover:bg-[#E8D7B0]/50 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-[#4A3A1F] hover:bg-[#E8D7B0]/50 transition-colors"
             >
-              {isOpen ? <X className="w-6 h-6 text-[#2E7D32]" /> : <Menu className="w-6 h-6 text-[#4A3A1F]" />}
+              {isOpen ? <X className="w-5 h-5 text-[#2E7D32]" /> : <Menu className="w-5 h-5 text-[#4A3A1F]" />}
             </button>
           </div>
         </div>
@@ -251,15 +241,6 @@ const Navbar = () => {
                   Dashboard
                 </Link>
               )}
-              <a
-                href="/cocoveera-brochure.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center bg-[#2E7D32] hover:bg-[#256528] text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow"
-              >
-                Download Brochure
-              </a>
             </div>
           </div>
         )}

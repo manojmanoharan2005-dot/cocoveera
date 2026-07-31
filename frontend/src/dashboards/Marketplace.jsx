@@ -20,6 +20,23 @@ const fetcher = url => axios.get(url).then(res => res.data.data);
 
 import { useWishlist } from '../context/WishlistContext';
 
+// Helper for flexible, case-insensitive, singular/plural category matching
+const isCategoryMatch = (productCat, selectedCat) => {
+  if (!productCat || !selectedCat) return false;
+  if (selectedCat === 'All') return true;
+  
+  const pCat = String(productCat).toLowerCase().trim();
+  const sCat = String(selectedCat).toLowerCase().trim();
+
+  if (pCat === sCat) return true;
+  if (pCat.startsWith(sCat) || sCat.startsWith(pCat)) return true;
+  if (pCat.includes(sCat) || sCat.includes(pCat)) return true;
+
+  const pClean = pCat.replace(/s$/i, '').replace(/\s+/g, '');
+  const sClean = sCat.replace(/s$/i, '').replace(/\s+/g, '');
+  return pClean === sClean || pClean.includes(sClean) || sClean.includes(pClean);
+};
+
 export const Marketplace = () => {
   const { user, fetchProfile } = useAuth();
   const { wishlist, toggleWishlist } = useWishlist();
@@ -32,9 +49,10 @@ export const Marketplace = () => {
     filterDrawerOpen, setFilterDrawerOpen 
   } = useOutletContext();
   
-  const { data: products = [], isLoading: loading } = useSWR(`${API_URL}/products`, fetcher, { 
-    revalidateOnFocus: false,
-    dedupingInterval: 60000 
+  const { data: products = [], isLoading: loading, mutate: refetchProducts } = useSWR(`${API_URL}/products`, fetcher, { 
+    revalidateOnFocus: true,
+    revalidateOnMount: true,
+    dedupingInterval: 10000 
   });
 
   const onWishlistToggle = async (product) => {
@@ -87,6 +105,23 @@ export const Marketplace = () => {
     dedupingInterval: 600000 
   });
 
+  // Restore scroll position on back navigation
+  useEffect(() => {
+    try {
+      const savedScroll = sessionStorage.getItem('cocoveera_mkt_scroll');
+      if (savedScroll !== null) {
+        const mainEl = document.querySelector('main');
+        if (mainEl) {
+          const scrollPos = parseInt(savedScroll, 10);
+          const timer = setTimeout(() => {
+            mainEl.scrollTo({ top: scrollPos, behavior: 'instant' });
+          }, 100);
+          return () => clearTimeout(timer);
+        }
+      }
+    } catch (e) {}
+  }, [searchParams]);
+
   useEffect(() => {
     let result = [...(products || [])];
 
@@ -103,10 +138,7 @@ export const Marketplace = () => {
 
     // 2. Collection category filter
     if (selectedCollection !== 'All') {
-      result = result.filter(p => {
-        const cat = p.category || '';
-        return cat === selectedCollection;
-      });
+      result = result.filter(p => isCategoryMatch(p.category, selectedCollection));
     }
 
     // 3. Price Range filter
@@ -122,14 +154,13 @@ export const Marketplace = () => {
     // 5. Rating filter
     if (ratingFilter > 0) {
       result = result.filter(p => {
-        const r = p.specifications?.ph ? 4.8 : 4.5; // mocked rating
+        const r = p.specifications?.ph ? 4.8 : 4.5;
         return r >= ratingFilter;
       });
     }
 
-    // 6. Marketplace sub-tabs logic (Mocking differences based on tab choice)
+    // 6. Marketplace sub-tabs logic
     if (activeMarketplaceTab === 'Latest') {
-      // Show newer items by reversing or slicing
       result = result.slice().reverse();
     } else if (activeMarketplaceTab === 'Best Seller') {
       result = result.filter(p => p.price > 310);
@@ -203,6 +234,16 @@ export const Marketplace = () => {
       image: dbCat?.image || catProducts[0]?.images?.[0] || 'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'
     };
   });
+
+  const handleProductCardClick = (p) => {
+    try {
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        sessionStorage.setItem('cocoveera_mkt_scroll', mainEl.scrollTop.toString());
+      }
+    } catch (e) {}
+    navigate(`/product/${p.slug || p._id}`);
+  };
 
   return (
     <div className="space-y-8 text-stone-900 font-sans">
@@ -317,18 +358,25 @@ export const Marketplace = () => {
                 onWishlistToggle={onWishlistToggle}
                 onAddToCart={onAddToCart}
                 onBuyNow={onBuyNow}
-                onCardClick={(p) => navigate(`/product/${p.slug || p._id}`)}
+                onCardClick={handleProductCardClick}
               />
             ))}
           </ProductGrid>
 
           {/* Empty State */}
           {!loading && displayedProducts.length === 0 && (
-            <div className="bg-white rounded-[24px] border border-stone-250 p-16 text-center space-y-4 max-w-lg mx-auto shadow-sm mt-8">
+            <div className="bg-white rounded-[24px] border border-stone-200 p-12 text-center space-y-4 max-w-lg mx-auto shadow-sm mt-8">
               <div className="w-16 h-16 bg-[#F7F9F7] text-stone-400 rounded-full flex items-center justify-center mx-auto border border-stone-100">
-                <Info className="w-6 h-6" />
+                <Info className="w-6 h-6 text-[#2E7D32]" />
               </div>
-              <h4 className="font-poppins font-extrabold text-stone-900 text-sm">No products found</h4>
+              <h4 className="font-poppins font-extrabold text-stone-900 text-base">No products match current filters</h4>
+              <p className="text-xs text-stone-500 font-medium">Try clearing your filters or viewing all collections.</p>
+              <button
+                onClick={handleClearFilters}
+                className="bg-[#2E7D32] text-white text-xs font-bold px-6 py-3 rounded-full hover:bg-[#236327] transition shadow-sm cursor-pointer"
+              >
+                Clear All Filters & Reset
+              </button>
             </div>
           )}
         </div>

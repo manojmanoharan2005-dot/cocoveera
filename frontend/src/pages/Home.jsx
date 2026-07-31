@@ -136,7 +136,7 @@ const whyFeatures = [
   { icon: Leaf, title: 'Eco Friendly', desc: '100% natural coconut byproducts – sustainable and eco-certified.' },
   { icon: Truck, title: 'Global Shipping', desc: 'Seamless worldwide logistics with port-to-port container delivery.' },
   { icon: ShieldCheck, title: 'Certified Company', desc: 'ISO certified exporter with international trade compliance.' },
-  { icon: Users, title: 'Trusted Globally', desc: 'Over 1000+ happy customers across 50+ countries worldwide.' },
+  { icon: Users, title: 'Trusted Globally', desc: 'Over 50+ happy customers across 15+ countries worldwide.' },
 ];
 
 // ─── Quality Tests ─────────────────────────────────────────────────────────────
@@ -214,7 +214,7 @@ const productionSteps = [
     num: '06',
     icon: Truck,
     title: 'Export',
-    desc: 'Containerized shipments dispatched from Coimbatore to 50+ countries worldwide.',
+    desc: 'Containerized shipments dispatched from Coimbatore to 15+ countries worldwide.',
   },
 ];
 
@@ -224,25 +224,25 @@ const testimonials = [
     quote: "Cocoveera's coco peat quality is simply outstanding. Our plants have shown remarkable growth with their buffered substrates.",
     author: 'John Williams',
     location: 'USA',
-    rating: 5,
+    rating: 4.8,
   },
   {
     quote: 'Reliable quality, timely delivery and great support. Highly recommended for all serious greenhouse operators.',
     author: 'Maria Gonzalez',
     location: 'Spain',
-    rating: 5,
+    rating: 4.2,
   },
   {
     quote: 'We have been importing from Cocoveera for years. Fully and professional team, consistent quality every shipment.',
     author: 'David Müller',
     location: 'Germany',
-    rating: 5,
+    rating: 3.8,
   },
   {
     quote: 'The most consistent coconut products we have ever used. Our middle have never looked better after switching.',
     author: 'Ahmed Al Mansoori',
     location: 'UAE',
-    rating: 5,
+    rating: 4.6,
   },
 ];
 
@@ -370,7 +370,7 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 1: HERO — Premium Floating Video Card Canvas
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="pt-[169px] bg-white">
+      <div className="pt-2 sm:pt-4 bg-white">
         <section 
           style={{ height: 'clamp(420px, 65vh, 720px)', minHeight: '420px', maxHeight: '720px' }}
           className="relative mx-3 sm:mx-5 lg:mx-[20px] xl:mx-auto xl:max-w-[calc(100%-40px)] mt-[18px] mb-6 rounded-[16px] sm:rounded-[20px] lg:rounded-[24px] overflow-hidden bg-stone-100 shadow-md border border-stone-200/60 flex items-center justify-center"
@@ -691,9 +691,9 @@ const Home = () => {
       <section ref={statsRef} className="bg-white border-y border-stone-100 py-10 sm:py-12">
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-            <StatCounter value={50} suffix="+" label="Countries Served" icon={Globe2} started={statsStarted} />
-            <StatCounter value={1000} suffix="+" label="Happy Customers" icon={Users} started={statsStarted} />
-            <StatCounter value={5000} suffix="+" label="Shipments Delivered" icon={Truck} started={statsStarted} />
+            <StatCounter value={15} suffix="+" label="Countries Served" icon={Globe2} started={statsStarted} />
+            <StatCounter value={50} suffix="+" label="Happy Customers" icon={Users} started={statsStarted} />
+            <StatCounter value={80} suffix="+" label="Shipments Delivered" icon={Truck} started={statsStarted} />
             <StatCounter value={99} suffix="%" label="Quality Consistency" icon={Award} started={statsStarted} />
           </div>
         </div>
@@ -732,11 +732,17 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 7: QUALITY TESTING (LOCKED PREVIEW / COMING SOON)
       ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 7: QUALITY TESTING (LOCKED PREVIEW / COMING SOON)
+      ═══════════════════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white relative overflow-hidden group cursor-not-allowed select-none">
         <div className="max-w-7xl mx-auto relative rounded-3xl overflow-hidden">
           
-          {/* UNDERLYING SECTION CONTENT (INACTIVE & BLURRED) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center filter blur-md opacity-60 pointer-events-none select-none">
+          {/* UNDERLYING SECTION CONTENT (INACTIVE & 90% VISIBLE WITH LIGHT 2.5px BLUR) */}
+          <div 
+            style={{ filter: 'blur(2.5px) saturate(0.95)', opacity: 0.9 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center pointer-events-none select-none"
+          >
             {/* Left: Content */}
             <div className="space-y-6">
               <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block">QUALITY TESTING</span>
@@ -757,12 +763,12 @@ const Home = () => {
                   </div>
                 ))}
               </div>
-              {/* Disabled View Test Reports button (preserved, blurred & pointer-events-none) */}
+              {/* Disabled View Test Reports button (preserved & pointer-events-none) */}
               <button
                 disabled
                 aria-disabled="true"
                 tabIndex={-1}
-                className="inline-flex items-center gap-2 bg-primary text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl shadow-lg opacity-75 cursor-not-allowed pointer-events-none filter blur-[1px]"
+                className="inline-flex items-center gap-2 bg-primary text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl shadow-lg opacity-75 cursor-not-allowed pointer-events-none"
               >
                 VIEW TEST REPORTS <ArrowRight className="w-4 h-4" />
               </button>
@@ -791,46 +797,37 @@ const Home = () => {
             </div>
           </div>
 
-          {/* OVERLAY & PREMIUM LOCK CARD */}
-          <div className="absolute inset-0 bg-white/75 backdrop-blur-md rounded-3xl flex items-center justify-center p-6 transition-colors duration-300 group-hover:bg-white/85 z-20 cursor-not-allowed">
+          {/* ELEGANT & MINIMAL FLOATING LOCK OVERLAY */}
+          <div className="absolute inset-0 bg-white/[0.12] backdrop-blur-[2px] rounded-3xl flex items-center justify-center p-4 z-20 cursor-not-allowed">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="bg-white/95 backdrop-blur-xl border border-stone-200/80 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-3xl p-6 sm:p-10 max-w-lg w-full text-center space-y-4 relative overflow-hidden"
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="flex flex-col items-center justify-center text-center space-y-2 pointer-events-none select-none"
             >
-              {/* Soft Ambient Glows */}
-              <div className="absolute -top-12 -left-12 w-28 h-28 bg-[#2E7D32]/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-12 -right-12 w-28 h-28 bg-[#2E7D32]/10 rounded-full blur-2xl pointer-events-none" />
+              {/* Floating Green Lock Circle */}
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                className="w-12 h-12 bg-[#2E7D32] text-white rounded-full flex items-center justify-center shadow-xl shadow-green-900/30 border-2 border-white/80"
+              >
+                <Lock className="w-5 h-5 text-white" />
+              </motion.div>
 
-              {/* Circular Icon Badge */}
-              <div className="w-14 h-14 bg-[#2E7D32] rounded-full flex items-center justify-center mx-auto shadow-md shadow-green-900/20">
-                <Lock className="w-7 h-7 text-white" />
-              </div>
+              {/* Gentle Pulsing COMING SOON Label */}
+              <motion.div
+                animate={{ opacity: [0.75, 1, 0.75] }}
+                transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+                className="text-[#2E7D32] font-poppins font-black text-xs sm:text-sm tracking-[0.2em] uppercase pt-1"
+              >
+                COMING SOON
+              </motion.div>
 
-              {/* Title & Subtitle */}
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-poppins font-extrabold text-stone-900 tracking-tight">
-                  Quality Testing
-                </h2>
-                <p className="text-[#2E7D32] font-poppins font-bold text-xs sm:text-sm tracking-wider uppercase mt-1">
-                  Coming Soon
-                </p>
-              </div>
-
-              {/* Description */}
-              <p className="text-stone-600 text-xs sm:text-sm font-medium leading-relaxed max-w-sm mx-auto">
-                Our laboratory quality reports and certification portal will be available soon. Stay tuned for verified product testing.
+              {/* Small Subtitle */}
+              <p className="text-stone-800 font-poppins font-bold text-xs sm:text-sm tracking-tight opacity-90 drop-shadow-xs">
+                Quality Testing Portal
               </p>
-
-              {/* Premium Pill Badge */}
-              <div className="pt-2">
-                <span className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#2E7D32] border border-[#2E7D32]/30 text-xs font-extrabold px-4 py-1.5 rounded-full shadow-xs animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-[#2E7D32]" />
-                  Launching Soon
-                </span>
-              </div>
             </motion.div>
           </div>
 
@@ -897,12 +894,6 @@ const Home = () => {
             <p className="text-white/70 text-sm leading-relaxed max-w-md">
               We ensure maximum loading optimization and value for every container with efficient loading for best effective shipping.
             </p>
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg"
-            >
-              VIEW CONTAINER DETAILS <ArrowRight className="w-4 h-4" />
-            </Link>
           </motion.div>
 
           {/* Right: Container cards */}
@@ -971,11 +962,29 @@ const Home = () => {
                   activeTestimonial === i ? 'border-primary shadow-premium' : 'border-stone-200'
                 }`}
               >
-                {/* Stars */}
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(t.rating)].map((_, s) => (
-                    <Star key={s} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  ))}
+                {/* Stars & Rating Badge */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex gap-0.5 items-center">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const isFull = t.rating >= star;
+                      const isHalf = !isFull && t.rating >= star - 0.5;
+                      return (
+                        <Star
+                          key={star}
+                          className={`w-3.5 h-3.5 ${
+                            isFull
+                              ? 'fill-amber-400 text-amber-400'
+                              : isHalf
+                              ? 'fill-amber-400/50 text-amber-400'
+                              : 'fill-stone-200 text-stone-300'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <span className="text-[11px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full">
+                    {t.rating.toFixed(1)}
+                  </span>
                 </div>
                 {/* Quote */}
                 <p className="text-stone-600 text-xs leading-relaxed italic mb-5">
@@ -1022,20 +1031,12 @@ const Home = () => {
               Let's build a sustainable future with premium coconut coir substrates. Contact our export team today.
             </p>
           </motion.div>
-          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 pt-2">
-            <a
-              href="/cocoveera-brochure.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white text-primary hover:bg-stone-50 font-poppins text-sm font-bold px-7 py-3.5 rounded-xl shadow-xl transition-all duration-300 hover:-translate-y-0.5"
-            >
-              VIEW BROCHURE <ArrowRight className="w-4 h-4" />
-            </a>
+          <div className="flex justify-center pt-2">
             <Link
               to="/contact"
-              className="inline-flex items-center gap-2 border-2 border-white/30 hover:border-white text-white font-poppins text-sm font-bold px-7 py-3.5 rounded-xl transition-all duration-300"
+              className="inline-flex items-center gap-2 bg-white text-primary hover:bg-stone-50 font-poppins text-sm font-bold px-8 py-3.5 rounded-xl shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             >
-              CONTACT US
+              CONTACT US <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>

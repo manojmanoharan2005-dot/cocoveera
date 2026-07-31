@@ -93,7 +93,7 @@ const Products = () => {
       />
 
       {/* HEADER HERO */}
-      <div className="pt-12 pb-6 px-4 sm:px-6 lg:px-8 text-center max-w-4xl mx-auto">
+      <div className="pt-6 sm:pt-8 pb-6 px-4 sm:px-6 lg:px-8 text-center max-w-4xl mx-auto">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-stone-900 font-poppins tracking-tight mb-3">
           {selectedCategory ? selectedCategory : "Our Products"}
         </h1>

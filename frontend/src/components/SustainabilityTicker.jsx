@@ -5,7 +5,7 @@
 import React from 'react';
 
 const SustainabilityTicker = () => {
-  const message = "Every New Registration Plants 50 Seed Balls for a Greener Tomorrow.";
+  const message = "Every New Registration Plants 100 Seed Balls • Every Order Plants 1,000 Seed Balls for a Greener Tomorrow.";
   const items = Array(4).fill(message);
 
   const renderGroup = (keyPrefix) => (

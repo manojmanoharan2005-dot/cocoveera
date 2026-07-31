@@ -22,7 +22,7 @@ export const ORIGIN = {
   coordinates: [76.9558, 11.0168],
 };
 
-// 13 Export Destinations with exact longitude & latitude coordinates [long, lat]
+// Export Destinations with exact longitude & latitude coordinates [long, lat]
 export const DESTINATIONS = [
   {
     id: 'usa',
@@ -35,18 +35,6 @@ export const DESTINATIONS = [
     coordinates: [-118.2437, 34.0522],
     curveOffset: -40,
     shipPos: 0.45,
-  },
-  {
-    id: 'canada',
-    country: 'Canada',
-    city: 'Toronto Port',
-    flag: '🇨🇦',
-    port: 'Toronto Port',
-    products: ['Cocopeat Blocks', 'Coir Pith'],
-    image: 'https://images.unsplash.com/photo-1517935703635-27c57d382432?auto=format&fit=crop&w=1000&q=85',
-    coordinates: [-79.3832, 43.6532],
-    curveOffset: -50,
-    shipPos: 0.5,
   },
   {
     id: 'uk',
@@ -266,7 +254,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
           </h2>
 
           <p className="text-stone-500 text-xs sm:text-sm max-w-xl leading-relaxed">
-            Cocoveera exports premium coco peat, coir products, and coconut growing substrates to customers across multiple international destinations.
+            Cocoveera exports premium coco peat, coir products, and coconut growing substrates to customers across multiple international destinations, and is well-equipped to support new countries and emerging markets.
           </p>
         </div>
 
@@ -299,7 +287,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
           height={height}
           style={{ width: "100%", height: "100%", backgroundColor: "#FAF9F6" }}
         >
-          <ZoomableGroup center={center} zoom={1} minZoom={0.7} maxZoom={4}>
+          <ZoomableGroup center={center} zoom={1} minZoom={1} maxZoom={1} disableZoom disablePanning>
             
             {/* World Country Geographies */}
             <Geographies geography={geoUrl}>
@@ -462,13 +450,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
           </ZoomableGroup>
         </ComposableMap>
 
-        {/* Mobile Drag & Zoom Hint Overlay */}
-        {isMobile && (
-          <div className="absolute bottom-2.5 right-3 bg-stone-900/75 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-[10px] font-medium pointer-events-none z-30 shadow-md">
-            Pinch / Drag to explore map
-          </div>
-        )}
-
+        {/* Static Map Container */}
       </div>
     </div>
   );

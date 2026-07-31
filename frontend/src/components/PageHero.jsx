@@ -20,7 +20,7 @@ const PageHero = ({
   bgImage = '/hero-product.webp',
 }) => {
   return (
-    <section className="relative pt-20 sm:pt-24 pb-10 sm:pb-12 bg-white overflow-hidden">
+    <section className="relative pt-6 sm:pt-8 pb-10 sm:pb-12 bg-white overflow-hidden">
       {/* ── RIGHT SIDE IMAGE ── */}
       <div className="absolute inset-y-0 right-0 w-full lg:w-1/2 z-0">
         <img

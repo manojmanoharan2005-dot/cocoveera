@@ -188,7 +188,7 @@ const QualityTesting = () => {
                         {stage.desc}
                       </p>
 
-                      <div className="flex flex-col gap-2.5 mb-8 relative z-10">
+                      <div className="flex flex-col gap-2.5 relative z-10">
                         {stage.highlights.map((highlight, hIdx) => (
                           <motion.div 
                             key={hIdx}
@@ -205,14 +205,6 @@ const QualityTesting = () => {
                           </motion.div>
                         ))}
                       </div>
-
-                      <Link
-                        to={stage.ctaLink}
-                        className="inline-flex items-center justify-center gap-2 bg-stone-900 hover:bg-primary text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all duration-300 group/btn w-full sm:w-auto shadow-sm hover:shadow-md relative z-10"
-                      >
-                        {stage.ctaLabel}
-                        <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                      </Link>
 
                     </div>
                   </motion.div>

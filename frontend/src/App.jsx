@@ -219,7 +219,7 @@ const PublicLayout = () => {
     >
       <div className="relative z-10 flex flex-col flex-grow w-full">
         <Navbar />
-        <div className="flex-grow flex flex-col w-full">
+        <div className="flex-grow flex flex-col w-full pt-[134px]">
           <ErrorBoundary>
             <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-0 transition-opacity duration-300 delay-150"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
               <Outlet />

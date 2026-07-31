@@ -51,7 +51,7 @@ export const AuthLayout = ({ children }) => {
 
 
       {/* Main Content Area */}
-      <main className="flex-grow flex items-center justify-center px-6 pt-32 pb-12 relative z-10">
+      <main className="flex-grow flex items-start justify-center px-4 sm:px-6 pt-2 sm:pt-4 pb-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
