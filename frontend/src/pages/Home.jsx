@@ -367,11 +367,11 @@ const Home = () => {
       />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 1: HERO — Video-Only Full-Width Hero Canvas
+          SECTION 1: HERO — Clear Separation Below Announcement Ticker
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full h-[380px] sm:h-[460px] md:h-[520px] lg:h-[clamp(520px,68vh,600px)] overflow-hidden bg-stone-100">
+      <section className="relative w-full mt-[130px] sm:mt-[140px] h-[380px] sm:h-[460px] md:h-[520px] lg:h-[clamp(520px,68vh,600px)] overflow-hidden bg-stone-100">
         
-        {/* ── 1. BACKGROUND VIDEO & INSTANT IMAGE LAYER ── */}
+        {/* ── 1. HIGH-DEFINITION BACKGROUND VIDEO & INSTANT IMAGE LAYER ── */}
         <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
           {/* Instant Background Image Layer */}
           <img
@@ -379,8 +379,9 @@ const Home = () => {
             alt="Cocoveera Products"
             style={{
               objectPosition: 'center',
-              transform: 'scale(1.2)',
-              transformOrigin: 'center'
+              backfaceVisibility: 'hidden',
+              transform: 'translateZ(0)',
+              filter: 'brightness(1.08) contrast(1.15) saturate(1.18)'
             }}
             className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           />
@@ -390,17 +391,15 @@ const Home = () => {
               style={{
                 y: yHeroImage,
                 objectPosition: 'center',
-                transformOrigin: 'center'
+                imageRendering: 'auto',
+                backfaceVisibility: 'hidden',
+                transform: 'translateZ(0)',
+                willChange: 'transform',
+                filter: 'brightness(1.08) contrast(1.15) saturate(1.18)'
               }}
-              initial={{ opacity: 0, scale: 1.2 }}
-              animate={{ 
-                opacity: heroVideoLoaded ? 1 : 0,
-                scale: [1.2, 1.24, 1.2]
-              }}
-              transition={{ 
-                opacity: { duration: 0.4, ease: "easeOut" },
-                scale: { duration: 20, repeat: Infinity, ease: "easeInOut" }
-              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: heroVideoLoaded ? 1 : 0 }}
+              transition={{ opacity: { duration: 0.4, ease: "easeOut" } }}
               src="/company-trail-video.mp4"
               poster="/hero-product.webp"
               autoPlay
@@ -427,11 +426,11 @@ const Home = () => {
           )}
         </div>
 
-        {/* ── 2. SUBTLE GRADIENT OVERLAY ── */}
+        {/* ── 2. HIGH-CLARITY SOFT GRADIENT OVERLAY ── */}
         <div 
           className="absolute inset-0 z-10 pointer-events-none"
           style={{
-            background: 'linear-gradient(90deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.00) 60%)'
+            background: 'linear-gradient(90deg, rgba(255,255,255,0.90) 0%, rgba(255,255,255,0.72) 20%, rgba(255,255,255,0.45) 38%, rgba(255,255,255,0.12) 58%, rgba(255,255,255,0) 72%)'
           }}
         />
       </section>
