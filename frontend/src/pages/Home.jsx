@@ -463,21 +463,7 @@ const Home = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 2: STATS BAR
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section ref={statsRef} className="bg-white border-y border-stone-100 py-10 sm:py-12">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-            <StatCounter value={50} suffix="+" label="Countries Served" icon={Globe2} started={statsStarted} />
-            <StatCounter value={1000} suffix="+" label="Happy Customers" icon={Users} started={statsStarted} />
-            <StatCounter value={5000} suffix="+" label="Shipments Delivered" icon={Truck} started={statsStarted} />
-            <StatCounter value={99} suffix="%" label="Quality Consistency" icon={Award} started={statsStarted} />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 3: ABOUT / ROOTED IN NATURE
+          SECTION 2: ABOUT / ROOTED IN NATURE
       ═══════════════════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
@@ -554,7 +540,232 @@ const Home = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 4: PRODUCTS
+          SECTION 3: WHY CHOOSE COCOVEERA
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-2">WHY CHOOSE</span>
+            <h2 className="text-4xl font-poppins font-extrabold text-stone-900">Why Choose COCOVEERA?</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+            {whyFeatures.map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="bg-white rounded-2xl p-6 text-center shadow-soft hover:shadow-premium hover:-translate-y-1 transition-all duration-300 border border-stone-100"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <f.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2">{f.title}</h3>
+                <p className="text-stone-500 text-xs leading-relaxed">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 4: QUALITY TESTING
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
+          {/* Left: Content */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="space-y-6"
+          >
+            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block">QUALITY TESTING</span>
+            <h2 className="text-4xl font-poppins font-extrabold text-stone-900 leading-tight">
+              Tested. Verified.<br />
+              <span className="text-primary">Trusted Worldwide.</span>
+            </h2>
+            <p className="text-stone-600 text-sm leading-relaxed max-w-md">
+              Every batch undergoes rigorous quality testing in our state-of-the-art laboratory to meet international standards and deliver consistency.
+            </p>
+            {/* Test type pills */}
+            <div className="flex flex-wrap gap-3 pt-2">
+              {qualityTests.map((t, i) => (
+                <div key={i} className="flex items-center gap-2 bg-accent border border-stone-200 rounded-full px-4 py-2">
+                  <t.icon className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-bold text-stone-700">{t.name}</span>
+                  <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">{t.range}</span>
+                </div>
+              ))}
+            </div>
+            <Link
+              to="/quality-testing"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:-translate-y-0.5"
+            >
+              VIEW TEST REPORTS <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
+
+          {/* Right: Test images grid */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="grid grid-cols-3 gap-3"
+          >
+            {qualityTests.slice(0, 5).map((t, i) => (
+              <div
+                key={i}
+                className={`relative rounded-2xl overflow-hidden ${i === 0 ? 'col-span-2 row-span-1' : ''}`}
+              >
+                <img
+                  src={t.img}
+                  alt={t.name}
+                  className="w-full h-40 object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
+                  <div>
+                    <div className="text-white font-bold text-xs">{t.name}</div>
+                    <div className="text-white/70 text-[10px]">Testing</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 5: PRODUCTION PROCESS
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent border-t border-stone-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-14">
+            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-2">OUR PRODUCTION PROCESS</span>
+            <h2 className="text-4xl font-poppins font-extrabold text-stone-900">
+              From Nature To<br />Your Success
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-4 relative">
+            {/* Connecting line */}
+            <div className="absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent hidden lg:block" />
+
+            {productionSteps.map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="relative flex flex-col items-center text-center"
+              >
+                <div className="relative w-24 h-24 rounded-2xl bg-white border-2 border-primary/20 shadow-soft flex flex-col items-center justify-center mb-4 hover:border-primary hover:shadow-premium transition-all duration-300 z-10">
+                  <step.icon className="w-8 h-8 text-primary mb-1" />
+                  <span className="text-[10px] font-bold text-primary">{step.num}</span>
+                </div>
+                <h4 className="font-poppins font-bold text-stone-800 text-xs mb-1 leading-tight">{step.title}</h4>
+                <p className="text-stone-500 text-[10px] leading-relaxed hidden md:block">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 6: CONTAINER / LOADING SECTION
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-0 bg-[#1a3d1a] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#6BBE45_1px,transparent_1px)] [background-size:30px_30px]" />
+
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-12 sm:py-16 grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center relative z-10">
+          {/* Left: Text */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="space-y-5"
+          >
+            <span className="text-primary-light font-poppins text-xs font-bold uppercase tracking-widest">CONTAINER LOADING CAPACITY</span>
+            <h2 className="text-4xl font-poppins font-extrabold text-white leading-tight">
+              Optimized Loading.<br />
+              <span className="text-primary-light">Trusted Worldwide</span>
+            </h2>
+            <p className="text-white/70 text-sm leading-relaxed max-w-md">
+              We ensure maximum loading optimization and value for every container with efficient loading for best effective shipping.
+            </p>
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg"
+            >
+              VIEW CONTAINER DETAILS <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
+
+          {/* Right: Container cards */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="grid grid-cols-2 gap-4"
+          >
+            {/* 20FT Container */}
+            <div className="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300">
+              <div className="text-primary-light font-poppins font-extrabold text-lg mb-1">20FT CONTAINER</div>
+              <div className="text-white/60 text-xs mb-4 font-medium">Standard Shipping</div>
+              <div className="mb-3">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-white/70 text-xs">Load Capacity</span>
+                  <span className="text-primary-light font-bold text-xs">85%</span>
+                </div>
+                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-primary to-primary-light w-[85%] rounded-full" />
+                </div>
+              </div>
+              <div className="space-y-1.5 text-xs text-white/70">
+                <div className="flex justify-between"><span>Load Capacity</span><span className="text-white font-bold">16–18 Tons</span></div>
+                <div className="flex justify-between"><span>Avg Pallets</span><span className="text-white font-bold">9–11 Units</span></div>
+              </div>
+            </div>
+
+            {/* 40FT Container */}
+            <div className="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300">
+              <div className="text-primary-light font-poppins font-extrabold text-lg mb-1">40FT CONTAINER</div>
+              <div className="text-white/60 text-xs mb-4 font-medium">High Volume Shipping</div>
+              <div className="mb-3">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-white/70 text-xs">Load Capacity</span>
+                  <span className="text-primary-light font-bold text-xs">92%</span>
+                </div>
+                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-primary to-primary-light w-[92%] rounded-full" />
+                </div>
+              </div>
+              <div className="space-y-1.5 text-xs text-white/70">
+                <div className="flex justify-between"><span>Load Capacity</span><span className="text-white font-bold">18–22 Tons</span></div>
+                <div className="flex justify-between"><span>Avg Pallets</span><span className="text-white font-bold">18–22 Units</span></div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 7: GLOBAL NETWORK (GLOBAL SUPPLY CHAIN)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#FAF9F6]">
+        <div className="max-w-7xl mx-auto">
+          <GlobalMap />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 8: PRODUCTS
       ═══════════════════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
@@ -667,227 +878,16 @@ const Home = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 5: WHY CHOOSE COCOVEERA
+          SECTION 9: STATS BAR (COMPANY STATISTICS)
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8 sm:mb-12">
-            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-2">WHY CHOOSE</span>
-            <h2 className="text-4xl font-poppins font-extrabold text-stone-900">Why Choose COCOVEERA?</h2>
+      <section ref={statsRef} className="bg-white border-y border-stone-100 py-10 sm:py-12">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+            <StatCounter value={50} suffix="+" label="Countries Served" icon={Globe2} started={statsStarted} />
+            <StatCounter value={1000} suffix="+" label="Happy Customers" icon={Users} started={statsStarted} />
+            <StatCounter value={5000} suffix="+" label="Shipments Delivered" icon={Truck} started={statsStarted} />
+            <StatCounter value={99} suffix="%" label="Quality Consistency" icon={Award} started={statsStarted} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
-            {whyFeatures.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="bg-white rounded-2xl p-6 text-center shadow-soft hover:shadow-premium hover:-translate-y-1 transition-all duration-300 border border-stone-100"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <f.icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-poppins font-bold text-stone-900 text-sm mb-2">{f.title}</h3>
-                <p className="text-stone-500 text-xs leading-relaxed">{f.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 6: QUALITY TESTING
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
-          {/* Left: Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="space-y-6"
-          >
-            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block">QUALITY TESTING</span>
-            <h2 className="text-4xl font-poppins font-extrabold text-stone-900 leading-tight">
-              Tested. Verified.<br />
-              <span className="text-primary">Trusted Worldwide.</span>
-            </h2>
-            <p className="text-stone-600 text-sm leading-relaxed max-w-md">
-              Every batch undergoes rigorous quality testing in our state-of-the-art laboratory to meet international standards and deliver consistency.
-            </p>
-            {/* Test type pills */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              {qualityTests.map((t, i) => (
-                <div key={i} className="flex items-center gap-2 bg-accent border border-stone-200 rounded-full px-4 py-2">
-                  <t.icon className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-xs font-bold text-stone-700">{t.name}</span>
-                  <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">{t.range}</span>
-                </div>
-              ))}
-            </div>
-            <Link
-              to="/quality-testing"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:-translate-y-0.5"
-            >
-              VIEW TEST REPORTS <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-
-          {/* Right: Test images grid */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="grid grid-cols-3 gap-3"
-          >
-            {qualityTests.slice(0, 5).map((t, i) => (
-              <div
-                key={i}
-                className={`relative rounded-2xl overflow-hidden ${i === 0 ? 'col-span-2 row-span-1' : ''}`}
-              >
-                <img
-                  src={t.img}
-                  alt={t.name}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
-                  <div>
-                    <div className="text-white font-bold text-xs">{t.name}</div>
-                    <div className="text-white/70 text-[10px]">Testing</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 7: PRODUCTION PROCESS
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent border-t border-stone-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block mb-2">OUR PRODUCTION PROCESS</span>
-            <h2 className="text-4xl font-poppins font-extrabold text-stone-900">
-              From Nature To<br />Your Success
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-4 relative">
-            {/* Connecting line */}
-            <div className="absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent hidden lg:block" />
-
-            {productionSteps.map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="relative flex flex-col items-center text-center"
-              >
-                <div className="relative w-24 h-24 rounded-2xl bg-white border-2 border-primary/20 shadow-soft flex flex-col items-center justify-center mb-4 hover:border-primary hover:shadow-premium transition-all duration-300 z-10">
-                  <step.icon className="w-8 h-8 text-primary mb-1" />
-                  <span className="text-[10px] font-bold text-primary">{step.num}</span>
-                </div>
-                <h4 className="font-poppins font-bold text-stone-800 text-xs mb-1 leading-tight">{step.title}</h4>
-                <p className="text-stone-500 text-[10px] leading-relaxed hidden md:block">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 8: CONTAINER / LOADING SECTION
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-0 bg-[#1a3d1a] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#6BBE45_1px,transparent_1px)] [background-size:30px_30px]" />
-
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-12 sm:py-16 grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center relative z-10">
-          {/* Left: Text */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="space-y-5"
-          >
-            <span className="text-primary-light font-poppins text-xs font-bold uppercase tracking-widest">CONTAINER LOADING CAPACITY</span>
-            <h2 className="text-4xl font-poppins font-extrabold text-white leading-tight">
-              Optimized Loading.<br />
-              <span className="text-primary-light">Trusted Worldwide</span>
-            </h2>
-            <p className="text-white/70 text-sm leading-relaxed max-w-md">
-              We ensure maximum loading optimization and value for every container with efficient loading for best effective shipping.
-            </p>
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg"
-            >
-              VIEW CONTAINER DETAILS <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-
-          {/* Right: Container cards */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="grid grid-cols-2 gap-4"
-          >
-            {/* 20FT Container */}
-            <div className="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300">
-              <div className="text-primary-light font-poppins font-extrabold text-lg mb-1">20FT CONTAINER</div>
-              <div className="text-white/60 text-xs mb-4 font-medium">Standard Shipping</div>
-              <div className="mb-3">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-white/70 text-xs">Load Capacity</span>
-                  <span className="text-primary-light font-bold text-xs">85%</span>
-                </div>
-                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary to-primary-light w-[85%] rounded-full" />
-                </div>
-              </div>
-              <div className="space-y-1.5 text-xs text-white/70">
-                <div className="flex justify-between"><span>Load Capacity</span><span className="text-white font-bold">16–18 Tons</span></div>
-                <div className="flex justify-between"><span>Avg Pallets</span><span className="text-white font-bold">9–11 Units</span></div>
-              </div>
-            </div>
-
-            {/* 40FT Container */}
-            <div className="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300">
-              <div className="text-primary-light font-poppins font-extrabold text-lg mb-1">40FT CONTAINER</div>
-              <div className="text-white/60 text-xs mb-4 font-medium">High Volume Shipping</div>
-              <div className="mb-3">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-white/70 text-xs">Load Capacity</span>
-                  <span className="text-primary-light font-bold text-xs">92%</span>
-                </div>
-                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary to-primary-light w-[92%] rounded-full" />
-                </div>
-              </div>
-              <div className="space-y-1.5 text-xs text-white/70">
-                <div className="flex justify-between"><span>Load Capacity</span><span className="text-white font-bold">18–22 Tons</span></div>
-                <div className="flex justify-between"><span>Avg Pallets</span><span className="text-white font-bold">18–22 Units</span></div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 9: GLOBAL NETWORK
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#FAF9F6]">
-        <div className="max-w-7xl mx-auto">
-          <GlobalMap />
         </div>
       </section>
 
