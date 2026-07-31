@@ -100,7 +100,7 @@ const LoadingScreen = () => (
       {/* Outer spinning ring */}
       <div className="absolute inset-0 border-4 border-stone-100 rounded-full"></div>
       <div className="absolute inset-0 border-4 border-[#2F7D32] border-t-transparent border-l-transparent rounded-full animate-spin"></div>
-      
+
       {/* Inner moving ship */}
       <motion.div
         animate={{
@@ -209,24 +209,24 @@ const AdminProtectedRoute = ({ children }) => {
 
 const PublicLayout = () => {
   const location = useLocation();
-  
+
   const authPaths = ['/login', '/register', '/verify-otp'];
   const hideFooter = authPaths.includes(location.pathname);
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen relative text-[#1A1A1A] font-sans bg-stone-50"
     >
       <div className="relative z-10 flex flex-col flex-grow w-full">
         <Navbar />
-      <div className="flex-grow flex flex-col w-full">
-        <ErrorBoundary>
-          <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-0 transition-opacity duration-300 delay-150"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
-            <Outlet />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-      {!hideFooter && <Footer />}
+        <div className="flex-grow flex flex-col w-full">
+          <ErrorBoundary>
+            <Suspense fallback={<div className="flex-grow flex items-center justify-center opacity-0 transition-opacity duration-300 delay-150"><div className="w-8 h-8 border-4 border-stone-200 border-t-[#2F7D32] rounded-full animate-spin"></div></div>}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
+        </div>
+        {!hideFooter && <Footer />}
       </div>
     </div>
   );
@@ -246,11 +246,11 @@ const ScrollToTop = () => {
 
 const DynamicLayout = () => {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return <LoadingScreen />;
   }
-  
+
   return user ? <DashboardLayout /> : <PublicLayout />;
 };
 
@@ -260,14 +260,14 @@ function AppContent() {
     const verifySecurityState = () => {
       const token = sessionStorage.getItem('cocoveera_token');
       const adminToken = sessionStorage.getItem('adminToken');
-      
+
       const hasValidUserToken = isTokenValid(token);
       const hasValidAdminToken = isTokenValid(adminToken);
-      
+
       const path = window.location.pathname;
       const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved');
       const isAdminProtected = path.startsWith('/admin');
-      
+
       if (isAdminProtected && !hasValidAdminToken) {
         window.location.replace('/login');
       } else if (isUserProtected && !hasValidUserToken) {
@@ -312,7 +312,7 @@ function AppContent() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
-          
+
           {/* Auth Flow - Shared Layout to prevent flicker */}
           <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
             <Route path="/login" element={<LoginForm />} />
