@@ -367,26 +367,35 @@ const Home = () => {
       />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 1: HERO — Full-Screen Video Background with Overlaid Content
+          SECTION 1: HERO — Full-Screen Cinematic Zoom Video Background
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full min-h-[600px] lg:min-h-[720px] xl:min-h-[780px] flex items-center overflow-hidden bg-stone-100 pt-44 sm:pt-48 lg:pt-52 pb-16 sm:pb-20 lg:pb-24">
+      <section className="relative w-full h-[88vh] min-h-[620px] lg:min-h-[750px] xl:min-h-[820px] flex items-center overflow-hidden bg-stone-100 pt-44 sm:pt-48 lg:pt-52 pb-16 sm:pb-20 lg:pb-24">
         
-        {/* ── 1. BACKGROUND VIDEO & INSTANT IMAGE LAYER (FULL WIDTH & HEIGHT) ── */}
+        {/* ── 1. BACKGROUND VIDEO & INSTANT IMAGE LAYER (CINEMATIC CLOSE-UP ZOOM 150%) ── */}
         <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
-          {/* Instant Background Image Layer so user never sees a dark/empty screen while video loads */}
+          {/* Instant Background Image Layer with matching zoom & framing */}
           <img
             src="/hero-product.webp"
             alt="Cocoveera Products"
-            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+            style={{
+              objectPosition: '70% center',
+              transform: 'scale(1.5)',
+              transformOrigin: 'center'
+            }}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           />
 
           {!heroVideoError && (
             <motion.video
-              style={{ y: yHeroImage }}
-              initial={{ opacity: 0, scale: 1 }}
+              style={{
+                y: yHeroImage,
+                objectPosition: '70% center',
+                transformOrigin: 'center'
+              }}
+              initial={{ opacity: 0, scale: 1.5 }}
               animate={{ 
                 opacity: heroVideoLoaded ? 1 : 0,
-                scale: [1, 1.04, 1]
+                scale: [1.5, 1.56, 1.5]
               }}
               transition={{ 
                 opacity: { duration: 0.4, ease: "easeOut" },
@@ -413,7 +422,7 @@ const Home = () => {
                   video.currentTime = 0.1;
                 }
               }}
-              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             />
           )}
         </div>
@@ -422,7 +431,7 @@ const Home = () => {
         <div 
           className="absolute inset-0 z-10 pointer-events-none"
           style={{
-            background: 'linear-gradient(90deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.90) 22%, rgba(255,255,255,0.65) 42%, rgba(255,255,255,0.20) 58%, rgba(255,255,255,0.00) 72%)'
+            background: 'linear-gradient(90deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.90) 22%, rgba(255,255,255,0.65) 42%, rgba(255,255,255,0.18) 62%, rgba(255,255,255,0) 76%)'
           }}
         />
 
