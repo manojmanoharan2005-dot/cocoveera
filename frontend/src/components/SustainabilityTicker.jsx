@@ -12,11 +12,11 @@ const SustainabilityTicker = () => {
     <div className="flex items-center shrink-0">
       {items.map((text, idx) => (
         <div key={`${keyPrefix}-${idx}`} className="flex items-center whitespace-nowrap shrink-0" style={{ gap: '90px', paddingRight: '90px' }}>
-          <span className="inline-flex items-center text-[#2E7D32] font-medium text-[13px] whitespace-nowrap">
-            <span className="mr-2 inline-block">🌱</span>
+          <span className="inline-flex items-center text-white font-medium text-[13px] whitespace-nowrap tracking-wide">
+            <span className="mr-2.5 inline-block text-base">🌱</span>
             {text}
           </span>
-          <span className="text-[#BDBDBD] font-normal select-none" aria-hidden="true">|</span>
+          <span className="text-white/50 font-normal select-none" aria-hidden="true">|</span>
         </div>
       ))}
     </div>
@@ -24,7 +24,7 @@ const SustainabilityTicker = () => {
 
   return (
     <div 
-      className="w-full bg-[#FFFFFF] border-t border-b border-[#E5E7EB] shadow-[0_1px_4px_rgba(0,0,0,0.02)] h-[34px] flex items-center overflow-hidden select-none pointer-events-auto z-40 relative"
+      className="w-full bg-[#2E7D32] h-[42px] flex items-center overflow-hidden select-none pointer-events-auto z-40 relative"
       aria-label="Sustainability Announcement Ticker"
     >
       <div className="flex w-max animate-marquee-track will-change-transform">
