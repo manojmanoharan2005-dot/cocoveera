@@ -8,6 +8,8 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Menu, X, ChevronDown, Globe, Mail, ShieldCheck, Heart, ShoppingCart, User } from 'lucide-react';
 
+import SustainabilityTicker from './SustainabilityTicker';
+
 const Navbar = () => {
   const { user, token, loading, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
@@ -221,6 +223,9 @@ const Navbar = () => {
           </div>
         )}
       </nav>
+
+      {/* ── SUSTAINABILITY ANNOUNCEMENT TICKER ── */}
+      <SustainabilityTicker />
     </header>
   );
 };
