@@ -369,17 +369,20 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 1: HERO — Premium Floating Video Card Canvas
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="pt-[130px] sm:pt-[140px] bg-white">
-        <section className="relative mx-3 sm:mx-5 lg:mx-[20px] xl:mx-auto xl:max-w-[calc(100%-40px)] mt-4 mb-6 h-[380px] sm:h-[460px] md:h-[520px] lg:h-[clamp(520px,68vh,600px)] rounded-[16px] sm:rounded-[20px] lg:rounded-[24px] overflow-hidden bg-stone-100 shadow-md border border-stone-200/60">
+      <div className="pt-[169px] bg-white">
+        <section 
+          style={{ height: 'clamp(420px, 65vh, 720px)', minHeight: '420px', maxHeight: '720px' }}
+          className="relative mx-3 sm:mx-5 lg:mx-[20px] xl:mx-auto xl:max-w-[calc(100%-40px)] mt-[18px] mb-6 rounded-[16px] sm:rounded-[20px] lg:rounded-[24px] overflow-hidden bg-stone-100 shadow-md border border-stone-200/60 flex items-center justify-center"
+        >
           
           {/* ── 1. HIGH-DEFINITION BACKGROUND VIDEO & INSTANT IMAGE LAYER ── */}
-          <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
+          <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none flex items-center justify-center">
             {/* Instant Background Image Layer */}
             <img
               src="/hero-product.webp"
               alt="Cocoveera Products"
               style={{
-                objectPosition: 'center',
+                objectPosition: 'center 42%',
                 backfaceVisibility: 'hidden',
                 transform: 'translateZ(0)',
                 filter: 'brightness(1.05) contrast(1.12) saturate(1.15)'
@@ -390,8 +393,7 @@ const Home = () => {
             {!heroVideoError && (
               <motion.video
                 style={{
-                  y: yHeroImage,
-                  objectPosition: 'center',
+                  objectPosition: 'center 42%',
                   imageRendering: 'auto',
                   backfaceVisibility: 'hidden',
                   transform: 'translateZ(0)',

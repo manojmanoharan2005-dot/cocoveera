@@ -79,32 +79,34 @@ const Navbar = () => {
       </div>
 
       {/* ── MAIN NAV ── */}
-      <nav className={`bg-transparent transition-all duration-500 ${isScrolled ? 'py-2' : 'py-3 sm:py-4'}`}>
-        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 flex items-center gap-4 sm:gap-8">
+      <nav className="bg-white shadow-[0_3px_12px_rgba(0,0,0,0.04)] border-b border-stone-200/60 transition-all duration-500">
+        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 flex items-center h-[95px] gap-4 sm:gap-8">
 
           {/* LOGO */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+          <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
             <img
               src="/logo.webp"
               alt="Cocoveera"
-              className={`object-contain transition-all duration-300 ${isScrolled ? 'h-8 sm:h-9' : 'h-10 sm:h-12'}`}
+              className="h-10 sm:h-12 object-contain transition-transform duration-300 hover:scale-105"
             />
-            <span className="font-poppins font-extrabold text-base tracking-wide hidden sm:block">
+            <span className="font-poppins font-extrabold text-lg sm:text-xl tracking-wide hidden sm:block">
               <span className="text-[#8B4513]">COCO</span>
               <span className="text-[#2E7D32]">VEERA</span>
             </span>
           </Link>
 
           {/* CENTER NAV – hidden below xl */}
-          <div className="hidden xl:flex flex-1 items-center justify-center gap-5">
+          <div className="hidden xl:flex flex-1 items-center justify-center gap-6">
             {navLinks.map((link) => (
               <NavLink
                 key={link.name}
                 to={link.path}
                 end={link.path === '/'}
                 className={({ isActive }) =>
-                  `font-poppins text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors duration-200 ${
-                    isActive ? 'text-primary' : 'text-stone-600 hover:text-primary'
+                  `font-poppins text-xs uppercase tracking-wider whitespace-nowrap relative py-1 transition-colors duration-300 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-[#2E7D32] after:transition-transform after:duration-300 ${
+                    isActive
+                      ? 'text-[#2E7D32] font-bold after:scale-x-100'
+                      : 'text-[#4A3A1F] font-semibold hover:text-[#2E7D32] after:scale-x-0 hover:after:scale-x-100'
                   }`
                 }
               >
@@ -114,19 +116,19 @@ const Navbar = () => {
           </div>
 
           {/* RIGHT ACTIONS – desktop */}
-          <div className="hidden xl:flex items-center gap-4 flex-shrink-0">
+          <div className="hidden xl:flex items-center gap-5 flex-shrink-0">
             {/* Language picker */}
             <div className="relative">
               <button
                 onClick={() => setLangDropdown(!langDropdown)}
-                className="flex items-center gap-1 text-[11px] font-semibold text-stone-600 hover:text-primary transition-colors"
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#4A3A1F] hover:text-[#2E7D32] transition-colors"
               >
-                <Globe className="w-3.5 h-3.5 text-secondary" />
+                <Globe className="w-4 h-4 text-[#2E7D32]" />
                 <span>{language}</span>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
               {langDropdown && (
-                <div className="absolute right-0 mt-2 w-28 bg-white border border-stone-100 rounded-xl shadow-lg py-1 z-50">
+                <div className="absolute right-0 mt-2 w-32 bg-[#FAF2DD] border border-[#E0D0AB] rounded-xl shadow-lg py-1 z-50">
                   {[
                     { code: 'EN', label: 'English' },
                     { code: 'ES', label: 'Español' },
@@ -136,7 +138,7 @@ const Navbar = () => {
                     <button
                       key={code}
                       onClick={() => { setLanguage(code); setLangDropdown(false); }}
-                      className="block w-full text-left px-4 py-2 text-xs text-stone-700 hover:bg-accent hover:text-primary transition-colors font-medium"
+                      className="block w-full text-left px-4 py-2 text-xs text-[#4A3A1F] hover:bg-[#E8D7B0]/50 hover:text-[#2E7D32] transition-colors font-semibold"
                     >
                       {label}
                     </button>
@@ -145,27 +147,45 @@ const Navbar = () => {
               )}
             </div>
 
-            <>
-              <Link
-                to="/login"
-                className="text-[11px] font-semibold uppercase tracking-wide text-stone-600 hover:text-primary transition-colors"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="border border-primary text-primary hover:bg-primary hover:text-white font-poppins text-[11px] font-bold px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 hover:shadow-[0_0_15px_rgba(46,125,50,0.4)]"
-              >
-                Register
-              </Link>
-            </>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  to={user.role === 'admin' ? '/admin' : '/dashboard'}
+                  className="flex items-center gap-2 text-xs font-bold text-[#4A3A1F] hover:text-[#2E7D32] bg-white/50 px-3.5 py-2 rounded-xl border border-[#E0D0AB] transition-colors"
+                >
+                  <User className="w-4 h-4 text-[#2E7D32]" />
+                  <span>Dashboard</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-bold text-red-700 hover:text-red-900 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-xs font-bold uppercase tracking-wider text-[#4A3A1F] hover:text-[#2E7D32] transition-colors px-2 py-1"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-transparent border-2 border-[#2E7D32] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white font-poppins text-xs font-bold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-sm"
+                >
+                  Register
+                </Link>
+              </>
+            )}
 
             {/* Brochure CTA */}
             <a
               href="/cocoveera-brochure.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-primary hover:bg-primary-dark text-white font-poppins text-[11px] font-bold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap active:scale-95 hover:shadow-[0_0_15px_rgba(46,125,50,0.5)]"
+              className="bg-[#2E7D32] hover:bg-[#256528] text-white font-poppins text-xs font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-300 whitespace-nowrap active:scale-95"
             >
               Brochure
             </a>
@@ -176,16 +196,16 @@ const Navbar = () => {
             <button
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? 'Close menu' : 'Open menu'}
-              className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-700 hover:bg-stone-100 transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-xl text-[#4A3A1F] hover:bg-[#E8D7B0]/50 transition-colors"
             >
-              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isOpen ? <X className="w-6 h-6 text-[#2E7D32]" /> : <Menu className="w-6 h-6 text-[#4A3A1F]" />}
             </button>
           </div>
         </div>
 
         {/* ── MOBILE DRAWER ── */}
         {isOpen && (
-          <div className="xl:hidden border-t border-stone-100 bg-white px-5 pt-5 pb-6 flex flex-col gap-1 animate-slide-down">
+          <div className="xl:hidden border-t border-[#E8D7B0]/60 bg-[#FAF2DD] px-5 pt-5 pb-6 flex flex-col gap-1.5 animate-slide-down">
             {navLinks.map((link) => (
               <NavLink
                 key={link.name}
@@ -193,10 +213,10 @@ const Navbar = () => {
                 end={link.path === '/'}
                 onClick={() => setIsOpen(false)}
                 className={({ isActive }) =>
-                  `py-3.5 px-4 rounded-xl font-poppins font-semibold text-sm uppercase tracking-wide transition-colors ${
+                  `py-3 px-4 rounded-xl font-poppins font-bold text-xs uppercase tracking-wider transition-colors ${
                     isActive
-                      ? 'text-primary bg-primary/5'
-                      : 'text-stone-700 hover:text-primary hover:bg-stone-50'
+                      ? 'text-[#2E7D32] bg-[#2E7D32]/10'
+                      : 'text-[#4A3A1F] hover:text-[#2E7D32] hover:bg-[#E8D7B0]/40'
                   }`
                 }
               >
@@ -204,29 +224,39 @@ const Navbar = () => {
               </NavLink>
             ))}
 
-            <div className="border-t border-stone-100 mt-4 pt-5 flex flex-col gap-3">
-              <>
+            <div className="border-t border-[#E8D7B0] mt-4 pt-5 flex flex-col gap-3">
+              {!user ? (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center border border-[#E0D0AB] text-[#4A3A1F] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:text-[#2E7D32] transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-center border-2 border-[#2E7D32] text-[#2E7D32] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-[#2E7D32] hover:text-white transition-all"
+                  >
+                    Register
+                  </Link>
+                </>
+              ) : (
                 <Link
-                  to="/login"
+                  to={user.role === 'admin' ? '/admin' : '/dashboard'}
                   onClick={() => setIsOpen(false)}
-                  className="w-full text-center border border-stone-200 text-stone-700 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide hover:border-primary hover:text-primary transition-colors"
+                  className="w-full text-center border border-[#2E7D32] text-[#2E7D32] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-[#2E7D32] hover:text-white transition-all"
                 >
-                  Login
+                  Dashboard
                 </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsOpen(false)}
-                  className="w-full text-center border border-primary text-primary py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-primary hover:text-white transition-all"
-                >
-                  Register
-                </Link>
-              </>
+              )}
               <a
                 href="/cocoveera-brochure.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsOpen(false)}
-                className="w-full text-center bg-primary text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide shadow"
+                className="w-full text-center bg-[#2E7D32] hover:bg-[#256528] text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow"
               >
                 Download Brochure
               </a>
