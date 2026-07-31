@@ -224,11 +224,11 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
 
   // Responsive projection settings:
   // Desktop: Scale 155, centered at [20, 15] for full world overview
-  // Mobile: Scale 210 (zoomed in nicely), centered at [55, 18] around India hub
+  // Mobile: Scale 145, centered at [15, 10] - auto-fits USA/Canada on left through NZ/Australia on right
   const width = 1000;
-  const height = isMobile ? 520 : 600;
-  const scale = isMobile ? 210 : 155;
-  const center = useMemo(() => (isMobile ? [55, 18] : [20, 15]), [isMobile]);
+  const height = isMobile ? 480 : 600;
+  const scale = isMobile ? 145 : 155;
+  const center = useMemo(() => (isMobile ? [15, 10] : [20, 15]), [isMobile]);
 
   // Projection instance matching react-simple-maps for accurate curved route rendering
   const projection = useMemo(() => {
@@ -290,7 +290,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
       {/* ═══════════════════════════════════════════════════════════════════
           MAP CONTAINER
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="relative w-full bg-[#FAF9F6] rounded-[20px] border border-stone-200/60 overflow-hidden shadow-inner h-[420px] sm:h-[520px] lg:h-[600px] flex items-center justify-center select-none">
+      <div className="relative w-full bg-[#FAF9F6] rounded-[20px] border border-stone-200/60 overflow-hidden shadow-inner h-[280px] xs:h-[320px] sm:h-[480px] lg:h-[600px] flex items-center justify-center select-none">
         
         <ComposableMap
           projection="geoMercator"
