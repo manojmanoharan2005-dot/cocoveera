@@ -211,23 +211,27 @@ const CoconutSubstrates = () => {
                 key={`card-${dest.id}`}
                 onClick={() => setSelectedDestId(dest.id)}
                 whileHover={{ y: -6 }}
-                transition={{ duration: 0.2 }}
-                className={`min-w-[280px] md:min-w-0 flex-shrink-0 md:flex-shrink rounded-[20px] p-6 border transition-all duration-300 cursor-pointer flex flex-col justify-between snap-start ${
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className={`group min-w-[280px] md:min-w-0 flex-shrink-0 md:flex-shrink rounded-[20px] p-5 border transition-all duration-300 cursor-pointer flex flex-col justify-between snap-start ${
                   isSelected
                     ? 'bg-white border-[#2E7D32] shadow-md ring-2 ring-[#2E7D32]/20'
-                    : 'bg-white border-stone-200/80 hover:border-stone-300 shadow-sm'
+                    : 'bg-white border-stone-200/80 hover:border-stone-300 hover:shadow-lg'
                 }`}
               >
                 <div className="space-y-4">
-                  {/* Country Image */}
-                  <div className="w-full h-36 rounded-[14px] overflow-hidden bg-stone-100 relative">
+                  {/* Country Image with 16:9 aspect ratio & 1.08x smooth scale */}
+                  <div className="w-full aspect-[16/9] rounded-[14px] overflow-hidden bg-stone-100 relative shadow-inner">
                     <img
                       src={dest.image}
                       alt={dest.country}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.08] group-hover:brightness-105"
                       loading="lazy"
                     />
-                    <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-stone-900 shadow-xs flex items-center gap-1.5">
+                    {/* Soft Cinematic Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/10 to-transparent pointer-events-none" />
+
+                    {/* Floating Glassmorphism Badge */}
+                    <div className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-extrabold text-stone-900 shadow-sm flex items-center gap-1.5 border border-white/40">
                       <span>{dest.flag}</span>
                       <span>{dest.country}</span>
                     </div>
@@ -243,7 +247,7 @@ const CoconutSubstrates = () => {
                     <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
                       Primary Port
                     </span>
-                    <div className="flex items-center gap-2 text-xs font-semibold text-stone-800 bg-[#FAF9F6] p-2.5 rounded-[12px]">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-stone-800 bg-[#FAF9F6] p-2.5 rounded-[12px] border border-stone-100">
                       <Anchor className="w-3.5 h-3.5 text-[#2E7D32] flex-shrink-0" />
                       <span>{dest.port}</span>
                     </div>
@@ -251,9 +255,9 @@ const CoconutSubstrates = () => {
                 </div>
 
                 {/* View Details Link */}
-                <div className="pt-5 mt-4 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-[#2E7D32]">
+                <div className="pt-4 mt-4 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-[#2E7D32]">
                   <span>View Details</span>
-                  <ArrowUpRight className="w-4 h-4" />
+                  <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>
               </motion.div>
             );
