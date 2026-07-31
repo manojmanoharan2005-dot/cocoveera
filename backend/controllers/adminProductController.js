@@ -22,7 +22,18 @@ export const getAdminProducts = async (req, res) => {
       ];
     }
     if (category) query.category = category;
-    if (status) query.isPublished = status === 'published';
+    if (status) {
+      const upperStatus = status.toUpperCase();
+      if (upperStatus === 'PUBLISHED') {
+        query.isPublished = true;
+      } else if (upperStatus === 'HIDDEN') {
+        query.isHidden = true;
+      } else if (upperStatus === 'DELETED') {
+        query.isDeleted = true;
+      } else {
+        query.status = upperStatus;
+      }
+    }
 
     const total = await Product.countDocuments(query);
     const products = await Product.find(query)
@@ -45,7 +56,7 @@ export const getAdminProducts = async (req, res) => {
   }
 };
 
-// @desc    Get single product
+// @desc    Get single product (Admin)
 // @route   GET /api/admin/products/:id
 // @access  Private/Admin
 export const getAdminProduct = async (req, res) => {
@@ -76,6 +87,9 @@ export const createAdminProduct = async (req, res) => {
       benefits,
       applications,
       isPublished,
+      status,
+      isHidden,
+      isDeleted,
       imageUrls,
     } = req.body;
 
@@ -96,6 +110,11 @@ export const createAdminProduct = async (req, res) => {
     const maxProd = await Product.findOne({ category }).sort({ displayOrder: -1 });
     const displayOrder = maxProd && maxProd.displayOrder ? maxProd.displayOrder + 1 : 1;
 
+    const finalStatus = status || (isPublished === false ? 'DRAFT' : 'ACTIVE');
+    const finalIsHidden = isHidden !== undefined ? Boolean(isHidden) : (finalStatus === 'HIDDEN');
+    const finalIsDeleted = isDeleted !== undefined ? Boolean(isDeleted) : (finalStatus === 'DELETED');
+    const finalIsPublished = isPublished !== undefined ? Boolean(isPublished) : (finalStatus === 'ACTIVE' || finalStatus === 'PUBLISHED');
+
     const product = await Product.create({
       name,
       description,
@@ -107,7 +126,10 @@ export const createAdminProduct = async (req, res) => {
       specifications: specifications || {},
       benefits: Array.isArray(benefits) ? benefits : [],
       applications: Array.isArray(applications) ? applications : [],
-      isPublished: isPublished || false,
+      status: finalStatus,
+      isPublished: finalIsPublished,
+      isHidden: finalIsHidden,
+      isDeleted: finalIsDeleted,
       displayOrder,
     });
 
@@ -139,6 +161,9 @@ export const updateAdminProduct = async (req, res) => {
       benefits,
       applications,
       isPublished,
+      status,
+      isHidden,
+      isDeleted,
       imageUrls,
     } = req.body;
 
@@ -152,8 +177,26 @@ export const updateAdminProduct = async (req, res) => {
       ...(specifications && { specifications }),
       ...(benefits && { benefits: Array.isArray(benefits) ? benefits : [] }),
       ...(applications && { applications: Array.isArray(applications) ? applications : [] }),
-      ...(isPublished !== undefined && { isPublished }),
+      ...(isPublished !== undefined && { isPublished: Boolean(isPublished) }),
+      ...(status && { status }),
+      ...(isHidden !== undefined && { isHidden: Boolean(isHidden) }),
+      ...(isDeleted !== undefined && { isDeleted: Boolean(isDeleted) }),
     };
+
+    if (status) {
+      const upperStatus = status.toUpperCase();
+      if (upperStatus === 'DRAFT') {
+        updateData.isPublished = false;
+      } else if (upperStatus === 'ACTIVE') {
+        updateData.isPublished = true;
+        updateData.isHidden = false;
+        updateData.isDeleted = false;
+      } else if (upperStatus === 'HIDDEN') {
+        updateData.isHidden = true;
+      } else if (upperStatus === 'DELETED') {
+        updateData.isDeleted = true;
+      }
+    }
 
     if (imageUrls) {
       updateData.images = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
@@ -171,12 +214,16 @@ export const updateAdminProduct = async (req, res) => {
   }
 };
 
-// @desc    Delete product (Admin only)
+// @desc    Delete product (Admin only - soft delete)
 // @route   DELETE /api/admin/products/:id
 // @access  Private/Admin
 export const deleteAdminProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true, status: 'DELETED', isPublished: false },
+      { new: true }
+    );
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -187,7 +234,7 @@ export const deleteAdminProduct = async (req, res) => {
   }
 };
 
-// @desc    Publish/Unpublish product
+// @desc    Publish/Unpublish product (Admin toggle)
 // @route   PATCH /api/admin/products/:id/publish
 // @access  Private/Admin
 export const togglePublishProduct = async (req, res) => {
@@ -198,6 +245,13 @@ export const togglePublishProduct = async (req, res) => {
     }
 
     product.isPublished = !product.isPublished;
+    if (product.isPublished) {
+      product.status = 'ACTIVE';
+      product.isHidden = false;
+      product.isDeleted = false;
+    } else {
+      product.status = 'DRAFT';
+    }
     await product.save();
 
     clearCache('/api/products');
@@ -206,75 +260,6 @@ export const togglePublishProduct = async (req, res) => {
       message: `Product ${product.isPublished ? 'published' : 'unpublished'} successfully`,
       data: product,
     });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// @desc    Get products for public store (only published)
-// @route   GET /api/products
-// @access  Public
-export const getProducts = async (req, res) => {
-  try {
-    const { category, page = 1, limit = 12, search } = req.query;
-    const skip = (page - 1) * limit;
-
-    let query = { isPublished: true };
-    if (category) query.category = category;
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    const total = await Product.countDocuments(query);
-    const products = await Product.find(query)
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    res.status(200).json({
-      success: true,
-      data: products,
-      pagination: {
-        total,
-        pages: Math.ceil(total / limit),
-        currentPage: parseInt(page),
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// @desc    Get single product by slug
-// @route   GET /api/products/:slug
-// @access  Public
-export const getProductBySlug = async (req, res) => {
-  try {
-    const product = await Product.findOne({
-      slug: req.params.slug,
-      isPublished: true,
-    });
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-    res.status(200).json({ success: true, data: product });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// @desc    Get product by ID
-// @route   GET /api/products/id/:id
-// @access  Public
-export const getProductById = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-    res.status(200).json({ success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

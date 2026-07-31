@@ -67,27 +67,23 @@ export const ProductCard = React.memo(({
       transition={{ type: 'spring', stiffness: 320, damping: 24 }}
       className="w-full bg-white rounded-[24px] border border-stone-200/70 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.10)] cursor-pointer flex flex-col relative group transition-shadow duration-300"
     >
-      <div className="h-[160px] sm:h-[200px] w-full overflow-hidden relative bg-stone-50 flex items-center justify-center p-2 flex-shrink-0">
-        <div className="h-full aspect-square rounded-[1.25rem] sm:rounded-[1.5rem] overflow-hidden flex items-center justify-center">
+      <div className="h-[220px] sm:h-[250px] w-full relative bg-white flex items-center justify-center p-5 sm:p-6 flex-shrink-0 overflow-hidden border-b border-stone-100">
+        <div className="w-full h-full flex items-center justify-center relative">
           <ImageWithFallback
             src={product.images?.[0]}
             alt={product.name}
-            className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-108"
-            style={{ transform: 'scale(1)' }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.07)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            className="max-w-full max-h-full w-auto h-auto object-contain object-center transition-transform duration-300 ease-out group-hover:scale-[1.03]"
           />
         </div>
 
-        {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
         {/* Category Badge */}
-        <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5">
-          <span className="text-[9px] sm:text-[10px] bg-[#1a1f24] text-white font-poppins font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-[6px]">
-            {product.category || 'Coir Product'}
-          </span>
-        </div>
+        {product.category && (
+          <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 z-10">
+            <span className="text-[9px] sm:text-[10px] bg-stone-900/80 backdrop-blur-xs text-white font-poppins font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
+              {product.category}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Content */}

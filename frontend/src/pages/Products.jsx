@@ -178,18 +178,20 @@ const Products = () => {
                 key={product._id}
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.25 }}
-                className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] transition-all flex flex-row sm:flex-col items-center gap-3.5 sm:gap-0 group cursor-pointer"
+                className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] transition-all flex flex-col items-center group cursor-pointer"
                 onClick={() => handleViewDetails(product)}
               >
-                {/* Product Image - Compact on Mobile, Square Grid on Desktop */}
-                <div className="w-28 h-24 sm:w-full sm:h-52 bg-stone-50/70 rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center p-2 sm:p-3 sm:mb-4 flex-shrink-0 relative">
-                  <ImageWithFallback
-                    src={product.images?.[0]}
-                    alt={product.name}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                  />
+                {/* Product Image Container - Fixed height with generous breathing space */}
+                <div className="w-full h-[200px] sm:h-[250px] bg-white rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center p-4 sm:p-6 sm:mb-4 flex-shrink-0 relative border border-stone-100">
+                  <div className="w-full h-full flex items-center justify-center relative">
+                    <ImageWithFallback
+                      src={product.images?.[0]}
+                      alt={product.name}
+                      className="max-w-full max-h-full w-auto h-auto object-contain object-center group-hover:scale-[1.03] transition-transform duration-300 ease-out"
+                    />
+                  </div>
                   {product.category && (
-                    <span className="absolute top-2 left-2 bg-[#2E7D32]/10 border border-[#2E7D32]/20 text-[#2E7D32] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider hidden sm:block">
+                    <span className="absolute top-2.5 left-2.5 bg-stone-900/80 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider hidden sm:block z-10">
                       {product.category}
                     </span>
                   )}

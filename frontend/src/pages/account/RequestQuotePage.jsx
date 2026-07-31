@@ -131,12 +131,8 @@ export const RequestQuotePage = () => {
 
   const fetchProductDetails = async (productId, fallbackProductObj) => {
     setLoadingProduct(true);
+    setRfqError('');
     try {
-      if (fallbackProductObj && fallbackProductObj._id === productId) {
-        setProduct(fallbackProductObj);
-        setLoadingProduct(false);
-        return;
-      }
       const res = await apiClient.get(`/products/${productId}`);
       if (res.data && res.data.data) {
         setProduct(res.data.data);
@@ -145,9 +141,8 @@ export const RequestQuotePage = () => {
       }
     } catch (err) {
       console.error('Failed to fetch product for RFQ:', err);
-      if (fallbackProductObj) {
-        setProduct(fallbackProductObj);
-      }
+      setProduct(null);
+      setRfqError('This product is no longer available.');
     } finally {
       setLoadingProduct(false);
     }

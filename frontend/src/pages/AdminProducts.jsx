@@ -499,15 +499,21 @@ export default function AdminProducts() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">{product.stock}</td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            product.isPublished
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {product.isPublished ? 'Published' : 'Draft'}
-                        </span>
+                        {(() => {
+                          if (product.isDeleted) {
+                            return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">Deleted</span>;
+                          }
+                          if (product.isHidden) {
+                            return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Hidden</span>;
+                          }
+                          if (product.status === 'ARCHIVED') {
+                            return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Archived</span>;
+                          }
+                          if (product.isPublished && (product.status === 'ACTIVE' || !product.status)) {
+                            return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Active</span>;
+                          }
+                          return <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">{product.status || 'Draft'}</span>;
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-sm space-x-3 flex items-center">
                         <button

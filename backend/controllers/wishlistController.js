@@ -5,7 +5,26 @@
 import User from '../models/User.js';
 
 // Populate field specification for consistent product data return
-const POPULATE_FIELDS = 'name price images slug category stock packageSize weight';
+const POPULATE_FIELDS = 'name price images slug category stock packageSize weight status isPublished isHidden isDeleted';
+
+const mapWishlistWithAvailability = (wishlistArray) => {
+  if (!Array.isArray(wishlistArray)) return [];
+  return wishlistArray.map((item) => {
+    if (!item) return null;
+    if (typeof item === 'object') {
+      const isAvailable =
+        item.status === 'ACTIVE' &&
+        item.isPublished === true &&
+        item.isHidden !== true &&
+        item.isDeleted !== true;
+      return {
+        ...item.toObject ? item.toObject() : item,
+        isAvailable,
+      };
+    }
+    return item;
+  }).filter(Boolean);
+};
 
 // @desc    Get user wishlist
 // @route   GET /api/wishlist
@@ -16,7 +35,8 @@ export const getWishlist = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    res.status(200).json({ success: true, data: user.wishlist || [] });
+    const formattedWishlist = mapWishlistWithAvailability(user.wishlist || []);
+    res.status(200).json({ success: true, data: formattedWishlist });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

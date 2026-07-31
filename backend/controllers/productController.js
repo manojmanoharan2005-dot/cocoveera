@@ -6,20 +6,34 @@ import Product from '../models/Product.js';
 import mongoose from 'mongoose';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 import { clearCache } from '../middleware/cache.js';
+import { PUBLIC_PRODUCT_FILTER } from '../utils/productFilters.js';
 
-// @desc    Get all products (with category filter)
+// @desc    Get all products (with category filter & search)
 // @route   GET /api/products
 // @access  Public
 export const getProducts = async (req, res) => {
   try {
-    const { category } = req.query;
-    let query = {};
-    if (category) {
+    const { category, search } = req.query;
+    let query = { ...PUBLIC_PRODUCT_FILTER };
+
+    if (category && category.toLowerCase() !== 'all') {
       query.category = category;
     }
+
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { category: searchRegex },
+      ];
+    }
+
     const products = await Product.find(query)
-      .select('name slug category description price stock images packageSize specifications updatedAt')
+      .select('name slug category description price stock images packageSize specifications status isPublished isHidden isDeleted displayOrder updatedAt')
+      .sort({ displayOrder: 1, createdAt: -1 })
       .lean();
+      
     res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -32,16 +46,18 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    let product;
+    let query = { ...PUBLIC_PRODUCT_FILTER };
 
     if (mongoose.Types.ObjectId.isValid(id)) {
-      product = await Product.findById(id).lean();
+      query._id = id;
     } else {
-      product = await Product.findOne({ slug: id }).lean();
+      query.slug = id;
     }
 
+    const product = await Product.findOne(query).lean();
+
     if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
+      return res.status(404).json({ success: false, message: 'Product not found or no longer available' });
     }
     res.status(200).json({ success: true, data: product });
   } catch (error) {
@@ -55,26 +71,36 @@ export const getProductById = async (req, res) => {
 export const getRelatedProducts = async (req, res) => {
   try {
     const { id } = req.params;
-    let product;
+    let mainProductQuery = { ...PUBLIC_PRODUCT_FILTER };
 
     if (mongoose.Types.ObjectId.isValid(id)) {
-      product = await Product.findById(id).lean();
+      mainProductQuery._id = id;
     } else {
-      product = await Product.findOne({ slug: id }).lean();
+      mainProductQuery.slug = id;
     }
+
+    const product = await Product.findOne(mainProductQuery).lean();
 
     if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
+      return res.status(404).json({ success: false, message: 'Product not found or no longer available' });
     }
 
-    let related = await Product.find({ _id: { $ne: product._id }, category: product.category })
-      .select('name slug category price images')
+    let related = await Product.find({
+      ...PUBLIC_PRODUCT_FILTER,
+      _id: { $ne: product._id },
+      category: product.category,
+    })
+      .select('name slug category price images status isPublished isHidden isDeleted')
       .limit(3)
       .lean();
 
     if (related.length < 3) {
-      const more = await Product.find({ _id: { $ne: product._id }, category: { $ne: product.category } })
-        .select('name slug category price images')
+      const more = await Product.find({
+        ...PUBLIC_PRODUCT_FILTER,
+        _id: { $ne: product._id },
+        category: { $ne: product.category },
+      })
+        .select('name slug category price images status isPublished isHidden isDeleted')
         .limit(3 - related.length)
         .lean();
       related = [...related, ...more];
@@ -91,8 +117,8 @@ export const getRelatedProducts = async (req, res) => {
 // @access  Public
 export const getRecommendedProducts = async (req, res) => {
   try {
-    const products = await Product.find()
-      .select('name slug category price images')
+    const products = await Product.find(PUBLIC_PRODUCT_FILTER)
+      .select('name slug category price images status isPublished isHidden isDeleted')
       .lean();
 
     const categoryMap = new Map();

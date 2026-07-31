@@ -78,6 +78,19 @@ const ProductSchema = new mongoose.Schema(
     },
     isPublished: {
       type: Boolean,
+      default: true,
+    },
+    status: {
+      type: String,
+      enum: ['DRAFT', 'PUBLISHED', 'ACTIVE', 'HIDDEN', 'ARCHIVED', 'DELETED'],
+      default: 'ACTIVE',
+    },
+    isHidden: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
       default: false,
     },
     benefits: {
@@ -101,6 +114,8 @@ const ProductSchema = new mongoose.Schema(
 // Indexes for fast querying
 ProductSchema.index({ category: 1, displayOrder: 1 });
 ProductSchema.index({ isPublished: 1 });
+ProductSchema.index({ status: 1, isPublished: 1, isHidden: 1, isDeleted: 1 });
+ProductSchema.index({ category: 1, status: 1, isPublished: 1, isHidden: 1, isDeleted: 1 });
 
 // Auto-generate slug before saving
 ProductSchema.pre('save', function(next) {

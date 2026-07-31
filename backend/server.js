@@ -225,6 +225,28 @@ const startServer = async () => {
   await connectDB();
   await initCategoryOrdering();
   
+  try {
+    await Product.updateMany(
+      { status: { $exists: false } },
+      { $set: { status: 'ACTIVE', isPublished: true, isHidden: false, isDeleted: false } }
+    );
+    await Product.updateMany(
+      { isPublished: { $exists: false } },
+      { $set: { isPublished: true } }
+    );
+    await Product.updateMany(
+      { isHidden: { $exists: false } },
+      { $set: { isHidden: false } }
+    );
+    await Product.updateMany(
+      { isDeleted: { $exists: false } },
+      { $set: { isDeleted: false } }
+    );
+    console.log('[ProductVisibility] Backfilled product visibility defaults');
+  } catch (err) {
+    console.error('[ProductVisibility] Backfill error:', err.message);
+  }
+  
   app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });
@@ -415,7 +437,11 @@ const seedDatabase = async () => {
 
       const productsToInsert = mockProducts.map(p => ({
         ...p,
-        slug: p.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')
+        slug: p.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'),
+        status: 'ACTIVE',
+        isPublished: true,
+        isHidden: false,
+        isDeleted: false,
       }));
       await Product.insertMany(productsToInsert);
       console.log('Seeding products complete.');

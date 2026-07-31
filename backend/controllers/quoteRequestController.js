@@ -9,6 +9,7 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
+import { isProductPubliclyVisible } from '../utils/productFilters.js';
 import {
   sendAdminQuoteRequestEmail,
   sendRFQApprovalEmail,
@@ -60,13 +61,24 @@ export const submitQuoteRequest = async (req, res) => {
     if (!products || !Array.isArray(products) || products.length === 0) {
       if (productId) {
         const productObj = await Product.findById(productId);
-        if (productObj) {
-          products = [{
-            product: productObj._id,
-            productName: productObj.name,
-            categoryName: productObj.category || category || 'Coco Substrates',
-            quantity: parseFloat(quantity) || 1.00
-          }];
+        if (!productObj || !isProductPubliclyVisible(productObj)) {
+          return res.status(400).json({ success: false, message: 'This product is no longer available.' });
+        }
+        products = [{
+          product: productObj._id,
+          productName: productObj.name,
+          categoryName: productObj.category || category || 'Coco Substrates',
+          quantity: parseFloat(quantity) || 1.00
+        }];
+      }
+    } else {
+      // Validate all products in array
+      for (const item of products) {
+        if (item.product) {
+          const productObj = await Product.findById(item.product);
+          if (!productObj || !isProductPubliclyVisible(productObj)) {
+            return res.status(400).json({ success: false, message: 'This product is no longer available.' });
+          }
         }
       }
     }

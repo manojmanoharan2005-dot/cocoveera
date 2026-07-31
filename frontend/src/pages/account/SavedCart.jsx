@@ -226,6 +226,14 @@ const SavedCart = () => {
               ? 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available' 
               : (Array.isArray(item.images) && item.images[0] ? item.images[0] : 'https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Available');
 
+            const isAvailable = !isString && (
+              item.isAvailable !== false &&
+              (item.status ? item.status === 'ACTIVE' : true) &&
+              (item.isPublished !== false) &&
+              (!item.isHidden) &&
+              (!item.isDeleted)
+            );
+
             return (
               <motion.div 
                 layout
@@ -233,14 +241,14 @@ const SavedCart = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.85, filter: 'blur(4px)', transition: { duration: 0.25 } }}
                 key={itemId} 
-                className="bg-white rounded-2xl border border-stone-200/80 shadow-sm hover:shadow-md transition-all overflow-hidden group flex flex-col relative"
+                className={`bg-white rounded-2xl border ${isAvailable ? 'border-stone-200/80' : 'border-amber-200 bg-amber-50/20'} shadow-sm hover:shadow-md transition-all overflow-hidden group flex flex-col relative`}
               >
                 {/* Image Container */}
                 <div className="relative h-48 bg-stone-50 w-full overflow-hidden flex items-center justify-center p-4">
                   <ImageWithFallback 
                     src={itemImage} 
                     alt={itemName} 
-                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" 
+                    className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${!isAvailable ? 'grayscale opacity-60' : ''}`} 
                   />
                   <button 
                     onClick={() => handleRemove(itemId)}
@@ -258,19 +266,34 @@ const SavedCart = () => {
                     <h3 className="font-poppins font-bold text-stone-900 text-sm mb-1 line-clamp-2">
                       {itemName}
                     </h3>
-                    <p className="text-[#2E7D32] font-black text-[10px] uppercase tracking-wider mb-4">
-                      {itemCategory}
-                    </p>
+                    {isAvailable ? (
+                      <p className="text-[#2E7D32] font-black text-[10px] uppercase tracking-wider mb-4">
+                        {itemCategory}
+                      </p>
+                    ) : (
+                      <p className="text-amber-700 font-bold text-xs bg-amber-100/80 border border-amber-200 rounded-lg px-2.5 py-1 inline-block mb-4">
+                        This product is no longer available.
+                      </p>
+                    )}
                   </div>
                   
                   <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
-                    <button 
-                      onClick={() => navigate(`/dashboard/request-quote?productId=${itemId}`)}
-                      className="w-full py-2.5 bg-[#F0FAF0] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-[#2E7D32] hover:bg-[#E8F5E9] text-xs font-black uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <span>Request Quote</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    {isAvailable ? (
+                      <button 
+                        onClick={() => navigate(`/dashboard/request-quote?productId=${itemId}`)}
+                        className="w-full py-2.5 bg-[#F0FAF0] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white text-xs font-black uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span>Request Quote</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <button 
+                        disabled
+                        className="w-full py-2.5 bg-stone-100 text-stone-400 text-xs font-bold uppercase tracking-wider rounded-xl cursor-not-allowed flex items-center justify-center gap-1.5"
+                      >
+                        <span>Unavailable</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>
