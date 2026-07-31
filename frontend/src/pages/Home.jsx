@@ -367,73 +367,75 @@ const Home = () => {
       />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 1: HERO — Clear Separation Below Announcement Ticker
+          SECTION 1: HERO — Premium Floating Video Card Canvas
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full mt-[130px] sm:mt-[140px] h-[380px] sm:h-[460px] md:h-[520px] lg:h-[clamp(520px,68vh,600px)] overflow-hidden bg-stone-100">
-        
-        {/* ── 1. HIGH-DEFINITION BACKGROUND VIDEO & INSTANT IMAGE LAYER ── */}
-        <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
-          {/* Instant Background Image Layer */}
-          <img
-            src="/hero-product.webp"
-            alt="Cocoveera Products"
-            style={{
-              objectPosition: 'center',
-              backfaceVisibility: 'hidden',
-              transform: 'translateZ(0)',
-              filter: 'brightness(1.08) contrast(1.15) saturate(1.18)'
-            }}
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          />
-
-          {!heroVideoError && (
-            <motion.video
+      <div className="pt-[130px] sm:pt-[140px] bg-white">
+        <section className="relative mx-3 sm:mx-5 lg:mx-[20px] xl:mx-auto xl:max-w-[calc(100%-40px)] mt-4 mb-6 h-[380px] sm:h-[460px] md:h-[520px] lg:h-[clamp(520px,68vh,600px)] rounded-[16px] sm:rounded-[20px] lg:rounded-[24px] overflow-hidden bg-stone-100 shadow-md border border-stone-200/60">
+          
+          {/* ── 1. HIGH-DEFINITION BACKGROUND VIDEO & INSTANT IMAGE LAYER ── */}
+          <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
+            {/* Instant Background Image Layer */}
+            <img
+              src="/hero-product.webp"
+              alt="Cocoveera Products"
               style={{
-                y: yHeroImage,
                 objectPosition: 'center',
-                imageRendering: 'auto',
                 backfaceVisibility: 'hidden',
                 transform: 'translateZ(0)',
-                willChange: 'transform',
-                filter: 'brightness(1.08) contrast(1.15) saturate(1.18)'
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: heroVideoLoaded ? 1 : 0 }}
-              transition={{ opacity: { duration: 0.4, ease: "easeOut" } }}
-              src="/company-trail-video.mp4"
-              poster="/hero-product.webp"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              onLoadedData={() => setHeroVideoLoaded(true)}
-              onCanPlay={() => setHeroVideoLoaded(true)}
-              onError={() => setHeroVideoError(true)}
-              ref={(el) => {
-                if (el && el.paused) {
-                  el.play().catch(() => {});
-                }
-              }}
-              onTimeUpdate={(e) => {
-                const video = e.target;
-                if (video.duration > 0 && video.currentTime >= video.duration - 0.25) {
-                  video.currentTime = 0.1;
-                }
+                filter: 'brightness(1.05) contrast(1.12) saturate(1.15)'
               }}
               className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             />
-          )}
-        </div>
 
-        {/* ── 2. HIGH-CLARITY SOFT GRADIENT OVERLAY ── */}
-        <div 
-          className="absolute inset-0 z-10 pointer-events-none"
-          style={{
-            background: 'linear-gradient(90deg, rgba(255,255,255,0.90) 0%, rgba(255,255,255,0.72) 20%, rgba(255,255,255,0.45) 38%, rgba(255,255,255,0.12) 58%, rgba(255,255,255,0) 72%)'
-          }}
-        />
-      </section>
+            {!heroVideoError && (
+              <motion.video
+                style={{
+                  y: yHeroImage,
+                  objectPosition: 'center',
+                  imageRendering: 'auto',
+                  backfaceVisibility: 'hidden',
+                  transform: 'translateZ(0)',
+                  willChange: 'transform',
+                  filter: 'brightness(1.05) contrast(1.12) saturate(1.15)'
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: heroVideoLoaded ? 1 : 0 }}
+                transition={{ opacity: { duration: 0.4, ease: "easeOut" } }}
+                src="/company-trail-video.mp4"
+                poster="/hero-product.webp"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                onLoadedData={() => setHeroVideoLoaded(true)}
+                onCanPlay={() => setHeroVideoLoaded(true)}
+                onError={() => setHeroVideoError(true)}
+                ref={(el) => {
+                  if (el && el.paused) {
+                    el.play().catch(() => {});
+                  }
+                }}
+                onTimeUpdate={(e) => {
+                  const video = e.target;
+                  if (video.duration > 0 && video.currentTime >= video.duration - 0.25) {
+                    video.currentTime = 0.1;
+                  }
+                }}
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              />
+            )}
+          </div>
+
+          {/* ── 2. ULTRA-SUBTLE ULTRA-CLEAR GRADIENT OVERLAY (70% REDUCED HAZE) ── */}
+          <div 
+            className="absolute inset-0 z-10 pointer-events-none"
+            style={{
+              background: 'linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.15) 15%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0) 60%)'
+            }}
+          />
+        </section>
+      </div>
 
       {/* ── FEATURE CARDS STRIP BELOW HERO ── */}
       <section className="bg-white border-b border-stone-200 py-6 sm:py-8 px-6 sm:px-10 lg:px-16 relative z-20">
