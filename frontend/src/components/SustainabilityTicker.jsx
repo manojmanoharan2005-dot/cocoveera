@@ -8,37 +8,32 @@ const SustainabilityTicker = () => {
   const message = "Every New Registration Plants 50 Seed Balls for a Greener Tomorrow.";
   const items = Array(4).fill(message);
 
+  const renderGroup = (keyPrefix) => (
+    <div className="flex items-center shrink-0">
+      {items.map((text, idx) => (
+        <div key={`${keyPrefix}-${idx}`} className="flex items-center whitespace-nowrap shrink-0" style={{ gap: '90px', paddingRight: '90px' }}>
+          <span className="inline-flex items-center text-[#2E7D32] font-medium text-[13px] whitespace-nowrap">
+            <span className="mr-2 inline-block">🌱</span>
+            {text}
+          </span>
+          <span className="text-[#BDBDBD] font-normal select-none" aria-hidden="true">|</span>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div 
-      className="w-full bg-[#FFFFFF] border-t border-b border-[#E5E7EB] shadow-[0_1px_4px_rgba(0,0,0,0.02)] h-[36px] sm:h-[38px] flex items-center overflow-hidden select-none pointer-events-auto z-40 relative"
+      className="w-full bg-[#FFFFFF] border-t border-b border-[#E5E7EB] shadow-[0_1px_4px_rgba(0,0,0,0.02)] h-[34px] flex items-center overflow-hidden select-none pointer-events-auto z-40 relative"
       aria-label="Sustainability Announcement Ticker"
     >
-      <div className="w-full overflow-hidden flex items-center">
-        <div className="flex shrink-0 whitespace-nowrap animate-marquee md:hover:[animation-play-state:paused] will-change-transform">
-          {items.map((text, idx) => (
-            <span
-              key={idx}
-              className="inline-flex items-center text-[#2E7D32] font-medium text-[11px] sm:text-[12px] md:text-[13px] tracking-normal px-12 sm:px-16 md:px-20"
-            >
-              <span className="mr-2 text-xs sm:text-sm inline-block">🌱</span>
-              {text}
-            </span>
-          ))}
-        </div>
-        <div className="flex shrink-0 whitespace-nowrap animate-marquee md:hover:[animation-play-state:paused] will-change-transform" aria-hidden="true">
-          {items.map((text, idx) => (
-            <span
-              key={`dup-${idx}`}
-              className="inline-flex items-center text-[#2E7D32] font-medium text-[11px] sm:text-[12px] md:text-[13px] tracking-normal px-12 sm:px-16 md:px-20"
-            >
-              <span className="mr-2 text-xs sm:text-sm inline-block">🌱</span>
-              {text}
-            </span>
-          ))}
-        </div>
+      <div className="flex w-max animate-marquee-track will-change-transform">
+        {renderGroup('group-1')}
+        {renderGroup('group-2')}
       </div>
     </div>
   );
 };
 
 export default SustainabilityTicker;
+
