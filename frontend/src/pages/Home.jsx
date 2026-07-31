@@ -367,12 +367,12 @@ const Home = () => {
       />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 1: HERO — Full-screen factory illustration background
+          SECTION 1: HERO — Full-Screen Video Background with Overlaid Content
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-[520px] sm:min-h-[600px] max-h-[900px] h-screen flex items-center bg-white overflow-hidden w-full">
+      <section className="relative w-full min-h-[600px] lg:min-h-[720px] xl:min-h-[780px] flex items-center overflow-hidden bg-stone-900 pt-44 sm:pt-48 lg:pt-52 pb-16 sm:pb-20 lg:pb-24">
         
-        {/* ── RIGHT SIDE HERO BACKGROUND VIDEO (Prominent 58% Width) ── */}
-        <div ref={heroVideoContainerRef} className="absolute inset-y-0 right-0 w-full lg:w-[58%] h-full z-0 overflow-hidden pointer-events-none">
+        {/* ── 1. BACKGROUND VIDEO (FULL WIDTH & HEIGHT 100vw x 100%) ── */}
+        <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
           {!heroVideoError ? (
             <motion.video
               style={{ y: yHeroImage }}
@@ -400,7 +400,7 @@ const Home = () => {
                   video.currentTime = 0.1;
                 }
               }}
-              className="w-full h-full object-cover object-center opacity-100 filter-none"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
             />
           ) : (
             <motion.img
@@ -413,122 +413,100 @@ const Home = () => {
               }}
               src="/hero-product.webp"
               alt="Cocoveera Products"
-              className="w-full h-full object-cover object-center"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
             />
           )}
-
-          {/* ── PRECISE 200px GRADIENT OVERLAY (White 100% -> White 60% -> Transparent) ── */}
-          <div 
-            className="absolute inset-y-0 left-0 w-[200px] z-10 pointer-events-none hidden lg:block"
-            style={{
-              background: 'linear-gradient(to right, #ffffff 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%)'
-            }}
-          />
-
-          {/* Mobile screen light overlay for text readability */}
-          <div className="absolute inset-0 bg-white/70 lg:hidden pointer-events-none z-10" />
         </div>
 
-        {/* ── HERO CONTENT ── */}
-        <motion.div style={{ y: yHeroText }} className="relative z-10 w-full px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 pt-32 sm:pt-40 md:pt-48 pb-14 sm:pb-20">
-          {/* Subtle glowing accent orb behind text */}
-          <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
+        {/* ── 2. GRADIENT OVERLAY FOR READABILITY ── */}
+        <div 
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{
+            background: 'linear-gradient(90deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.90) 22%, rgba(255,255,255,0.65) 42%, rgba(255,255,255,0.20) 58%, rgba(255,255,255,0.00) 72%)'
+          }}
+        />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center relative z-10">
-
-            {/* LEFT: Text Content */}
-            <div className="flex flex-col space-y-5 sm:space-y-7">
-
-              {/* Badge */}
-              <motion.div
-                initial="hidden" animate="visible" variants={fadeUp} custom={0}
-                className="inline-flex items-center gap-2 bg-white/40 backdrop-blur-md text-primary text-xs font-bold px-4 py-2 rounded-full self-start border border-primary/20 shadow-sm"
-              >
-                <Leaf className="w-3.5 h-3.5 text-primary drop-shadow-[0_0_8px_rgba(46,125,50,0.5)]" />
-                PREMIUM COCONUT SUBSTRATES
-              </motion.div>
-
-              {/* Heading */}
-              <motion.h1
-                initial="hidden" animate="visible" variants={fadeUp} custom={1}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-poppins font-extrabold text-stone-900 leading-[1.08] sm:leading-[1.05] relative"
-              >
-                Engineered<br />
-                <span className="text-primary relative inline-block">
-                  For Global
-                  <span className="absolute -inset-1 bg-primary/20 blur-xl -z-10 rounded-full"></span>
-                </span><br />
-                Growers
-              </motion.h1>
-
-              {/* Description */}
-              <motion.p
-                initial="hidden" animate="visible" variants={fadeUp} custom={2}
-                className="text-stone-700 text-base sm:text-base leading-relaxed max-w-lg font-medium"
-              >
-                High-performance coconut coir solutions for hydroponics, greenhouses and nurseries. Exported worldwide with quality you can trust.
-              </motion.p>
-
-              {/* CTA Buttons */}
-              <motion.div
-                initial="hidden" animate="visible" variants={fadeUp} custom={3}
-                className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-1"
-              >
-                <Link
-                  to="/products"
-                  className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
-                >
-                  EXPLORE PRODUCTS <ChevronRight className="w-4 h-4" />
-                </Link>
-                <a
-                  href="/cocoveera-brochure.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 border-2 border-stone-800 hover:border-primary text-stone-800 hover:text-primary font-poppins text-sm font-bold px-7 py-3.5 rounded-xl transition-all duration-300 bg-white/50 backdrop-blur-sm"
-                >
-                  VIEW BROCHURE <ChevronRight className="w-4 h-4" />
-                </a>
-              </motion.div>
-
-              {/* Trust Badges */}
-              <motion.div
-                initial="hidden" animate="visible" variants={fadeUp} custom={4}
-                className="flex flex-wrap gap-5 pt-4 border-t border-stone-200"
-              >
-                {[
-                  { label: '100% Natural', sub: 'Eco-Friendly' },
-                  { label: 'Strict Quality', sub: 'Assurance' },
-                  { label: 'Global Shipping', sub: 'Worldwide' },
-                  { label: 'Sustainable', sub: 'Future' },
-                ].map((b, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center">
-                      <Leaf className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-stone-800">{b.label}</div>
-                      <div className="text-[10px] text-stone-500">{b.sub}</div>
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* RIGHT: Empty column to let the product background image shine through unobstructed */}
-            <div className="hidden lg:block"></div>
-          </div>
-        </motion.div>
-
-        {/* ── BOTTOM SCROLL INDICATOR ── */}
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
+        {/* ── 3. TEXT CONTENT ON TOP OF VIDEO (Positioned Safely Below Fixed Navbar/Ticker) ── */}
+        <motion.div 
+          style={{ y: yHeroText }} 
+          className="relative z-20 w-full px-6 sm:px-10 lg:px-16 xl:px-20"
         >
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center pt-2">
-            <div className="w-1.5 h-3 bg-white/60 rounded-full" />
+          <div className="max-w-[540px] lg:max-w-[580px] xl:max-w-[620px] flex flex-col space-y-4 sm:space-y-6">
+
+            {/* Badge */}
+            <motion.div
+              initial="hidden" animate="visible" variants={fadeUp} custom={0}
+              className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md text-primary text-xs font-bold px-4 py-2 rounded-full self-start border border-primary/20 shadow-sm"
+            >
+              <Leaf className="w-3.5 h-3.5 text-primary drop-shadow-[0_0_8px_rgba(46,125,50,0.5)]" />
+              PREMIUM COCONUT SUBSTRATES
+            </motion.div>
+
+            {/* Heading */}
+            <motion.h1
+              initial="hidden" animate="visible" variants={fadeUp} custom={1}
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-poppins font-extrabold text-stone-900 leading-[1.08] sm:leading-[1.05] relative"
+            >
+              Engineered<br />
+              <span className="text-primary relative inline-block">
+                For Global
+                <span className="absolute -inset-1 bg-primary/20 blur-xl -z-10 rounded-full"></span>
+              </span><br />
+              Growers
+            </motion.h1>
+
+            {/* Description */}
+            <motion.p
+              initial="hidden" animate="visible" variants={fadeUp} custom={2}
+              className="text-stone-800 text-sm sm:text-base lg:text-lg leading-relaxed max-w-lg font-medium drop-shadow-sm"
+            >
+              High-performance coconut coir solutions for hydroponics, greenhouses and nurseries. Exported worldwide with quality you can trust.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial="hidden" animate="visible" variants={fadeUp} custom={3}
+              className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-1"
+            >
+              <Link
+                to="/products"
+                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+              >
+                EXPLORE PRODUCTS <ChevronRight className="w-4 h-4" />
+              </Link>
+              <a
+                href="/cocoveera-brochure.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 border-2 border-stone-800 hover:border-primary text-stone-800 hover:text-primary font-poppins text-sm font-bold px-7 py-3.5 rounded-xl transition-all duration-300 bg-white/70 backdrop-blur-sm shadow-sm"
+              >
+                VIEW BROCHURE <ChevronRight className="w-4 h-4" />
+              </a>
+            </motion.div>
           </div>
         </motion.div>
+      </section>
+
+      {/* ── FEATURE CARDS STRIP BELOW HERO ── */}
+      <section className="bg-white border-b border-stone-200 py-6 sm:py-8 px-6 sm:px-10 lg:px-16 relative z-20">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+          {[
+            { label: '100% Natural', sub: 'Eco-Friendly' },
+            { label: 'Strict Quality', sub: 'Assurance' },
+            { label: 'Global Shipping', sub: 'Worldwide' },
+            { label: 'Sustainable', sub: 'Future' },
+          ].map((b, i) => (
+            <div key={i} className="flex items-center gap-3 bg-stone-50/90 p-3.5 rounded-xl border border-stone-200/70 shadow-sm transition-transform hover:-translate-y-0.5">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                <Leaf className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <div className="text-xs sm:text-sm font-bold text-stone-800">{b.label}</div>
+                <div className="text-[10px] sm:text-xs text-stone-500 font-medium">{b.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
