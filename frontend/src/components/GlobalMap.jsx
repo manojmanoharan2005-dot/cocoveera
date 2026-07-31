@@ -222,11 +222,13 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Map viewport dimensions & projection settings
+  // Responsive projection settings:
+  // Desktop: Scale 155, centered at [20, 15] for full world overview
+  // Mobile: Scale 210 (zoomed in nicely), centered at [55, 18] around India hub
   const width = 1000;
-  const height = isMobile ? 500 : 600;
-  const scale = isMobile ? 130 : 155;
-  const center = [20, 15];
+  const height = isMobile ? 520 : 600;
+  const scale = isMobile ? 210 : 155;
+  const center = useMemo(() => (isMobile ? [55, 18] : [20, 15]), [isMobile]);
 
   // Projection instance matching react-simple-maps for accurate curved route rendering
   const projection = useMemo(() => {
@@ -248,18 +250,18 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
   };
 
   return (
-    <div className="w-full bg-white rounded-[24px] border border-stone-200/80 p-4 sm:p-8 lg:p-10 shadow-lg shadow-stone-100/70 overflow-hidden font-sans">
+    <div className="w-full bg-white rounded-[24px] border border-stone-200/80 p-3.5 sm:p-8 lg:p-10 shadow-lg shadow-stone-100/70 overflow-hidden font-sans">
       
       {/* ═══════════════════════════════════════════════════════════════════
           HEADER SECTION
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 sm:gap-6 mb-4 sm:mb-8">
         <div>
-          <span className="text-[#2E7D32] text-xs font-extrabold uppercase tracking-widest block mb-1.5 sm:mb-2">
+          <span className="text-[#2E7D32] text-xs font-extrabold uppercase tracking-widest block mb-1 sm:mb-2">
             LOGISTICS &amp; DISTRIBUTION
           </span>
 
-          <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-[#1C1917] tracking-tight mb-2 sm:mb-3">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-[#1C1917] tracking-tight mb-1.5 sm:mb-3">
             Global <span className="text-[#2E7D32]">Supply Chain</span> Network
           </h2>
 
@@ -269,7 +271,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-4 sm:gap-6 bg-stone-50/90 border border-stone-200/80 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full shadow-xs text-[11px] sm:text-xs font-semibold text-stone-700 self-start md:self-auto">
+        <div className="flex items-center gap-4 sm:gap-6 bg-stone-50/90 border border-stone-200/80 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full shadow-xs text-[11px] sm:text-xs font-semibold text-stone-700 self-start md:self-auto">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2E7D32] opacity-75"></span>
@@ -288,7 +290,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
       {/* ═══════════════════════════════════════════════════════════════════
           MAP CONTAINER
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="relative w-full bg-[#FAF9F6] rounded-[20px] border border-stone-200/60 overflow-hidden shadow-inner h-[380px] sm:h-[520px] lg:h-[600px] flex items-center justify-center select-none">
+      <div className="relative w-full bg-[#FAF9F6] rounded-[20px] border border-stone-200/60 overflow-hidden shadow-inner h-[420px] sm:h-[520px] lg:h-[600px] flex items-center justify-center select-none">
         
         <ComposableMap
           projection="geoMercator"
@@ -297,7 +299,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
           height={height}
           style={{ width: "100%", height: "100%", backgroundColor: "#FAF9F6" }}
         >
-          <ZoomableGroup center={center} zoom={1} minZoom={0.8} maxZoom={4}>
+          <ZoomableGroup center={center} zoom={1} minZoom={0.7} maxZoom={4}>
             
             {/* World Country Geographies */}
             <Geographies geography={geoUrl}>
@@ -342,11 +344,11 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                       d={d}
                       fill="none"
                       stroke={isSelected ? "#1B5E20" : "url(#routeGrad)"}
-                      strokeWidth={isSelected ? (isMobile ? 2.5 : 3.5) : (isMobile ? 1.5 : 2)}
+                      strokeWidth={isSelected ? (isMobile ? 3 : 3.5) : (isMobile ? 1.8 : 2)}
                       strokeLinecap="round"
                       strokeDasharray="4 4"
                       initial={{ pathLength: 0, opacity: 0 }}
-                      animate={{ pathLength: 1, opacity: isSelected ? 1 : 0.7 }}
+                      animate={{ pathLength: 1, opacity: isSelected ? 1 : 0.75 }}
                       transition={{ duration: 1.2, ease: "easeInOut" }}
                     />
 
@@ -363,8 +365,8 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
             {/* MANUFACTURING HQ MARKER (COIMBATORE, INDIA) */}
             <Marker coordinates={ORIGIN.coordinates}>
               <g className="cursor-pointer group" transform="translate(0, 0)">
-                <circle r={isMobile ? 12 : 16} fill="#2E7D32" opacity={0.25} className="animate-ping" />
-                <circle r={isMobile ? 8 : 11} fill="#2E7D32" stroke="#FFFFFF" strokeWidth={2} className="shadow-md" />
+                <circle r={isMobile ? 14 : 16} fill="#2E7D32" opacity={0.25} className="animate-ping" />
+                <circle r={isMobile ? 10 : 11} fill="#2E7D32" stroke="#FFFFFF" strokeWidth={2} className="shadow-md" />
                 <foreignObject x="-14" y="-14" width="28" height="28" className="pointer-events-none">
                   <div className="w-full h-full flex items-center justify-center text-white">
                     <Factory className="w-3.5 h-3.5" />
@@ -405,7 +407,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                   >
                     {/* Location Pin Ring Animation */}
                     <circle
-                      r={isSelected ? (isMobile ? 10 : 14) : (isMobile ? 7 : 9)}
+                      r={isSelected ? (isMobile ? 12 : 14) : (isMobile ? 8 : 9)}
                       fill={isSelected ? '#1B5E20' : '#F59E0B'}
                       opacity={0.35}
                       className="animate-pulse"
@@ -413,7 +415,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                     
                     {/* Main Pin Icon Circle */}
                     <circle
-                      r={isSelected ? (isMobile ? 6 : 8) : (isMobile ? 4.5 : 6)}
+                      r={isSelected ? (isMobile ? 7 : 8) : (isMobile ? 5.5 : 6)}
                       fill={isSelected ? '#1B5E20' : '#F59E0B'}
                       stroke="#FFFFFF"
                       strokeWidth={1.5}
@@ -462,8 +464,8 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
 
         {/* Mobile Drag & Zoom Hint Overlay */}
         {isMobile && (
-          <div className="absolute bottom-2.5 right-3 bg-stone-900/75 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-[10px] font-medium pointer-events-none z-30">
-            Pinch / Drag to zoom &amp; move map
+          <div className="absolute bottom-2.5 right-3 bg-stone-900/75 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-[10px] font-medium pointer-events-none z-30 shadow-md">
+            Pinch / Drag to explore map
           </div>
         )}
 
@@ -473,4 +475,5 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
 };
 
 export default GlobalMap;
+
 
