@@ -369,11 +369,18 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 1: HERO — Full-Screen Video Background with Overlaid Content
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full min-h-[600px] lg:min-h-[720px] xl:min-h-[780px] flex items-center overflow-hidden bg-stone-900 pt-44 sm:pt-48 lg:pt-52 pb-16 sm:pb-20 lg:pb-24">
+      <section className="relative w-full min-h-[600px] lg:min-h-[720px] xl:min-h-[780px] flex items-center overflow-hidden bg-stone-100 pt-44 sm:pt-48 lg:pt-52 pb-16 sm:pb-20 lg:pb-24">
         
-        {/* ── 1. BACKGROUND VIDEO (FULL WIDTH & HEIGHT 100vw x 100%) ── */}
+        {/* ── 1. BACKGROUND VIDEO & INSTANT IMAGE LAYER (FULL WIDTH & HEIGHT) ── */}
         <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
-          {!heroVideoError ? (
+          {/* Instant Background Image Layer so user never sees a dark/empty screen while video loads */}
+          <img
+            src="/hero-product.webp"
+            alt="Cocoveera Products"
+            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+          />
+
+          {!heroVideoError && (
             <motion.video
               style={{ y: yHeroImage }}
               initial={{ opacity: 0, scale: 1 }}
@@ -382,10 +389,10 @@ const Home = () => {
                 scale: [1, 1.04, 1]
               }}
               transition={{ 
-                opacity: { duration: 0.6, ease: "easeOut" },
+                opacity: { duration: 0.4, ease: "easeOut" },
                 scale: { duration: 20, repeat: Infinity, ease: "easeInOut" }
               }}
-              src={shouldLoadHeroVideo ? "/company-trail-video.mp4" : undefined}
+              src="/company-trail-video.mp4"
               poster="/hero-product.webp"
               autoPlay
               muted
@@ -393,26 +400,19 @@ const Home = () => {
               playsInline
               preload="auto"
               onLoadedData={() => setHeroVideoLoaded(true)}
+              onCanPlay={() => setHeroVideoLoaded(true)}
               onError={() => setHeroVideoError(true)}
+              ref={(el) => {
+                if (el && el.paused) {
+                  el.play().catch(() => {});
+                }
+              }}
               onTimeUpdate={(e) => {
                 const video = e.target;
                 if (video.duration > 0 && video.currentTime >= video.duration - 0.25) {
                   video.currentTime = 0.1;
                 }
               }}
-              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
-            />
-          ) : (
-            <motion.img
-              style={{ y: yHeroImage }}
-              initial={{ opacity: 0, scale: 1 }}
-              animate={{ opacity: 1, scale: [1, 1.04, 1] }}
-              transition={{
-                opacity: { duration: 0.6 },
-                scale: { duration: 20, repeat: Infinity, ease: "easeInOut" }
-              }}
-              src="/hero-product.webp"
-              alt="Cocoveera Products"
               className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
             />
           )}

@@ -30,6 +30,17 @@ const Navbar = () => {
     setLangDropdown(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const handleLogout = () => {
     logout();
     navigate('/');

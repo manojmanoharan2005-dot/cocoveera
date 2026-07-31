@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -26,7 +26,7 @@ export default function AdminLayout({ children }) {
   const { admin, logout } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
 
   const [productsOpen, setProductsOpen] = useState(
     location.pathname.includes('/admin/products') || location.pathname.includes('/admin/categories')
@@ -34,6 +34,25 @@ export default function AdminLayout({ children }) {
   const [rfqOpen, setRfqOpen] = useState(
     location.pathname.includes('/admin/quote-requests')
   );
+
+  // Auto close sidebar on route change for mobile/tablet
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
+
+  // Lock body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (sidebarOpen && window.innerWidth < 1024) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
 
   const handleLogout = () => {
     logout();
