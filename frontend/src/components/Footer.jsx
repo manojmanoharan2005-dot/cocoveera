@@ -73,7 +73,7 @@ const Footer = () => {
             {[
               {
                 Icon: Linkedin,
-                href: 'https://www.linkedin.com/in/cocoveera🌿-support-desk-b51229422?utm_source=share_via&utm_content=profile&utm_medium=member_android',
+                href: 'https://www.linkedin.com/company/cocoveera/',
               },
               { Icon: Facebook, href: 'https://facebook.com' },
               { Icon: Twitter, href: 'https://twitter.com' },
