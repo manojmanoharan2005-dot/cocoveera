@@ -16,10 +16,40 @@ import {
 import { motion } from 'framer-motion';
 import GlobalMap, { DESTINATIONS } from '../components/GlobalMap';
 import SEO from '../components/SEO';
+import { useEffect } from 'react';
 
 const CoconutSubstrates = () => {
   const [selectedDestId, setSelectedDestId] = useState('usa');
   const mapSectionRef = useRef(null);
+
+  // Hero Video States & Ref
+  const [videoError, setVideoError] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const videoContainerRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadVideo(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    const currentRef = videoContainerRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.disconnect();
+      }
+    };
+  }, []);
 
   const handleSelectDestination = (dest) => {
     setSelectedDestId(dest.id);
@@ -102,15 +132,50 @@ const CoconutSubstrates = () => {
               className="lg:col-span-6 relative flex justify-center items-center"
             >
               <div className="relative w-full max-w-2xl rounded-[20px] overflow-hidden shadow-md border border-stone-200/80 bg-white">
-                {/* Large container ship background */}
-                <div className="relative h-[320px] sm:h-[420px] lg:h-[480px] w-full overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=80"
-                    alt="Cocoveera Container Ship & Shipping Containers"
-                    className="w-full h-full object-cover"
-                  />
+                {/* Large container ship video with fallback image */}
+                <div ref={videoContainerRef} className="relative h-[320px] sm:h-[420px] lg:h-[480px] w-full overflow-hidden p-3 flex items-center justify-center">
+                  {!videoError ? (
+                    <motion.video
+                      style={{
+                        filter: 'brightness(1.05) contrast(1.08) saturate(1.05)',
+                        maskImage: 'radial-gradient(ellipse 92% 92% at 50% 50%, black 75%, transparent 100%)',
+                        WebkitMaskImage: 'radial-gradient(ellipse 92% 92% at 50% 50%, black 75%, transparent 100%)',
+                      }}
+                      initial={{ opacity: 0, y: 0 }}
+                      animate={{ 
+                        opacity: isVideoLoaded ? 1 : 0,
+                        y: [0, -7, 0]
+                      }}
+                      transition={{ 
+                        opacity: { duration: 0.8, ease: "easeOut" },
+                        y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                      src={shouldLoadVideo ? "/company-trail-video.mp4" : undefined}
+                      poster="https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=80"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      onLoadedData={() => setIsVideoLoaded(true)}
+                      onError={() => setVideoError(true)}
+                      onTimeUpdate={(e) => {
+                        const video = e.target;
+                        if (video.duration > 0 && video.currentTime >= video.duration - 0.25) {
+                          video.currentTime = 0.1;
+                        }
+                      }}
+                      className="w-full h-full object-cover rounded-[16px] pointer-events-none shadow-[0_20px_40px_rgba(0,0,0,0.12)]"
+                    />
+                  ) : (
+                    <img
+                      src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=80"
+                      alt="Cocoveera Container Ship & Shipping Containers"
+                      className="w-full h-full object-cover rounded-[16px]"
+                    />
+                  )}
                   {/* Soft white overlay with natural lighting */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/20 to-transparent pointer-events-none" />
                 </div>
 
                 {/* Premium Cocoveera Grow Bag Floating / Overlapping slightly */}

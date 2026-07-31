@@ -270,6 +270,35 @@ const Home = () => {
   const statsRef = useRef(null);
   const productRef = useRef(null);
 
+  // Hero Video States & Ref
+  const [heroVideoError, setHeroVideoError] = useState(false);
+  const [heroVideoLoaded, setHeroVideoLoaded] = useState(false);
+  const [shouldLoadHeroVideo, setShouldLoadHeroVideo] = useState(false);
+  const heroVideoContainerRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadHeroVideo(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    const currentContainer = heroVideoContainerRef.current;
+    if (currentContainer) {
+      observer.observe(currentContainer);
+    }
+
+    return () => {
+      if (currentContainer) {
+        observer.disconnect();
+      }
+    };
+  }, []);
+
   const { data: dbCategories = [], isLoading } = useSWR(
     `${API_URL}/categories`,
     fetcher,
@@ -340,28 +369,68 @@ const Home = () => {
       {/* ═══════════════════════════════════════════════════════════════════
           SECTION 1: HERO — Full-screen factory illustration background
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-[520px] sm:min-h-[600px] max-h-[900px] h-screen flex items-center bg-white overflow-hidden max-w-7xl mx-auto w-full">
+      <section className="relative min-h-[520px] sm:min-h-[600px] max-h-[900px] h-screen flex items-center bg-white overflow-hidden w-full">
         
-        {/* ── RIGHT SIDE IMAGE (Restricted to right half so products stay on the side) ── */}
-        <div className="absolute inset-y-0 right-0 w-full lg:w-[55%] z-0">
-          <motion.img
-            style={{ y: yHeroImage }}
-            src="/hero-product.webp"
-            alt="Cocoveera Products"
-            className="absolute -top-[12%] w-full h-[112%] object-contain object-bottom md:object-cover md:object-center lg:object-center"
+        {/* ── RIGHT SIDE HERO BACKGROUND VIDEO (Prominent 58% Width) ── */}
+        <div ref={heroVideoContainerRef} className="absolute inset-y-0 right-0 w-full lg:w-[58%] h-full z-0 overflow-hidden pointer-events-none">
+          {!heroVideoError ? (
+            <motion.video
+              style={{ y: yHeroImage }}
+              initial={{ opacity: 0, scale: 1 }}
+              animate={{ 
+                opacity: heroVideoLoaded ? 1 : 0,
+                scale: [1, 1.04, 1]
+              }}
+              transition={{ 
+                opacity: { duration: 0.6, ease: "easeOut" },
+                scale: { duration: 20, repeat: Infinity, ease: "easeInOut" }
+              }}
+              src={shouldLoadHeroVideo ? "/company-trail-video.mp4" : undefined}
+              poster="/hero-product.webp"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              onLoadedData={() => setHeroVideoLoaded(true)}
+              onError={() => setHeroVideoError(true)}
+              onTimeUpdate={(e) => {
+                const video = e.target;
+                if (video.duration > 0 && video.currentTime >= video.duration - 0.25) {
+                  video.currentTime = 0.1;
+                }
+              }}
+              className="w-full h-full object-cover object-center opacity-100 filter-none"
+            />
+          ) : (
+            <motion.img
+              style={{ y: yHeroImage }}
+              initial={{ opacity: 0, scale: 1 }}
+              animate={{ opacity: 1, scale: [1, 1.04, 1] }}
+              transition={{
+                opacity: { duration: 0.6 },
+                scale: { duration: 20, repeat: Infinity, ease: "easeInOut" }
+              }}
+              src="/hero-product.webp"
+              alt="Cocoveera Products"
+              className="w-full h-full object-cover object-center"
+            />
+          )}
+
+          {/* ── PRECISE 200px GRADIENT OVERLAY (White 100% -> White 60% -> Transparent) ── */}
+          <div 
+            className="absolute inset-y-0 left-0 w-[200px] z-10 pointer-events-none hidden lg:block"
+            style={{
+              background: 'linear-gradient(to right, #ffffff 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%)'
+            }}
           />
-          {/* Blend image edge into the white background */}
-          <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-white via-white/80 to-transparent hidden lg:block" />
-          <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-white to-transparent hidden lg:block" />
-          {/* Soft bottom fade */}
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
-          
-          {/* Mobile overlay */}
-          <div className="absolute inset-0 bg-white/80 lg:hidden" />
+
+          {/* Mobile screen light overlay for text readability */}
+          <div className="absolute inset-0 bg-white/70 lg:hidden pointer-events-none z-10" />
         </div>
 
         {/* ── HERO CONTENT ── */}
-        <motion.div style={{ y: yHeroText }} className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-6 lg:px-12 pt-32 sm:pt-40 md:pt-48 pb-14 sm:pb-20">
+        <motion.div style={{ y: yHeroText }} className="relative z-10 w-full px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 pt-32 sm:pt-40 md:pt-48 pb-14 sm:pb-20">
           {/* Subtle glowing accent orb behind text */}
           <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
 

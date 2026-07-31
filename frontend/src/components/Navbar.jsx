@@ -53,7 +53,7 @@ const Navbar = () => {
           isScrolled ? 'max-h-0 py-0 opacity-0' : 'max-h-10 py-2 opacity-100'
         }`}
       >
-        <div className="max-w-screen-xl mx-auto px-5 sm:px-6 flex justify-between items-center h-full">
+        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 flex justify-between items-center h-full">
           <div className="flex items-center gap-3 sm:gap-6 flex-wrap justify-center w-full sm:w-auto">
             <a href="mailto:supportdesk@cocoveera.com" className="flex items-center gap-1.5 hover:text-green-200 transition-colors">
               <Mail className="w-3 h-3" />
@@ -69,7 +69,7 @@ const Navbar = () => {
 
       {/* ── MAIN NAV ── */}
       <nav className={`bg-transparent transition-all duration-500 ${isScrolled ? 'py-2' : 'py-3 sm:py-4'}`}>
-        <div className="max-w-screen-xl mx-auto px-5 sm:px-6 flex items-center gap-4 sm:gap-8">
+        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 flex items-center gap-4 sm:gap-8">
 
           {/* LOGO */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
