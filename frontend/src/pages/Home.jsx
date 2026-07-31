@@ -436,6 +436,22 @@ const Home = () => {
               background: 'linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.15) 15%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0) 60%)'
             }}
           />
+
+          {/* ── 3. FLOATING EXPERIENCE BADGE ── */}
+          <div 
+            style={{ boxShadow: '0 18px 40px rgba(0,0,0,0.25)' }}
+            className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] md:w-[150px] md:h-[150px] bg-[#2E7D32] text-white rounded-[18px] sm:rounded-[20px] border-2 border-white flex flex-col items-center justify-center text-center p-2.5 sm:p-3 z-30 transition-all duration-300 hover:-translate-y-1.5 cursor-default select-none pointer-events-auto"
+          >
+            <span className="font-poppins font-extrabold text-[38px] sm:text-[46px] md:text-[50px] leading-none tracking-tight text-white mb-0.5">
+              +2
+            </span>
+            <span className="text-[10px] sm:text-[11px] md:text-[12px] font-semibold tracking-wide text-white/90 leading-tight uppercase">
+              Years of
+            </span>
+            <span className="text-[12px] sm:text-[13px] md:text-[14px] font-extrabold tracking-wide text-white leading-tight uppercase">
+              Excellence
+            </span>
+          </div>
         </section>
       </div>
 
@@ -596,12 +612,20 @@ const Home = () => {
               autoPlay
               playsInline
             />
-            {/* Floating year badge */}
-            <div className="absolute -bottom-6 -right-6 md:-bottom-8 md:-right-8 bg-primary text-white px-7 py-6 rounded-2xl shadow-2xl border-[6px] border-accent z-20">
-              <div className="font-poppins font-extrabold text-4xl leading-none mb-1 text-center">15+</div>
-              <div className="text-[11px] font-bold leading-tight tracking-wide text-white/90 text-center">
-                Years of<br />Excellence
-              </div>
+            {/* Floating Experience Badge */}
+            <div 
+              style={{ boxShadow: '0 18px 40px rgba(0,0,0,0.18)' }}
+              className="absolute -bottom-[25px] -right-[25px] w-[150px] h-[150px] bg-[#2E7D32] text-white rounded-[20px] border-2 border-white flex flex-col items-center justify-center text-center p-3 z-20 transition-all duration-300 hover:-translate-y-1.5 cursor-default select-none"
+            >
+              <span className="font-poppins font-extrabold text-[50px] leading-none tracking-tight text-white mb-0.5">
+                +2
+              </span>
+              <span className="text-[12px] font-semibold tracking-wide text-white/90 leading-tight uppercase">
+                Years of
+              </span>
+              <span className="text-[14px] font-extrabold tracking-wide text-white leading-tight uppercase">
+                Excellence
+              </span>
             </div>
           </motion.div>
 

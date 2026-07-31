@@ -265,7 +265,7 @@ function AppContent() {
       const hasValidAdminToken = isTokenValid(adminToken);
 
       const path = window.location.pathname;
-      const isUserProtected = path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved');
+      const isUserProtected = !path.startsWith('/admin') && (path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved'));
       const isAdminProtected = path.startsWith('/admin');
 
       if (isAdminProtected && !hasValidAdminToken) {
