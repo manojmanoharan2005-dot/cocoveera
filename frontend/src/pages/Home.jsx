@@ -35,6 +35,7 @@ import {
   ThermometerSun,
   Activity,
   Layers,
+  Lock,
 } from 'lucide-react';
 import GlobalMap from '../components/GlobalMap';
 
@@ -729,71 +730,110 @@ const Home = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 7: QUALITY TESTING
+          SECTION 7: QUALITY TESTING (LOCKED PREVIEW / COMING SOON)
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
-          {/* Left: Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="space-y-6"
-          >
-            <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block">QUALITY TESTING</span>
-            <h2 className="text-4xl font-poppins font-extrabold text-stone-900 leading-tight">
-              Tested. Verified.<br />
-              <span className="text-primary">Trusted Worldwide.</span>
-            </h2>
-            <p className="text-stone-600 text-sm leading-relaxed max-w-md">
-              Every batch undergoes rigorous quality testing in our state-of-the-art laboratory to meet international standards and deliver consistency.
-            </p>
-            {/* Test type pills */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              {qualityTests.map((t, i) => (
-                <div key={i} className="flex items-center gap-2 bg-accent border border-stone-200 rounded-full px-4 py-2">
-                  <t.icon className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-xs font-bold text-stone-700">{t.name}</span>
-                  <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">{t.range}</span>
+      <section className="py-14 sm:py-20 px-5 sm:px-6 bg-white relative overflow-hidden group cursor-not-allowed select-none">
+        <div className="max-w-7xl mx-auto relative rounded-3xl overflow-hidden">
+          
+          {/* UNDERLYING SECTION CONTENT (INACTIVE & BLURRED) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center filter blur-md opacity-60 pointer-events-none select-none">
+            {/* Left: Content */}
+            <div className="space-y-6">
+              <span className="text-primary font-poppins text-xs font-bold uppercase tracking-widest block">QUALITY TESTING</span>
+              <h2 className="text-4xl font-poppins font-extrabold text-stone-900 leading-tight">
+                Tested. Verified.<br />
+                <span className="text-primary">Trusted Worldwide.</span>
+              </h2>
+              <p className="text-stone-600 text-sm leading-relaxed max-w-md">
+                Every batch undergoes rigorous quality testing in our state-of-the-art laboratory to meet international standards and deliver consistency.
+              </p>
+              {/* Test type pills */}
+              <div className="flex flex-wrap gap-3 pt-2">
+                {qualityTests.map((t, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-accent border border-stone-200 rounded-full px-4 py-2">
+                    <t.icon className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-bold text-stone-700">{t.name}</span>
+                    <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">{t.range}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Disabled View Test Reports button (preserved, blurred & pointer-events-none) */}
+              <button
+                disabled
+                aria-disabled="true"
+                tabIndex={-1}
+                className="inline-flex items-center gap-2 bg-primary text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl shadow-lg opacity-75 cursor-not-allowed pointer-events-none filter blur-[1px]"
+              >
+                VIEW TEST REPORTS <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Right: Test images grid */}
+            <div className="grid grid-cols-3 gap-3">
+              {qualityTests.slice(0, 5).map((t, i) => (
+                <div
+                  key={i}
+                  className={`relative rounded-2xl overflow-hidden ${i === 0 ? 'col-span-2 row-span-1' : ''}`}
+                >
+                  <img
+                    src={t.img}
+                    alt={t.name}
+                    className="w-full h-40 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
+                    <div>
+                      <div className="text-white font-bold text-xs">{t.name}</div>
+                      <div className="text-white/70 text-[10px]">Testing</div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-            <Link
-              to="/quality-testing"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:-translate-y-0.5"
-            >
-              VIEW TEST REPORTS <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
+          </div>
 
-          {/* Right: Test images grid */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="grid grid-cols-3 gap-3"
-          >
-            {qualityTests.slice(0, 5).map((t, i) => (
-              <div
-                key={i}
-                className={`relative rounded-2xl overflow-hidden ${i === 0 ? 'col-span-2 row-span-1' : ''}`}
-              >
-                <img
-                  src={t.img}
-                  alt={t.name}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
-                  <div>
-                    <div className="text-white font-bold text-xs">{t.name}</div>
-                    <div className="text-white/70 text-[10px]">Testing</div>
-                  </div>
-                </div>
+          {/* OVERLAY & PREMIUM LOCK CARD */}
+          <div className="absolute inset-0 bg-white/75 backdrop-blur-md rounded-3xl flex items-center justify-center p-6 transition-colors duration-300 group-hover:bg-white/85 z-20 cursor-not-allowed">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="bg-white/95 backdrop-blur-xl border border-stone-200/80 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-3xl p-6 sm:p-10 max-w-lg w-full text-center space-y-4 relative overflow-hidden"
+            >
+              {/* Soft Ambient Glows */}
+              <div className="absolute -top-12 -left-12 w-28 h-28 bg-[#2E7D32]/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-12 -right-12 w-28 h-28 bg-[#2E7D32]/10 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Circular Icon Badge */}
+              <div className="w-14 h-14 bg-[#2E7D32] rounded-full flex items-center justify-center mx-auto shadow-md shadow-green-900/20">
+                <Lock className="w-7 h-7 text-white" />
               </div>
-            ))}
-          </motion.div>
+
+              {/* Title & Subtitle */}
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-poppins font-extrabold text-stone-900 tracking-tight">
+                  Quality Testing
+                </h2>
+                <p className="text-[#2E7D32] font-poppins font-bold text-xs sm:text-sm tracking-wider uppercase mt-1">
+                  Coming Soon
+                </p>
+              </div>
+
+              {/* Description */}
+              <p className="text-stone-600 text-xs sm:text-sm font-medium leading-relaxed max-w-sm mx-auto">
+                Our laboratory quality reports and certification portal will be available soon. Stay tuned for verified product testing.
+              </p>
+
+              {/* Premium Pill Badge */}
+              <div className="pt-2">
+                <span className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#2E7D32] border border-[#2E7D32]/30 text-xs font-extrabold px-4 py-1.5 rounded-full shadow-xs animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-[#2E7D32]" />
+                  Launching Soon
+                </span>
+              </div>
+            </motion.div>
+          </div>
+
         </div>
       </section>
 
