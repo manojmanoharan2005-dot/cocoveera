@@ -367,11 +367,11 @@ const Home = () => {
       />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          SECTION 1: HERO — Compact Corporate Video Background Hero
+          SECTION 1: HERO — Video-Only Full-Width Hero Canvas
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full h-[380px] sm:h-[460px] md:h-[520px] lg:h-[clamp(520px,68vh,600px)] flex items-center overflow-hidden bg-stone-100 pt-28 sm:pt-32 lg:pt-36 pb-8 sm:pb-12">
+      <section className="relative w-full h-[380px] sm:h-[460px] md:h-[520px] lg:h-[clamp(520px,68vh,600px)] overflow-hidden bg-stone-100">
         
-        {/* ── 1. BACKGROUND VIDEO & INSTANT IMAGE LAYER (COMPACT SCALE 1.2, CENTER FIT) ── */}
+        {/* ── 1. BACKGROUND VIDEO & INSTANT IMAGE LAYER ── */}
         <div ref={heroVideoContainerRef} className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
           {/* Instant Background Image Layer */}
           <img
@@ -427,73 +427,13 @@ const Home = () => {
           )}
         </div>
 
-        {/* ── 2. GRADIENT OVERLAY FOR READABILITY ── */}
+        {/* ── 2. SUBTLE GRADIENT OVERLAY ── */}
         <div 
           className="absolute inset-0 z-10 pointer-events-none"
           style={{
-            background: 'linear-gradient(90deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.88) 25%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.15) 65%, rgba(255,255,255,0) 80%)'
+            background: 'linear-gradient(90deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.00) 60%)'
           }}
         />
-
-        {/* ── 3. TEXT CONTENT ON TOP OF VIDEO ── */}
-        <motion.div 
-          style={{ y: yHeroText }} 
-          className="relative z-20 w-full pl-6 sm:pl-9 lg:pl-[52px] pr-6"
-        >
-          <div className="max-w-[560px] flex flex-col space-y-3 sm:space-y-4">
-
-            {/* Badge */}
-            <motion.div
-              initial="hidden" animate="visible" variants={fadeUp} custom={0}
-              className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md text-primary text-xs font-bold px-4 py-2 rounded-full self-start border border-primary/20 shadow-sm"
-            >
-              <Leaf className="w-3.5 h-3.5 text-primary drop-shadow-[0_0_8px_rgba(46,125,50,0.5)]" />
-              PREMIUM COCONUT SUBSTRATES
-            </motion.div>
-
-            {/* Heading */}
-            <motion.h1
-              initial="hidden" animate="visible" variants={fadeUp} custom={1}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-poppins font-extrabold text-stone-900 leading-[1.08] sm:leading-[1.05] relative"
-            >
-              Engineered<br />
-              <span className="text-primary relative inline-block">
-                For Global
-                <span className="absolute -inset-1 bg-primary/20 blur-xl -z-10 rounded-full"></span>
-              </span><br />
-              Growers
-            </motion.h1>
-
-            {/* Description */}
-            <motion.p
-              initial="hidden" animate="visible" variants={fadeUp} custom={2}
-              className="text-stone-800 text-sm sm:text-base lg:text-lg leading-relaxed max-w-lg font-medium drop-shadow-sm"
-            >
-              High-performance coconut coir solutions for hydroponics, greenhouses and nurseries. Exported worldwide with quality you can trust.
-            </motion.p>
-
-            {/* CTA Buttons */}
-            <motion.div
-              initial="hidden" animate="visible" variants={fadeUp} custom={3}
-              className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-1"
-            >
-              <Link
-                to="/products"
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-poppins text-sm font-bold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
-              >
-                EXPLORE PRODUCTS <ChevronRight className="w-4 h-4" />
-              </Link>
-              <a
-                href="/cocoveera-brochure.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 border-2 border-stone-800 hover:border-primary text-stone-800 hover:text-primary font-poppins text-sm font-bold px-7 py-3.5 rounded-xl transition-all duration-300 bg-white/70 backdrop-blur-sm shadow-sm"
-              >
-                VIEW BROCHURE <ChevronRight className="w-4 h-4" />
-              </a>
-            </motion.div>
-          </div>
-        </motion.div>
       </section>
 
       {/* ── FEATURE CARDS STRIP BELOW HERO ── */}
