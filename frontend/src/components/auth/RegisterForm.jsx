@@ -213,8 +213,18 @@ export const RegisterForm = () => {
       const res = await verifyOtp(registeredEmail, fullOtp);
       if (res.success) {
         localStorage.removeItem('cocoveera_register_cache');
-        setSuccessMsg('Verification successful. Welcome to Cocoveera!');
-        setShowAnimation(true);
+        sessionStorage.setItem('show_registration_onboarding', 'true');
+
+        const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+        const pendingRfq = sessionStorage.getItem('pendingRFQ');
+        if (storedRedirect) {
+          sessionStorage.removeItem('postLoginRedirect');
+          navigate(storedRedirect, { replace: true });
+        } else if (pendingRfq) {
+          navigate('/dashboard/request-quote', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       }
     } catch (err) {
       setApiError(err.message || 'OTP verification failed. Please try again.');
@@ -244,25 +254,6 @@ export const RegisterForm = () => {
       setLoading(false);
     }
   };
-
-  if (showAnimation) {
-    return (
-      <RegistrationSuccessAnimation
-        onComplete={() => {
-          const storedRedirect = sessionStorage.getItem('postLoginRedirect');
-          const pendingRfq = sessionStorage.getItem('pendingRFQ');
-          if (storedRedirect) {
-            sessionStorage.removeItem('postLoginRedirect');
-            navigate(storedRedirect, { replace: true });
-          } else if (pendingRfq) {
-            navigate('/dashboard/request-quote', { replace: true });
-          } else {
-            navigate('/dashboard', { replace: true });
-          }
-        }}
-      />
-    );
-  }
 
   return (
     <div className="bg-white border border-stone-200/85 rounded-3xl p-6 shadow-soft text-stone-900 max-w-md w-full mx-auto">

@@ -102,7 +102,18 @@ export const OTPForm = () => {
       if (res.success) {
         setSuccessMsg('Account verified successfully!');
         setUserRole(res.user?.role);
-        setShowFullAnimation(true);
+        sessionStorage.setItem('show_registration_onboarding', 'true');
+
+        const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+        const pendingRfq = sessionStorage.getItem('pendingRFQ');
+        if (storedRedirect && res.user?.role !== 'admin') {
+          sessionStorage.removeItem('postLoginRedirect');
+          navigate(storedRedirect, { replace: true });
+        } else if (pendingRfq && res.user?.role !== 'admin') {
+          navigate('/dashboard/request-quote', { replace: true });
+        } else {
+          navigate(res.user?.role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+        }
       }
     } catch (err) {
       setApiError(err.message || 'OTP verification failed. Please try again.');
@@ -131,25 +142,6 @@ export const OTPForm = () => {
       setLoading(false);
     }
   };
-
-  if (showFullAnimation) {
-    return (
-      <RegistrationSuccessAnimation 
-        onComplete={() => {
-          const storedRedirect = sessionStorage.getItem('postLoginRedirect');
-          const pendingRfq = sessionStorage.getItem('pendingRFQ');
-          if (storedRedirect && userRole !== 'admin') {
-            sessionStorage.removeItem('postLoginRedirect');
-            navigate(storedRedirect, { replace: true });
-          } else if (pendingRfq && userRole !== 'admin') {
-            navigate('/dashboard/request-quote', { replace: true });
-          } else {
-            navigate(userRole === 'admin' ? '/admin' : '/dashboard', { replace: true });
-          }
-        }} 
-      />
-    );
-  }
 
   return (
     <div className="bg-stone-900/60 border border-stone-850 rounded-3xl p-8 backdrop-blur-md shadow-premium">

@@ -11,12 +11,21 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import MobileBottomNav from '../components/MobileBottomNav';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import RegistrationSuccessAnimation from '../components/auth/RegistrationSuccessAnimation';
 
 export const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showOnboardingAnimation, setShowOnboardingAnimation] = useState(false);
+
+  useEffect(() => {
+    const isNewRegistration = sessionStorage.getItem('show_registration_onboarding');
+    if (isNewRegistration === 'true') {
+      setShowOnboardingAnimation(true);
+    }
+  }, []);
 
   // Prefetch dashboard data as soon as the user logs in / hits layout
   useEffect(() => {
@@ -364,6 +373,15 @@ export const DashboardLayout = () => {
       )}
 
       <MobileBottomNav />
+
+      {showOnboardingAnimation && (
+        <RegistrationSuccessAnimation
+          onComplete={() => {
+            sessionStorage.removeItem('show_registration_onboarding');
+            setShowOnboardingAnimation(false);
+          }}
+        />
+      )}
     </div>
   );
 };
