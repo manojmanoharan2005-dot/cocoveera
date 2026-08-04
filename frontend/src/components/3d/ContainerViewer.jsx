@@ -214,9 +214,10 @@ export default function ContainerViewer({ width = '100%', height = 320, initialC
           }`}
         >
           <img
-            src={containerPreviewImg}
+            src="/container-configurations.jpg"
             alt="Container Preview"
-            className="w-full h-full object-cover mix-blend-multiply"
+            className="w-full h-full object-contain"
+            loading="lazy"
           />
           <div
             className="absolute inset-0 opacity-30 mix-blend-color transition-colors duration-500 pointer-events-none"

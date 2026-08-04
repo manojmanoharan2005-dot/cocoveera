@@ -36,12 +36,22 @@ export const ContainerViewer3D = React.memo(({ containerType = '40HC', totalQuan
       <div 
         className="w-full h-64 sm:h-72 rounded-2xl bg-gradient-to-b from-[#FAFAFA] via-[#F2F4F2] to-[#E5E8E5] border border-stone-200/60 flex items-center justify-center p-2 relative overflow-hidden shadow-inner"
       >
-        <ContainerMini3DCanvas 
-          containerType={containerType} 
-          product={activeProduct} 
-          totalQuantity={totalQuantity} 
-          palletItems={palletItems} 
-        />
+        {/* 3D Model View (Disabled - change to true or uncomment to re-enable 3D rendering) */}
+        {false ? (
+          <ContainerMini3DCanvas 
+            containerType={containerType} 
+            product={activeProduct} 
+            totalQuantity={totalQuantity} 
+            palletItems={palletItems} 
+          />
+        ) : (
+          <img 
+            src="/container-configurations.jpg" 
+            alt="Container Configurations" 
+            className="w-full h-full object-contain"
+            loading="lazy"
+          />
+        )}
       </div>
 
       {/* METRICS SUMMARY BAR */}
