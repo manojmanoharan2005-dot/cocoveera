@@ -24,13 +24,13 @@ const Products = () => {
   const { data: products = [], isLoading: loadingProducts } = useSWR(
     '/products',
     fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 600000 }
+    { revalidateOnFocus: true, revalidateOnMount: true, revalidateIfStale: true, dedupingInterval: 5000 }
   );
 
   const { data: categories = [] } = useSWR(
     '/categories',
     fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 600000 }
+    { revalidateOnFocus: true, revalidateOnMount: true, revalidateIfStale: true, dedupingInterval: 5000 }
   );
 
   // Build unique category options list

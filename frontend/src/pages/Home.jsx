@@ -303,7 +303,7 @@ const Home = () => {
   const { data: dbCategories = [], isLoading } = useSWR(
     `${API_URL}/categories`,
     fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 600000 }
+    { revalidateOnFocus: true, revalidateOnMount: true, revalidateIfStale: true, dedupingInterval: 5000 }
   );
 
   const sortedCategories = dbCategories;
