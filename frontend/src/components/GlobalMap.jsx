@@ -1,16 +1,16 @@
 /**
  * File: frontend/src/components/GlobalMap.jsx
  * Purpose: Enterprise Global Shipping Network Dashboard for Cocoveera B2B Export Website.
- * Renders real-time SVG cargo vessel transit from Tuticorin Port to global destination ports.
- * Features 100% precise SVG path tracking via native getPointAtLength API, smooth 2.6s voyage,
- * rotational alignment, arrival ripples, and clean light UI with no transit days displayed.
+ * Features real-time SVG cargo vessel transit from Tuticorin Port to global destination ports,
+ * 100% precise SVG path tracking via native getPointAtLength API, smooth 2.6s voyage,
+ * and dynamic Haversine distance calculation (KM) from Tuticorin Port for every destination.
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { geoMercator } from 'd3-geo';
-import { Anchor, Ship, CheckCircle2, Box, Award } from 'lucide-react';
+import { Anchor, Ship, CheckCircle2, MapPin } from 'lucide-react';
 
 const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 
@@ -24,7 +24,7 @@ export const ORIGIN = {
   coordinates: [78.1348, 8.7642],
 };
 
-// Global Export Destinations (Strictly NO transit days or distance fields)
+// Global Export Destinations with Exact Port Coordinates
 export const DESTINATIONS = [
   {
     id: 'usa',
@@ -33,9 +33,6 @@ export const DESTINATIONS = [
     flag: '🇺🇸',
     city: 'Los Angeles',
     port: 'Port of Los Angeles',
-    products: ['Cocopeat 5kg Blocks', 'Grow Bags'],
-    containersExported: '850+ FEU',
-    yearsPartnership: '6+ Years',
     coordinates: [-118.2437, 34.0522],
     curveOffset: -45,
   },
@@ -46,9 +43,6 @@ export const DESTINATIONS = [
     flag: '🇬🇧',
     city: 'London',
     port: 'Port of Tilbury',
-    products: ['Cocopeat Blocks', 'Coco Husk Chips'],
-    containersExported: '420+ FEU',
-    yearsPartnership: '5+ Years',
     coordinates: [-0.1276, 51.5072],
     curveOffset: 45,
   },
@@ -59,9 +53,6 @@ export const DESTINATIONS = [
     flag: '🇳🇱',
     city: 'Rotterdam',
     port: 'Port of Rotterdam',
-    products: ['Buffered Grow Bags', 'Coir Pith'],
-    containersExported: '650+ FEU',
-    yearsPartnership: '7+ Years',
     coordinates: [4.4777, 51.9244],
     curveOffset: 38,
   },
@@ -72,9 +63,6 @@ export const DESTINATIONS = [
     flag: '🇩🇪',
     city: 'Hamburg',
     port: 'Port of Hamburg',
-    products: ['Grow Bags', 'Coco Chips'],
-    containersExported: '380+ FEU',
-    yearsPartnership: '4+ Years',
     coordinates: [9.9937, 53.5511],
     curveOffset: 30,
   },
@@ -85,9 +73,6 @@ export const DESTINATIONS = [
     flag: '🇪🇸',
     city: 'Valencia',
     port: 'Port of Valencia',
-    products: ['Grow Bags', 'Coir Pith'],
-    containersExported: '290+ FEU',
-    yearsPartnership: '4+ Years',
     coordinates: [-0.3763, 39.4699],
     curveOffset: 32,
   },
@@ -98,9 +83,6 @@ export const DESTINATIONS = [
     flag: '🇦🇪',
     city: 'Dubai',
     port: 'Jebel Ali Port',
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    containersExported: '510+ FEU',
-    yearsPartnership: '6+ Years',
     coordinates: [55.1713, 25.0657],
     curveOffset: 18,
   },
@@ -111,9 +93,6 @@ export const DESTINATIONS = [
     flag: '🇸🇦',
     city: 'Jeddah',
     port: 'Jeddah Islamic Port',
-    products: ['Cocopeat Blocks', 'Coir Pith'],
-    containersExported: '340+ FEU',
-    yearsPartnership: '4+ Years',
     coordinates: [39.1925, 21.4858],
     curveOffset: 22,
   },
@@ -124,9 +103,6 @@ export const DESTINATIONS = [
     flag: '🇸🇬',
     city: 'Singapore',
     port: 'Port of Singapore',
-    products: ['Hydroponic Substrates', 'Grow Bags'],
-    containersExported: '260+ FEU',
-    yearsPartnership: '3+ Years',
     coordinates: [103.8198, 1.3521],
     curveOffset: -18,
   },
@@ -137,9 +113,6 @@ export const DESTINATIONS = [
     flag: '🇻🇳',
     city: 'Hai Phong',
     port: 'Hai Phong Port',
-    products: ['Coir Pith Blocks', 'Grow Bags'],
-    containersExported: '430+ FEU',
-    yearsPartnership: '4+ Years',
     coordinates: [106.6881, 20.8651],
     curveOffset: -22,
   },
@@ -150,9 +123,6 @@ export const DESTINATIONS = [
     flag: '🇰🇷',
     city: 'Busan',
     port: 'Port of Busan',
-    products: ['Grow Bags', 'Coco Chips'],
-    containersExported: '490+ FEU',
-    yearsPartnership: '5+ Years',
     coordinates: [129.0756, 35.1796],
     curveOffset: -32,
   },
@@ -163,9 +133,6 @@ export const DESTINATIONS = [
     flag: '🇯🇵',
     city: 'Tokyo',
     port: 'Port of Tokyo',
-    products: ['Cocopeat Blocks', 'Grow Bags'],
-    containersExported: '530+ FEU',
-    yearsPartnership: '6+ Years',
     coordinates: [139.6503, 35.6762],
     curveOffset: -38,
   },
@@ -176,9 +143,6 @@ export const DESTINATIONS = [
     flag: '🇦🇺',
     city: 'Melbourne',
     port: 'Port of Melbourne',
-    products: ['Buffered Grow Bags', 'Coco Chips'],
-    containersExported: '610+ FEU',
-    yearsPartnership: '5+ Years',
     coordinates: [144.9631, -37.8136],
     curveOffset: -45,
   },
@@ -189,15 +153,30 @@ export const DESTINATIONS = [
     flag: '🇳🇿',
     city: 'Auckland',
     port: 'Ports of Auckland',
-    products: ['Cocopeat Blocks', 'Husk Chips'],
-    containersExported: '210+ FEU',
-    yearsPartnership: '3+ Years',
     coordinates: [174.7633, -36.8485],
     curveOffset: -52,
   },
 ];
 
-// Helper: Calculate Quadratic Bezier Curve string
+// Calculate Haversine Distance in KM from Tuticorin Port to Destination Coordinates
+const getDistanceKm = (startCoords, endCoords) => {
+  const [lon1, lat1] = startCoords;
+  const [lon2, lat2] = endCoords;
+  const R = 6371; // Earth Radius in KM
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = Math.round(R * c);
+  return distance.toLocaleString('en-US') + ' KM';
+};
+
+// Quadratic Bezier Curve Helper
 const getCurvedPathString = (start, end, offset = -30) => {
   const midX = (start[0] + end[0]) / 2;
   const midY = (start[1] + end[1]) / 2;
@@ -607,7 +586,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
         {/* ═══════════════════════════════════════════════════════════════════
             3. FLOATING WHITE TELEMETRY CARD (BOTTOM-LEFT)
         ═══════════════════════════════════════════════════════════════════ */}
-        <div className="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-auto bg-white/95 border border-emerald-100 backdrop-blur-xl p-4 sm:p-5 rounded-[24px] shadow-2xl shadow-emerald-950/10 max-w-md pointer-events-auto">
+        <div className="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-auto bg-white/95 border border-emerald-100 backdrop-blur-xl p-4 sm:p-5 rounded-[24px] shadow-2xl shadow-emerald-950/10 max-w-sm pointer-events-auto">
           
           <div className="flex items-center justify-between gap-4 mb-3">
             <div className="flex items-center gap-2.5">
@@ -645,26 +624,14 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
             />
           </div>
 
-          {/* 2-COLUMN METRICS GRID (STRICTLY NO TRANSIT DAYS / DISTANCE) */}
-          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-stone-100">
-            <div className="bg-emerald-50/70 p-2.5 rounded-2xl border border-emerald-100/80 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-emerald-700 shadow-xs border border-emerald-100">
-                <Box className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-stone-500 font-semibold">Exported</div>
-                <div className="text-xs sm:text-sm font-extrabold text-stone-900">{activeDest.containersExported}</div>
-              </div>
+          {/* SINGLE CENTERED DYNAMIC DISTANCE (KM) METRIC */}
+          <div className="pt-3 border-t border-stone-100 flex flex-col items-center justify-center text-center">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-stone-500 mb-1">
+              <MapPin className="w-4 h-4 text-emerald-600 animate-pulse" />
+              <span>Distance</span>
             </div>
-
-            <div className="bg-emerald-50/70 p-2.5 rounded-2xl border border-emerald-100/80 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-emerald-700 shadow-xs border border-emerald-100">
-                <Award className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-stone-500 font-semibold">Partnership</div>
-                <div className="text-xs sm:text-sm font-extrabold text-stone-900">{activeDest.yearsPartnership}</div>
-              </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
+              {getDistanceKm(ORIGIN.coordinates, activeDest.coordinates)}
             </div>
           </div>
 
