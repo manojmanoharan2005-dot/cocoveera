@@ -310,6 +310,7 @@ function AppContent() {
           <Route path="/global-network" element={<CoconutSubstrates />} />
           <Route path="/substrates" element={<Navigate to="/global-network" replace />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/how-it-works" element={<Onboarding />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
 
