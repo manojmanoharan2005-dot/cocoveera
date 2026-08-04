@@ -157,6 +157,18 @@ export const DESTINATIONS = [
     shipPos: 0.5,
   },
   {
+    id: 'vietnam',
+    country: 'Vietnam',
+    city: 'Hai Phong Port',
+    flag: '🇻🇳',
+    port: 'Hai Phong Port',
+    products: ['Cocopeat Blocks', 'Grow Bags'],
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1000&q=85',
+    coordinates: [106.6881, 20.8651],
+    curveOffset: -20,
+    shipPos: 0.5,
+  },
+  {
     id: 'nz',
     country: 'New Zealand',
     city: 'Auckland Port',

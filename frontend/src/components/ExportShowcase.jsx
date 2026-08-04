@@ -99,6 +99,14 @@ const ROW_2_DATA = [
     image: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=600&q=80',
   },
   {
+    id: 'vietnam',
+    code: 'VN',
+    country: 'Vietnam',
+    flag: '🇻🇳',
+    port: 'Hai Phong Port',
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=600&q=80',
+  },
+  {
     id: 'nz',
     code: 'NZ',
     country: 'New Zealand',

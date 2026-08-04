@@ -15,7 +15,8 @@ export const COUNTRIES_LIST = [
   { name: 'Spain', code: 'ES', currency: 'EUR' },
   { name: 'Mexico', code: 'MX', currency: 'MXN' },
   { name: 'Brazil', code: 'BR', currency: 'BRL' },
-  { name: 'South Africa', code: 'ZA', currency: 'ZAR' }
+  { name: 'South Africa', code: 'ZA', currency: 'ZAR' },
+  { name: 'Vietnam', code: 'VN', currency: 'VND' }
 ];
 
 /**
