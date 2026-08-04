@@ -47,10 +47,8 @@ const SUPPORT_LINKS = [
 
 const Footer = () => {
   const { data: dbCategories = [] } = useSWR(`${API_URL}/categories`, fetcher, {
-    revalidateOnFocus: true,
-    revalidateOnMount: true,
-    revalidateIfStale: true,
-    dedupingInterval: 5000,
+    revalidateOnFocus: false,
+    dedupingInterval: 600000,
   });
 
   const categoryItems =

@@ -1,11 +1,12 @@
 import NodeCache from 'node-cache';
 
 // stdTTL: time to live in seconds
-const cache = new NodeCache({ stdTTL: 120, checkperiod: 60 });
+const cache = new NodeCache({ stdTTL: 300, checkperiod: 120 });
 
 export const cacheMiddleware = (duration) => {
   return (req, res, next) => {
     if (req.method !== 'GET') {
+      console.error('Cannot cache non-GET methods!');
       return next();
     }
 
@@ -13,8 +14,7 @@ export const cacheMiddleware = (duration) => {
     const cachedResponse = cache.get(key);
 
     if (cachedResponse) {
-      res.setHeader('X-Cache', 'HIT');
-      return res.send(cachedResponse);
+      res.send(cachedResponse);
     } else {
       res.originalSend = res.send;
       res.send = (body) => {
@@ -27,18 +27,10 @@ export const cacheMiddleware = (duration) => {
 };
 
 export const clearCache = (keyPattern) => {
-  if (!keyPattern) {
-    cache.flushAll();
-    return;
-  }
   const keys = cache.keys();
   for (const key of keys) {
-    if (key.includes(keyPattern) || keyPattern.includes(key)) {
+    if (key.includes(keyPattern)) {
       cache.del(key);
     }
-  }
-  // Always flush all cache on product or category admin updates to guarantee 100% fresh data
-  if (keyPattern.includes('product') || keyPattern.includes('categor')) {
-    cache.flushAll();
   }
 };

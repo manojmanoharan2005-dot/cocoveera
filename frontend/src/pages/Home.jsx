@@ -303,7 +303,7 @@ const Home = () => {
   const { data: dbCategories = [], isLoading } = useSWR(
     `${API_URL}/categories`,
     fetcher,
-    { revalidateOnFocus: true, revalidateOnMount: true, revalidateIfStale: true, dedupingInterval: 5000 }
+    { revalidateOnFocus: false, dedupingInterval: 600000 }
   );
 
   const sortedCategories = dbCategories;
@@ -596,38 +596,55 @@ const Home = () => {
       ═══════════════════════════════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 px-5 sm:px-6 bg-accent overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16 items-center">
-          {/* Left: image with play button */}
+          {/* Left: image with ambient glow & Ken Burns animation */}
           <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="relative"
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="relative group lg:-mt-6"
           >
-            <LazyVideo 
-              src="/company-trail-video.mp4"
-              poster="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=700&q=80"
-              className="rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3] w-full"
-              muted
-              loop
-              autoPlay
-              playsInline
-            />
+            {/* Ambient Background Glow */}
+            <div className="absolute -inset-2 bg-gradient-to-r from-emerald-600/30 to-amber-500/20 rounded-[35px] blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-700 -z-10" />
+
+            {/* Main Image Container */}
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-video lg:aspect-[4/3] w-full border-2 border-white/60 bg-stone-900">
+              <motion.img 
+                src="/about-hero.png"
+                alt="Cocoveera Plantation Sunset"
+                className="w-full h-full object-cover object-center"
+                animate={{
+                  scale: [1.02, 1.09, 1.02],
+                  y: [0, -6, 0],
+                }}
+                transition={{
+                  duration: 12,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Subtle Gradient Overlay for depth */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
+            </div>
+
             {/* Floating Experience Badge */}
-            <div 
-              style={{ boxShadow: '0 18px 40px rgba(0,0,0,0.18)' }}
-              className="absolute -bottom-[25px] -right-[25px] w-[150px] h-[150px] bg-[#2E7D32] text-white rounded-[20px] border-2 border-white flex flex-col items-center justify-center text-center p-3 z-20 transition-all duration-300 hover:-translate-y-1.5 cursor-default select-none"
+            <motion.div 
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              style={{ boxShadow: '0 20px 45px rgba(0,0,0,0.22)' }}
+              className="absolute -bottom-[25px] -right-[20px] sm:-right-[25px] w-[140px] sm:w-[150px] h-[140px] sm:h-[150px] bg-[#2E7D32] text-white rounded-[22px] border-4 border-white flex flex-col items-center justify-center text-center p-3 z-20 cursor-default select-none shadow-2xl"
             >
-              <span className="font-poppins font-extrabold text-[50px] leading-none tracking-tight text-white mb-0.5">
+              <span className="font-poppins font-extrabold text-[44px] sm:text-[50px] leading-none tracking-tight text-white mb-0.5 drop-shadow-md">
                 +2
               </span>
-              <span className="text-[12px] font-semibold tracking-wide text-white/90 leading-tight uppercase">
+              <span className="text-[11px] sm:text-[12px] font-semibold tracking-wide text-white/90 leading-tight uppercase">
                 Years of
               </span>
-              <span className="text-[14px] font-extrabold tracking-wide text-white leading-tight uppercase">
+              <span className="text-[13px] sm:text-[14px] font-extrabold tracking-wide text-white leading-tight uppercase">
                 Excellence
               </span>
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* Right: Content */}

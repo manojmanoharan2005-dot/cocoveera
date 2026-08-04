@@ -182,8 +182,7 @@ export const Marketplace = () => {
   const { data: dbCategories = [], mutate: refetchCategories } = useSWR(`${API_URL}/categories`, fetcher, { 
     revalidateOnFocus: true,
     revalidateOnMount: true,
-    revalidateIfStale: true,
-    dedupingInterval: 2000 
+    dedupingInterval: 30000 
   });
 
   useEffect(() => {
