@@ -16,7 +16,10 @@ import { API_URL } from '../utils/config';
 import ImageWithFallback from '../components/common/ImageWithFallback';
 import useSWR from 'swr';
 
-const fetcher = url => axios.get(url).then(res => res.data.data);
+const fetcher = url => axios.get(url).then(res => {
+  const data = res.data?.data ?? res.data;
+  return Array.isArray(data) ? data : [];
+});
 
 import { useWishlist } from '../context/WishlistContext';
 
@@ -43,17 +46,39 @@ export const Marketplace = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  const { 
-    searchQuery, setSearchQuery, 
-    sortBy, setSortBy, 
-    filterDrawerOpen, setFilterDrawerOpen 
-  } = useOutletContext();
+  const outletContext = useOutletContext() || {};
+  const searchQuery = outletContext.searchQuery || '';
+  const setSearchQuery = outletContext.setSearchQuery || (() => {});
+  const sortBy = outletContext.sortBy || 'Featured';
+  const setSortBy = outletContext.setSortBy || (() => {});
+  const filterDrawerOpen = outletContext.filterDrawerOpen || false;
+  const setFilterDrawerOpen = outletContext.setFilterDrawerOpen || (() => {});
   
-  const { data: products = [], isLoading: loading, mutate: refetchProducts } = useSWR(`${API_URL}/products`, fetcher, { 
+  const { 
+    data: products = [], 
+    isLoading: loading, 
+    error, 
+    mutate: refetchProducts 
+  } = useSWR(`${API_URL}/products`, fetcher, { 
     revalidateOnFocus: true,
     revalidateOnMount: true,
-    dedupingInterval: 10000 
+    revalidateIfStale: true,
+    shouldRetryOnError: true,
+    dedupingInterval: 2000 
   });
+
+  // Revalidate products, categories, profile on mount and route return
+  useEffect(() => {
+    console.log('[Marketplace Debug] Component Mounted / Route Active:', window.location.pathname + window.location.search);
+    refetchProducts();
+    if (fetchProfile) {
+      fetchProfile().catch(e => console.error('[Marketplace Debug] fetchProfile error:', e));
+    }
+
+    return () => {
+      console.log('[Marketplace Debug] Component Unmounting from:', window.location.pathname);
+    };
+  }, []);
 
   const onWishlistToggle = async (product) => {
     toggleWishlist(product);
@@ -67,7 +92,7 @@ export const Marketplace = () => {
         await fetchProfile();
       }
     } catch (err) {
-      console.error(err);
+      console.error('[Marketplace Debug] onAddToCart error:', err);
     }
   };
 
@@ -79,6 +104,7 @@ export const Marketplace = () => {
   // Filters & Sorting state
   const selectedCollection = searchParams.get('category') || 'All';
   const setSelectedCollection = (cat) => {
+    console.log('[Marketplace Debug] Category selected:', cat);
     if (cat === 'All') {
       searchParams.delete('category');
     } else {
@@ -86,12 +112,65 @@ export const Marketplace = () => {
     }
     setSearchParams(searchParams);
   };
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 99999999 });
-  const [stockStatus, setStockStatus] = useState('all');
-  const [ratingFilter, setRatingFilter] = useState(0);
+
+  const [priceRange, setPriceRange] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('cocoveera_mkt_price');
+      return saved ? JSON.parse(saved) : { min: 0, max: 99999999 };
+    } catch (e) {
+      return { min: 0, max: 99999999 };
+    }
+  });
+
+  const [stockStatus, setStockStatus] = useState(() => {
+    try {
+      return sessionStorage.getItem('cocoveera_mkt_stock') || 'all';
+    } catch (e) {
+      return 'all';
+    }
+  });
+
+  const [ratingFilter, setRatingFilter] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('cocoveera_mkt_rating');
+      return saved ? Number(saved) : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
   
   // Custom active tab inside Marketplace ("Featured", "Latest", etc.)
-  const [activeMarketplaceTab, setActiveMarketplaceTab] = useState('Featured');
+  const [activeMarketplaceTab, setActiveMarketplaceTab] = useState(() => {
+    try {
+      return sessionStorage.getItem('cocoveera_mkt_tab') || 'Featured';
+    } catch (e) {
+      return 'Featured';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('cocoveera_mkt_price', JSON.stringify(priceRange));
+    } catch (e) {}
+  }, [priceRange]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('cocoveera_mkt_stock', stockStatus);
+    } catch (e) {}
+  }, [stockStatus]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('cocoveera_mkt_rating', ratingFilter.toString());
+    } catch (e) {}
+  }, [ratingFilter]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('cocoveera_mkt_tab', activeMarketplaceTab);
+    } catch (e) {}
+  }, [activeMarketplaceTab]);
 
   // Selected product details modal state
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -100,27 +179,21 @@ export const Marketplace = () => {
   const [displayedProducts, setDisplayedProducts] = useState([]);
   
   // Database categories to get images
-  const { data: dbCategories = [] } = useSWR(`${API_URL}/categories`, fetcher, { 
-    revalidateOnFocus: false,
-    dedupingInterval: 600000 
+  const { data: dbCategories = [], mutate: refetchCategories } = useSWR(`${API_URL}/categories`, fetcher, { 
+    revalidateOnFocus: true,
+    revalidateOnMount: true,
+    dedupingInterval: 30000 
   });
 
-  // Restore scroll position on back navigation
   useEffect(() => {
-    try {
-      const savedScroll = sessionStorage.getItem('cocoveera_mkt_scroll');
-      if (savedScroll !== null) {
-        const mainEl = document.querySelector('main');
-        if (mainEl) {
-          const scrollPos = parseInt(savedScroll, 10);
-          const timer = setTimeout(() => {
-            mainEl.scrollTo({ top: scrollPos, behavior: 'instant' });
-          }, 100);
-          return () => clearTimeout(timer);
-        }
-      }
-    } catch (e) {}
-  }, [searchParams]);
+    console.log('[Marketplace Debug] SWR Products state:', {
+      productsCount: products?.length || 0,
+      categoriesCount: dbCategories?.length || 0,
+      loading,
+      hasError: !!error,
+      errorMsg: error?.message
+    });
+  }, [products, dbCategories, loading, error]);
 
   useEffect(() => {
     let result = [...(products || [])];
@@ -142,13 +215,13 @@ export const Marketplace = () => {
     }
 
     // 3. Price Range filter
-    result = result.filter(p => p.price >= priceRange.min && p.price <= priceRange.max);
+    result = result.filter(p => (p.price || 0) >= priceRange.min && (p.price || 0) <= priceRange.max);
 
     // 4. Stock Availability filter
     if (stockStatus === 'in_stock') {
-      result = result.filter(p => p.stock > 0);
+      result = result.filter(p => (p.stock || 0) > 0);
     } else if (stockStatus === 'out_of_stock') {
-      result = result.filter(p => p.stock <= 0);
+      result = result.filter(p => (p.stock || 0) <= 0);
     }
 
     // 5. Rating filter
@@ -163,18 +236,18 @@ export const Marketplace = () => {
     if (activeMarketplaceTab === 'Latest') {
       result = result.slice().reverse();
     } else if (activeMarketplaceTab === 'Best Seller') {
-      result = result.filter(p => p.price > 310);
+      result = result.filter(p => (p.price || 0) > 310);
     } else if (activeMarketplaceTab === 'Trending') {
-      result = result.filter(p => p.stock < 120);
+      result = result.filter(p => (p.stock || 0) < 120);
     } else if (activeMarketplaceTab === 'New Arrival') {
       result = result.slice(0, 4);
     }
 
     // 7. Sorting
     if (sortBy === 'Price: Low to High') {
-      result.sort((a, b) => a.price - b.price);
+      result.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sortBy === 'Price: High to Low') {
-      result.sort((a, b) => b.price - a.price);
+      result.sort((a, b) => (b.price || 0) - (a.price || 0));
     } else if (sortBy === 'Rating') {
       result.sort((a, b) => {
         const rA = a.specifications?.ph ? 4.8 : 4.5;
@@ -199,10 +272,18 @@ export const Marketplace = () => {
     setSearchQuery('');
     setSortBy('Featured');
     setActiveMarketplaceTab('Featured');
+    try {
+      sessionStorage.removeItem('cocoveera_mkt_price');
+      sessionStorage.removeItem('cocoveera_mkt_stock');
+      sessionStorage.removeItem('cocoveera_mkt_rating');
+      sessionStorage.removeItem('cocoveera_mkt_tab');
+      sessionStorage.removeItem('cocoveera_mkt_search');
+      sessionStorage.removeItem('cocoveera_mkt_sort');
+    } catch (e) {}
   };
 
   const getRelatedProducts = (prod) => {
-    return products
+    return (products || [])
       .filter(p => p._id !== prod._id && p.category === prod.category)
       .slice(0, 3);
   };
@@ -235,6 +316,23 @@ export const Marketplace = () => {
     };
   });
 
+  // Restore scroll position on back navigation
+  useEffect(() => {
+    try {
+      const savedScroll = sessionStorage.getItem('cocoveera_mkt_scroll');
+      if (savedScroll !== null && !loading) {
+        const mainEl = document.querySelector('main');
+        if (mainEl) {
+          const scrollPos = parseInt(savedScroll, 10);
+          const timer = setTimeout(() => {
+            mainEl.scrollTo({ top: scrollPos, behavior: 'instant' });
+          }, 80);
+          return () => clearTimeout(timer);
+        }
+      }
+    } catch (e) {}
+  }, [loading, displayedProducts.length, categoryCards.length, searchParams]);
+
   const handleProductCardClick = (p) => {
     try {
       const mainEl = document.querySelector('main');
@@ -244,6 +342,24 @@ export const Marketplace = () => {
     } catch (e) {}
     navigate(`/product/${p.slug || p._id}`);
   };
+
+  if (error && (!products || products.length === 0)) {
+    return (
+      <div className="bg-white rounded-[24px] border border-stone-200 p-8 sm:p-12 text-center space-y-4 max-w-lg mx-auto shadow-sm my-8">
+        <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto border border-red-100">
+          <Info className="w-6 h-6" />
+        </div>
+        <h4 className="font-poppins font-extrabold text-stone-900 text-base sm:text-lg">Unable to connect to Marketplace</h4>
+        <p className="text-xs sm:text-sm text-stone-500 font-medium">There was an issue loading the product catalog. Please try reconnecting.</p>
+        <button
+          onClick={() => refetchProducts()}
+          className="bg-[#2E7D32] hover:bg-[#236327] text-white text-xs font-bold px-6 py-3 rounded-full transition shadow-sm cursor-pointer"
+        >
+          Retry Connection
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 text-stone-900 font-sans">
@@ -269,7 +385,7 @@ export const Marketplace = () => {
         <div className="space-y-6">
           <h3 className="font-poppins font-extrabold text-xl text-stone-900">Browse by Category</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {loading && categoryCards.length === 0 ? (
+            {(loading || (products || []).length === 0) && categoryCards.length === 0 ? (
               [...Array(4)].map((_, idx) => (
                 <div 
                   key={idx}

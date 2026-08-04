@@ -65,9 +65,33 @@ export const DashboardLayout = () => {
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('Featured');
+  const [searchQuery, setSearchQuery] = useState(() => {
+    try {
+      return sessionStorage.getItem('cocoveera_mkt_search') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [sortBy, setSortBy] = useState(() => {
+    try {
+      return sessionStorage.getItem('cocoveera_mkt_sort') || 'Featured';
+    } catch (e) {
+      return 'Featured';
+    }
+  });
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('cocoveera_mkt_search', searchQuery || '');
+    } catch (e) {}
+  }, [searchQuery]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('cocoveera_mkt_sort', sortBy || 'Featured');
+    } catch (e) {}
+  }, [sortBy]);
 
   const drawerRef = useRef(null);
   const lastActiveElement = useRef(null);
@@ -300,20 +324,13 @@ export const DashboardLayout = () => {
                 <p className="text-stone-400 text-xs font-bold mt-4 animate-pulse">Loading content...</p>
               </div>
             }>
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 <motion.div
                   key={location.pathname}
-                  initial={() => {
-                    const path = location.pathname;
-                    if (path.includes('/quotes')) return { x: 30, opacity: 0 };
-                    if (path.includes('/orders') && location.state?.fromPayment) return { opacity: 0 };
-                    if (path.includes('/orders')) return { scale: 0.97, opacity: 0 };
-                    if (path.includes('/payment')) return { y: 30, opacity: 0 };
-                    return { opacity: 0 };
-                  }}
-                  animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 1 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
                   className="w-full h-full"
                 >
                   <Outlet context={{
