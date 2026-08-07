@@ -60,8 +60,9 @@ async function generateSitemap() {
     { route: '/about', priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
     { route: '/products', priority: '0.8', changefreq: 'daily', lastmod: buildDate },
     { route: '/contact', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
-    { route: '/quality-testing', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
-    { route: '/substrates', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
+    { route: '/production-process', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
+    { route: '/global-network', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
+    { route: '/how-it-works', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
     { route: '/privacy-policy', priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
     { route: '/terms-conditions', priority: '0.5', changefreq: 'yearly', lastmod: buildDate }
   ];
