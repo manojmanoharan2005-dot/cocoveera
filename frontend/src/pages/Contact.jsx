@@ -89,7 +89,8 @@ const Contact = () => {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+      const errorMessage = err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Something went wrong. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

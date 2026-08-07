@@ -260,42 +260,43 @@ export const submitQuoteRequest = async (req, res) => {
       commercialNotes: requirementNote || '',
     });
 
-    // Send email to admin
-    try {
-      await sendAdminQuoteRequestEmail({
-        category: categoryFallback,
-        productName: products[0]?.productName || 'Coco Substrates',
-        products,
-        requirementNote,
-        containerSize,
-        expectedDeliveryDate: expectedDeliveryDate || null,
-        companyName,
-        contactPerson,
-        email,
-        phone,
-        country,
-        address: address || '',
-        quantity: quantityStr,
-        createdAt: quoteRequest.createdAt,
-      });
-    } catch (mailErr) {
-      console.error('Failed to send admin notification email:', mailErr.message);
-    }
+    // Dispatch email notifications asynchronously in the background so API response is instant
+    setImmediate(async () => {
+      try {
+        await sendAdminQuoteRequestEmail({
+          category: categoryFallback,
+          productName: products[0]?.productName || 'Coco Substrates',
+          products,
+          requirementNote,
+          containerSize,
+          expectedDeliveryDate: expectedDeliveryDate || null,
+          companyName,
+          contactPerson,
+          email,
+          phone,
+          country,
+          address: address || '',
+          quantity: quantityStr,
+          createdAt: quoteRequest.createdAt,
+        });
+      } catch (mailErr) {
+        console.error('Failed to send admin notification email:', mailErr.message);
+      }
 
-    // Send RFQ confirmation email to customer
-    try {
-      await sendQuoteRequestEmail(email, contactPerson, {
-        referenceId: quoteRequest._id.toString().slice(-6).toUpperCase(),
-        date: new Date(quoteRequest.createdAt).toLocaleDateString(),
-        expectedDeliveryDate: expectedDeliveryDate ? formatDateFriendly(expectedDeliveryDate) : 'N/A',
-        products,
-        containerSize,
-        quantity: quantityStr,
-        requirementNote,
-      });
-    } catch (mailErr) {
-      console.error('Failed to send customer confirmation email:', mailErr.message);
-    }
+      try {
+        await sendQuoteRequestEmail(email, contactPerson, {
+          referenceId: quoteRequest._id.toString().slice(-6).toUpperCase(),
+          date: new Date(quoteRequest.createdAt).toLocaleDateString(),
+          expectedDeliveryDate: expectedDeliveryDate ? formatDateFriendly(expectedDeliveryDate) : 'N/A',
+          products,
+          containerSize,
+          quantity: quantityStr,
+          requirementNote,
+        });
+      } catch (mailErr) {
+        console.error('Failed to send customer confirmation email:', mailErr.message);
+      }
+    });
 
     res.status(201).json({
       success: true,

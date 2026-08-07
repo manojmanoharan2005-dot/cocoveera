@@ -59,12 +59,15 @@ export const validateAddress = [
 ];
 
 export const validateContact = [
-  body('name').isLength({ min: 2 }).withMessage('Name required'),
-  body('email').isEmail().withMessage('Valid email required'),
-  body('message').isLength({ min: 10 }).withMessage('Message too short'),
+  body('name').trim().isLength({ min: 2 }).withMessage('Name is required (at least 2 characters)'),
+  body('email').trim().isEmail().withMessage('Please provide a valid email address'),
+  body('message').trim().isLength({ min: 5 }).withMessage('Message must be at least 5 characters long'),
   (req, res, next) => {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+    if (!errors.isEmpty()) {
+      const firstErrMsg = errors.array()[0].msg;
+      return res.status(400).json({ success: false, message: firstErrMsg, errors: errors.array() });
+    }
     next();
   }
 ];
@@ -77,7 +80,8 @@ export const validateIdParam = [
     next();
   }
 ];
-export const validateQuote = [
+
+export const validateQuote = [
   body('name').isLength({ min: 2 }).withMessage('Name required'),
   body('email').isEmail().withMessage('Valid email required'),
   body('items').isArray({ min: 1 }).withMessage('Provide at least one item for quote'),

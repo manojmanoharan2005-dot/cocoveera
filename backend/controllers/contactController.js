@@ -24,10 +24,12 @@ export const submitContactForm = async (req, res) => {
 
     let fileUrls = [];
     if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const uploadResult = await uploadToCloudinary(file.buffer, 'cocoveera_inquiries');
-        fileUrls.push(uploadResult.secure_url);
-      }
+      fileUrls = await Promise.all(
+        req.files.map(async (file) => {
+          const uploadResult = await uploadToCloudinary(file.buffer, 'cocoveera_inquiries');
+          return uploadResult.secure_url;
+        })
+      );
     }
 
     const newInquiry = await Inquiry.create({
@@ -41,20 +43,17 @@ export const submitContactForm = async (req, res) => {
       emailStatus: 'Pending'
     });
 
-    // Send internal notification to supportdesk
-    await sendContactInquiryEmail(newInquiry).catch(err => console.error("Internal mail error:", err));
-
-    // Send professional confirmation to customer
-    try {
-      await sendInquiryConfirmationEmail(newInquiry);
-      newInquiry.emailStatus = 'Sent';
-    } catch (emailErr) {
-      console.error('Confirmation email failed to send:', emailErr);
-      newInquiry.emailStatus = 'Failed';
-      // In a robust system, we would enqueue a retry worker here
-    }
-    
-    await newInquiry.save();
+    // Dispatch emails asynchronously in the background so API response is instant
+    setImmediate(async () => {
+      try {
+        await sendContactInquiryEmail(newInquiry).catch(err => console.error("Internal admin mail error:", err));
+        await sendInquiryConfirmationEmail(newInquiry);
+        await Inquiry.findByIdAndUpdate(newInquiry._id, { emailStatus: 'Sent' });
+      } catch (emailErr) {
+        console.error('Confirmation email failed to send:', emailErr);
+        await Inquiry.findByIdAndUpdate(newInquiry._id, { emailStatus: 'Failed' });
+      }
+    });
 
     return res.status(200).json({
       success: true,
