@@ -202,20 +202,11 @@ export default function ContainerViewer({ width = '100%', height = 320, initialC
       ) : (
         /* Static container preview with CSS color tint */
         <div 
-          onClick={() => {
-            if (isWebGLSupported && !fpsFailed) {
-              setCanvasLoading(true);
-              setLoadingProgress(0);
-              setIsInteractive(true);
-            }
-          }}
-          className={`relative w-full h-full flex items-center justify-center overflow-hidden bg-stone-100 ${
-            isWebGLSupported && !fpsFailed ? 'cursor-pointer' : ''
-          }`}
+          className="relative w-full h-full flex items-center justify-center overflow-hidden bg-stone-100"
         >
           <img
             src="/container-configurations.jpg"
-            alt="Container Preview"
+            alt="Container Configurations"
             className="w-full h-full object-contain"
             loading="lazy"
           />

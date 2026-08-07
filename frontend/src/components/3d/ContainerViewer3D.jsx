@@ -23,7 +23,7 @@ export const ContainerViewer3D = React.memo(({ containerType = '40HC', totalQuan
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <div>
             <h3 className="font-poppins font-black text-xs sm:text-sm text-stone-900 uppercase tracking-wider leading-tight">
-              Live Cargo Visualizer
+              Container Configurations
             </h3>
             <span className="text-[10px] font-bold text-stone-400 block mt-0.5">
               {containerType} High Cube • {usagePct}% Capacity Filled
@@ -32,11 +32,11 @@ export const ContainerViewer3D = React.memo(({ containerType = '40HC', totalQuan
         </div>
       </div>
 
-      {/* LIGHTWEIGHT LIVE 3D PREVIEW BOX (OCCUPIES 90% AREA WITH PROPER PADDING) */}
+      {/* STATIC CONTAINER CONFIGURATION IMAGE BOX */}
       <div 
         className="w-full h-64 sm:h-72 rounded-2xl bg-gradient-to-b from-[#FAFAFA] via-[#F2F4F2] to-[#E5E8E5] border border-stone-200/60 flex items-center justify-center p-2 relative overflow-hidden shadow-inner"
       >
-        {/* 3D Model View (Disabled - change to true or uncomment to re-enable 3D rendering) */}
+        {/* 3D Model View (Unlinked - set to true or uncomment to re-enable 3D rendering) */}
         {false ? (
           <ContainerMini3DCanvas 
             containerType={containerType} 

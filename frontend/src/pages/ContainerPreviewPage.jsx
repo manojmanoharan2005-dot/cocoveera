@@ -464,7 +464,7 @@ export default function ContainerPreviewPage() {
         {/* 2. FULLSCREEN 3D CANVAS SCENE WITH SILENT WEBGL FALLBACK (45-55% viewport height on mobile) */}
         <div ref={canvasRef} className="w-full h-[48vh] sm:h-[55vh] md:h-full relative shrink-0">
           <Suspense fallback={null}>
-            {hasWebGL ? (
+            {false && hasWebGL ? (
               <ContainerPreview3DCanvas
                 containerType={containerType}
                 product={product}
@@ -479,11 +479,11 @@ export default function ContainerPreviewPage() {
                 onFpsUpdate={setFps}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center p-8 bg-stone-950">
+              <div className="w-full h-full flex items-center justify-center p-4 sm:p-8 bg-stone-900">
                 <img 
-                  src={containerPreviewImg} 
-                  alt="Cocoveera Shipping Container Model" 
-                  className="max-w-4xl max-h-[75vh] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]" 
+                  src="/container-configurations.jpg" 
+                  alt="Cocoveera Container Configurations" 
+                  className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl bg-white p-2" 
                 />
               </div>
             )}
