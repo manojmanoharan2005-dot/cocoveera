@@ -304,7 +304,6 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/products" element={<Products />} />
-          <Route path="/products/:id" element={<Navigate to="/login" replace />} />
           <Route path="/production-process" element={<QualityTesting />} />
           <Route path="/quality-testing" element={<Navigate to="/production-process" replace />} />
           <Route path="/global-network" element={<CoconutSubstrates />} />
@@ -350,6 +349,7 @@ function AppContent() {
           <Route path="/support" element={<HelpCenter />} />
           <Route path="/mobile" element={<MobileAccount />} />
           <Route path="/product/:id" element={<ProductView />} />
+          <Route path="/products/:id" element={<ProductView />} />
           <Route path="/productview/:id" element={<ProductView />} />
         </Route>
 
