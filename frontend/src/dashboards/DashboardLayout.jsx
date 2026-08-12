@@ -324,28 +324,17 @@ export const DashboardLayout = () => {
                 <p className="text-stone-400 text-xs font-bold mt-4 animate-pulse">Loading content...</p>
               </div>
             }>
-              <AnimatePresence>
-                <motion.div
-                  key={location.pathname}
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 1 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="w-full h-full"
-                >
-                  <Outlet context={{
-                    searchQuery,
-                    setSearchQuery,
-                    sortBy,
-                    setSortBy,
-                    filterDrawerOpen,
-                    setFilterDrawerOpen,
-                    user,
-                    cartCount,
-                    wishlistCount
-                  }} />
-                </motion.div>
-              </AnimatePresence>
+              <Outlet context={{
+                searchQuery,
+                setSearchQuery,
+                sortBy,
+                setSortBy,
+                filterDrawerOpen,
+                setFilterDrawerOpen,
+                user,
+                cartCount,
+                wishlistCount
+              }} />
             </Suspense>
           </ErrorBoundary>
         </main>

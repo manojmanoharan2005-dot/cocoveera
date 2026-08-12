@@ -376,16 +376,21 @@ Timestamp: ${new Date().toLocaleString()}
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+    let isMounted = true;
+
     const fetchProductDetails = async () => {
       setLoading(true);
       setError(null);
       try {
         const [prodRes, relatedRes, catRes, allProdsRes] = await Promise.all([
-          apiClient.get(`/products/${id}`),
-          apiClient.get(`/products/related/${id}`),
-          apiClient.get('/categories'),
-          apiClient.get('/products')
+          apiClient.get(`/products/${id}`, { signal: controller.signal }),
+          apiClient.get(`/products/related/${id}`, { signal: controller.signal }),
+          apiClient.get('/categories', { signal: controller.signal }),
+          apiClient.get('/products', { signal: controller.signal })
         ]);
+
+        if (!isMounted) return;
 
         if (prodRes.data.success) {
           const fetchedProduct = prodRes.data.data;
@@ -423,15 +428,26 @@ Timestamp: ${new Date().toLocaleString()}
           setAllProducts(allProdsRes.data.data);
         }
       } catch (err) {
+        if (axios.isCancel(err) || err.name === 'CanceledError' || err.name === 'AbortError') {
+          return; // Ignore request cancellation silently
+        }
+        if (!isMounted) return;
         console.error('Error fetching product details:', err);
         setError(err.response?.data?.message || 'Error connecting to server. Please try again.');
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchProductDetails();
     fetchTestingPackages();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [id, user]);
 
   // Update 3D viewer state instantly whenever quantity or extraItems changes
