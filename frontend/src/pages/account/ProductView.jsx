@@ -74,7 +74,7 @@ const ProductView = () => {
   const activeContainerLoad = parseFloat((quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
   const isActiveContainerComplete = activeContainerLoad >= 1.00;
 
-  // Auto-complete active container when it reaches 1.00 (100%) and create/open next container
+  // Auto-complete active container when it reaches 1.00 (100%) and save completed containers to MongoDB Cart
   useEffect(() => {
     if (activeContainerLoad >= 1.00) {
       // Build snapshot of active container selections
@@ -96,16 +96,33 @@ const ProductView = () => {
         completedAt: new Date().toISOString()
       };
 
-      setCompletedContainers(prev => [...prev, newCompletedContainer]);
+      const updatedCompletedList = [...completedContainers, newCompletedContainer];
+      setCompletedContainers(updatedCompletedList);
       setActiveContainerIndex(prev => prev + 1);
 
       // Reset active container form state for the next container
       setQuantity(0.00);
       setExtraItems([]);
 
-      // Toast notification for container completion
-      setAddedMessage(`Container ${activeContainerIndex} (1.00 FCL) is 100% completed! Opened Container ${activeContainerIndex + 1}.`);
-      
+      // Toast notification for container completion & save
+      setAddedMessage(`Container ${activeContainerIndex} (1.00 FCL) completed & saved to Cart!`);
+
+      // Auto-save completed container to MongoDB Cart
+      if (user && product) {
+        const payload = {
+          mainProductId: product._id,
+          containerType,
+          completedContainers: updatedCompletedList,
+          totalContainers: updatedCompletedList.length,
+          cartItemId: editingCartItemId || undefined,
+        };
+        if (editingCartItemId) {
+          updateCartItem(editingCartItemId, payload);
+        } else {
+          addContainerToCart(payload);
+        }
+      }
+
       // Smooth scroll to container builder
       setTimeout(() => {
         if (containerBuilderRef.current) {
@@ -113,7 +130,7 @@ const ProductView = () => {
         }
       }, 300);
     }
-  }, [activeContainerLoad, activeContainerIndex, containerType, product, quantity, extraItems]);
+  }, [activeContainerLoad, activeContainerIndex, containerType, product, quantity, extraItems, completedContainers, user, editingCartItemId]);
 
   // Toast auto-clear effect (2.5 seconds)
   useEffect(() => {
@@ -157,8 +174,28 @@ const ProductView = () => {
   };
 
   const handleDeleteCompletedContainer = (containerNumber) => {
-    setCompletedContainers(prev => prev.filter(c => c.containerNumber !== containerNumber));
+    const remaining = completedContainers.filter(c => c.containerNumber !== containerNumber);
+    setCompletedContainers(remaining);
     setAddedMessage(`Container #${containerNumber} removed.`);
+
+    if (user && product) {
+      if (remaining.length > 0) {
+        const payload = {
+          mainProductId: product._id,
+          containerType,
+          completedContainers: remaining,
+          totalContainers: remaining.length,
+          cartItemId: editingCartItemId || undefined,
+        };
+        if (editingCartItemId) {
+          updateCartItem(editingCartItemId, payload);
+        } else {
+          addContainerToCart(payload);
+        }
+      } else if (editingCartItemId) {
+        removeFromCart(editingCartItemId);
+      }
+    }
   };
 
   const handleUpdateCompletedContainerItem = (containerNumber, productId, change) => {
