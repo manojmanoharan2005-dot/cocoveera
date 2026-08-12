@@ -41,7 +41,7 @@ export const register = async (req, res) => {
     });
 
     // Send OTP Email
-    await sendOTPNotification(email, user.phone, name, otpCode);
+    await sendOTPNotification(email, null, name, otpCode);
 
     res.status(201).json({
       success: true,
@@ -49,6 +49,12 @@ export const register = async (req, res) => {
       email: user.email,
     });
   } catch (error) {
+    if (error.code === 11000 || (error.message && error.message.includes('E11000'))) {
+      return res.status(400).json({
+        success: false,
+        message: 'An account with this email already exists.',
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -89,7 +95,7 @@ export const verifyOtp = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone || '',
+        phone: user?.phone || '',
         role: user.role,
         country: user.country,
         countryCode: user.countryCode,
@@ -134,7 +140,7 @@ export const login = async (req, res) => {
       user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
       await user.save();
       
-      await sendOTPNotification(user.email, user.phone, user.name, otpCode);
+      await sendOTPNotification(user.email, user?.phone || null, user.name, otpCode);
 
       return res.status(403).json({
         success: false,
@@ -168,7 +174,7 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone || '',
+        phone: user?.phone || '',
         role: user.role,
         country: user.country,
         countryCode: user.countryCode,
@@ -211,7 +217,7 @@ export const googleLogin = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone || '',
+        phone: user?.phone || '',
         role: user.role,
         country: user.country,
         countryCode: user.countryCode,
@@ -312,7 +318,7 @@ export const resendOtp = async (req, res) => {
     await user.save();
 
     // Send OTP Email
-    await sendOTPNotification(user.email, user.phone, user.name, otpCode);
+    await sendOTPNotification(user.email, user?.phone || null, user.name, otpCode);
 
     res.status(200).json({
       success: true,
