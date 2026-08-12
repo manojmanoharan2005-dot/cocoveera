@@ -499,6 +499,7 @@ function AppContent() {
 }
 
 import { WishlistProvider } from './context/WishlistContext';
+import { CartProvider } from './context/CartContext';
 
 function App() {
   return (
@@ -507,9 +508,11 @@ function App() {
         <Router>
           <AuthProvider>
             <WishlistProvider>
-              <AdminAuthProvider>
-                <AppContent />
-              </AdminAuthProvider>
+              <CartProvider>
+                <AdminAuthProvider>
+                  <AppContent />
+                </AdminAuthProvider>
+              </CartProvider>
             </WishlistProvider>
           </AuthProvider>
         </Router>

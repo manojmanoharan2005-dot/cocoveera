@@ -17,25 +17,30 @@ import {
   ShieldCheck,
   X,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  ShoppingCart
 } from 'lucide-react';
 
 import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
 
 export const Sidebar = ({
   user,
   activeTab,
-  cartCount,
+  cartCount: propCartCount,
   wishlistCount: propWishlistCount,
   onLogoutClick,
   isMobileDrawer = false,
   onClose
 }) => {
   const { wishlistCount } = useWishlist();
+  const { cartCount } = useCart();
   const effectiveWishlistCount = wishlistCount !== undefined ? wishlistCount : propWishlistCount;
+  const effectiveCartCount = cartCount !== undefined ? cartCount : propCartCount;
 
   const menuItems = [
     { name: 'Marketplace', label: 'Marketplace', icon: Store, path: '/dashboard' },
+    { name: 'Cart', label: 'Cart', icon: ShoppingCart, badge: effectiveCartCount, path: '/cart' },
     { name: 'Quotes', label: 'My Quotes', icon: MessageSquare, path: '/quotes' },
     { name: 'Orders', label: 'My Orders', icon: Package, path: '/orders' },
     { name: 'Wishlist', label: 'Wishlist', icon: Heart, badge: effectiveWishlistCount, path: '/wishlist' },

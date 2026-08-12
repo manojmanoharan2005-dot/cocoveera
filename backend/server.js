@@ -161,12 +161,14 @@ app.use((req, res, next) => {
 });
 
 import wishlistRoutes from './routes/wishlistRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
 
 // 8. Routes
 app.use('/api/auth', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/cart', cartRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/quote-requests', quoteRequestRoutes);

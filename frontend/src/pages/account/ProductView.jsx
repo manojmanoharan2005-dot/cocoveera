@@ -18,6 +18,7 @@ import ImageWithFallback from '../../components/common/ImageWithFallback';
 import SEO from '../../components/SEO';
 
 import { useWishlist } from '../../context/WishlistContext';
+import { useCart } from '../../context/CartContext';
 
 const ProductView = () => {
   const { id } = useParams();
@@ -25,6 +26,9 @@ const ProductView = () => {
   const location = useLocation();
   const { user, fetchProfile } = useAuth();
   const { isWishlisted: checkIsWishlisted, toggleWishlist } = useWishlist();
+  const { cart, addToCart: addContainerToCart, updateCartItem } = useCart();
+  const searchParams = new URLSearchParams(location.search);
+  const editingCartItemId = searchParams.get('cartItemId');
 
   // State management with sessionStorage persistence across 3D Viewer navigation
   const [product, setProduct] = useState(null);
@@ -551,6 +555,20 @@ Timestamp: ${new Date().toLocaleString()}
     toggleWishlist(product);
   };
 
+  // Restore saved cart item if editing cart configuration (?cartItemId=xyz)
+  useEffect(() => {
+    if (editingCartItemId && cart && cart.length > 0) {
+      const targetItem = cart.find(i => i._id === editingCartItemId);
+      if (targetItem) {
+        if (targetItem.containerType) setContainerType(targetItem.containerType);
+        if (targetItem.completedContainers) setCompletedContainers(targetItem.completedContainers);
+        if (targetItem.mainQuantity !== undefined) setQuantity(targetItem.mainQuantity);
+        if (targetItem.extraItems) setExtraItems(targetItem.extraItems);
+        setAddedMessage(`Loaded saved container configuration from cart for editing.`);
+      }
+    }
+  }, [editingCartItemId, cart]);
+
   const handleAddToCart = async () => {
     if (!product || actionLoading) return;
     if (!user) {
@@ -559,19 +577,46 @@ Timestamp: ${new Date().toLocaleString()}
     }
     setActionLoading(true);
     try {
-      const res = await apiClient.post('/users/cart', { 
-        productId: product._id, 
-        quantity, 
-        increment: true 
+      const currentActiveItems = [];
+      if (quantity > 0) {
+        currentActiveItems.push({ product, quantity });
+      }
+      extraItems.forEach(item => {
+        if (item.quantity > 0) {
+          currentActiveItems.push({ product: item.product, quantity: item.quantity });
+        }
       });
-      localStorage.setItem('preferredContainer', containerType === '40FT' ? '40FT Container' : '20FT Container');
-      if (res.data.success) {
-        await fetchProfile();
-        setAddedMessage(`Successfully added ${quantity} Container${quantity > 1 ? 's' : ''} to Cart!`);
-        setTimeout(() => setAddedMessage(''), 3000);
+
+      const activeContainerLoad = parseFloat((quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
+      const totalContainersVal = parseFloat((completedContainers.length + activeContainerLoad).toFixed(2));
+
+      const payload = {
+        mainProductId: product._id,
+        containerType,
+        completedContainers,
+        activeContainer: {
+          containerType,
+          totalLoad: activeContainerLoad,
+          items: currentActiveItems,
+        },
+        extraItems,
+        mainQuantity: quantity,
+        totalContainers: totalContainersVal > 0 ? totalContainersVal : 1,
+        cartItemId: editingCartItemId || undefined,
+      };
+
+      let success = false;
+      if (editingCartItemId) {
+        success = await updateCartItem(editingCartItemId, payload);
+      } else {
+        success = await addContainerToCart(payload);
+      }
+
+      if (success) {
+        setAddedMessage(editingCartItemId ? 'Container configuration updated in cart!' : 'Container configuration added to cart!');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Add to Cart Error:', err);
     } finally {
       setActionLoading(false);
     }
@@ -1589,13 +1634,23 @@ Timestamp: ${new Date().toLocaleString()}
                   <ContainerViewer3D containerType={containerType} totalQuantity={viewerQuantity} autoRotate={true} palletItems={viewerPallets} />
                 </div>
 
-                {/* REQUEST QUOTE ACTIONS (Desktop Only) */}
-                <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:block">
+                {/* ADD TO CART & REQUEST QUOTE ACTIONS (Desktop Only) */}
+                <div className="mt-4 border-t border-stone-100 pt-4 hidden lg:grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={actionLoading || (quantity === 0 && completedContainers.length === 0 && extraItems.length === 0)}
+                    className="w-full font-poppins text-xs font-black py-4 px-5 rounded-xl border-2 border-[#2E7D32] bg-emerald-50/50 hover:bg-[#2E7D32] text-[#2E7D32] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xs flex items-center justify-center gap-2 group active:scale-[0.98] cursor-pointer"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>{editingCartItemId ? 'UPDATE CART' : 'ADD TO CART'}</span>
+                  </button>
+
                   <button
                     type="button"
                     disabled={isQuoteButtonDisabled || hasActiveRfq}
                     onClick={handleRequestQuoteClick}
-                    className={`w-full font-poppins text-xs font-black py-4 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
+                    className={`w-full font-poppins text-xs font-black py-4 px-5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
                       hasActiveRfq
                         ? 'bg-stone-100 border border-stone-200 text-stone-600 cursor-not-allowed shadow-none'
                         : 'bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white active:scale-[0.98]'
