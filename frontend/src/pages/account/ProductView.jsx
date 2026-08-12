@@ -8,7 +8,7 @@ import {
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
   Droplet, Wind, ShieldCheck, FileText, ChevronRight, ChevronLeft,
   Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2, Home, Beaker,
-  Share2, MoreVertical, HelpCircle, Maximize2, X
+  Share2, MoreVertical, HelpCircle, Maximize2, X, Pencil, Trash2, Edit3, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
@@ -120,6 +120,88 @@ const ProductView = () => {
       return () => clearTimeout(timer);
     }
   }, [addedMessage]);
+
+  // Handlers to Edit, Update, or Delete Completed Containers
+  const handleEditCompletedContainer = (containerNumber) => {
+    const targetContainer = completedContainers.find(c => c.containerNumber === containerNumber);
+    if (!targetContainer) return;
+
+    setContainerType(targetContainer.containerType || '20FT');
+
+    // Find main product in target container
+    const mainItem = targetContainer.items.find(i => 
+      (product && (i.product._id === product._id || i.product.id === product._id || i.product.name === product.name))
+    );
+    const newMainQty = mainItem ? mainItem.quantity : 0.00;
+
+    // Find extra items
+    const newExtraItems = targetContainer.items
+      .filter(i => (!product || (i.product._id !== product._id && i.product.id !== product._id && i.product.name !== product.name)))
+      .map(i => ({ product: i.product, quantity: i.quantity }));
+
+    setQuantity(newMainQty);
+    setExtraItems(newExtraItems);
+
+    setCompletedContainers(prev => prev.filter(c => c.containerNumber !== containerNumber));
+    setActiveContainerIndex(containerNumber);
+
+    setAddedMessage(`Editing Container #${containerNumber}. Modify your products below.`);
+
+    if (containerBuilderRef.current) {
+      containerBuilderRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleDeleteCompletedContainer = (containerNumber) => {
+    setCompletedContainers(prev => prev.filter(c => c.containerNumber !== containerNumber));
+    setAddedMessage(`Container #${containerNumber} removed.`);
+  };
+
+  const handleUpdateCompletedContainerItem = (containerNumber, productId, change) => {
+    setCompletedContainers(prev => {
+      let unpackTarget = null;
+
+      const updated = prev.map(c => {
+        if (c.containerNumber !== containerNumber) return c;
+
+        const updatedItems = c.items.map(item => {
+          const pId = item.product._id || item.product.id;
+          if (pId === productId) {
+            const newQty = parseFloat(Math.max(0, item.quantity + change).toFixed(2));
+            return { ...item, quantity: newQty };
+          }
+          return item;
+        }).filter(item => item.quantity > 0);
+
+        const newTotalLoad = parseFloat(updatedItems.reduce((sum, i) => sum + i.quantity, 0).toFixed(2));
+
+        if (newTotalLoad < 1.00) {
+          unpackTarget = c.containerNumber;
+        }
+
+        return {
+          ...c,
+          totalLoad: newTotalLoad,
+          items: updatedItems
+        };
+      });
+
+      if (unpackTarget !== null) {
+        setTimeout(() => {
+          handleEditCompletedContainer(unpackTarget);
+        }, 100);
+        return updated.filter(c => c.containerNumber !== unpackTarget);
+      }
+
+      return updated.filter(c => c.items.length > 0);
+    });
+  };
+
+  const handleClearActiveContainer = () => {
+    setQuantity(0.00);
+    setExtraItems([]);
+    setAddedMessage(`Active Container #${activeContainerIndex} reset.`);
+  };
 
   // Sync state with sessionStorage when ID changes or state updates
   useEffect(() => {
@@ -1049,36 +1131,110 @@ Timestamp: ${new Date().toLocaleString()}
                 {/* COMPLETED CONTAINERS SUMMARY CARDS */}
                 {completedContainers.length > 0 && (
                   <div className="space-y-3 border-b border-stone-100 pb-5">
-                    <h4 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
-                      Completed Containers ({completedContainers.length})
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black text-stone-900 uppercase tracking-widest font-poppins flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
+                        Completed Containers ({completedContainers.length})
+                      </h4>
+                      <span className="text-[10px] text-stone-400 font-bold">
+                        Click "Edit" to modify any container
+                      </span>
+                    </div>
 
                     {completedContainers.map((c) => (
                       <div 
                         key={c.containerNumber}
-                        className="bg-[#f0fdf4] border-2 border-[#22c55e]/60 rounded-2xl p-4 space-y-2 shadow-sm transition-all"
+                        className="bg-[#f0fdf4] border-2 border-[#22c55e]/60 rounded-2xl p-4 space-y-3 shadow-sm transition-all relative group"
                       >
-                        <div className="flex items-center justify-between">
+                        {/* Header */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#86efac]/40 pb-2.5">
                           <div className="flex items-center gap-2">
                             <span className="w-6 h-6 rounded-full bg-[#22c55e] text-white flex items-center justify-center font-bold text-xs shadow-sm">
                               ✓
                             </span>
-                            <span className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wide">
-                              Container #{c.containerNumber} ({c.containerType})
-                            </span>
+                            <div>
+                              <span className="font-poppins font-black text-xs text-stone-900 uppercase tracking-wide block">
+                                Container #{c.containerNumber} ({c.containerType})
+                              </span>
+                              <span className="text-[10px] font-black text-[#15803d] font-poppins">
+                                100% Filled (1.00 FCL)
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-xs font-black text-[#15803d] font-poppins bg-[#dcfce7] px-2.5 py-0.5 rounded-full border border-[#86efac]">
-                            100% Filled (1.00 FCL)
-                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleEditCompletedContainer(c.containerNumber)}
+                              className="flex items-center gap-1 text-[11px] font-extrabold text-[#15803d] bg-white hover:bg-[#dcfce7] border border-[#86efac] px-2.5 py-1 rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer"
+                              title="Edit items in this container"
+                            >
+                              <Pencil className="w-3 h-3 text-[#15803d]" />
+                              <span>Edit Container</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCompletedContainer(c.containerNumber)}
+                              className="flex items-center gap-1 text-[11px] font-extrabold text-red-600 bg-white hover:bg-red-50 border border-red-200 px-2 py-1 rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer"
+                              title="Delete this container"
+                            >
+                              <Trash2 className="w-3 h-3 text-red-500" />
+                            </button>
+                          </div>
                         </div>
 
-                        {/* Items list inside completed container */}
-                        <div className="pt-2 border-t border-[#86efac]/40 space-y-1.5">
+                        {/* Items list with inline quantity edit options */}
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black text-stone-500 uppercase tracking-wider block">
+                            Container Products ({c.items.length})
+                          </span>
                           {c.items.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between text-xs text-stone-700 font-bold">
-                              <span className="truncate max-w-[200px]">{item.product.name}</span>
-                              <span className="text-[#15803d] font-poppins">{item.quantity.toFixed(2)} Container</span>
+                            <div key={idx} className="flex items-center justify-between text-xs text-stone-800 font-bold bg-white/90 p-2.5 rounded-xl border border-[#86efac]/60 shadow-2xs">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                {item.product.images?.[0] && (
+                                  <img 
+                                    src={item.product.images[0]} 
+                                    alt={item.product.name} 
+                                    className="w-7 h-7 object-contain rounded-lg border border-stone-200 bg-stone-50 shrink-0" 
+                                  />
+                                )}
+                                <span className="truncate max-w-[160px] text-stone-900 font-extrabold">{item.product.name}</span>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {/* Inline +/- edit for quantity */}
+                                <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg p-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateCompletedContainerItem(c.containerNumber, item.product._id || item.product.id, -0.25)}
+                                    className="w-5 h-5 flex items-center justify-center text-stone-600 hover:bg-red-100 hover:text-red-600 rounded transition-colors"
+                                    title="Decrease 0.25 Container"
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </button>
+                                  <span className="w-10 text-center font-black text-[11px] text-[#15803d]">
+                                    {item.quantity.toFixed(2)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateCompletedContainerItem(c.containerNumber, item.product._id || item.product.id, 0.25)}
+                                    className="w-5 h-5 flex items-center justify-center text-stone-600 hover:bg-emerald-100 hover:text-[#15803d] rounded transition-colors"
+                                    title="Increase 0.25 Container"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </button>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateCompletedContainerItem(c.containerNumber, item.product._id || item.product.id, -item.quantity)}
+                                  className="p-1 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Remove Product"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -1093,8 +1249,21 @@ Timestamp: ${new Date().toLocaleString()}
                     <Package className="w-4 h-4 text-[#2E7D32]" />
                     Active Container #{activeContainerIndex} Configuration
                   </h3>
-                  <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
-                    Container #{activeContainerIndex}
+                  <div className="flex items-center gap-2">
+                    {(quantity > 0 || extraItems.length > 0) && (
+                      <button
+                        type="button"
+                        onClick={handleClearActiveContainer}
+                        className="text-[10px] font-extrabold text-stone-500 hover:text-red-600 bg-stone-100 hover:bg-red-50 px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Clear selections in active container"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Reset</span>
+                      </button>
+                    )}
+                    <div className="bg-[#2E7D32]/10 text-[#2E7D32] px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider">
+                      Container #{activeContainerIndex}
+                    </div>
                   </div>
                 </div>
 

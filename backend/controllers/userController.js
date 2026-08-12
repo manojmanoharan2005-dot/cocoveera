@@ -12,7 +12,8 @@ export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
       .populate('cart.product', 'name price images slug category stock packageSize weight')
-      .populate('wishlist', 'name price images slug category stock packageSize weight');
+      .populate('wishlist', 'name price images slug category stock packageSize weight')
+      .populate('savedContainers.items.product', 'name price images slug category stock packageSize weight specifications');
       
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -332,4 +333,48 @@ export const deleteUserProfile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Save/Sync container customizations
+// @route   POST /api/users/containers
+// @access  Private
+export const saveContainers = async (req, res) => {
+  try {
+    const { containers } = req.body;
+    if (!Array.isArray(containers)) {
+      return res.status(400).json({ success: false, message: 'containers must be an array' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Format and validate containers
+    user.savedContainers = containers.map(c => ({
+      _id: c._id || undefined,
+      containerNumber: Number(c.containerNumber),
+      containerType: c.containerType || '20FT',
+      totalLoad: Number(c.totalLoad),
+      items: (c.items || []).map(i => ({
+        product: i.product._id || i.product,
+        quantity: Number(i.quantity)
+      })),
+      completedAt: c.completedAt || new Date()
+    }));
+
+    await user.save();
+
+    const updatedUser = await User.findById(req.user._id)
+      .populate('savedContainers.items.product', 'name price images slug category stock packageSize weight specifications');
+
+    res.status(200).json({
+      success: true,
+      message: 'Container customization saved successfully',
+      data: updatedUser.savedContainers
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 

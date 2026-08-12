@@ -15,6 +15,7 @@ import {
   clearCart,
   toggleWishlist,
   deleteUserProfile,
+  saveContainers,
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -46,5 +47,8 @@ router.route('/cart')
 
 router.route('/wishlist')
   .post(protect, toggleWishlist);
+
+router.route('/containers')
+  .post(protect, saveContainers);
 
 export default router;
