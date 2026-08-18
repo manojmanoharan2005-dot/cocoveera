@@ -26,7 +26,7 @@ const ProductView = () => {
   const location = useLocation();
   const { user, fetchProfile } = useAuth();
   const { isWishlisted: checkIsWishlisted, toggleWishlist } = useWishlist();
-  const { cart, addToCart: addContainerToCart, updateCartItem } = useCart();
+  const { cart, addToCart: addContainerToCart, updateCartItem, removeFromCart } = useCart();
   const searchParams = new URLSearchParams(location.search);
   const editingCartItemId = searchParams.get('cartItemId');
 
@@ -238,8 +238,105 @@ const ProductView = () => {
     });
   };
 
+  // Unified Quantity Updater that Synchronizes UI, Session Storage, and Cart Context / Backend Persistence
+  const updateQuantityAndPersist = useCallback(async (newQtyVal) => {
+    let finalQty = 0.00;
+    setQuantity(prev => {
+      const nextVal = typeof newQtyVal === 'function' ? newQtyVal(prev) : newQtyVal;
+      finalQty = parseFloat(Math.max(0, isNaN(nextVal) ? 0 : nextVal).toFixed(2));
+      return finalQty;
+    });
+
+    const isZero = finalQty <= 0 && completedContainers.length === 0 && extraItems.every(i => i.quantity <= 0);
+
+    if (isZero) {
+      // 1. Remove all sessionStorage keys for this product/container selection
+      try {
+        sessionStorage.removeItem(`cocoveera_qty_${id}`);
+        sessionStorage.removeItem(`cocoveera_type_${id}`);
+        sessionStorage.removeItem(`cocoveera_extra_${id}`);
+        if (product?.slug) {
+          sessionStorage.removeItem(`cocoveera_qty_${product.slug}`);
+          sessionStorage.removeItem(`cocoveera_type_${product.slug}`);
+          sessionStorage.removeItem(`cocoveera_extra_${product.slug}`);
+        }
+        if (product?._id) {
+          sessionStorage.removeItem(`cocoveera_qty_${product._id}`);
+          sessionStorage.removeItem(`cocoveera_type_${product._id}`);
+          sessionStorage.removeItem(`cocoveera_extra_${product._id}`);
+        }
+        sessionStorage.removeItem('cocoveera_active_config');
+      } catch (e) {}
+
+      // 2. Remove from CartContext / Backend database if cart item exists
+      const targetCartItem = cart?.find(i => 
+        i._id === editingCartItemId || 
+        (product && (i.mainProduct?._id === product._id || i.mainProduct?.slug === product.slug))
+      );
+
+      if (targetCartItem) {
+        await removeFromCart(targetCartItem._id, true);
+      }
+    } else if (finalQty > 0) {
+      // 1. Save to sessionStorage
+      try {
+        sessionStorage.setItem(`cocoveera_qty_${id}`, finalQty);
+        sessionStorage.setItem(`cocoveera_type_${id}`, containerType);
+        sessionStorage.setItem(`cocoveera_extra_${id}`, JSON.stringify(extraItems));
+        if (product?.slug) {
+          sessionStorage.setItem(`cocoveera_qty_${product.slug}`, finalQty);
+          sessionStorage.setItem(`cocoveera_type_${product.slug}`, containerType);
+          sessionStorage.setItem(`cocoveera_extra_${product.slug}`, JSON.stringify(extraItems));
+        }
+        if (product?._id) {
+          sessionStorage.setItem(`cocoveera_qty_${product._id}`, finalQty);
+          sessionStorage.setItem(`cocoveera_type_${product._id}`, containerType);
+          sessionStorage.setItem(`cocoveera_extra_${product._id}`, JSON.stringify(extraItems));
+        }
+      } catch (e) {}
+
+      // 2. Sync with CartContext / Backend database if user logged in
+      if (user && product) {
+        const currentActiveItems = [{ product, quantity: finalQty }];
+        extraItems.forEach(item => {
+          if (item.quantity > 0) {
+            currentActiveItems.push({ product: item.product, quantity: item.quantity });
+          }
+        });
+        const activeContainerLoad = parseFloat((finalQty + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
+        const totalContainersVal = parseFloat((completedContainers.length + activeContainerLoad).toFixed(2));
+
+        const targetCartItem = cart?.find(i => 
+          i._id === editingCartItemId || 
+          (i.mainProduct?._id === product._id || i.mainProduct?.slug === product.slug)
+        );
+
+        const payload = {
+          mainProductId: product._id,
+          containerType,
+          completedContainers,
+          activeContainer: {
+            containerType,
+            totalLoad: activeContainerLoad,
+            items: currentActiveItems,
+          },
+          extraItems,
+          mainQuantity: finalQty,
+          totalContainers: totalContainersVal > 0 ? totalContainersVal : 1,
+          cartItemId: targetCartItem?._id || editingCartItemId || undefined,
+        };
+
+        if (targetCartItem?._id || editingCartItemId) {
+          await updateCartItem(targetCartItem?._id || editingCartItemId, payload, true);
+        } else {
+          await addContainerToCart(payload, true);
+        }
+      }
+    }
+  }, [completedContainers, extraItems, id, product, containerType, cart, editingCartItemId, removeFromCart, user, updateCartItem, addContainerToCart]);
+
   const handleClearActiveContainer = () => {
-    setQuantity(0.00);
+    updateQuantityAndPersist(0.00);
     setExtraItems([]);
     setAddedMessage(`Active Container #${activeContainerIndex} reset.`);
   };
@@ -248,44 +345,43 @@ const ProductView = () => {
   useEffect(() => {
     if (id) {
       try {
-        sessionStorage.setItem(`cocoveera_qty_${id}`, quantity);
-        sessionStorage.setItem(`cocoveera_type_${id}`, containerType);
-        sessionStorage.setItem(`cocoveera_extra_${id}`, JSON.stringify(extraItems));
+        if (quantity > 0) {
+          sessionStorage.setItem(`cocoveera_qty_${id}`, quantity);
+          sessionStorage.setItem(`cocoveera_type_${id}`, containerType);
+          sessionStorage.setItem(`cocoveera_extra_${id}`, JSON.stringify(extraItems));
 
-        if (product) {
-          if (product.slug) {
-            sessionStorage.setItem(`cocoveera_qty_${product.slug}`, quantity);
-            sessionStorage.setItem(`cocoveera_type_${product.slug}`, containerType);
-            sessionStorage.setItem(`cocoveera_extra_${product.slug}`, JSON.stringify(extraItems));
+          if (product) {
+            if (product.slug) {
+              sessionStorage.setItem(`cocoveera_qty_${product.slug}`, quantity);
+              sessionStorage.setItem(`cocoveera_type_${product.slug}`, containerType);
+              sessionStorage.setItem(`cocoveera_extra_${product.slug}`, JSON.stringify(extraItems));
+            }
+            if (product._id) {
+              sessionStorage.setItem(`cocoveera_qty_${product._id}`, quantity);
+              sessionStorage.setItem(`cocoveera_type_${product._id}`, containerType);
+              sessionStorage.setItem(`cocoveera_extra_${product._id}`, JSON.stringify(extraItems));
+            }
           }
-          if (product._id) {
-            sessionStorage.setItem(`cocoveera_qty_${product._id}`, quantity);
-            sessionStorage.setItem(`cocoveera_type_${product._id}`, containerType);
-            sessionStorage.setItem(`cocoveera_extra_${product._id}`, JSON.stringify(extraItems));
+        } else {
+          sessionStorage.removeItem(`cocoveera_qty_${id}`);
+          sessionStorage.removeItem(`cocoveera_type_${id}`);
+          sessionStorage.removeItem(`cocoveera_extra_${id}`);
+          if (product) {
+            if (product.slug) {
+              sessionStorage.removeItem(`cocoveera_qty_${product.slug}`);
+              sessionStorage.removeItem(`cocoveera_type_${product.slug}`);
+              sessionStorage.removeItem(`cocoveera_extra_${product.slug}`);
+            }
+            if (product._id) {
+              sessionStorage.removeItem(`cocoveera_qty_${product._id}`);
+              sessionStorage.removeItem(`cocoveera_type_${product._id}`);
+              sessionStorage.removeItem(`cocoveera_extra_${product._id}`);
+            }
           }
         }
       } catch (e) {}
     }
   }, [id, quantity, containerType, extraItems, product]);
-
-  useEffect(() => {
-    if (id) {
-      try {
-        const savedQty = sessionStorage.getItem(`cocoveera_qty_${id}`);
-        if (savedQty !== null) {
-          setQuantity(parseFloat(savedQty));
-        }
-        const savedType = sessionStorage.getItem(`cocoveera_type_${id}`);
-        if (savedType) {
-          setContainerType(savedType);
-        }
-        const savedExtra = sessionStorage.getItem(`cocoveera_extra_${id}`);
-        if (savedExtra) {
-          setExtraItems(JSON.parse(savedExtra));
-        }
-      } catch (e) {}
-    }
-  }, [id]);
 
   // Fullscreen Lightbox gallery states
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
@@ -520,21 +616,36 @@ Timestamp: ${new Date().toLocaleString()}
           setProduct(fetchedProduct);
           setExpandedCategory(fetchedProduct.category);
           
-          // Restore saved quantities for this product slug/_id
+          // Restore saved quantities for this product from CartContext or sessionStorage
           try {
-            const savedQty = sessionStorage.getItem(`cocoveera_qty_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_qty_${fetchedProduct._id}`);
-            if (savedQty !== null) {
-              setQuantity(parseFloat(savedQty));
+            const existingCartItem = cart?.find(i => 
+              i._id === editingCartItemId || 
+              (fetchedProduct && (i.mainProduct?._id === fetchedProduct._id || i.mainProduct?.slug === fetchedProduct.slug))
+            );
+
+            if (existingCartItem && existingCartItem.mainQuantity > 0) {
+              setQuantity(existingCartItem.mainQuantity);
+              if (existingCartItem.containerType) setContainerType(existingCartItem.containerType);
+              if (existingCartItem.completedContainers) setCompletedContainers(existingCartItem.completedContainers);
+              if (existingCartItem.extraItems) setExtraItems(existingCartItem.extraItems);
+            } else if (!existingCartItem) {
+              const savedQtyStr = sessionStorage.getItem(`cocoveera_qty_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_qty_${fetchedProduct._id}`);
+              const parsedQty = savedQtyStr !== null ? parseFloat(savedQtyStr) : 0;
+              if (parsedQty > 0) {
+                setQuantity(parsedQty);
+                const savedType = sessionStorage.getItem(`cocoveera_type_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_type_${fetchedProduct._id}`);
+                if (savedType) setContainerType(savedType);
+                const savedExtra = sessionStorage.getItem(`cocoveera_extra_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_extra_${fetchedProduct._id}`);
+                if (savedExtra) setExtraItems(JSON.parse(savedExtra));
+              } else {
+                setQuantity(0.00);
+              }
+            } else {
+              setQuantity(0.00);
             }
-            const savedType = sessionStorage.getItem(`cocoveera_type_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_type_${fetchedProduct._id}`);
-            if (savedType) {
-              setContainerType(savedType);
-            }
-            const savedExtra = sessionStorage.getItem(`cocoveera_extra_${fetchedProduct.slug}`) || sessionStorage.getItem(`cocoveera_extra_${fetchedProduct._id}`);
-            if (savedExtra) {
-              setExtraItems(JSON.parse(savedExtra));
-            }
-          } catch (e) {}
+          } catch (e) {
+            setQuantity(0.00);
+          }
 
           if (relatedRes.data.success) {
             setRelatedProducts(relatedRes.data.data);
@@ -1391,7 +1502,7 @@ Timestamp: ${new Date().toLocaleString()}
                     <div className="flex items-center justify-between bg-white border-2 border-stone-100 rounded-2xl p-1.5 sm:p-2 shadow-sm h-full max-h-[64px]">
                       <button 
                         type="button"
-                        onClick={() => setQuantity(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))))}
+                        onClick={() => updateQuantityAndPersist(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))))}
                         className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 active:scale-95"
                       >
                         <Minus className="w-5 h-5" />
@@ -1406,7 +1517,7 @@ Timestamp: ${new Date().toLocaleString()}
                           value={quantity === 0 ? "0.00" : quantity}
                           onChange={(e) => {
                             const val = parseFloat(e.target.value);
-                            setQuantity(isNaN(val) ? 0.00 : Math.max(0.00, parseFloat(val.toFixed(2))));
+                            updateQuantityAndPersist(isNaN(val) ? 0.00 : Math.max(0.00, parseFloat(val.toFixed(2))));
                           }}
                           className="w-20 text-center text-2xl font-poppins font-black text-stone-900 focus:outline-none focus:ring-0 bg-transparent border-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
@@ -1415,7 +1526,7 @@ Timestamp: ${new Date().toLocaleString()}
 
                       <button 
                         type="button"
-                        onClick={() => setQuantity(q => parseFloat((q + 0.25).toFixed(2)))}
+                        onClick={() => updateQuantityAndPersist(q => parseFloat((q + 0.25).toFixed(2)))}
                         className="w-12 h-12 flex items-center justify-center text-stone-500 bg-stone-50 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] rounded-xl transition-all duration-200 active:scale-95"
                       >
                         <Plus className="w-5 h-5" />
@@ -1572,7 +1683,7 @@ Timestamp: ${new Date().toLocaleString()}
                                               type="button"
                                               onClick={() => {
                                                 if (isMainProduct) {
-                                                  setQuantity(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))));
+                                                  updateQuantityAndPersist(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))));
                                                 } else {
                                                   setExtraItems(prev => {
                                                     const existing = prev.find(item => item.product._id === p._id);
@@ -1598,7 +1709,7 @@ Timestamp: ${new Date().toLocaleString()}
                                               type="button"
                                               onClick={() => {
                                                 if (isMainProduct) {
-                                                  setQuantity(q => parseFloat((q + 0.25).toFixed(2)));
+                                                  updateQuantityAndPersist(q => parseFloat((q + 0.25).toFixed(2)));
                                                 } else {
                                                   setExtraItems(prev => {
                                                     const existing = prev.find(item => item.product._id === p._id);

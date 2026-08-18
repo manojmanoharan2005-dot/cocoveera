@@ -67,6 +67,26 @@ export const addToCart = async (req, res) => {
       cart = new Cart({ user: req.user._id, items: [] });
     }
 
+    // If quantity is 0 or less and no completed containers, remove item from cart persistence
+    const isZeroQuantity = Number(mainQuantity) <= 0 && 
+      (!completedContainers || completedContainers.length === 0) &&
+      (!activeContainer || Number(activeContainer.totalLoad || 0) <= 0);
+
+    if (isZeroQuantity) {
+      if (cartItemId) {
+        cart.items = cart.items.filter(item => item._id.toString() !== cartItemId);
+      } else {
+        cart.items = cart.items.filter(item => item.mainProduct.toString() !== mainProductId);
+      }
+      await cart.save();
+      const updatedCart = await populateCart(Cart.findById(cart._id));
+      return res.status(200).json({
+        success: true,
+        message: 'Zero quantity item removed from cart',
+        data: updatedCart.items || [],
+      });
+    }
+
     const newItemData = {
       mainProduct: mainProductId,
       containerType,
@@ -165,6 +185,17 @@ export const updateCartItem = async (req, res) => {
       mainQuantity,
       totalContainers,
     } = req.body;
+
+    if (mainQuantity !== undefined && Number(mainQuantity) <= 0 && (!completedContainers || completedContainers.length === 0)) {
+      cart.items = cart.items.filter(item => item._id.toString() !== itemId);
+      await cart.save();
+      const updatedCart = await populateCart(Cart.findById(cart._id));
+      return res.status(200).json({
+        success: true,
+        message: 'Cart item removed due to zero quantity',
+        data: updatedCart.items || [],
+      });
+    }
 
     if (mainProductId) cart.items[itemIndex].mainProduct = mainProductId;
     if (containerType) cart.items[itemIndex].containerType = containerType;

@@ -80,9 +80,9 @@ export const CartProvider = ({ children }) => {
   }, [isAuthenticated, fetchCart]);
 
   // Add container configuration to cart
-  const addToCart = useCallback(async (payload) => {
+  const addToCart = useCallback(async (payload, silent = false) => {
     if (!isAuthenticated) {
-      showToast('Please log in to add items to your cart', 'error');
+      if (!silent) showToast('Please log in to add items to your cart', 'error');
       return false;
     }
     setLoading(true);
@@ -90,15 +90,15 @@ export const CartProvider = ({ children }) => {
       const res = await apiClient.post('/cart', payload);
       if (res.data?.success) {
         setCart(sanitizeCartItems(res.data.data));
-        showToast('Container configuration added to cart!');
+        if (!silent) showToast('Container configuration added to cart!');
         return true;
       } else {
-        showToast(res.data?.message || 'Failed to add to cart', 'error');
+        if (!silent) showToast(res.data?.message || 'Failed to add to cart', 'error');
         return false;
       }
     } catch (err) {
       console.error('Add to Cart Error:', err);
-      showToast(err.response?.data?.message || 'Error saving container configuration to cart', 'error');
+      if (!silent) showToast(err.response?.data?.message || 'Error saving container configuration to cart', 'error');
       return false;
     } finally {
       setLoading(false);
@@ -106,22 +106,22 @@ export const CartProvider = ({ children }) => {
   }, [isAuthenticated, sanitizeCartItems, showToast]);
 
   // Update existing cart item (Edit configuration flow)
-  const updateCartItem = useCallback(async (itemId, payload) => {
+  const updateCartItem = useCallback(async (itemId, payload, silent = false) => {
     if (!isAuthenticated || !itemId) return false;
     setLoading(true);
     try {
       const res = await apiClient.put(`/cart/${itemId}`, payload);
       if (res.data?.success) {
         setCart(sanitizeCartItems(res.data.data));
-        showToast('Cart container configuration updated!');
+        if (!silent) showToast('Cart container configuration updated!');
         return true;
       } else {
-        showToast(res.data?.message || 'Failed to update cart item', 'error');
+        if (!silent) showToast(res.data?.message || 'Failed to update cart item', 'error');
         return false;
       }
     } catch (err) {
       console.error('Update Cart Item Error:', err);
-      showToast(err.response?.data?.message || 'Error updating cart item', 'error');
+      if (!silent) showToast(err.response?.data?.message || 'Error updating cart item', 'error');
       return false;
     } finally {
       setLoading(false);
@@ -129,20 +129,20 @@ export const CartProvider = ({ children }) => {
   }, [isAuthenticated, sanitizeCartItems, showToast]);
 
   // Remove a specific cart item
-  const removeFromCart = useCallback(async (itemId) => {
+  const removeFromCart = useCallback(async (itemId, silent = false) => {
     if (!isAuthenticated || !itemId) return false;
     setLoading(true);
     try {
       const res = await apiClient.delete(`/cart/${itemId}`);
       if (res.data?.success) {
         setCart(sanitizeCartItems(res.data.data));
-        showToast('Item removed from cart');
+        if (!silent) showToast('Item removed from cart');
         return true;
       }
       return false;
     } catch (err) {
       console.error('Remove from Cart Error:', err);
-      showToast('Failed to remove item', 'error');
+      if (!silent) showToast('Failed to remove item', 'error');
       return false;
     } finally {
       setLoading(false);

@@ -64,7 +64,8 @@ async function generateSitemap() {
     { route: '/global-network', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
     { route: '/how-it-works', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
     { route: '/privacy-policy', priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
-    { route: '/terms-conditions', priority: '0.5', changefreq: 'yearly', lastmod: buildDate }
+    { route: '/terms-conditions', priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
+    { route: '/blueberry-discs-in-coimbatore', priority: '0.8', changefreq: 'weekly', lastmod: buildDate }
   ];
   
   const productPages = products.map(product => {

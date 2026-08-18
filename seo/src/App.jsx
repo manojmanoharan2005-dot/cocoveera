@@ -14,6 +14,9 @@ import { API_URL } from './utils/config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
+// landingpages
+import BlueberryDiscsInCoimbatore from './pages/landingPages/BlueberryDiscsInCoimbatore';
+
 // Configure QueryClient with the optimized performance settings requested
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,9 +42,6 @@ const NotFound = lazyWithRetry(() => import('./pages/NotFound'), 'NotFound');
 const PrivacyPolicy = lazyWithRetry(() => import('./pages/PrivacyPolicy'), 'PrivacyPolicy');
 const TermsConditions = lazyWithRetry(() => import('./pages/TermsConditions'), 'TermsConditions');
 const Onboarding = lazyWithRetry(() => import('./pages/Onboarding'), 'Onboarding');
-
-// Landing Pages
-const BlueberryDiscsInCoimbatore = lazyWithRetry(() => import('./pages/landingPages/BlueberryDiscsInCoimbatore'), 'BlueberryDiscsInCoimbatore');
 
 // Eagerly load Authentication pages to prevent Suspend flickers during auth flow navigation
 import AuthLayout from './layouts/AuthLayout';
@@ -315,6 +315,8 @@ function AppContent() {
           <Route path="/how-it-works" element={<Onboarding />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
+
+          {/* landing pages */}
           <Route path="/blueberry-discs-in-coimbatore" element={<BlueberryDiscsInCoimbatore />} />
 
           {/* Auth Flow - Shared Layout to prevent flicker */}
