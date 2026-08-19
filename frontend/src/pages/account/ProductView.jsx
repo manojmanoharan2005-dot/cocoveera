@@ -976,7 +976,7 @@ Timestamp: ${new Date().toLocaleString()}
     "@context": "https://schema.org/",
     "@type": "Product",
     "name": product.name,
-    "image": product.images?.[0] || 'https://cocoveera.com/favicon.webp',
+    "image": product.images?.[0] || 'https://www.cocoveera.com/favicon.webp',
     "description": product.description || `Premium export-grade ${product.name} from Cocoveera.`,
     "sku": product._id,
     "brand": {
@@ -985,7 +985,7 @@ Timestamp: ${new Date().toLocaleString()}
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://cocoveera.com/product/${product.slug || product._id}`,
+      "url": `https://www.cocoveera.com/product/${product.slug || product._id}`,
       "priceCurrency": "INR",
       "price": product.price || "0",
       "availability": "https://schema.org/InStock"

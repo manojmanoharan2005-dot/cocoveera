@@ -354,8 +354,8 @@ const Home = () => {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Cocoveera",
-    "url": "https://cocoveera.com",
-    "logo": "https://cocoveera.com/favicon.webp",
+    "url": "https://www.cocoveera.com",
+    "logo": "https://www.cocoveera.com/favicon.webp",
     "description": "Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export."
   };
 

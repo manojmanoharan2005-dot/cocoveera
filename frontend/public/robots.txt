@@ -11,5 +11,5 @@ Disallow: /orders
 Disallow: /quotes
 Disallow: /admin
 
-Sitemap: https://cocoveera.com/sitemap.xml
+Sitemap: https://www.cocoveera.com/sitemap.xml
 

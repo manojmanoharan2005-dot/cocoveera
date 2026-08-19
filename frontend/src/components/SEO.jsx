@@ -2,7 +2,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
 const SEO = ({ title, description, url, image, schema, noindex }) => {
-  const siteUrl = 'https://cocoveera.com';
+  const siteUrl = 'https://www.cocoveera.com';
   const defaultImage = `${siteUrl}/favicon.webp`;
   const defaultDescription = 'COCOVEERA - Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export. Verify batch quality tests instantly.';
 

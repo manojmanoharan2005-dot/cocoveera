@@ -268,7 +268,7 @@ function AppContent() {
       const hasValidAdminToken = isTokenValid(adminToken);
 
       const path = window.location.pathname;
-      const isUserProtected = !path.startsWith('/admin') && (path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/product') || path.includes('/quotes') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved'));
+      const isUserProtected = !path.startsWith('/admin') && (path.includes('/dashboard') || path.includes('/orders') || path.includes('/cart') || path.includes('/checkout') || path.includes('/profile') || path.includes('/settings') || path.includes('/quotes') || path.includes('/payments') || path.includes('/testing-reports') || path.includes('/notifications') || path.includes('/support') || path.includes('/mobile') || path.includes('/address') || path.includes('/wishlist') || path.includes('/saved'));
       const isAdminProtected = path.startsWith('/admin');
 
       if (isAdminProtected && !hasValidAdminToken) {
@@ -316,6 +316,9 @@ function AppContent() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
           <Route path="/blueberry-discs-in-coimbatore" element={<BlueberryDiscsInCoimbatore />} />
+          <Route path="/product/:id" element={<ProductView />} />
+          <Route path="/products/:id" element={<ProductView />} />
+          <Route path="/productview/:id" element={<ProductView />} />
 
           {/* Auth Flow - Shared Layout to prevent flicker */}
           <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
@@ -352,9 +355,6 @@ function AppContent() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/support" element={<HelpCenter />} />
           <Route path="/mobile" element={<MobileAccount />} />
-          <Route path="/product/:id" element={<ProductView />} />
-          <Route path="/products/:id" element={<ProductView />} />
-          <Route path="/productview/:id" element={<ProductView />} />
         </Route>
 
 

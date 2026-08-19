@@ -167,13 +167,13 @@ const BlueberryDiscsInCoimbatore = () => {
                     "@type": "ListItem",
                     "position": 1,
                     "name": "Home",
-                    "item": "https://cocoveera.com"
+                    "item": "https://www.cocoveera.com"
                 },
                 {
                     "@type": "ListItem",
                     "position": 2,
                     "name": "Blueberry Discs in Coimbatore",
-                    "item": "https://cocoveera.com/blueberry-discs-in-coimbatore"
+                    "item": "https://www.cocoveera.com/blueberry-discs-in-coimbatore"
                 }
             ]
         },
@@ -181,8 +181,8 @@ const BlueberryDiscsInCoimbatore = () => {
             "@context": "https://schema.org",
             "@type": "Organization",
             "name": "Cocoveera",
-            "url": "https://cocoveera.com",
-            "logo": "https://cocoveera.com/favicon.webp",
+            "url": "https://www.cocoveera.com",
+            "logo": "https://www.cocoveera.com/favicon.webp",
             "description": "Manufacturer and exporter of premium coconut coir substrates, coir peat blocks, grow bags, and blueberry growing discs."
         }
     ];

@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const API_URL = 'https://cocoveera.onrender.com/api';
-const BASE_URL = 'https://cocoveera.com';
+const BASE_URL = 'https://www.cocoveera.com';
 
 function generateSlug(name) {
   if (!name) return '';

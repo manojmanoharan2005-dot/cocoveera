@@ -75,13 +75,7 @@ const Products = () => {
 
   const handleViewDetails = (product) => {
     const targetProductPath = `/product/${product.slug || product._id}`;
-
-    if (!user) {
-      sessionStorage.setItem('postLoginRedirect', targetProductPath);
-      navigate(`/login?redirect=${encodeURIComponent(targetProductPath)}`);
-    } else {
-      navigate(targetProductPath);
-    }
+    navigate(targetProductPath);
   };
 
   return (
