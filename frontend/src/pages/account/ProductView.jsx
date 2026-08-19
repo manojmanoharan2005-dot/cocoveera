@@ -18,6 +18,7 @@ import ImageWithFallback from '../../components/common/ImageWithFallback';
 import SEO from '../../components/SEO';
 
 import { useWishlist } from '../../context/WishlistContext';
+
 import { useCart } from '../../context/CartContext';
 
 const ProductView = () => {
@@ -971,14 +972,36 @@ Timestamp: ${new Date().toLocaleString()}
     'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'
   ];
 
+  const productSchema = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.images?.[0] || 'https://cocoveera.com/favicon.webp',
+    "description": product.description || `Premium export-grade ${product.name} from Cocoveera.`,
+    "sku": product._id,
+    "brand": {
+      "@type": "Brand",
+      "name": "COCOVEERA"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://cocoveera.com/product/${product.slug || product._id}`,
+      "priceCurrency": "INR",
+      "price": product.price || "0",
+      "availability": "https://schema.org/InStock"
+    }
+  };
+
   return (
     <div className="max-w-6xl space-y-4 sm:space-y-5 pb-24 lg:pb-16">
       <SEO 
         title={product.name}
         description={product.description?.substring(0, 160) || `Buy premium ${product.name} at Cocoveera.`}
-        url={`/products/${product.slug || product._id}`}
-        image={product.images?.[0]?.url || product.image}
+        url={`/product/${product.slug || product._id}`}
+        image={product.images?.[0]}
+        schema={productSchema}
       />
+
       
 
 

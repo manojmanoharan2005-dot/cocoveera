@@ -188,12 +188,11 @@ const BlueberryDiscsInCoimbatore = () => {
     ];
 
     return (
-        <main className="landing_page_parent">
-            <SEO
-                title="Blueberry Discs in Coimbatore | High Quality Coir Discs"
-                description="Discover premium coir blueberry growing discs in Coimbatore by Cocoveera. Engineered for optimal air-water ratio, root development, and sustainable yield."
+        <div className="landing-page-root">
+            <SEO 
+                title="Blueberry Discs in Coimbatore"
+                description="Premium coir-based blueberry growing discs in Coimbatore, sustainably crafted for excellent moisture retention, aeration, and healthy root development."
                 url="/blueberry-discs-in-coimbatore"
-                image="https://cocoveera.com/landing-page-images/banner-product.webp"
                 schema={structuredSchema}
             />
 
@@ -930,7 +929,7 @@ const BlueberryDiscsInCoimbatore = () => {
 
             </section>
 
-        </main>
+        </div>
     );
 };
 

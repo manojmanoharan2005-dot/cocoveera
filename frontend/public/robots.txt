@@ -1,23 +1,15 @@
 User-agent: *
 Allow: /
-Disallow: /account/
-Disallow: /dashboard/
-Disallow: /admin/
+
 Disallow: /login
 Disallow: /register
 Disallow: /cart
 Disallow: /checkout
-Disallow: /profile
+Disallow: /account
+Disallow: /wishlist
 Disallow: /orders
 Disallow: /quotes
-Disallow: /api/
-Disallow: /auth/
-Disallow: /wishlist
-Disallow: /private/
-Disallow: /customer/
-Disallow: /rfq/
-Disallow: /payment/
-Disallow: /invoice/
-Disallow: /settings/
+Disallow: /admin
 
 Sitemap: https://cocoveera.com/sitemap.xml
+

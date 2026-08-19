@@ -8,16 +8,33 @@ const SEO = ({ title, description, url, image, schema, noindex }) => {
 
   const seoTitle = title ? `${title} | COCOVEERA` : 'COCOVEERA | Quality Testing & Coconut Substrates Export';
   const seoDescription = description || defaultDescription;
-  const seoUrl = url ? `${siteUrl}${url}` : siteUrl;
+
+  // Determine relative pathname safely
+  let pathname = '';
+  if (url) {
+    pathname = url;
+  } else if (typeof window !== 'undefined') {
+    pathname = window.location.pathname;
+  }
+
+  // Ensure leading slash and remove trailing slashes except for root '/'
+  let cleanPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
+    cleanPath = cleanPath.slice(0, -1);
+  }
+
+  const seoUrl = `${siteUrl}${cleanPath === '/' ? '' : cleanPath}`;
   const seoImage = image || defaultImage;
 
-  // Automatically determine if the path is internal/private
-  const path = typeof window !== 'undefined' ? window.location.pathname : '';
-  const isInternal = noindex || 
-                     path.startsWith('/account') || 
-                     path.startsWith('/dashboard') || 
-                     path.startsWith('/admin') ||
-                     ['/login', '/register', '/verify-otp', '/cart', '/checkout', '/order-summary', '/payment', '/order-success', '/wishlist', '/saved', '/address', '/settings', '/profile', '/quotes', '/payments', '/testing-reports', '/notifications', '/support', '/mobile'].includes(path);
+  // Route-aware private page check for noindex tag
+  const isPrivate = noindex || 
+                    cleanPath.startsWith('/account') || 
+                    cleanPath.startsWith('/dashboard') || 
+                    cleanPath.startsWith('/admin') ||
+                    cleanPath.startsWith('/orders') ||
+                    cleanPath.startsWith('/quotes') ||
+                    cleanPath.startsWith('/track') ||
+                    ['/login', '/register', '/verify-otp', '/cart', '/checkout', '/order-summary', '/payment', '/order-success', '/wishlist', '/saved', '/address', '/settings', '/profile', '/payments', '/testing-reports', '/notifications', '/support', '/mobile'].includes(cleanPath);
 
   return (
     <Helmet>
@@ -26,7 +43,11 @@ const SEO = ({ title, description, url, image, schema, noindex }) => {
       <meta name="title" content={seoTitle} />
       <meta name="description" content={seoDescription} />
       <link rel="canonical" href={seoUrl} />
-      {isInternal && <meta name="robots" content="noindex, nofollow" />}
+      {isPrivate ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : (
+        <meta name="robots" content="index, follow" />
+      )}
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content="website" />
@@ -53,3 +74,4 @@ const SEO = ({ title, description, url, image, schema, noindex }) => {
 };
 
 export default SEO;
+

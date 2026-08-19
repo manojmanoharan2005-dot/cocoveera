@@ -1,8 +1,14 @@
 import React from 'react';
+import SEO from '../components/SEO';
 
 const NotFound = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] bg-[#1a1a1a] font-sans w-full py-12 rounded-xl">
+      <SEO 
+        title="404 - Page Not Found"
+        description="The requested page could not be found."
+        noindex={true}
+      />
       <div className="flex flex-col md:flex-row items-center space-y-8 md:space-y-0 md:space-x-8 px-4">
         
         {/* Window Graphic */}

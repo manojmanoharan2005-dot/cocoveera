@@ -4,6 +4,7 @@ import { motion, useScroll } from 'framer-motion';
 import { Palmtree, Settings, Box, Shield, Package, Ship, ArrowRight, CheckCircle2, Home } from 'lucide-react';
 import PageHero from '../components/PageHero';
 import ImageWithFallback from '../components/common/ImageWithFallback';
+import SEO from '../components/SEO';
 
 const QualityTesting = () => {
   const containerRef = useRef(null);
@@ -87,6 +88,11 @@ const QualityTesting = () => {
 
   return (
     <div className="pb-24 bg-stone-50 min-h-screen relative overflow-hidden">
+      <SEO 
+        title="Production Process & Quality Testing"
+        description="Explore Cocoveera's 7-stage manufacturing infrastructure, raw material collection, processing, and strict batch quality testing."
+        url="/production-process"
+      />
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0 opacity-[0.04] pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#2E7D32 1.5px, transparent 1.5px)', backgroundSize: '48px 48px' }} />
 

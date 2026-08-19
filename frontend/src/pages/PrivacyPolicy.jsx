@@ -49,7 +49,7 @@ const PrivacyPolicy = () => {
 
   return (
     <>
-      <SEO title="Privacy Policy - Cocoveera" description="Privacy policy and data handling practices at Cocoveera." />
+      <SEO title="Privacy Policy" description="Privacy policy and data handling practices at Cocoveera." url="/privacy-policy" />
       <div className="relative min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-hidden z-10">
         {/* Futuristic Background Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">

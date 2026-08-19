@@ -18,30 +18,27 @@ function generateSlug(name) {
     .replace(/-+/g, '-');
 }
 
-async function fetchProducts() {
+async function fetchData(endpoint) {
   try {
-    const response = await fetch(`${API_URL}/products`);
+    const response = await fetch(`${API_URL}/${endpoint}`);
     const data = await response.json();
     if (data.success && data.data) {
       return data.data;
     }
     return [];
   } catch (error) {
-    console.error('Error fetching products for sitemap:', error);
+    console.error(`Error fetching ${endpoint} for sitemap:`, error);
     return [];
   }
 }
 
-function generateXml(pages) {
+function generateXml(urls) {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
-  pages.forEach(page => {
+  urls.forEach(url => {
     xml += `  <url>\n`;
-    xml += `    <loc>${BASE_URL}${page.route}</loc>\n`;
-    xml += `    <lastmod>${page.lastmod}</lastmod>\n`;
-    xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
-    xml += `    <priority>${page.priority}</priority>\n`;
+    xml += `    <loc>${BASE_URL}${url}</loc>\n`;
     xml += `  </url>\n`;
   });
 
@@ -51,44 +48,52 @@ function generateXml(pages) {
 
 async function generateSitemap() {
   console.log('Generating sitemap...');
-  const products = await fetchProducts();
-  
-  const buildDate = new Date().toISOString();
-  
+  const [products, categories] = await Promise.all([
+    fetchData('products'),
+    fetchData('categories')
+  ]);
+
   const staticPages = [
-    { route: '/', priority: '1.0', changefreq: 'daily', lastmod: buildDate },
-    { route: '/about', priority: '0.8', changefreq: 'weekly', lastmod: buildDate },
-    { route: '/products', priority: '0.8', changefreq: 'daily', lastmod: buildDate },
-    { route: '/contact', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
-    { route: '/production-process', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
-    { route: '/global-network', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
-    { route: '/how-it-works', priority: '0.8', changefreq: 'monthly', lastmod: buildDate },
-    { route: '/privacy-policy', priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
-    { route: '/terms-conditions', priority: '0.5', changefreq: 'yearly', lastmod: buildDate },
-    { route: '/blueberry-discs-in-coimbatore', priority: '0.8', changefreq: 'weekly', lastmod: buildDate }
+    '/',
+    '/about',
+    '/products',
+    '/contact',
+    '/production-process',
+    '/global-network',
+    '/how-it-works',
+    '/privacy-policy',
+    '/terms-conditions',
+    '/blueberry-discs-in-coimbatore'
   ];
-  
+
+  // Category pages
+  const categoryPages = [];
+  const categoryNames = new Set();
+  categories.forEach(c => {
+    if (c.name) categoryNames.add(c.name.trim());
+  });
+  categoryNames.forEach(catName => {
+    categoryPages.push(`/products?category=${encodeURIComponent(catName)}`);
+  });
+
+  // Product pages (Canonical path: /product/slug)
   const productPages = products.map(product => {
     const slug = product.slug || generateSlug(product.name) || product._id;
-    const lastmod = product.updatedAt ? new Date(product.updatedAt).toISOString() : buildDate;
-    return {
-      route: `/products/${slug}`,
-      priority: '0.7',
-      changefreq: 'weekly',
-      lastmod
-    };
+    return `/product/${slug}`;
   });
-  
-  const allPages = [...staticPages, ...productPages];
-  const xml = generateXml(allPages);
-  
+
+  // Deduplicate and filter valid public routes
+  const allUrls = Array.from(new Set([...staticPages, ...categoryPages, ...productPages]));
+  const xml = generateXml(allUrls);
+
   const publicDir = path.resolve(__dirname, '../public');
   if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir);
+    fs.mkdirSync(publicDir, { recursive: true });
   }
-  
+
   fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), xml);
-  console.log(`Sitemap generated successfully with ${allPages.length} URLs.`);
+  console.log(`Sitemap generated successfully with ${allUrls.length} URLs.`);
 }
 
 generateSitemap();
+
