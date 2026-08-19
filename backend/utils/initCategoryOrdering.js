@@ -1,11 +1,11 @@
 /**
  * File: backend/utils/initCategoryOrdering.js
- * Purpose: Ensures categories in MongoDB strictly adhere to production order,
- * placing DEMO at the end of existing categories, and maintaining persistent displayOrder.
+ * Purpose: Ensures categories in MongoDB strictly adhere to production order
+ * and maintains persistent displayOrder.
  */
 import Category from '../models/Category.js';
 
-// Production category order requested:
+// Production category order:
 const INITIAL_CATEGORY_ORDER = [
   'Coco Cubes',
   'Coir Fiber Bales',
@@ -17,12 +17,21 @@ const INITIAL_CATEGORY_ORDER = [
   'Open Top Grow Bags',
   'Curled Coir Ropes',
   'Cocopeat Blocks',
-  'Growbags',
-  'DEMO' // DEMO is placed at the end of existing categories!
+  'Growbags'
 ];
 
 export const initCategoryOrdering = async () => {
   try {
+    // Purge any legacy DEMO/test categories from database
+    await Category.deleteMany({
+      $or: [
+        { name: { $regex: /^demo/i } },
+        { slug: { $regex: /^demo/i } },
+        { name: { $regex: /^test/i } },
+        { slug: { $regex: /^test/i } }
+      ]
+    });
+
     const categories = await Category.find({});
     if (!categories || categories.length === 0) return;
 

@@ -22,15 +22,17 @@ const fetcher = (url) =>
     .catch(() => []);
 
 const FALLBACK_CATEGORIES = [
-  'Cocopeat Blocks',
-  'Grow Bags',
   'Coco Cubes',
-  'Coir Briquettes',
-  'Coir Fiber Bale',
-  'Coco Chips',
-  'Open Top Grow Bags',
+  'Coir Fiber Bales',
   'Substrate Bags',
-  'Erosion Control Products',
+  'Erosion Control Nets & Logs',
+  'Blueberry Discs',
+  'Erosion Control Blankets',
+  'Briquettes',
+  'Open Top Grow Bags',
+  'Curled Coir Ropes',
+  'Cocopeat Blocks',
+  'Growbags',
 ];
 
 const SUPPORT_LINKS = [
@@ -54,7 +56,7 @@ const Footer = () => {
   const categoryItems =
     Array.isArray(dbCategories) && dbCategories.length > 0
       ? dbCategories
-          .filter((cat) => cat && cat.isActive !== false)
+          .filter((cat) => cat && cat.name && !cat.name.toLowerCase().includes('demo') && !cat.name.toLowerCase().includes('test'))
           .map((cat) => (typeof cat === 'string' ? cat : cat.name))
       : FALLBACK_CATEGORIES;
 

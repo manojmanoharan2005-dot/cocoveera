@@ -33,17 +33,16 @@ const Products = () => {
     { revalidateOnFocus: false, dedupingInterval: 600000 }
   );
 
-  // Build unique category options list
+  // Build unique category options list dynamically from API categories
   const categoryOptions = useMemo(() => {
     const set = new Set();
     categories.forEach((c) => {
-      if (c.name) set.add(c.name.trim());
-    });
-    products.forEach((p) => {
-      if (p.category) set.add(p.category.trim());
+      if (c && c.name && !c.name.toLowerCase().includes('demo') && !c.name.toLowerCase().includes('test')) {
+        set.add(c.name.trim());
+      }
     });
     return Array.from(set);
-  }, [categories, products]);
+  }, [categories]);
 
   // Filter products matching selectedCategory
   const filteredProducts = useMemo(() => {

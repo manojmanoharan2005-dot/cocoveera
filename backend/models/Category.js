@@ -40,10 +40,11 @@ CategorySchema.index({ displayOrder: 1, name: 1 });
 
 // Auto-generate slug before saving
 CategorySchema.pre('save', function(next) {
-  if (!this.slug) {
+  if (this.isModified('name') || !this.slug) {
     this.slug = this.name
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
+      .trim()
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-');
   }
