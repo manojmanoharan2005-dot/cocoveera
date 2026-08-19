@@ -48,9 +48,8 @@ function generateXml(urls) {
 
 async function generateSitemap() {
   console.log('Generating sitemap...');
-  const [products, categories] = await Promise.all([
-    fetchData('products'),
-    fetchData('categories')
+  const [products] = await Promise.all([
+    fetchData('products')
   ]);
 
   const staticPages = [
@@ -66,24 +65,25 @@ async function generateSitemap() {
     '/blueberry-discs-in-coimbatore'
   ];
 
-  // Category pages
-  const categoryPages = [];
-  const categoryNames = new Set();
-  categories.forEach(c => {
-    if (c.name) categoryNames.add(c.name.trim());
-  });
-  categoryNames.forEach(catName => {
-    categoryPages.push(`/products?category=${encodeURIComponent(catName)}`);
-  });
-
   // Product pages (Canonical path: /product/slug)
-  const productPages = products.map(product => {
-    const slug = product.slug || generateSlug(product.name) || product._id;
-    return `/product/${slug}`;
-  });
+  // Exclude demo, test, inactive, or deleted products
+  const productPages = products
+    .filter(product => {
+      if (!product || product.isActive === false || product.isDeleted) return false;
+      const slug = (product.slug || generateSlug(product.name) || '').toLowerCase();
+      const name = (product.name || '').toLowerCase();
+      if (slug.includes('demo') || slug.includes('test') || name.includes('demo') || name.includes('test')) {
+        return false;
+      }
+      return slug.length > 0;
+    })
+    .map(product => {
+      const slug = product.slug || generateSlug(product.name) || product._id;
+      return `/product/${slug}`;
+    });
 
   // Deduplicate and filter valid public routes
-  const allUrls = Array.from(new Set([...staticPages, ...categoryPages, ...productPages]));
+  const allUrls = Array.from(new Set([...staticPages, ...productPages]));
   const xml = generateXml(allUrls);
 
   const publicDir = path.resolve(__dirname, '../public');
@@ -96,4 +96,5 @@ async function generateSitemap() {
 }
 
 generateSitemap();
+
 
