@@ -16,7 +16,7 @@ cloudinary.config({
 
 const uploadImage = async () => {
   try {
-    const res = await cloudinary.uploader.upload(path.resolve(__dirname, '../frontend/public/logo.webp'), {
+    const res = await cloudinary.uploader.upload(path.resolve(__dirname, '../../frontend/public/logo.webp'), {
       folder: 'cocoveera_assets',
       public_id: 'logo',
       format: 'png' // Convert to PNG for better email compatibility!
