@@ -164,28 +164,12 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Guard for guest pages (redirects to dashboard if already logged in)
+// Guard for guest pages
 const GuestRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  const token = sessionStorage.getItem('cocoveera_token');
-  const hasValidToken = isTokenValid(token);
-  const [shouldRedirect, setShouldRedirect] = React.useState(false);
-
-  useEffect(() => {
-    // Only intercept if they have a valid session on mount, preventing race conditions
-    // during the active login process where state updates before animation finishes.
-    if (user && hasValidToken) {
-      setShouldRedirect(true);
-    }
-  }, []); // Run only once on mount
+  const { loading } = useAuth();
 
   if (loading) {
     return <LoadingScreen />;
-  }
-
-  if (shouldRedirect) {
-    const storedRedirect = sessionStorage.getItem('postLoginRedirect');
-    return <Navigate to={storedRedirect || "/dashboard"} replace />;
   }
 
   return children;
@@ -247,15 +231,7 @@ const ScrollToTop = () => {
   return null;
 };
 
-const DynamicLayout = () => {
-  const { user, loading } = useAuth();
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  return user ? <DashboardLayout /> : <PublicLayout />;
-};
 
 function AppContent() {
   // Security: Handle back button and bfcache navigation without allowing cached protected pages
@@ -495,10 +471,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        {/* Product routes have been moved to ProtectedRoute above */}
-        <Route element={<DynamicLayout />}>
-          {/* Empty dynamic block, leaving for any future public/private hybrid routes */}
-        </Route>
+
       </Routes>
     </Suspense>
   );

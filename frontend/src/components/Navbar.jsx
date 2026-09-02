@@ -11,7 +11,6 @@ import { Menu, X, ChevronDown, Globe, Mail, ShieldCheck, Heart, ShoppingCart, Us
 import SustainabilityTicker from './SustainabilityTicker';
 
 const Navbar = () => {
-  const { user, token, loading, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -147,38 +146,18 @@ const Navbar = () => {
               )}
             </div>
 
-            {user ? (
-              <div className="flex items-center gap-3">
-                <Link
-                  to={user.role === 'admin' ? '/admin' : '/dashboard'}
-                  className="flex items-center gap-2 text-xs font-bold text-[#4A3A1F] hover:text-[#2E7D32] bg-white/50 px-3 py-1.5 rounded-xl border border-[#E0D0AB] transition-colors"
-                >
-                  <User className="w-4 h-4 text-[#2E7D32]" />
-                  <span>Dashboard</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="text-xs font-bold text-red-700 hover:text-red-900 transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-xs font-bold uppercase tracking-wider text-[#4A3A1F] hover:text-[#2E7D32] transition-colors px-2 py-0.5"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-transparent border-2 border-[#2E7D32] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white font-poppins text-xs font-bold px-4 py-1.5 rounded-xl transition-all duration-300 shadow-sm"
-                >
-                  Register
-                </Link>
-              </>
-            )}
+            <Link
+              to="/login"
+              className="text-xs font-bold uppercase tracking-wider text-[#4A3A1F] hover:text-[#2E7D32] transition-colors px-2 py-0.5"
+            >
+              Login
+            </Link>
+            <Link
+              to="/register"
+              className="bg-transparent border-2 border-[#2E7D32] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white font-poppins text-xs font-bold px-4 py-1.5 rounded-xl transition-all duration-300 shadow-sm"
+            >
+              Register
+            </Link>
           </div>
 
           {/* MOBILE TOGGLE */}
@@ -215,32 +194,20 @@ const Navbar = () => {
             ))}
 
             <div className="border-t border-[#E8D7B0] mt-4 pt-5 flex flex-col gap-3">
-              {!user ? (
-                <>
-                  <Link
-                    to="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full text-center border border-[#E0D0AB] text-[#4A3A1F] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:text-[#2E7D32] transition-colors"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full text-center border-2 border-[#2E7D32] text-[#2E7D32] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-[#2E7D32] hover:text-white transition-all"
-                  >
-                    Register
-                  </Link>
-                </>
-              ) : (
-                <Link
-                  to={user.role === 'admin' ? '/admin' : '/dashboard'}
-                  onClick={() => setIsOpen(false)}
-                  className="w-full text-center border border-[#2E7D32] text-[#2E7D32] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-[#2E7D32] hover:text-white transition-all"
-                >
-                  Dashboard
-                </Link>
-              )}
+              <Link
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className="w-full text-center border border-[#E0D0AB] text-[#4A3A1F] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:text-[#2E7D32] transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setIsOpen(false)}
+                className="w-full text-center border-2 border-[#2E7D32] text-[#2E7D32] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-[#2E7D32] hover:text-white transition-all"
+              >
+                Register
+              </Link>
             </div>
           </div>
         )}
