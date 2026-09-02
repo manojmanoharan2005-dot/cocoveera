@@ -945,7 +945,11 @@ Timestamp: ${new Date().toLocaleString()}
   const activeLoad = parseFloat((quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
   const totalQuantity = parseFloat((completedContainers.length + activeLoad).toFixed(2));
   const isWholeContainer = totalQuantity > 0 && Math.abs(totalQuantity - Math.round(totalQuantity)) < 0.001;
-  const capacityPercentage = activeLoad === 0 ? 0 : Math.round(activeLoad >= 1.00 ? 100 : (activeLoad * 100));
+  const capacityPercentage = (completedContainers.length > 0 && activeLoad === 0)
+    ? 100
+    : (activeLoad === 0 
+        ? 0 
+        : Math.min(100, Math.round(activeLoad >= 0.999 ? 100 : (activeLoad * 100))));
   const remainingForNextFull = activeLoad === 0 ? 1.00 : parseFloat((1.00 - activeLoad).toFixed(2));
   const isQuoteButtonDisabled = totalQuantity === 0 || (!isWholeContainer && completedContainers.length === 0);
   const isOverCapacity = false; // No longer applicable as they can order multiple containers

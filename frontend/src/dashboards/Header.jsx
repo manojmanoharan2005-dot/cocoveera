@@ -28,13 +28,11 @@ export const Header = ({
   const { wishlistCount } = useWishlist();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const isProductPage = location.pathname.includes('/product/') || location.pathname.includes('/productview/');
 
   React.useEffect(() => {
     setDropdownOpen(false);
-    setSortDropdownOpen(false);
     setMoreMenuOpen(false);
   }, [location.pathname]);
 
@@ -128,63 +126,18 @@ export const Header = ({
           </div>
         )}
 
-        {/* ROW 3: Filter Row - ONLY Two Buttons [ Filter ] [ Sort ] (Width: 50%, Height: 44px, Gap: 12px) */}
+        {/* ROW 3: Filter Row - ONLY Filter Button */}
         {showSearchAndFilters && (
           <div className="flex items-center gap-3 w-full mt-3">
-            {/* Filter Button (50% Width, 44px Height) */}
+            {/* Filter Button */}
             <button
               type="button"
               onClick={onFilterClick}
-              className="flex-1 h-[44px] bg-white border border-stone-200 hover:border-[#2E7D32] text-stone-800 font-poppins font-black text-xs rounded-[12px] flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="w-full h-[44px] bg-white border border-stone-200 hover:border-[#2E7D32] text-stone-800 font-poppins font-black text-xs rounded-[12px] flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
               <SlidersHorizontal className="w-4 h-4 text-[#2E7D32]" />
               <span>Filter</span>
             </button>
-
-            {/* Sort Button & Dropdown (50% Width, 44px Height) */}
-            <div className="flex-1 relative">
-              <button
-                type="button"
-                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                className="w-full h-[44px] bg-white border border-stone-200 hover:border-[#2E7D32] text-stone-800 font-poppins font-black text-xs rounded-[12px] flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98]"
-              >
-                <span>Sort: {sortBy}</span>
-                <ChevronDown className={`w-4 h-4 text-stone-500 transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              <AnimatePresence>
-                {sortDropdownOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40 bg-black/10" onClick={() => setSortDropdownOpen(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 5 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute top-[calc(100%+6px)] right-0 w-full bg-white border border-stone-200 rounded-[14px] shadow-xl py-1 z-50 overflow-hidden"
-                    >
-                      {['Featured', 'Rating'].map((option) => (
-                        <button
-                          key={option}
-                          onClick={() => {
-                            setSortBy(option);
-                            setSortDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-3 text-xs font-bold transition-colors flex items-center justify-between ${
-                            sortBy === option 
-                              ? 'bg-[#F0FAF0] text-[#2E7D32]' 
-                              : 'text-stone-700 hover:bg-stone-50'
-                          }`}
-                        >
-                          {option}
-                          {sortBy === option && <Check className="w-4 h-4 text-[#2E7D32]" />}
-                        </button>
-                      ))}
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
           </div>
         )}
       </header>
@@ -248,54 +201,6 @@ export const Header = ({
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Filter</span>
               </button>
-
-              {/* Sort dropdown */}
-              <div className="relative flex items-center shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                  className="flex items-center justify-between bg-white border border-stone-200 hover:border-[#2E7D32] hover:shadow-sm rounded-[12px] px-3.5 h-10 min-w-[140px] transition-all group cursor-pointer"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-stone-400 font-bold">Sort:</span>
-                    <span className="text-[11.5px] text-stone-900 font-extrabold">{sortBy}</span>
-                  </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-stone-400 group-hover:text-[#2E7D32] transition-transform ${sortDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                <AnimatePresence>
-                  {sortDropdownOpen && (
-                    <>
-                      <div className="fixed inset-0 z-40 cursor-pointer" onClick={() => setSortDropdownOpen(false)} />
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute top-[calc(100%+8px)] right-0 w-[160px] bg-white border border-stone-200/80 rounded-[14px] shadow-[0_16px_48px_rgba(0,0,0,0.12)] py-1.5 z-50 overflow-hidden"
-                      >
-                        {['Featured', 'Rating'].map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => {
-                              setSortBy(option);
-                              setSortDropdownOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-2.5 text-[11.5px] font-bold transition-colors flex items-center justify-between ${
-                              sortBy === option 
-                                ? 'bg-[#F0FAF0] text-[#2E7D32]' 
-                                : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
-                            }`}
-                          >
-                            {option}
-                            {sortBy === option && <Check className="w-3.5 h-3.5 text-[#2E7D32]" />}
-                          </button>
-                        ))}
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
             </motion.div>
           ) : (
             <motion.div

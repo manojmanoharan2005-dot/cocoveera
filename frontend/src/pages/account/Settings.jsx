@@ -5,10 +5,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, apiClient } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, MapPin, Lock, Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import { User, Mail, MapPin, Lock, Save, Loader2, Trash2, AlertTriangle, Building2, Phone } from 'lucide-react';
 
 const Settings = () => {
-  const { user, login, logout } = useAuth(); // login function updates the auth state
+  const { user, login, logout, fetchProfile } = useAuth(); // login function updates the auth state
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,13 +26,14 @@ const Settings = () => {
     email: '',
     country: '',
     companyName: '',
+    phone: '',
     currentPassword: '',
     password: '',
     confirmPassword: ''
   });
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       try {
         const res = await apiClient.get('/users/profile');
         if (res.data.success) {
@@ -41,6 +42,8 @@ const Settings = () => {
             name: profile.name || '',
             email: profile.email || '',
             country: profile.country || '',
+            companyName: profile.companyName && profile.companyName !== 'N/A' ? profile.companyName : '',
+            phone: profile.phone || '',
             password: '',
             confirmPassword: ''
           });
@@ -51,7 +54,7 @@ const Settings = () => {
         setLoading(false);
       }
     };
-    fetchProfile();
+    loadProfile();
   }, []);
 
   const handleChange = (e) => {
@@ -82,6 +85,8 @@ const Settings = () => {
       const payload = {
         name: formData.name,
         country: formData.country,
+        companyName: formData.companyName || 'N/A',
+        phone: formData.phone,
       };
 
       if (formData.password) {
@@ -118,6 +123,7 @@ const Settings = () => {
       }
       const res = await apiClient.put('/users/profile', payload);
       if (res.data.success) {
+        if (fetchProfile) await fetchProfile();
         setMessage({ text: 'Profile updated successfully', type: 'success' });
         setFormData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
         setShowOtpModal(false);
@@ -213,6 +219,28 @@ const Settings = () => {
               </label>
               <input 
                 type="text" name="country" value={formData.country} onChange={handleChange}
+                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
+                <Building2 className="w-3.5 h-3.5" /> Company / Organization Name
+              </label>
+              <input 
+                type="text" name="companyName" value={formData.companyName} onChange={handleChange}
+                placeholder="e.g. Agri-Imports Co."
+                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-stone-600 uppercase tracking-wider flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5" /> Contact Phone Number
+              </label>
+              <input 
+                type="tel" name="phone" value={formData.phone} onChange={handleChange}
+                placeholder="+1 (555) 000-0000"
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 focus:bg-white focus:border-[#2E7D32] outline-none transition-all" 
               />
             </div>
