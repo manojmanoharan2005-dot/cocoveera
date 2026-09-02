@@ -86,7 +86,7 @@ const Footer = () => {
               },
               {
                 Icon: WhatsAppIcon,
-                href: 'https://wa.me/916382801974',
+                href: 'https://wa.me/916383469877',
                 label: 'WhatsApp',
               },
             ].map(({ Icon, href, label }, idx) => (
@@ -160,12 +160,12 @@ const Footer = () => {
             <li className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-primary-light flex-shrink-0" />
               <a
-                href="https://wa.me/916382801974"
+                href="https://wa.me/916383469877"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-stone-400 hover:text-primary-light transition-colors font-medium"
               >
-                +91 63828 01974
+                +91 63834 69877
               </a>
             </li>
 

@@ -451,7 +451,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Direct Phone / WhatsApp</p>
-                    <a href="https://wa.me/916382801974" target="_blank" rel="noreferrer" className="text-stone-900 font-bold hover:text-[#2E7D32] transition">+91 63828 01974</a>
+                    <a href="https://wa.me/916383469877" target="_blank" rel="noreferrer" className="text-stone-900 font-bold hover:text-[#2E7D32] transition">+91 63834 69877</a>
                   </div>
                 </div>
 
@@ -490,7 +490,7 @@ const Contact = () => {
                 <span className="font-bold text-[#D4A843]">Within 24 Hours</span>
               </div>
               
-              <a href="https://wa.me/916382801974" target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white py-3.5 rounded-xl font-bold transition shadow-[0_4px_12px_rgba(37,211,102,0.3)]">
+              <a href="https://wa.me/916383469877" target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white py-3.5 rounded-xl font-bold transition shadow-[0_4px_12px_rgba(37,211,102,0.3)]">
                 Chat on WhatsApp
               </a>
 
