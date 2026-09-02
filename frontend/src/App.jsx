@@ -331,6 +331,8 @@ function AppContent() {
         {/* User Protected Routes under DashboardLayout */}
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Marketplace />} />
+          <Route path="/dashboard/product/:id" element={<ProductView />} />
+          <Route path="/dashboard/productview/:id" element={<ProductView />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetails />} />
           <Route path="/orders/payment/:id" element={<OrderPaymentMilestones />} />

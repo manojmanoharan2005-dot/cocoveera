@@ -2,7 +2,7 @@
  * File: frontend/src/pages/account/ProductView.jsx
  * Purpose: React page component representing the ProductView view.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
@@ -603,9 +603,10 @@ Timestamp: ${new Date().toLocaleString()}
       setLoading(true);
       setError(null);
       try {
+        const cleanId = encodeURIComponent(decodeURIComponent(id || '').trim());
         const [prodRes, relatedRes, catRes, allProdsRes] = await Promise.all([
-          apiClient.get(`/products/${id}`, { signal: controller.signal }),
-          apiClient.get(`/products/related/${id}`, { signal: controller.signal }),
+          apiClient.get(`/products/${cleanId}`, { signal: controller.signal }),
+          apiClient.get(`/products/related/${cleanId}`, { signal: controller.signal }),
           apiClient.get('/categories', { signal: controller.signal }),
           apiClient.get('/products', { signal: controller.signal })
         ]);

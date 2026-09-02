@@ -123,7 +123,7 @@ const RecommendedProducts = () => {
                 key={product._id}
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.2 }}
-                onClick={() => navigate(`/product/${product._id}`)}
+                onClick={() => navigate(user ? `/dashboard/product/${product.slug || product._id}` : `/product/${product.slug || product._id}`)}
                 className="w-[260px] sm:w-auto shrink-0 snap-center bg-white rounded-[20px] border border-stone-200/90 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group cursor-pointer"
               >
                 {/* Product Image & Wishlist Button */}
@@ -160,7 +160,7 @@ const RecommendedProducts = () => {
                   <div className="pt-2 border-t border-stone-100 flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => navigate(`/product/${product._id}`)}
+                      onClick={() => navigate(user ? `/dashboard/product/${product.slug || product._id}` : `/product/${product.slug || product._id}`)}
                       className="flex-grow py-2 px-3 bg-white border border-stone-200 hover:border-[#2E7D32] hover:bg-[#F0FAF0] text-stone-700 hover:text-[#2E7D32] text-xs font-extrabold rounded-[12px] transition-all text-center"
                     >
                       View Details

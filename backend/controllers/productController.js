@@ -33,7 +33,7 @@ export const getProducts = async (req, res) => {
       .select('name slug category description price stock images packageSize specifications status isPublished isHidden isDeleted displayOrder updatedAt')
       .sort({ displayOrder: 1, createdAt: -1 })
       .lean();
-      
+
     res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -128,7 +128,7 @@ export const getRecommendedProducts = async (req, res) => {
         categoryMap.set(category, product);
       }
     }
-    
+
     const getCategoryPriority = (name) => {
       if (!name) return 999;
       const lower = name.toLowerCase();
@@ -150,7 +150,7 @@ export const getRecommendedProducts = async (req, res) => {
     });
 
     const sortedProducts = uniqueCategories.map(cat => categoryMap.get(cat)).slice(0, 11);
-    
+
     res.status(200).json({ success: true, count: sortedProducts.length, data: sortedProducts });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

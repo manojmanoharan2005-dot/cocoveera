@@ -164,7 +164,7 @@ import wishlistRoutes from './routes/wishlistRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 
 // 8. Routes
-app.use('/api/auth', authLimiter);
+// app.use('/api/auth', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/wishlist', wishlistRoutes);

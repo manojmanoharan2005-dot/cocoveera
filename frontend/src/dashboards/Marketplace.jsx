@@ -69,15 +69,10 @@ export const Marketplace = () => {
 
   // Revalidate products, categories, profile on mount and route return
   useEffect(() => {
-    console.log('[Marketplace Debug] Component Mounted / Route Active:', window.location.pathname + window.location.search);
     refetchProducts();
     if (fetchProfile) {
-      fetchProfile().catch(e => console.error('[Marketplace Debug] fetchProfile error:', e));
+      fetchProfile().catch(e => console.error('fetchProfile error:', e));
     }
-
-    return () => {
-      console.log('[Marketplace Debug] Component Unmounting from:', window.location.pathname);
-    };
   }, []);
 
   const onWishlistToggle = async (product) => {
@@ -185,15 +180,7 @@ export const Marketplace = () => {
     dedupingInterval: 30000 
   });
 
-  useEffect(() => {
-    console.log('[Marketplace Debug] SWR Products state:', {
-      productsCount: products?.length || 0,
-      categoriesCount: dbCategories?.length || 0,
-      loading,
-      hasError: !!error,
-      errorMsg: error?.message
-    });
-  }, [products, dbCategories, loading, error]);
+
 
   useEffect(() => {
     let result = [...(products || [])];
@@ -340,7 +327,8 @@ export const Marketplace = () => {
         sessionStorage.setItem('cocoveera_mkt_scroll', mainEl.scrollTop.toString());
       }
     } catch (e) {}
-    navigate(`/product/${p.slug || p._id}`);
+    const targetSlug = p.slug || p._id || (p.name ? p.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') : '');
+    navigate(`/dashboard/product/${encodeURIComponent(targetSlug)}`);
   };
 
   if (error && (!products || products.length === 0)) {

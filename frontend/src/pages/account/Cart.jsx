@@ -23,7 +23,7 @@ const Cart = () => {
   const handleEditConfiguration = (item) => {
     if (!item || !item.mainProduct) return;
     const targetSlug = item.mainProduct.slug || item.mainProduct._id;
-    navigate(`/product/${targetSlug}?cartItemId=${item._id}`);
+    navigate(`/dashboard/product/${targetSlug}?cartItemId=${item._id}`);
   };
 
   const handleRemoveItem = async (itemId) => {

@@ -195,7 +195,7 @@ export const LoginForm = () => {
         }, 1450);
       }
     } catch (err) {
-      const errorMsg = parseErrorMessage(err, 'Incorrect credentials. Please try again.');
+      const errorMsg = parseErrorMessage(err, 'Incorrect password. Please try again.');
       if (errorMsg.toLowerCase().includes('not verified') || errorMsg.toLowerCase().includes('otp')) {
         navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
       } else {
@@ -302,6 +302,7 @@ export const LoginForm = () => {
   const isCheckmark = successStage === 'checkmark';
   const isFadeCard = successStage === 'fadeCard';
   const isAnimatingSuccess = isMorphing || isCheckmark || isFadeCard;
+  const isAuthFailed = (!!apiError && mode === 'login') || failureActive;
 
   return (
     <motion.div
@@ -340,10 +341,10 @@ export const LoginForm = () => {
       <AnimatePresence>
         {apiError && (
           <motion.div 
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center flex items-center justify-center gap-2"
+            className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center flex items-center justify-center gap-2 shadow-sm"
           >
             <AlertCircle className="w-4 h-4 text-red-650 shrink-0" />
             <span>{typeof apiError === 'string' ? apiError : (apiError?.message || 'Authentication error. Please try again.')}</span>
@@ -361,9 +362,7 @@ export const LoginForm = () => {
         <motion.form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email */}
           <motion.div 
-            variants={itemVariants}
-            initial="hidden"
-            animate={errors.email ? { x: [0, -4, 4, -4, 4, 0] } : "visible"}
+            animate={(errors.email || apiError) ? { x: [0, -4, 4, -4, 4, 0] } : { x: 0 }}
             transition={{ duration: 0.4 }}
           >
             <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
@@ -380,9 +379,12 @@ export const LoginForm = () => {
                     value: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
                     message: 'Please enter a valid email address',
                   },
+                  onChange: () => {
+                    if (apiError) setApiError(null);
+                  }
                 })}
                 className={`w-full bg-[#F3F6F8] border text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-400/80 ${
-                  errors.email ? 'border-red-300' : 'border-transparent'
+                  (errors.email || (apiError && mode === 'login')) ? 'border-red-400 bg-red-50/30' : 'border-transparent'
                 }`}
                 placeholder="you@email.com"
               />
@@ -396,9 +398,7 @@ export const LoginForm = () => {
 
           {/* Password */}
           <motion.div 
-            variants={itemVariants}
-            initial="hidden"
-            animate={errors.password ? { x: [0, -4, 4, -4, 4, 0] } : "visible"}
+            animate={(errors.password || apiError) ? { x: [0, -4, 4, -4, 4, 0] } : { x: 0 }}
             transition={{ duration: 0.4 }}
           >
             <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
@@ -410,14 +410,17 @@ export const LoginForm = () => {
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 name={passwordRegister.name}
-                onChange={passwordRegister.onChange}
+                onChange={(e) => {
+                  passwordRegister.onChange(e);
+                  if (apiError) setApiError(null);
+                }}
                 onBlur={passwordRegister.onBlur}
                 ref={(e) => {
                   passwordRegister.ref(e);
                   passwordRef.current = e;
                 }}
                 className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-450 ${
-                  errors.password ? 'border-red-300' : 'border-transparent'
+                  (errors.password || (apiError && mode === 'login')) ? 'border-red-400 bg-red-50/30' : 'border-transparent'
                 }`}
                 placeholder="••••••"
               />
@@ -437,12 +440,7 @@ export const LoginForm = () => {
           </motion.div>
 
           {/* Remember Me & Forgot Password */}
-          <motion.div
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex items-center justify-between pt-1"
-          >
+          <div className="flex items-center justify-between pt-1">
             <label className="flex items-center space-x-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -464,26 +462,28 @@ export const LoginForm = () => {
             >
               Forgot password?
             </button>
-          </motion.div>
+          </div>
 
           {/* Submit Button Wrapper */}
-          <motion.div
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex justify-center pt-2 w-full"
-          >
+          <div className="flex justify-center pt-2 w-full">
             <motion.button
               layout
               type="submit"
               disabled={loading || isAnimatingSuccess}
               style={{ borderRadius: isAnimatingSuccess ? '9999px' : '12px' }}
-              whileHover={!isAnimatingSuccess ? { 
-                scale: 1.03,
-                y: -2,
-                boxShadow: "0 10px 20px rgba(46, 94, 53, 0.15)",
-                background: "linear-gradient(135deg, #2E5E35 0%, #3B7A45 100%)"
-              } : {}}
+              whileHover={!isAnimatingSuccess ? (
+                isAuthFailed ? { 
+                  scale: 1.03,
+                  y: -2,
+                  boxShadow: "0 10px 20px rgba(220, 38, 38, 0.25)",
+                  background: "linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)"
+                } : { 
+                  scale: 1.03,
+                  y: -2,
+                  boxShadow: "0 10px 20px rgba(46, 94, 53, 0.15)",
+                  background: "linear-gradient(135deg, #2E5E35 0%, #3B7A45 100%)"
+                }
+              ) : {}}
               whileTap={!isAnimatingSuccess ? { scale: 0.98 } : {}}
               animate={
                 isCheckmark 
@@ -502,8 +502,17 @@ export const LoginForm = () => {
                   : failureActive
                   ? {
                       x: [0, -6, 6, -6, 6, 0],
+                      width: '100%',
+                      height: '48px',
                       backgroundColor: '#DC2626',
                       boxShadow: '0 0 15px rgba(220, 38, 38, 0.3)'
+                    }
+                  : isAuthFailed
+                  ? {
+                      width: '100%',
+                      height: '48px',
+                      backgroundColor: '#DC2626',
+                      boxShadow: '0 0 15px rgba(220, 38, 38, 0.25)'
                     }
                   : {
                       width: '100%',
@@ -539,13 +548,13 @@ export const LoginForm = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </motion.svg>
               )}
-              {failureActive && (
+              {!isAnimatingSuccess && isAuthFailed && (
                 <>
                   <AlertCircle className="w-4 h-4 text-white shrink-0" />
-                  <span className="shrink-0">Authentication Failed</span>
+                  <span className="shrink-0">Access Denied</span>
                 </>
               )}
-              {!isAnimatingSuccess && !failureActive && (
+              {!isAnimatingSuccess && !isAuthFailed && (
                 <>
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -558,7 +567,7 @@ export const LoginForm = () => {
                 </>
               )}
             </motion.button>
-          </motion.div>
+          </div>
         </motion.form>
       )}
 
@@ -852,11 +861,8 @@ export const LoginForm = () => {
       )}
 
       {mode === 'login' && (
-        <motion.p
+        <p
           key="register-link"
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
           className="text-center text-xs text-stone-555 mt-6 font-semibold animate-fade-in"
         >
           New to Cocoveera?{' '}
@@ -866,7 +872,7 @@ export const LoginForm = () => {
           >
             Register here
           </span>
-        </motion.p>
+        </p>
       )}
     </motion.div>
   );
