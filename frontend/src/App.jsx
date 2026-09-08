@@ -42,6 +42,11 @@ const Onboarding = lazyWithRetry(() => import('./pages/Onboarding'), 'Onboarding
 
 // Landing Pages
 const BlueberryDiscsInCoimbatore = lazyWithRetry(() => import('./pages/landingPages/BlueberryDiscsInCoimbatore'), 'BlueberryDiscsInCoimbatore');
+const CocopeatBlocksWholesaleUSA = lazyWithRetry(() => import('./pages/landingPages/CocopeatBlocksWholesaleUSA'), 'CocopeatBlocksWholesaleUSA');
+const CocoCoirGrowBagsWholesale = lazyWithRetry(() => import('./pages/landingPages/CocoCoirGrowBagsWholesale'), 'CocoCoirGrowBagsWholesale');
+const BuyCocopeatNewYork = lazyWithRetry(() => import('./pages/landingPages/BuyCocopeatNewYork'), 'BuyCocopeatNewYork');
+const CocoCoirBriquettesBulk = lazyWithRetry(() => import('./pages/landingPages/CocoCoirBriquettesBulk'), 'CocoCoirBriquettesBulk');
+const CocoCoirWholesaleSupplierUSA = lazyWithRetry(() => import('./pages/landingPages/CocoCoirWholesaleSupplierUSA'), 'CocoCoirWholesaleSupplierUSA');
 
 // Eagerly load Authentication pages to prevent Suspend flickers during auth flow navigation
 import AuthLayout from './layouts/AuthLayout';
@@ -292,6 +297,11 @@ function AppContent() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
           <Route path="/blueberry-discs-in-coimbatore" element={<BlueberryDiscsInCoimbatore />} />
+          <Route path="/cocopeat-blocks-wholesale-usa" element={<CocopeatBlocksWholesaleUSA />} />
+          <Route path="/coco-coir-grow-bags-wholesale" element={<CocoCoirGrowBagsWholesale />} />
+          <Route path="/buy-cocopeat-new-york" element={<BuyCocopeatNewYork />} />
+          <Route path="/coco-coir-briquettes-bulk" element={<CocoCoirBriquettesBulk />} />
+          <Route path="/coco-coir-wholesale-supplier-usa" element={<CocoCoirWholesaleSupplierUSA />} />
           <Route path="/product/:id" element={<ProductView />} />
           <Route path="/products/:id" element={<ProductView />} />
           <Route path="/productview/:id" element={<ProductView />} />

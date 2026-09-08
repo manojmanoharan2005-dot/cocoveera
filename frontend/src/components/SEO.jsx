@@ -65,9 +65,17 @@ const SEO = ({ title, description, url, image, schema, noindex }) => {
 
       {/* Structured Data (JSON-LD) */}
       {schema && (
-        <script type="application/ld+json">
-          {JSON.stringify(schema)}
-        </script>
+        Array.isArray(schema) ? (
+          schema.map((item, index) => (
+            <script key={index} type="application/ld+json">
+              {JSON.stringify(item)}
+            </script>
+          ))
+        ) : (
+          <script type="application/ld+json">
+            {JSON.stringify(schema)}
+          </script>
+        )
       )}
     </Helmet>
   );

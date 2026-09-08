@@ -62,7 +62,12 @@ async function generateSitemap() {
     '/how-it-works',
     '/privacy-policy',
     '/terms-conditions',
-    '/blueberry-discs-in-coimbatore'
+    '/blueberry-discs-in-coimbatore',
+    '/cocopeat-blocks-wholesale-usa',
+    '/coco-coir-grow-bags-wholesale',
+    '/buy-cocopeat-new-york',
+    '/coco-coir-briquettes-bulk',
+    '/coco-coir-wholesale-supplier-usa'
   ];
 
   // Product pages (Canonical path: /product/slug)
