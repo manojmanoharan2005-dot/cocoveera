@@ -175,7 +175,7 @@ const Products = () => {
                 onClick={() => handleViewDetails(product)}
               >
                 {/* Product Image Container - Fixed height with generous breathing space */}
-                <div className="w-full h-[200px] sm:h-[250px] bg-white rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center p-4 sm:p-6 sm:mb-4 flex-shrink-0 relative border border-stone-100">
+                <div className="w-full h-[150px] xs:h-[180px] sm:h-[250px] bg-white rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center p-3 sm:p-6 sm:mb-4 flex-shrink-0 relative border border-stone-100">
                   <div className="w-full h-full flex items-center justify-center relative">
                     <ImageWithFallback
                       src={product.images?.[0]}

@@ -397,8 +397,8 @@ export const Marketplace = () => {
                   className="group cursor-pointer bg-white rounded-[24px] border border-stone-200 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-300 flex flex-col active:scale-[0.99]"
                 >
                   {/* Full bleed image area */}
-                  <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-stone-100 flex items-center justify-center p-3">
-                    <div className="h-full aspect-square rounded-[1.25rem] sm:rounded-[1.5rem] overflow-hidden flex items-center justify-center">
+                  <div className="relative h-36 xs:h-40 sm:h-56 w-full overflow-hidden bg-stone-100 flex items-center justify-center p-2.5 sm:p-3">
+                    <div className="h-full aspect-square rounded-[1rem] sm:rounded-[1.5rem] overflow-hidden flex items-center justify-center">
                       <img 
                         src={cat.image} 
                         alt={cat.name} 

@@ -28,9 +28,9 @@ const MobileBottomNav = () => {
     <>
       {/* Global padding added dynamically to body when this component mounts, 
           but adding an invisible spacer here is safer for the React tree */}
-      <div className="h-[76px] md:hidden w-full shrink-0" aria-hidden="true" />
+      <div className="h-[58px] md:hidden w-full shrink-0" aria-hidden="true" />
       
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[9999] px-2 flex items-end justify-between" style={{ height: 'calc(72px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-stone-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[9999] px-2 flex items-center justify-between" style={{ height: 'calc(56px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 4px)' }}>
         {navItems.map((item) => {
           const isActive = 
             location.pathname === item.path || 
@@ -40,23 +40,23 @@ const MobileBottomNav = () => {
             <NavLink
               key={item.name}
               to={item.path}
-              className={`relative flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-300 ${
-                isActive ? 'text-[#2E7D32]' : 'text-gray-400 hover:text-gray-600'
+              className={`relative flex flex-col items-center justify-center w-full h-full space-y-0.5 transition-all duration-300 ${
+                isActive ? 'text-[#2E7D32]' : 'text-stone-400 hover:text-stone-600'
               }`}
             >
               <div className="relative">
                 <item.icon 
-                  className={`w-[22px] h-[22px] transition-transform duration-300 ${isActive ? 'scale-110' : 'scale-100'}`} 
+                  className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-105' : 'scale-100'}`} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
                 {item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1.5 bg-[#2E7D32] text-white text-[8px] font-black min-w-[14px] h-[14px] rounded-full flex items-center justify-center border border-white">
+                  <span className="absolute -top-1 -right-1.5 bg-[#2E7D32] text-white text-[8px] font-black min-w-[13px] h-[13px] rounded-full flex items-center justify-center border border-white">
                     {item.badge}
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] font-bold tracking-tight transition-all duration-300 ${
-                isActive ? 'font-extrabold text-[#2E7D32]' : 'font-semibold text-gray-500'
+              <span className={`text-[9.5px] tracking-tight transition-all duration-300 ${
+                isActive ? 'font-black text-[#2E7D32]' : 'font-semibold text-stone-500'
               }`}>
                 {item.name}
               </span>

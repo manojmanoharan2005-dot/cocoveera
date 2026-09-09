@@ -64,21 +64,21 @@ export const Header = ({
       {/* ========================================================================= */}
       {/* MOBILE TOP NAVIGATION (< 1024px) - Clean 3-Row Professional Ecommerce Header */}
       {/* ========================================================================= */}
-      <header className="lg:hidden w-full bg-white border-b border-stone-200 sticky top-0 z-[100] px-4 pt-3 pb-3 shadow-xs select-none pt-[env(safe-area-inset-top,0px)]">
-        {/* ROW 1: Height 60px - Hamburger Menu | Centered Logo | Wishlist Icon */}
-        <div className="flex items-center justify-between gap-3 w-full h-[60px]">
+      <header className="lg:hidden w-full bg-white border-b border-stone-200 sticky top-0 z-[100] px-3.5 pt-2 pb-2.5 shadow-xs select-none pt-[env(safe-area-inset-top,0px)]">
+        {/* ROW 1: Height 48px - Hamburger Menu | Centered Logo | Wishlist Icon */}
+        <div className="flex items-center justify-between gap-2 w-full h-[48px]">
           {/* Left: Hamburger Menu */}
           {onMenuClick ? (
             <button
               type="button"
               onClick={onMenuClick}
-              className="w-10 h-10 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-xl transition-colors shrink-0"
+              className="w-9 h-9 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-xl transition-colors shrink-0"
               aria-label="Open Navigation Menu"
             >
-              <Menu className="w-6 h-6 text-stone-800" />
+              <Menu className="w-5 h-5 text-stone-800" />
             </button>
           ) : (
-            <div className="w-10 h-10 shrink-0" />
+            <div className="w-9 h-9 shrink-0" />
           )}
 
           {/* Center: Cocoveera Logo + Wordmark */}
@@ -90,9 +90,9 @@ export const Header = ({
             <img
               src="/logo.webp"
               alt="Cocoveera Logo"
-              className="w-9 h-9 object-contain rounded-xl"
+              className="w-8 h-8 object-contain rounded-lg"
             />
-            <span className="font-poppins font-black text-lg tracking-wide leading-none">
+            <span className="font-poppins font-black text-base tracking-wide leading-none">
               <span className="text-[#7B4F1E]">COCO</span><span className="text-[#2E7D32]">VEERA</span>
             </span>
           </div>
@@ -100,42 +100,42 @@ export const Header = ({
           {/* Right: Wishlist Icon */}
           <button
             onClick={() => navigate('/wishlist')}
-            className="relative w-10 h-10 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-xl transition-all shrink-0"
+            className="relative w-9 h-9 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-xl transition-all shrink-0"
             title="Wishlist"
           >
-            <Heart className="w-6 h-6 text-stone-800" />
+            <Heart className="w-5 h-5 text-stone-800" />
             {wishlistCount > 0 && (
-              <span className="absolute top-1 right-1 bg-[#2E7D32] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+              <span className="absolute top-0.5 right-0.5 bg-[#2E7D32] text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white shadow-xs">
                 {wishlistCount}
               </span>
             )}
           </button>
         </div>
 
-        {/* ROW 2: Full Width Search Bar (46px height, 12px rounded, mt-3) */}
+        {/* ROW 2: Full Width Search Bar (40px height, 10px rounded, mt-2) */}
         {showSearchAndFilters && (
-          <div className="relative w-full mt-3">
-            <Search className="w-4 h-4 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative w-full mt-2">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Search coir products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-[46px] bg-[#F7F9F7] border border-stone-200 rounded-[12px] pl-11 pr-4 text-xs font-semibold text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#2E7D32] focus:bg-white focus:shadow-[0_0_0_3px_rgba(46,125,50,0.08)] transition-all"
+              className="w-full h-[40px] bg-[#F7F9F7] border border-stone-200 rounded-[10px] pl-10 pr-4 text-xs font-semibold text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#2E7D32] focus:bg-white focus:shadow-[0_0_0_3px_rgba(46,125,50,0.08)] transition-all"
             />
           </div>
         )}
 
         {/* ROW 3: Filter Row - ONLY Filter Button */}
         {showSearchAndFilters && (
-          <div className="flex items-center gap-3 w-full mt-3">
+          <div className="flex items-center gap-2 w-full mt-2">
             {/* Filter Button */}
             <button
               type="button"
               onClick={onFilterClick}
-              className="w-full h-[44px] bg-white border border-stone-200 hover:border-[#2E7D32] text-stone-800 font-poppins font-black text-xs rounded-[12px] flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="w-full h-[38px] bg-white border border-stone-200 hover:border-[#2E7D32] text-stone-800 font-poppins font-bold text-xs rounded-[10px] flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
-              <SlidersHorizontal className="w-4 h-4 text-[#2E7D32]" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#2E7D32]" />
               <span>Filter</span>
             </button>
           </div>

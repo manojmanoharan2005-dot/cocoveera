@@ -67,7 +67,7 @@ export const ProductCard = React.memo(({
       transition={{ type: 'spring', stiffness: 320, damping: 24 }}
       className="w-full bg-white rounded-[24px] border border-stone-200/70 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.10)] cursor-pointer flex flex-col relative group transition-shadow duration-300"
     >
-      <div className="h-[220px] sm:h-[250px] w-full relative bg-white flex items-center justify-center p-5 sm:p-6 flex-shrink-0 overflow-hidden border-b border-stone-100">
+      <div className="h-[150px] xs:h-[180px] sm:h-[250px] w-full relative bg-white flex items-center justify-center p-3 sm:p-6 flex-shrink-0 overflow-hidden border-b border-stone-100">
         <div className="w-full h-full flex items-center justify-center relative">
           <ImageWithFallback
             src={product.images?.[0]}
