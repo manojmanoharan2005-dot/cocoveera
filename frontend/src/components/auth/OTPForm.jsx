@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authService } from '../../services/authService';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
+import { getPostLoginRedirect, isSafeInternalRoute } from '../../utils/productNavigation';
 
 export const OTPForm = () => {
   const { verifyOtp, register: authRegister } = useAuth();
@@ -104,11 +105,13 @@ export const OTPForm = () => {
         setUserRole(res.user?.role);
         sessionStorage.setItem('show_registration_onboarding', 'true');
 
-        const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+        const targetRedirect = getPostLoginRedirect();
         const pendingRfq = sessionStorage.getItem('pendingRFQ');
-        if (storedRedirect && res.user?.role !== 'admin') {
-          sessionStorage.removeItem('postLoginRedirect');
-          navigate(storedRedirect, { replace: true });
+        if (targetRedirect && isSafeInternalRoute(targetRedirect) && res.user?.role !== 'admin') {
+          const cleanPath = targetRedirect.startsWith('/products/')
+            ? targetRedirect.replace('/products/', '/product/')
+            : targetRedirect;
+          navigate(cleanPath, { replace: true });
         } else if (pendingRfq && res.user?.role !== 'admin') {
           navigate('/dashboard/request-quote', { replace: true });
         } else {

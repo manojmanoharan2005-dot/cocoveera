@@ -11,6 +11,7 @@ import { Mail, KeyRound, Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle } fro
 import { authService } from '../../services/authService';
 import SuccessAnimation from './SuccessAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getPostLoginRedirect, isSafeInternalRoute } from '../../utils/productNavigation';
 
 // Premium Apple-style transitions
 const cardVariants = {
@@ -163,35 +164,22 @@ export const LoginForm = () => {
           setSuccessStage('fadeCard');
         }, 1100);
         setTimeout(() => {
-          const storedRedirect = sessionStorage.getItem('postLoginRedirect');
-          if (storedRedirect) {
-            sessionStorage.removeItem('postLoginRedirect');
-            // If stored redirect is a public route, route it into dashboard
-            const cleanPath = storedRedirect.startsWith('/products/')
-              ? storedRedirect.replace('/products/', '/product/')
-              : storedRedirect;
-            navigate(cleanPath, { replace: true });
-            return;
-          }
-          if (redirect) {
-            const decodedRedirect = decodeURIComponent(redirect);
-            const targetPath = decodedRedirect.startsWith('/') ? decodedRedirect : `/${decodedRedirect}`;
-            const cleanPath = targetPath.startsWith('/products/')
-              ? targetPath.replace('/products/', '/product/')
-              : targetPath;
-            navigate(cleanPath, { replace: true });
-            return;
-          }
           const pendingRfq = sessionStorage.getItem('pendingRFQ');
           if (pendingRfq) {
             navigate('/dashboard/request-quote', { replace: true });
             return;
           }
-          const fromState = location.state?.from;
-          const fromPath = fromState 
-            ? `${fromState.pathname}${fromState.search || ''}` 
-            : '/dashboard';
-          navigate(fromPath, { replace: true });
+
+          const targetRedirect = getPostLoginRedirect(location);
+          if (targetRedirect && isSafeInternalRoute(targetRedirect)) {
+            const cleanPath = targetRedirect.startsWith('/products/')
+              ? targetRedirect.replace('/products/', '/product/')
+              : targetRedirect;
+            navigate(cleanPath, { replace: true });
+            return;
+          }
+
+          navigate('/dashboard', { replace: true });
         }, 1450);
       }
     } catch (err) {

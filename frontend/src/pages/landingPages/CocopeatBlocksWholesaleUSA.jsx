@@ -7,11 +7,14 @@ import { API_URL } from "../../utils/config";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import ImageWithFallback from "../../components/common/ImageWithFallback";
 import SEO from "../../components/SEO";
+import { useAuth } from "../../context/AuthContext";
+import { navigateToProduct } from "../../utils/productNavigation";
 
 import "./landingpageStyle.css";
 
 const CocopeatBlocksWholesaleUSA = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [activeIndex, setActiveIndex] = useState(0);
     const [showVideo, setShowVideo] = useState(false);
     const [showAllProducts, setShowAllProducts] = useState(false);
@@ -772,13 +775,14 @@ const CocopeatBlocksWholesaleUSA = () => {
                                                     )}
 
                                                     {/* View Product */}
-                                                    <Link
-                                                        to={`/product/${product.slug || product._id}`}
-                                                        className="primary-btn w-fit inline-flex items-center gap-1"
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => navigateToProduct(product, navigate, user, e)}
+                                                        className="primary-btn w-fit inline-flex items-center gap-1 cursor-pointer"
                                                     >
                                                         View Product
                                                         <span>→</span>
-                                                    </Link>
+                                                    </button>
                                                 </div>
                                             );
                                         })}

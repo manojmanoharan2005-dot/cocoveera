@@ -7,6 +7,7 @@ import { API_URL } from "../../utils/config";
 import { ArrowRight, ChevronLeft, ChevronRight, CheckCircle, Package, Truck, ShieldCheck, Globe, Star, HelpCircle } from "lucide-react";
 import ImageWithFallback from "../../components/common/ImageWithFallback";
 import SEO from "../../components/SEO";
+import { navigateToProduct } from "../../utils/productNavigation";
 
 import "./landingpageStyle.css";
 
@@ -355,13 +356,13 @@ const CocoCoirBriquettesBulk = () => {
                                                 <h3 className="font-bold text-stone-900 text-base line-clamp-1">{prod.name}</h3>
                                                 <p className="text-xs text-stone-500 mt-1 line-clamp-2">{prod.shortDescription || prod.description || "High quality coir substrate"}</p>
                                             </div>
-                                            <Link 
-                                                to={`/product/${prodSlug}`}
-                                                className="w-full inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-xl text-xs transition-colors"
-                                            >
+                                             <button 
+                                                onClick={(e) => navigateToProduct(prod, navigate, null, e)}
+                                                className="w-full inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
+                                             >
                                                 View Product Details
                                                 <ArrowRight className="w-3.5 h-3.5" />
-                                            </Link>
+                                             </button>
                                         </div>
                                     </div>
                                 );

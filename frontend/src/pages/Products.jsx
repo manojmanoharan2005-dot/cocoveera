@@ -6,6 +6,7 @@ import { ArrowRight, Filter, X, Check } from 'lucide-react';
 import SEO from '../components/SEO';
 import useSWR from 'swr';
 import ImageWithFallback from '../components/common/ImageWithFallback';
+import { navigateToProduct } from '../utils/productNavigation';
 
 const fetcher = (url) => apiClient.get(url).then((res) => res.data.data);
 
@@ -72,9 +73,8 @@ const Products = () => {
     }
   };
 
-  const handleViewDetails = (product) => {
-    const targetProductPath = `/product/${product.slug || product._id}`;
-    navigate(targetProductPath);
+  const handleViewDetails = (product, e) => {
+    navigateToProduct(product, navigate, user, e);
   };
 
   return (

@@ -11,6 +11,7 @@ import { authService } from '../../services/authService';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { COUNTRIES_LIST } from '../../utils/countryHelpers';
+import { getPostLoginRedirect, isSafeInternalRoute } from '../../utils/productNavigation';
 
 const formVariants = {
   hidden: { opacity: 0, y: 10 },
@@ -215,11 +216,13 @@ export const RegisterForm = () => {
         localStorage.removeItem('cocoveera_register_cache');
         sessionStorage.setItem('show_registration_onboarding', 'true');
 
-        const storedRedirect = sessionStorage.getItem('postLoginRedirect');
+        const targetRedirect = getPostLoginRedirect(location);
         const pendingRfq = sessionStorage.getItem('pendingRFQ');
-        if (storedRedirect) {
-          sessionStorage.removeItem('postLoginRedirect');
-          navigate(storedRedirect, { replace: true });
+        if (targetRedirect && isSafeInternalRoute(targetRedirect)) {
+          const cleanPath = targetRedirect.startsWith('/products/')
+            ? targetRedirect.replace('/products/', '/product/')
+            : targetRedirect;
+          navigate(cleanPath, { replace: true });
         } else if (pendingRfq) {
           navigate('/dashboard/request-quote', { replace: true });
         } else {

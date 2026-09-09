@@ -34,48 +34,21 @@ import User from './models/User.js';
 
 const app = express();
 
-// ==================== MIDDLEWARE ORDER ====================
-
-// 1. Helmet Security Middleware (with strict CORS-friendly setup)
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: [
-          "'self'",
-          'https://www.cocoveera.com',
-          'https://cocoveera.com',
-          'http://localhost:5173',
-          'https:'
-        ],
-        frameAncestors: ["'none'"],
-        objectSrc: ["'none'"],
-      },
-    },
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    referrerPolicy: { policy: 'same-origin' },
-    xContentTypeOptions: true,
-    frameguard: { action: 'deny' },
-    xssFilter: true,
-  })
-);
-
-// 2. Production-Ready CORS Middleware & OPTIONS Preflight
 const allowedOrigins = [
   'https://www.cocoveera.com',
   'https://cocoveera.com',
-  'http://localhost:5173'
+  'https://cocoveera.vercel.app',
+  'https://www.cocoveera.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5174'
 ];
 
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (like server-to-server, curl, postman, or self-ping)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin) || (process.env.ADDITIONAL_ALLOWED_ORIGINS && process.env.ADDITIONAL_ALLOWED_ORIGINS.split(',').includes(origin))) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'));
@@ -92,8 +65,38 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
+// 1. CORS MUST BE REGISTERED FIRST BEFORE ALL OTHER MIDDLEWARES (INCLUDING HELMET)
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// 2. Helmet Security Middleware (with strict CORS-friendly setup)
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: [
+          "'self'",
+          'https://www.cocoveera.com',
+          'https://cocoveera.com',
+          'https://cocoveera.vercel.app',
+          'http://localhost:5173',
+          'https:'
+        ],
+        frameAncestors: ["'none'"],
+        objectSrc: ["'none'"],
+      },
+    },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    referrerPolicy: { policy: 'same-origin' },
+    xContentTypeOptions: true,
+    frameguard: { action: 'deny' },
+    xssFilter: true,
+  })
+);
 
 // 3. Body Parser
 app.use(express.json({ limit: '100kb' }));
