@@ -195,14 +195,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
                 schema={schemaData}
             />
 
-            {/* Breadcrumb Navigation */}
-            <div className="bg-emerald-950 text-white/80 py-2.5 px-4 sm:px-8 text-xs font-medium border-b border-emerald-900/50">
-                <div className="max-w-7xl mx-auto flex items-center gap-2">
-                    <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
-                    <span>/</span>
-                    <span className="text-emerald-400 font-semibold">{pageData.breadcrumbName}</span>
-                </div>
-            </div>
+
 
             <main className="landing_page_parent">
 
