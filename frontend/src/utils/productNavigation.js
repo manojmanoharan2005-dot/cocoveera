@@ -68,7 +68,14 @@ export const navigateToProduct = (product, navigate, userAuthOverride, e) => {
   }
 
   const targetPath = `/product/${slugOrId}`;
-  const isAuthenticated = userAuthOverride !== undefined ? Boolean(userAuthOverride) : checkIsAuthenticated();
+  let isAuthenticated = false;
+  if (typeof userAuthOverride === 'boolean') {
+    isAuthenticated = userAuthOverride;
+  } else if (userAuthOverride && typeof userAuthOverride === 'object') {
+    isAuthenticated = Boolean(userAuthOverride._id || userAuthOverride.email || userAuthOverride.role);
+  } else {
+    isAuthenticated = checkIsAuthenticated();
+  }
 
   if (isAuthenticated) {
     navigate(targetPath);
