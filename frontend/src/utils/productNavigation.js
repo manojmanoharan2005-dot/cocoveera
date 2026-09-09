@@ -67,7 +67,7 @@ export const navigateToProduct = (product, navigate, userAuthOverride, e) => {
     return;
   }
 
-  const targetPath = `/product/${slugOrId}`;
+  const targetPath = `/dashboard/product/${slugOrId}`;
   let isAuthenticated = false;
   if (typeof userAuthOverride === 'boolean') {
     isAuthenticated = userAuthOverride;

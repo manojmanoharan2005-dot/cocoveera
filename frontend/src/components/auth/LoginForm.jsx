@@ -173,7 +173,7 @@ export const LoginForm = () => {
           const targetRedirect = getPostLoginRedirect(location);
           if (targetRedirect && isSafeInternalRoute(targetRedirect)) {
             const cleanPath = targetRedirect.startsWith('/products/')
-              ? targetRedirect.replace('/products/', '/product/')
+              ? targetRedirect.replace('/products/', '/dashboard/product/')
               : targetRedirect;
             navigate(cleanPath, { replace: true });
             return;

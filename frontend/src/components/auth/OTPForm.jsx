@@ -109,7 +109,7 @@ export const OTPForm = () => {
         const pendingRfq = sessionStorage.getItem('pendingRFQ');
         if (targetRedirect && isSafeInternalRoute(targetRedirect) && res.user?.role !== 'admin') {
           const cleanPath = targetRedirect.startsWith('/products/')
-            ? targetRedirect.replace('/products/', '/product/')
+            ? targetRedirect.replace('/products/', '/dashboard/product/')
             : targetRedirect;
           navigate(cleanPath, { replace: true });
         } else if (pendingRfq && res.user?.role !== 'admin') {
