@@ -13,20 +13,25 @@ const SEO = ({ title, description, url, canonical, image, schema, noindex, exact
     : 'COCOVEERA | Quality Testing & Coconut Substrates Export';
   const seoDescription = description || defaultDescription;
 
-  // Determine canonical URL safely
-  let seoUrl = canonical || '';
-  if (!seoUrl) {
-    let pathname = url || (typeof window !== 'undefined' ? window.location.pathname : '');
-    if (pathname.startsWith('http://') || pathname.startsWith('https://')) {
-      seoUrl = pathname;
-    } else {
-      let cleanPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
-      if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
-        cleanPath = cleanPath.slice(0, -1);
-      }
-      seoUrl = `${siteUrl}${cleanPath === '/' ? '' : cleanPath}`;
-    }
+  // Determine relative pathname safely
+  let pathname = '';
+  if (url) {
+    pathname = url;
+  } else if (typeof window !== 'undefined') {
+    pathname = window.location.pathname;
   }
+
+  // Ensure leading slash and remove trailing slashes except for root '/'
+  let cleanPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
+    cleanPath = cleanPath.slice(0, -1);
+  }
+
+  // Determine canonical URL safely
+  const seoUrl = canonical || (pathname.startsWith('http://') || pathname.startsWith('https://')
+    ? pathname
+    : `${siteUrl}${cleanPath === '/' ? '' : cleanPath}`);
+
   const seoImage = image || defaultImage;
 
   // Route-aware private page check for noindex tag
