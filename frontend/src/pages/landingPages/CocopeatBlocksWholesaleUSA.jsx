@@ -18,6 +18,15 @@ const CocopeatBlocksWholesaleUSA = () => {
     const [openFaq, setOpenFaq] = useState(0);
 
     const productRef = useRef(null);
+
+    const optimizeImage = (url) => {
+        if (!url) return '';
+        if (url.includes('cloudinary.com') && !url.includes('/upload/f_auto,q_auto')) {
+            return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+        }
+        return url;
+    };
+
     const fetcher = url => axios.get(url).then(res => res.data.data);
     const { data: dbCategories = [], isLoading } = useSWR(
         `${API_URL}/categories`,
@@ -108,63 +117,6 @@ const CocopeatBlocksWholesaleUSA = () => {
         },
     ];
 
-    // const products = [
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Blueberry Discs",
-    //         description1: "Premium coconut coir discs designed for healthy blueberry plant growth.",
-    //         description2: "Excellent moisture retention and aeration for strong root development.",
-    //     },
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Coco Peat",
-    //         description1: "High-quality coco peat providing an ideal growing medium for plants.",
-    //         description2: "Lightweight, moisture-retentive and suitable for modern cultivation.",
-    //     },
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Coir Logs",
-    //         description1: "Natural coir logs designed for erosion control and landscaping applications.",
-    //         description2: "Durable, biodegradable and an environmentally friendly solution.",
-    //     },
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Coco Pots",
-    //         description1: "Natural coconut coir pots that provide excellent support for growing plants.",
-    //         description2: "Biodegradable planters suitable for nurseries, gardens and horticulture.",
-    //     },
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Coco Grow Bags",
-    //         description1: "Premium coco coir grow bags designed for efficient plant cultivation.",
-    //         description2: "Provides excellent drainage, aeration and moisture management.",
-    //     },
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Coco Chips",
-    //         description1: "Clean and carefully processed coconut chips for growing applications.",
-    //         description2: "Helps improve drainage, aeration and moisture balance around roots.",
-    //     },
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Coir Briquettes",
-    //         description1: "Compressed coconut coir briquettes offering convenient storage and handling.",
-    //         description2: "Expands efficiently with water to create a versatile growing medium.",
-    //     },
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Coir Blocks",
-    //         description1: "High-quality compressed coir blocks suitable for professional cultivation.",
-    //         description2: "Ideal for nurseries, farms and commercial growing operations.",
-    //     },
-    //     {
-    //         img: "/landing-page-images/blog.webp",
-    //         title: "Coco Fiber",
-    //         description1: "Natural coconut fiber suitable for horticulture and agricultural applications.",
-    //         description2: "Strong, renewable and biodegradable material for sustainable solutions.",
-    //     },
-    // ];
-
     const benefits = [
         {
             icon: "/landing-page-images/icons/natural-safe.png",
@@ -183,12 +135,12 @@ const CocopeatBlocksWholesaleUSA = () => {
         },
         {
             icon: "/landing-page-images/icons/wide-range.png",
-            title: "Flexible Grades & Sizes ",
+            title: "Flexible Grades & Sizes",
             text: "From low to high EC cocopeat blocks, compressed to loose, small to bulk sizes — we offer cocopeat blocks suited to every growing need.",
         },
         {
             icon: "/landing-page-images/icons/affordable-prices.png",
-            title: "Bulk Value Pricing ",
+            title: "Bulk Value Pricing",
             text: "Buying in bulk means better value per block, without compromising on the quality your plants and soil deserve.",
         },
         {
@@ -200,25 +152,21 @@ const CocopeatBlocksWholesaleUSA = () => {
 
     const testimonials = [
         {
-            img: "https://randomuser.me/api/portraits/women/44.jpg",
             name: "Mark Reynolds",
             role: "Nursery Owner",
             text: "We tested the cocopeat blocks for some of our nursery plants and were happy with the texture after expansion. The material provided good moisture retention without feeling overly compact. We would consider using it for more of our growing applications.",
         },
         {
-            img: "https://randomuser.me/api/portraits/men/32.jpg",
-            name: "James Carter ",
+            name: "James Carter",
             role: "Home Gardener",
             text: "Good quality coco peat blocks at a fair wholesale price. Would like to see even faster shipping next time, but overall very satisfied.",
         },
         {
-            img: "https://randomuser.me/api/portraits/women/65.jpg",
-            name: "Linda Torres ",
+            name: "Linda Torres",
             role: "Agricultural Product Distributor",
             text: "As a distributor, I need consistency across every batch — Cocoveera's compressed blocks have been reliable, and their team was responsive when we had questions.",
         },
         {
-            img: "https://randomuser.me/api/portraits/men/46.jpg",
             name: "Daniel T",
             role: "Hydroponic Grower",
             text: "The cocopeat blocks arrived well compressed and were easy to hydrate and prepare for use. We liked the structure of the growing medium and how evenly it held moisture. It has been a practical addition to our growing setup.",
@@ -228,30 +176,34 @@ const CocopeatBlocksWholesaleUSA = () => {
     const blogs = [
         {
             image: "/landing-page-images/blog.webp",
-            category: "Blueberry Growing",
-            title: "How to Use Coco Discs for Healthy Blueberry Plants",
-            date: "April 25, 2026",
-            time: "5 min read",
-        },
-        {
-            image: "/landing-page-images/blog.webp",
-            category: "Sustainable Gardening",
-            title: "Why Coir Products Are the Future of Gardening",
-            date: "April 20, 2026",
+            category: "Commercial Cultivation",
+            title: "Washed vs Buffered Cocopeat Blocks for Agriculture",
+            link: "/production-process",
+            date: "Technical Guide",
             time: "4 min read",
         },
         {
             image: "/landing-page-images/blog.webp",
-            category: "Plant Care",
-            title: "How to Choose the Right Growing Medium",
-            date: "April 15, 2026",
+            category: "Growing Media",
+            title: "Optimizing Moisture Retention with Coco Substrates",
+            link: "/products?category=Cocopeat%20Blocks",
+            date: "Technical Guide",
+            time: "5 min read",
+        },
+        {
+            image: "/landing-page-images/blog.webp",
+            category: "Global Logistics",
+            title: "Container Load Export & Bulk Freight Logistics",
+            link: "/global-network",
+            date: "Supply Chain",
             time: "6 min read",
         },
         {
             image: "/landing-page-images/blog.webp",
-            category: "Eco Living",
-            title: "Sustainable Gardening: Small Steps, Big Impact",
-            date: "April 10, 2026",
+            category: "Quality Testing",
+            title: "Understanding Low EC Standards for Greenhouse Crops",
+            link: "/production-process",
+            date: "Quality Assurance",
             time: "5 min read",
         },
     ];
@@ -305,7 +257,7 @@ const CocopeatBlocksWholesaleUSA = () => {
     ];
 
 
-    const siteUrl = "https://www.cocoveera.com";
+    const siteUrl = "https://cocoveera.com";
     const pageUrl = `${siteUrl}/cocopeat-blocks-wholesale-usa`;
 
     const schemaData = [
@@ -314,7 +266,7 @@ const CocopeatBlocksWholesaleUSA = () => {
             "@type": "BreadcrumbList",
             "itemListElement": [
                 { "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl },
-                { "@type": "ListItem", "position": 2, "name": "Premium Cocopeat Blocks Wholesale in the USA", "item": pageUrl }
+                { "@type": "ListItem", "position": 2, "name": "Cocopeat Blocks Wholesale USA", "item": pageUrl }
             ]
         },
         {
@@ -342,13 +294,11 @@ const CocopeatBlocksWholesaleUSA = () => {
         <>
             <SEO
                 title="Cocopeat Blocks Wholesale USA | Bulk Cocopeat Supplier"
-
-                description="Buy bulk cocopeat blocks wholesale in the USA from Cocoveera. Explore compressed cocopeat blocks, low EC coco peat blocks, 5kg blocks and container-load export options."
-
+                exactTitle={true}
+                description="Buy cocopeat blocks wholesale in the USA from Cocoveera. Source bulk compressed, low-EC cocopeat blocks for commercial growers, nurseries and distributors."
+                canonical="https://cocoveera.com/cocopeat-blocks-wholesale-usa"
                 url="/cocopeat-blocks-wholesale-usa"
-
                 image="/landing-page-images/banner-product.webp"
-
                 keywords={`
         cocopeat blocks,
         wholesale USA,
@@ -367,9 +317,17 @@ const CocopeatBlocksWholesaleUSA = () => {
         coco peat block supplier with phytosanitary certificate,
         coco peat blocks container load export price
     `}
-
-            schema={schemaData}
+                schema={schemaData}
             />
+            {/* Breadcrumb Navigation */}
+            <div className="bg-emerald-950 text-white/80 py-2.5 px-4 sm:px-8 text-xs font-medium border-b border-emerald-900/50">
+                <div className="max-w-7xl mx-auto flex items-center gap-2">
+                    <Link to="/" className="hover:text-emerald-400 transition-colors">Home</Link>
+                    <span>/</span>
+                    <span className="text-emerald-400 font-semibold">Cocopeat Blocks Wholesale USA</span>
+                </div>
+            </div>
+
             <main className="landing_page_parent">
 
                 {/* ================= HERO ================= */}
@@ -436,7 +394,7 @@ const CocopeatBlocksWholesaleUSA = () => {
                             </div>
                             <img
                                 src="/landing-page-images/banner-product.webp"
-                                alt="Blueberry Growing Discs"
+                                alt="Premium compressed cocopeat blocks for wholesale supply"
                             />
                         </div>
 
@@ -787,37 +745,26 @@ const CocopeatBlocksWholesaleUSA = () => {
                                                 )}
 
                                                 {/* View Product */}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const targetProductPath =
-                                                            `/product/${product.slug || product._id}`;
-
-                                                        navigate(targetProductPath);
-                                                    }}
-                                                    className="primary-btn w-fit"
+                                                <Link
+                                                    to={`/product/${product.slug || product._id}`}
+                                                    className="primary-btn w-fit inline-flex items-center gap-1"
                                                 >
                                                     View Product
                                                     <span>→</span>
-                                                </button>
+                                                </Link>
                                             </div>
                                         ))}
                                     </div>
 
                                     {/* View More Products */}
                                     <div className="flex justify-center mt-10">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                navigate(
-                                                    "/products?category=Cocopeat%20Blocks"
-                                                )
-                                            }
-                                            className="view-more-btn"
+                                        <Link
+                                            to="/products?category=Cocopeat%20Blocks"
+                                            className="view-more-btn inline-flex items-center gap-1"
                                         >
                                             View More Products
                                             <span>→</span>
-                                        </button>
+                                        </Link>
                                     </div>
                                 </>
                             ) : (
@@ -841,8 +788,8 @@ const CocopeatBlocksWholesaleUSA = () => {
                                 <img src="/landing-page-images/icons/globe.png" alt="" />
                             </span>
                             <div>
-                                <strong>15+</strong>
-                                <small>Countries Served</small>
+                                <strong>Global Reach</strong>
+                                <small>Export Network</small>
                             </div>
                         </div>
 
@@ -851,8 +798,8 @@ const CocopeatBlocksWholesaleUSA = () => {
                                 <img src="/landing-page-images/icons/rating-stars.png" alt="" />
                             </span>
                             <div>
-                                <strong>50K+</strong>
-                                <small>Happy Customers</small>
+                                <strong>B2B Supply</strong>
+                                <small>Commercial Partners</small>
                             </div>
                         </div>
 
@@ -861,8 +808,8 @@ const CocopeatBlocksWholesaleUSA = () => {
                                 <img src="/landing-page-images/icons/sustainability.png" alt="" />
                             </span>
                             <div>
-                                <strong>80+</strong>
-                                <small>Organic Products</small>
+                                <strong>100% Organic</strong>
+                                <small>Natural Coir Media</small>
                             </div>
                         </div>
 
@@ -871,8 +818,8 @@ const CocopeatBlocksWholesaleUSA = () => {
                                 <img src="/landing-page-images/icons/user-experience.png" alt="" />
                             </span>
                             <div>
-                                <strong>99%</strong>
-                                <small>Customer Satisfaction</small>
+                                <strong>Lab Tested</strong>
+                                <small>Quality Assurance</small>
                             </div>
                         </div>
 
@@ -968,9 +915,8 @@ const CocopeatBlocksWholesaleUSA = () => {
 
                                                 <div className="customer">
 
-                                                    <div className="customer-avatar">
-                                                        <img src={`${item.img}`} alt="" />
-                                                        {/* {item.name.charAt(0)} */}
+                                                    <div className="w-10 h-10 rounded-full bg-[#2E7D32] text-white flex items-center justify-center font-bold font-poppins text-sm flex-shrink-0">
+                                                        {item.name.charAt(0)}
                                                     </div>
 
                                                     <div>
@@ -1026,7 +972,7 @@ const CocopeatBlocksWholesaleUSA = () => {
                             {/* Step 3 */}
                             <div className="process-item step-3">
                                 <div className="process-icon">3</div>
-                                <strong>Washing & Buffering </strong>
+                                <strong>Washing & Buffering</strong>
                                 <p>
                                     The extracted coco peat is thoroughly washed and buffered to remove excess salts and balance EC levels, ensuring it's safe for all plant types.
                                 </p>
@@ -1071,41 +1017,43 @@ const CocopeatBlocksWholesaleUSA = () => {
                             <div className="section-heading">
                                 <span className="text-start">GROWING KNOWLEDGE • SUSTAINABLE LIVING</span>
                                 <h2 className="text-start">
-                                    From Our Blog
+                                    Technical Guides & Resources
                                 </h2>
                             </div>
-                            <a href="/blog" className="view-all">
-                                View All Posts →
-                            </a>
+                            <Link to="/production-process" className="view-all">
+                                Explore Guides →
+                            </Link>
                         </div>
 
                         <div className="blog-grid">
 
                             {blogs.map((blog, index) => (
-                                <article className="blog-card" key={index}>
+                                <Link to={blog.link || "/production-process"} key={index} className="blog-card block group hover:no-underline">
+                                    <article className="h-full flex flex-col">
 
-                                    <div className="blog-image">
-                                        <img
-                                            src={blog.image}
-                                            alt={blog.title}
-                                        />
-                                    </div>
-
-                                    <div className="blog-content">
-
-                                        <span className="font-bold">{blog.category}</span>
-
-                                        <h3>{blog.title}</h3>
-
-                                        <div className="blog-meta">
-                                            <small>{blog.date}</small>
-                                            <small>•</small>
-                                            <small>{blog.time}</small>
+                                        <div className="blog-image">
+                                            <img
+                                                src={blog.image}
+                                                alt={blog.title}
+                                            />
                                         </div>
 
-                                    </div>
+                                        <div className="blog-content flex-grow flex flex-col">
 
-                                </article>
+                                            <span className="font-bold">{blog.category}</span>
+
+                                            <h3>{blog.title}</h3>
+
+                                            <div className="blog-meta mt-auto">
+                                                <small>{blog.date}</small>
+                                                <small>•</small>
+                                                <small>{blog.time}</small>
+                                            </div>
+
+                                        </div>
+
+                                    </article>
+                                </Link>
                             ))}
 
                         </div>
@@ -1343,13 +1291,13 @@ const CocopeatBlocksWholesaleUSA = () => {
                                 Discover sustainable coconut coir solutions designed
                                 to support healthier plants and a greener future.
                             </p>
-                            <div className="cta-buttons">
-                                <a href="/products" className="primary-btn">
+                             <div className="cta-buttons">
+                                <Link to="/products" className="primary-btn">
                                     Explore Our Products <span>→</span>
-                                </a>
-                                <a href="/contact" className="secondary-btn">
+                                </Link>
+                                <Link to="/contact" className="secondary-btn">
                                     Get In Touch
-                                </a>
+                                </Link>
                             </div>
                         </div>
                         <div className="cta-features">

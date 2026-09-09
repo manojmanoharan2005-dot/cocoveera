@@ -1,29 +1,32 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SEO = ({ title, description, url, image, schema, noindex }) => {
-  const siteUrl = 'https://www.cocoveera.com';
+const SEO = ({ title, description, url, canonical, image, schema, noindex, exactTitle = false }) => {
+  const siteUrl = 'https://cocoveera.com';
   const defaultImage = `${siteUrl}/favicon.webp`;
   const defaultDescription = 'COCOVEERA - Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export. Verify batch quality tests instantly.';
 
-  const seoTitle = title ? `${title} | COCOVEERA` : 'COCOVEERA | Quality Testing & Coconut Substrates Export';
+  const seoTitle = title
+    ? (exactTitle || title.includes('COCOVEERA') || title.includes('Cocoveera')
+        ? title
+        : `${title} | COCOVEERA`)
+    : 'COCOVEERA | Quality Testing & Coconut Substrates Export';
   const seoDescription = description || defaultDescription;
 
-  // Determine relative pathname safely
-  let pathname = '';
-  if (url) {
-    pathname = url;
-  } else if (typeof window !== 'undefined') {
-    pathname = window.location.pathname;
+  // Determine canonical URL safely
+  let seoUrl = canonical || '';
+  if (!seoUrl) {
+    let pathname = url || (typeof window !== 'undefined' ? window.location.pathname : '');
+    if (pathname.startsWith('http://') || pathname.startsWith('https://')) {
+      seoUrl = pathname;
+    } else {
+      let cleanPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+      if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
+        cleanPath = cleanPath.slice(0, -1);
+      }
+      seoUrl = `${siteUrl}${cleanPath === '/' ? '' : cleanPath}`;
+    }
   }
-
-  // Ensure leading slash and remove trailing slashes except for root '/'
-  let cleanPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
-  if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
-    cleanPath = cleanPath.slice(0, -1);
-  }
-
-  const seoUrl = `${siteUrl}${cleanPath === '/' ? '' : cleanPath}`;
   const seoImage = image || defaultImage;
 
   // Route-aware private page check for noindex tag
