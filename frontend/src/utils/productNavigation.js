@@ -82,7 +82,7 @@ export const navigateToProduct = (product, navigate, userAuthOverride, e) => {
   } else {
     // Safely store intended product route for post-login return
     sessionStorage.setItem('postLoginRedirect', targetPath);
-    navigate('/login', { state: { from: targetPath } });
+    navigate(`/login?returnUrl=${encodeURIComponent(targetPath)}`, { state: { from: targetPath } });
   }
 };
 
