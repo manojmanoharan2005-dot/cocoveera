@@ -51,14 +51,37 @@ const CocopeatBlocksWholesaleUSA = () => {
         }
     );
 
+    const getProductImage = (product) => {
+        if (!product) return null;
+        if (Array.isArray(product.images) && product.images.length > 0 && product.images[0]) {
+            return product.images[0];
+        }
+        if (typeof product.image === 'string' && product.image) {
+            return product.image;
+        }
+        if (Array.isArray(product.image) && product.image.length > 0 && product.image[0]) {
+            return product.image[0];
+        }
+        if (product.imageUrl) return product.imageUrl;
+        if (product.image_url) return product.image_url;
+        return null;
+    };
+
     const latestCocopeatProducts = useMemo(() => {
         return cocopeatProducts
             .filter((product) => {
+                if (!product || product.isActive === false || product.isDeleted) return false;
                 const category = (product.category || "").toLowerCase().trim();
+                const name = (product.name || "").toLowerCase().trim();
 
                 return (
                     category === "cocopeat blocks" ||
-                    category.includes("cocopeat blocks")
+                    category.includes("cocopeat blocks") ||
+                    category.includes("cocopeat block") ||
+                    category.includes("coir block") ||
+                    category.includes("coco peat block") ||
+                    name.includes("cocopeat block") ||
+                    name.includes("coir block")
                 );
             })
             .slice(0, 8);
@@ -717,43 +740,48 @@ const CocopeatBlocksWholesaleUSA = () => {
                                 <>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
 
-                                        {latestCocopeatProducts.map((product) => (
-                                            <div
-                                                key={product._id}
-                                                className="product-card"
-                                            >
+                                        {latestCocopeatProducts.map((product) => {
+                                            const mainImage = getProductImage(product);
 
-                                                {/* Product Image */}
-                                                <div className="w-full h-52 flex items-center justify-center overflow-hidden">
-                                                    <ImageWithFallback
-                                                        src={product.image?.[0]}
-                                                        alt={product.name}
-                                                        className="max-w-full max-h-full w-auto h-auto object-contain"
-                                                    />
-                                                </div>
-
-                                                {/* Product Heading */}
-                                                <h3>
-                                                    {product.name}
-                                                </h3>
-
-                                                {/* Product Description */}
-                                                {product.description && (
-                                                    <p>
-                                                        {product.description}
-                                                    </p>
-                                                )}
-
-                                                {/* View Product */}
-                                                <Link
-                                                    to={`/product/${product.slug || product._id}`}
-                                                    className="primary-btn w-fit inline-flex items-center gap-1"
+                                            return (
+                                                <div
+                                                    key={product._id}
+                                                    className="product-card"
                                                 >
-                                                    View Product
-                                                    <span>→</span>
-                                                </Link>
-                                            </div>
-                                        ))}
+
+                                                    {/* Product Image */}
+                                                    <div className="w-full h-52 flex items-center justify-center overflow-hidden">
+                                                        <ImageWithFallback
+                                                            src={mainImage}
+                                                            alt={product.name || "Compressed Cocopeat Block"}
+                                                            className="max-w-full max-h-full w-auto h-auto object-contain"
+                                                            loading="lazy"
+                                                        />
+                                                    </div>
+
+                                                    {/* Product Heading */}
+                                                    <h3>
+                                                        {product.name}
+                                                    </h3>
+
+                                                    {/* Product Description */}
+                                                    {product.description && (
+                                                        <p>
+                                                            {product.description}
+                                                        </p>
+                                                    )}
+
+                                                    {/* View Product */}
+                                                    <Link
+                                                        to={`/product/${product.slug || product._id}`}
+                                                        className="primary-btn w-fit inline-flex items-center gap-1"
+                                                    >
+                                                        View Product
+                                                        <span>→</span>
+                                                    </Link>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
 
                                     {/* View More Products */}
