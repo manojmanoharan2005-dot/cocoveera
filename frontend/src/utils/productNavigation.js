@@ -108,14 +108,14 @@ export const getPostLoginRedirect = (location) => {
     return statePath;
   }
 
-  // 3. Check URL search query param ?redirect=
+  // 3. Check URL search query param ?returnUrl= or ?redirect=
   try {
     const params = new URLSearchParams(window.location.search);
-    const paramRedirect = params.get('redirect');
+    const paramRedirect = params.get('returnUrl') || params.get('redirect');
     if (paramRedirect) {
       const decoded = decodeURIComponent(paramRedirect);
       const candidate = decoded.startsWith('/') ? decoded : `/${decoded}`;
-      if (isSafeInternalRoute(candidate)) {
+      if (isSafeInternalRoute(candidate) && !candidate.startsWith('/login')) {
         return candidate;
       }
     }
