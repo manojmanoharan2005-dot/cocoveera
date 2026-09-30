@@ -431,7 +431,7 @@ export const getRFQApprovalTemplate = (customerName, details) => {
     <div style="border-top: 1px solid #E2DCD0; padding-top: 20px; margin-top: 30px; font-size: 13px; color: #555555;">
       <p style="margin: 0; font-weight: bold; color: #1E5B2E;">Regards,</p>
       <p style="margin: 3px 0 0 0; font-weight: bold; color: #2C2C2C;">Cocoveera Export Team</p>
-      <p style="margin: 3px 0 0 0; color: #777777; font-size: 12px;">Email: <a href="mailto:coirsystemadmin@gmail.com" style="color: #1E5B2E;">coirsystemadmin@gmail.com</a></p>
+      <p style="margin: 3px 0 0 0; color: #777777; font-size: 12px;">Email: <a href="mailto:supportdesk@cocoveera.com" style="color: #1E5B2E;">supportdesk@cocoveera.com</a></p>
     </div>
   `;
   return baseTemplate({ title: 'Quote Request Approved - Cocoveera Export', content });

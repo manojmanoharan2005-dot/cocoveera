@@ -77,7 +77,7 @@ const sendAndLogEmail = async (subject, htmlContent, toEmail, toName, attachment
     sendSmtpEmail.htmlContent = htmlContent;
     sendSmtpEmail.sender = { name: 'COCOVEERA Export Desk', email: 'supportdesk@cocoveera.com' };
     sendSmtpEmail.to = [{ email: toEmail, name: toName }];
-    sendSmtpEmail.replyTo = { email: process.env.ADMIN_EMAIL || 'coirsystemadmin@gmail.com', name: 'Cocoveera Admin' };
+    sendSmtpEmail.replyTo = { email: process.env.ADMIN_EMAIL || 'adminteam@cocoveera.com', name: 'Cocoveera Admin' };
 
     if (attachment) {
       sendSmtpEmail.attachment = [

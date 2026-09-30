@@ -846,7 +846,7 @@ export const handleBrevoWebhook = async (req, res) => {
       quoteRequest.timeline.push({
         status: 'CUSTOMER_REPLIED',
         title: 'Customer Replied',
-        description: `Customer replied to email. Target admin: coirsystemadmin@gmail.com`,
+        description: `Customer replied to email. Target admin: adminteam@cocoveera.com`,
         timestamp: new Date(),
       });
     } else if (event === 'hard_bounce' || event === 'soft_bounce' || event === 'error') {

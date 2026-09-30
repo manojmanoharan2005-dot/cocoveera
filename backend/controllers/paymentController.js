@@ -374,7 +374,7 @@ const sendConsolidatedPaymentEmail = async ({ order, invDoc, receiptDoc }) => {
     sendSmtpEmail.htmlContent = htmlContent;
     sendSmtpEmail.sender = { name: 'COCOVEERA Export Desk', email: 'servicedesk@cocoveera.com' };
     sendSmtpEmail.to = [{ email: recipientEmail, name: recipientName }];
-    sendSmtpEmail.replyTo = { email: process.env.ADMIN_EMAIL || 'coirsystemadmin@gmail.com', name: 'Cocoveera Admin' };
+    sendSmtpEmail.replyTo = { email: process.env.ADMIN_EMAIL || 'adminteam@cocoveera.com', name: 'Cocoveera Admin' };
     if (attachments.length > 0) {
       sendSmtpEmail.attachment = attachments;
     }

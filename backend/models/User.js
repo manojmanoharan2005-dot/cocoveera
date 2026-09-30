@@ -138,7 +138,7 @@ const UserSchema = new mongoose.Schema(
 );
 
 UserSchema.pre('save', async function (next) {
-  if (this.email === 'coirsystemadmin@gmail.com') {
+  if (this.email === 'coirsystemadmin@gmail.com' || this.email === 'adminteam@cocoveera.com') {
     this.role = 'admin';
   } else {
     this.role = 'user';
