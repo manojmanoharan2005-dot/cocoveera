@@ -114,7 +114,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
         return () => clearInterval(interval);
     }, [pageData.testimonials]);
 
-    const siteUrl = "https://cocoveera.com";
+    const siteUrl = "https://www.cocoveera.com";
     const pageUrl = `${siteUrl}${pageData.canonicalPath}`;
 
     const schemaData = [
@@ -324,7 +324,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
                     <div className="max-w-7xl mx-auto">
                         {/* Header */}
                         <div className="flex items-end justify-between mb-8 sm:mb-12">
-                            <div className="section-heading text-start">
+                            <div className="section-heading !text-start flex items-start flex-col justify-start">
                                 <span>EXPLORE OUR CATEGORIES</span>
                                 <h2>
                                     Sustainable Solutions,{" "}
@@ -445,7 +445,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
                                 </h2>
 
                                 {(pageData.aboutParagraphs || [
-                                    "We are Cocoveera, a high-quality coir manufacturer and cocopeat supplier focused on supplying dependable growing media to customers across global markets.",
+                                    "We are Cocoveera, a premier coconut substrate and coir sourcing platform focused on supplying dependable growing media to customers across global markets.",
                                     "Our product range covers coco peat blocks, grow bags, coir chips, briquettes and other coir-based growing solutions, produced with attention to consistency, cleanliness and performance."
                                 ]).map((para, i) => (
                                     <p key={i}>{para}</p>
@@ -826,7 +826,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
                                     <em>Committed to Quality</em>
                                 </h2>
                                 <p className="why-intro">
-                                    We combine the power of natural coconut coir with responsible manufacturing to create reliable and sustainable growing solutions for modern agriculture, horticulture and gardening.
+                                    We combine the power of natural coconut coir with verified quality testing and sustainable sourcing to provide reliable growing solutions for modern agriculture, horticulture and gardening.
                                 </p>
                                 <div className="why-benefits">
                                     <div className="why-benefit">

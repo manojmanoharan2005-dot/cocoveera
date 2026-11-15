@@ -1,7 +1,7 @@
 /* =========================================================
    GLOBAL
 ========================================================= */
-.landing_page_parent {
+:root {
     --green: #2e7d32;
     --dark-green: #214d26;
     --light-green: #edf6e9;
@@ -1932,10 +1932,10 @@
     }
 }
 
-p,
-li,
-label,
-span:not(.badge):not(.tag):not(.chip) {
+.landing_page_parent p,
+.landing_page_parent li,
+.landing_page_parent label,
+.landing_page_parent span:not(.badge):not(.tag):not(.chip) {
     font-size: unset;
 }
 

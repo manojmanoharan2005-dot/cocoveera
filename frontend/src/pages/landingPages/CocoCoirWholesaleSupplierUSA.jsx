@@ -7,7 +7,7 @@ const pageData = {
     metaTitle: "Coco Coir Wholesale Supplier USA | Bulk Coir Exporter",
     metaDescription: "Leading coco coir wholesale supplier serving commercial growers across the USA. High quality, lab-tested low EC coir blocks, grow bags and chips directly imported from India.",
     keywords: `
-        coco coir wholesale supplier USA,
+        Coco Coir Wholesale Supplier USA,
         bulk coir supplier,
         coir export India to USA,
         commercial coir substrates,
@@ -16,15 +16,15 @@ const pageData = {
         wholesale grow media USA
     `,
     heroBadge: "LEADING B2B COIR EXPORTER",
-    heroH1: "coco coir wholesale supplier USA",
-    heroDescription: "Direct factory export of premium coconut coir substrates, compressed blocks, grow bags, and custom formulations designed for commercial agriculture, greenhouse operators, and soil blenders in the USA.",
+    heroH1: "Coco Coir Wholesale Supplier USA",
+    heroDescription: "Direct source export of premium coconut coir substrates, compressed blocks, grow bags, and custom formulations designed for commercial agriculture, greenhouse operators, and soil blenders in the USA.",
     heroImage: "/landing-page-images/banner-product.webp",
     heroImageAlt: "Coco coir wholesale supplier servicing commercial growers in the USA",
     productFilterKeyword: "coir",
     productsH2: "Explore Our Full B2B Product Line for USA Commercial Buyers",
-    aboutH2: "Trusted Global Manufacturer & Direct Export Supplier",
+    aboutH2: "Trusted Global Supplier & Direct Export Partner",
     aboutParagraphs: [
-        "Cocoveera is a premier manufacturer and exporter of organic coconut coir substrates, supplying commercial growers, greenhouse operators, and soil mix blenders worldwide.",
+        "Cocoveera is a premier supplier and exporter of organic coconut coir substrates, supplying commercial growers, greenhouse operators, and soil mix blenders worldwide.",
         "With years of experience in coir processing, washing, buffering, and quality testing, we deliver reliable bulk coir growing media that meets the highest international standards."
     ],
     benefitsTag: "SUPPLIER ADVANTAGE",
@@ -57,8 +57,8 @@ const pageData = {
         },
         {
             icon: "/landing-page-images/icons/fast-shipping.png",
-            title: "Direct Factory Value",
-            text: "Competitive wholesale container pricing straight from our manufacturing facilities."
+            title: "Direct Source Value",
+            text: "Competitive wholesale container pricing straight from our verified processing network."
         }
     ],
     testimonials: [
@@ -109,7 +109,7 @@ const pageData = {
     faqs: [
         {
             question: "Why choose Cocoveera as your USA coir wholesale supplier?",
-            answer: "We combine direct factory manufacturing with rigorous quality control, verified lab testing, low EC guarantees, and end-to-end container export service."
+            answer: "We combine direct source procurement with rigorous quality control, verified lab testing, low EC guarantees, and end-to-end container export service."
         },
         {
             question: "Do you provide phytosanitary and export compliance certificates for USA import?",

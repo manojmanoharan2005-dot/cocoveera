@@ -33,7 +33,7 @@ const pageData = {
     productsH2: "Beyond Bulk Coco Peat Blocks, Discover More from our Other Range of Products",
     aboutH2: "Growing a Greener Future, Naturally",
     aboutParagraphs: [
-        "We are Cocoveera, a high-quality coir manufacturer and cocopeat supplier focused on supplying dependable growing media to customers across global markets. We work with coconut as a natural resource, carefully processing its coir into products suited for modern cultivation and commercial growing needs.",
+        "We are Cocoveera, a premier coconut substrate and coir sourcing platform focused on supplying dependable growing media to customers across global markets. We work with coconut as a natural resource, carefully processing its coir into products suited for modern cultivation and commercial growing needs.",
         "Our product range covers coco peat blocks, grow bags, coir chips, briquettes and other coir-based growing solutions, produced with attention to consistency, cleanliness and performance. Every product is developed with the practical requirements of growers and agricultural businesses in mind.",
         "Our goal is simple — to make high-quality coconut-based growing solutions more accessible to businesses worldwide while creating greater value from a renewable agricultural resource."
     ],

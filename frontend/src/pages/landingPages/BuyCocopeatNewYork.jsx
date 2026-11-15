@@ -17,14 +17,14 @@ const pageData = {
     `,
     heroBadge: "EXPORT DIRECT TO NEW YORK PORTS",
     heroH1: "Buy Cocopeat in New York",
-    heroDescription: "Direct container import of premium low-EC coconut coir blocks, briquettes, and grow bags shipped straight from our India manufacturing facilities to New York / New Jersey port terminals for regional commercial growers and soil blenders.",
+    heroDescription: "Direct container import of premium low-EC coconut coir blocks, briquettes, and grow bags shipped straight from our verified India processing partner facilities to New York / New Jersey port terminals for regional commercial growers and soil blenders.",
     heroImage: "/landing-page-images/banner-product.webp",
     heroImageAlt: "Bulk export of cocopeat blocks and coir substrates bound for New York",
     productFilterKeyword: "cocopeat",
     productsH2: "Explore Our Full Export Range of Cocopeat Substrates for New York",
     aboutH2: "Direct Coir Substrate Export to New York Commercial Growers",
     aboutParagraphs: [
-        "Cocoveera is an international coir manufacturer exporting premium coconut growing media directly to commercial growers and distributors across New York State and the East Coast.",
+        "Cocoveera is an international coir exporter and sourcing platform supplying premium coconut growing media directly to commercial growers and distributors across New York State and the East Coast.",
         "We handle all export logistics, phytosanitary certifications, and customs documentation to ensure smooth container delivery to New York ports and regional warehouses."
     ],
     benefitsTag: "NEW YORK BULK EXPORT ADVANTAGE",

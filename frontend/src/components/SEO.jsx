@@ -1,8 +1,8 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SEO = ({ title, description, url, canonical, image, schema, noindex, exactTitle = false }) => {
-  const siteUrl = 'https://cocoveera.com';
+const SEO = ({ title, description, url, canonical, image, schema, noindex, exactTitle = false, keywords }) => {
+  const siteUrl = 'https://www.cocoveera.com';
   const defaultImage = `${siteUrl}/favicon.webp`;
   const defaultDescription = 'COCOVEERA - Premium organic coconut substrates, Coir peat blocks, Grow bags, and Coco Briquettes for bulk global export. Verify batch quality tests instantly.';
 
@@ -50,6 +50,7 @@ const SEO = ({ title, description, url, canonical, image, schema, noindex, exact
       <title>{seoTitle}</title>
       <meta name="title" content={seoTitle} />
       <meta name="description" content={seoDescription} />
+      {keywords && <meta name="keywords" content={typeof keywords === 'string' ? keywords.trim().replace(/\s+/g, ' ') : keywords} />}
       <link rel="canonical" href={seoUrl} />
       {isPrivate ? (
         <meta name="robots" content="noindex, nofollow" />

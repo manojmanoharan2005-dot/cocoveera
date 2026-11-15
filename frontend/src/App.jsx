@@ -48,6 +48,70 @@ const BuyCocopeatNewYork = lazyWithRetry(() => import('./pages/landingPages/BuyC
 const CocoCoirBriquettesBulk = lazyWithRetry(() => import('./pages/landingPages/CocoCoirBriquettesBulk'), 'CocoCoirBriquettesBulk');
 const CocoCoirWholesaleSupplierUSA = lazyWithRetry(() => import('./pages/landingPages/CocoCoirWholesaleSupplierUSA'), 'CocoCoirWholesaleSupplierUSA');
 
+// Product Specific SEO Landing Pages (62 pages)
+const BerriesMixSubstrateBagInUK = lazyWithRetry(() => import('./pages/landingPages/Products/BerriesMixSubstrateBagInUK'), 'BerriesMixSubstrateBagInUK');
+const BlueberryMixSubstrateBagInSingapore = lazyWithRetry(() => import('./pages/landingPages/Products/BlueberryMixSubstrateBagInSingapore'), 'BlueberryMixSubstrateBagInSingapore');
+const BufferedCocoCoirGrowBag50x20x11CmInUk = lazyWithRetry(() => import('./pages/landingPages/Products/BufferedCocoCoirGrowBag50x20x11CmInUk'), 'BufferedCocoCoirGrowBag50x20x11CmInUk');
+const BufferedCocoCoirGrowBag60x15x10CmInSingapore = lazyWithRetry(() => import('./pages/landingPages/Products/BufferedCocoCoirGrowBag60x15x10CmInSingapore'), 'BufferedCocoCoirGrowBag60x15x10CmInSingapore');
+const BufferedCocoCoirGrowBag72x20x12cmInJapan = lazyWithRetry(() => import('./pages/landingPages/Products/BufferedCocoCoirGrowBag72x20x12cmInJapan'), 'BufferedCocoCoirGrowBag72x20x12cmInJapan');
+const BufferedCocoCoirGrowBag90x15x12cmInSpain = lazyWithRetry(() => import('./pages/landingPages/Products/BufferedCocoCoirGrowBag90x15x12cmInSpain'), 'BufferedCocoCoirGrowBag90x15x12cmInSpain');
+const BufferedCocoCoirGrowCubeInSaudiArabia = lazyWithRetry(() => import('./pages/landingPages/Products/BufferedCocoCoirGrowCubeInSaudiArabia'), 'BufferedCocoCoirGrowCubeInSaudiArabia');
+const BufferedCocoHuskChipsBriquetteUSA = lazyWithRetry(() => import('./pages/landingPages/Products/BufferedCocoHuskChipsBriquetteUSA'), 'BufferedCocoHuskChipsBriquetteUSA');
+const CocoCoirGrowCube10x10x7CmInVietnam = lazyWithRetry(() => import('./pages/landingPages/Products/CocoCoirGrowCube10x10x7CmInVietnam'), 'CocoCoirGrowCube10x10x7CmInVietnam');
+const CocoCoirGrowCube7x7x7CmInGermany = lazyWithRetry(() => import('./pages/landingPages/Products/CocoCoirGrowCube7x7x7CmInGermany'), 'CocoCoirGrowCube7x7x7CmInGermany');
+const CocoCoirPropagationCubeInJapan = lazyWithRetry(() => import('./pages/landingPages/Products/CocoCoirPropagationCubeInJapan'), 'CocoCoirPropagationCubeInJapan');
+const CocoCubeBlock15x10x7CmInUsa = lazyWithRetry(() => import('./pages/landingPages/Products/CocoCubeBlock15x10x7CmInUsa'), 'CocoCubeBlock15x10x7CmInUsa');
+const CocoCubeBlock20x10x7CmInUae = lazyWithRetry(() => import('./pages/landingPages/Products/CocoCubeBlock20x10x7CmInUae'), 'CocoCubeBlock20x10x7CmInUae');
+const CocoHuskChipsBriquetteGermany = lazyWithRetry(() => import('./pages/landingPages/Products/CocoHuskChipsBriquetteGermany'), 'CocoHuskChipsBriquetteGermany');
+const CocoPeatDisc10cmInJapan = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc10cmInJapan'), 'CocoPeatDisc10cmInJapan');
+const CocoPeatDisc135cmInUSA = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc135cmInUSA'), 'CocoPeatDisc135cmInUSA');
+const CocoPeatDisc16cmInSouthKorea = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc16cmInSouthKorea'), 'CocoPeatDisc16cmInSouthKorea');
+const CocoPeatDisc22cmInUK = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc22cmInUK'), 'CocoPeatDisc22cmInUK');
+const CocoPeatDisc25cmInAustralia = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc25cmInAustralia'), 'CocoPeatDisc25cmInAustralia');
+const CocoPeatDisc30cmInUAE = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc30cmInUAE'), 'CocoPeatDisc30cmInUAE');
+const CocoPeatDisc35cmInNetherlands = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc35cmInNetherlands'), 'CocoPeatDisc35cmInNetherlands');
+const CocoPeatDisc40cmInSaudiArabia = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc40cmInSaudiArabia'), 'CocoPeatDisc40cmInSaudiArabia');
+const CocoPeatDisc4cmInSingapore = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc4cmInSingapore'), 'CocoPeatDisc4cmInSingapore');
+const CocoPeatDisc6cmInVietnam = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc6cmInVietnam'), 'CocoPeatDisc6cmInVietnam');
+const CocoPeatDisc75cmInGermany = lazyWithRetry(() => import('./pages/landingPages/Products/CocoPeatDisc75cmInGermany'), 'CocoPeatDisc75cmInGermany');
+const CoconutCoirTwineRopeInSaudiArabia = lazyWithRetry(() => import('./pages/landingPages/Products/CoconutCoirTwineRopeInSaudiArabia'), 'CoconutCoirTwineRopeInSaudiArabia');
+const CoirErosionControlBlanketInUK = lazyWithRetry(() => import('./pages/landingPages/Products/CoirErosionControlBlanketInUK'), 'CoirErosionControlBlanketInUK');
+const CoirErosionControlLogInUSA = lazyWithRetry(() => import('./pages/landingPages/Products/CoirErosionControlLogInUSA'), 'CoirErosionControlLogInUSA');
+const CurledCoconutCoirRopeInUSA = lazyWithRetry(() => import('./pages/landingPages/Products/CurledCoconutCoirRopeInUSA'), 'CurledCoconutCoirRopeInUSA');
+const CustomCocoCoirGrowCubeInSpain = lazyWithRetry(() => import('./pages/landingPages/Products/CustomCocoCoirGrowCubeInSpain'), 'CustomCocoCoirGrowCubeInSpain');
+const CustomCocoCoirMixSubstrateBagInSpain = lazyWithRetry(() => import('./pages/landingPages/Products/CustomCocoCoirMixSubstrateBagInSpain'), 'CustomCocoCoirMixSubstrateBagInSpain');
+const CustomSizeCocoPeatDiscInSpain = lazyWithRetry(() => import('./pages/landingPages/Products/CustomSizeCocoPeatDiscInSpain'), 'CustomSizeCocoPeatDiscInSpain');
+const FloweringMixSubstrateBagInNetherlands = lazyWithRetry(() => import('./pages/landingPages/Products/FloweringMixSubstrateBagInNetherlands'), 'FloweringMixSubstrateBagInNetherlands');
+const GerminationMixSubstrateBagInSouthKorea = lazyWithRetry(() => import('./pages/landingPages/Products/GerminationMixSubstrateBagInSouthKorea'), 'GerminationMixSubstrateBagInSouthKorea');
+const HydroponicCocoCoirGrowCubeInSouthKorea = lazyWithRetry(() => import('./pages/landingPages/Products/HydroponicCocoCoirGrowCubeInSouthKorea'), 'HydroponicCocoCoirGrowCubeInSouthKorea');
+const HydroponicMixSubstrateBagInSaudiArabia = lazyWithRetry(() => import('./pages/landingPages/Products/HydroponicMixSubstrateBagInSaudiArabia'), 'HydroponicMixSubstrateBagInSaudiArabia');
+const NaturalCocoCoirCubeInNetherlands = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoCoirCubeInNetherlands'), 'NaturalCocoCoirCubeInNetherlands');
+const NaturalCocoCoirGrowBag50x20x11CmInAustralia = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoCoirGrowBag50x20x11CmInAustralia'), 'NaturalCocoCoirGrowBag50x20x11CmInAustralia');
+const NaturalCocoCoirGrowBag60x15x10CmInSaudiArabia = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoCoirGrowBag60x15x10CmInSaudiArabia'), 'NaturalCocoCoirGrowBag60x15x10CmInSaudiArabia');
+const NaturalCocoCoirGrowBag72x20x12CmInSouthKorea = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoCoirGrowBag72x20x12CmInSouthKorea'), 'NaturalCocoCoirGrowBag72x20x12CmInSouthKorea');
+const NaturalCocoCoirGrowBag90x15x12cmInNetherlands = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoCoirGrowBag90x15x12cmInNetherlands'), 'NaturalCocoCoirGrowBag90x15x12cmInNetherlands');
+const NaturalCocoPeatBlock1kgInVietnam = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoPeatBlock1kgInVietnam'), 'NaturalCocoPeatBlock1kgInVietnam');
+const NaturalCocoPeatBlock2kgInSingapore = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoPeatBlock2kgInSingapore'), 'NaturalCocoPeatBlock2kgInSingapore');
+const NaturalCocoPeatBlock3kgInUk = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoPeatBlock3kgInUk'), 'NaturalCocoPeatBlock3kgInUk');
+const NaturalCocoPeatBlock45kgInNetherlands = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoPeatBlock45kgInNetherlands'), 'NaturalCocoPeatBlock45kgInNetherlands');
+const NaturalCocoPeatBlock4kgInSouthKorea = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoPeatBlock4kgInSouthKorea'), 'NaturalCocoPeatBlock4kgInSouthKorea');
+const NaturalCocoPeatBlock5kgInUsa = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoPeatBlock5kgInUsa'), 'NaturalCocoPeatBlock5kgInUsa');
+const NaturalCocoPeatBlock650gInSaudiArabia = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoPeatBlock650gInSaudiArabia'), 'NaturalCocoPeatBlock650gInSaudiArabia');
+const NaturalCocoPeatBriquetteAustralia = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalCocoPeatBriquetteAustralia'), 'NaturalCocoPeatBriquetteAustralia');
+const NaturalPlusCocoPeatBriquetteSaudiArabia = lazyWithRetry(() => import('./pages/landingPages/Products/NaturalPlusCocoPeatBriquetteSaudiArabia'), 'NaturalPlusCocoPeatBriquetteSaudiArabia');
+const PropagationMixSubstrateBagInGermany = lazyWithRetry(() => import('./pages/landingPages/Products/PropagationMixSubstrateBagInGermany'), 'PropagationMixSubstrateBagInGermany');
+const RaspberryMixSubstrateBagInVietnam = lazyWithRetry(() => import('./pages/landingPages/Products/RaspberryMixSubstrateBagInVietnam'), 'RaspberryMixSubstrateBagInVietnam');
+const StrawberryMixSubstrateBagInAustralia = lazyWithRetry(() => import('./pages/landingPages/Products/StrawberryMixSubstrateBagInAustralia'), 'StrawberryMixSubstrateBagInAustralia');
+const TwistedCoconutCoirRopeInUAE = lazyWithRetry(() => import('./pages/landingPages/Products/TwistedCoconutCoirRopeInUAE'), 'TwistedCoconutCoirRopeInUAE');
+const VegetationMixSubstrateBagInUAE = lazyWithRetry(() => import('./pages/landingPages/Products/VegetationMixSubstrateBagInUAE'), 'VegetationMixSubstrateBagInUAE');
+const WashedCocoCoirGrowBag50x20x11CmInUsa = lazyWithRetry(() => import('./pages/landingPages/Products/WashedCocoCoirGrowBag50x20x11CmInUsa'), 'WashedCocoCoirGrowBag50x20x11CmInUsa');
+const WashedCocoCoirGrowBag60x15x10CmInVietnam = lazyWithRetry(() => import('./pages/landingPages/Products/WashedCocoCoirGrowBag60x15x10CmInVietnam'), 'WashedCocoCoirGrowBag60x15x10CmInVietnam');
+const WashedCocoCoirGrowBag72x20x12CmInUae = lazyWithRetry(() => import('./pages/landingPages/Products/WashedCocoCoirGrowBag72x20x12CmInUae'), 'WashedCocoCoirGrowBag72x20x12CmInUae');
+const WashedCocoCoirGrowBag90x15x12cmInGermany = lazyWithRetry(() => import('./pages/landingPages/Products/WashedCocoCoirGrowBag90x15x12cmInGermany'), 'WashedCocoCoirGrowBag90x15x12cmInGermany');
+const WashedCocoHuskChipsBriquetteUK = lazyWithRetry(() => import('./pages/landingPages/Products/WashedCocoHuskChipsBriquetteUK'), 'WashedCocoHuskChipsBriquetteUK');
+const WashedLowEcCocoCoirCubeInUk = lazyWithRetry(() => import('./pages/landingPages/Products/WashedLowEcCocoCoirCubeInUk'), 'WashedLowEcCocoCoirCubeInUk');
+const WashedLowEcCocoPeatBlock5kgInNetherlands = lazyWithRetry(() => import('./pages/landingPages/Products/WashedLowEcCocoPeatBlock5kgInNetherlands'), 'WashedLowEcCocoPeatBlock5kgInNetherlands');
+
 // Eagerly load Authentication pages to prevent Suspend flickers during auth flow navigation
 import AuthLayout from './layouts/AuthLayout';
 import OTPForm from './components/auth/OTPForm';
@@ -302,6 +366,70 @@ function AppContent() {
           <Route path="/buy-cocopeat-new-york" element={<BuyCocopeatNewYork />} />
           <Route path="/coco-coir-briquettes-bulk" element={<CocoCoirBriquettesBulk />} />
           <Route path="/coco-coir-wholesale-supplier-usa" element={<CocoCoirWholesaleSupplierUSA />} />
+
+          {/* Product Specific SEO Landing Pages (62 pages) */}
+<Route path="/berries-mix-substrate-bag-in-uk" element={<BerriesMixSubstrateBagInUK />} />
+          <Route path="/blueberry-mix-substrate-bag-in-singapore" element={<BlueberryMixSubstrateBagInSingapore />} />
+          <Route path="/buffered-coco-coir-grow-bag-50x20x11-cm-in-uk" element={<BufferedCocoCoirGrowBag50x20x11CmInUk />} />
+          <Route path="/buffered-coco-coir-grow-bag-60x15x10-cm-in-singapore" element={<BufferedCocoCoirGrowBag60x15x10CmInSingapore />} />
+          <Route path="/buffered-coco-coir-grow-bag-72x20x12-cm-in-japan" element={<BufferedCocoCoirGrowBag72x20x12cmInJapan />} />
+          <Route path="/buffered-coco-coir-grow-bag-90x15x12-cm-in-spain" element={<BufferedCocoCoirGrowBag90x15x12cmInSpain />} />
+          <Route path="/buffered-coco-coir-grow-cube-in-saudi-arabia" element={<BufferedCocoCoirGrowCubeInSaudiArabia />} />
+          <Route path="/buffered-coco-husk-chips-briquette-usa" element={<BufferedCocoHuskChipsBriquetteUSA />} />
+          <Route path="/coco-coir-grow-cube-10x10x7-cm-in-vietnam" element={<CocoCoirGrowCube10x10x7CmInVietnam />} />
+          <Route path="/coco-coir-grow-cube-7x7x7-cm-in-germany" element={<CocoCoirGrowCube7x7x7CmInGermany />} />
+          <Route path="/coco-coir-propagation-cube-in-japan" element={<CocoCoirPropagationCubeInJapan />} />
+          <Route path="/coco-cube-block-15x10x7-cm-in-usa" element={<CocoCubeBlock15x10x7CmInUsa />} />
+          <Route path="/coco-cube-block-20x10x7-cm-in-uae" element={<CocoCubeBlock20x10x7CmInUae />} />
+          <Route path="/coco-husk-chips-briquette-germany" element={<CocoHuskChipsBriquetteGermany />} />
+          <Route path="/coco-peat-disc-10cm-in-japan" element={<CocoPeatDisc10cmInJapan />} />
+          <Route path="/coco-peat-disc-135cm-in-usa" element={<CocoPeatDisc135cmInUSA />} />
+          <Route path="/coco-peat-disc-16cm-in-south-korea" element={<CocoPeatDisc16cmInSouthKorea />} />
+          <Route path="/coco-peat-disc-22cm-in-uk" element={<CocoPeatDisc22cmInUK />} />
+          <Route path="/coco-peat-disc-25cm-in-australia" element={<CocoPeatDisc25cmInAustralia />} />
+          <Route path="/coco-peat-disc-30cm-in-uae" element={<CocoPeatDisc30cmInUAE />} />
+          <Route path="/coco-peat-disc-35cm-in-netherlands" element={<CocoPeatDisc35cmInNetherlands />} />
+          <Route path="/coco-peat-disc-40cm-in-saudi-arabia" element={<CocoPeatDisc40cmInSaudiArabia />} />
+          <Route path="/coco-peat-disc-4cm-in-singapore" element={<CocoPeatDisc4cmInSingapore />} />
+          <Route path="/coco-peat-disc-6cm-in-vietnam" element={<CocoPeatDisc6cmInVietnam />} />
+          <Route path="/coco-peat-disc-7.5cm-in-germany" element={<CocoPeatDisc75cmInGermany />} />
+          <Route path="/coconut-coir-twine-rope-in-saudi-arabia" element={<CoconutCoirTwineRopeInSaudiArabia />} />
+          <Route path="/coir-erosion-control-blanket-in-uk" element={<CoirErosionControlBlanketInUK />} />
+          <Route path="/coir-erosion-control-log-in-usa" element={<CoirErosionControlLogInUSA />} />
+          <Route path="/curled-coconut-coir-rope-in-usa" element={<CurledCoconutCoirRopeInUSA />} />
+          <Route path="/custom-coco-coir-grow-cube-in-spain" element={<CustomCocoCoirGrowCubeInSpain />} />
+          <Route path="/custom-coco-coir-mix-substrate-bag-in-spain" element={<CustomCocoCoirMixSubstrateBagInSpain />} />
+          <Route path="/custom-size-coco-peat-disc-in-spain" element={<CustomSizeCocoPeatDiscInSpain />} />
+          <Route path="/flowering-mix-substrate-bag-in-netherlands" element={<FloweringMixSubstrateBagInNetherlands />} />
+          <Route path="/germination-mix-substrate-bag-in-south-korea" element={<GerminationMixSubstrateBagInSouthKorea />} />
+          <Route path="/hydroponic-coco-coir-grow-cube-in-south-korea" element={<HydroponicCocoCoirGrowCubeInSouthKorea />} />
+          <Route path="/hydroponic-mix-substrate-bag-in-saudi-arabia" element={<HydroponicMixSubstrateBagInSaudiArabia />} />
+          <Route path="/natural-coco-coir-cube-in-netherlands" element={<NaturalCocoCoirCubeInNetherlands />} />
+          <Route path="/natural-coco-coir-grow-bag-50x20x11-cm-in-australia" element={<NaturalCocoCoirGrowBag50x20x11CmInAustralia />} />
+          <Route path="/natural-coco-coir-grow-bag-60x15x10-cm-in-saudi-arabia" element={<NaturalCocoCoirGrowBag60x15x10CmInSaudiArabia />} />
+          <Route path="/natural-coco-coir-grow-bag-72x20x12-cm-in-south-korea" element={<NaturalCocoCoirGrowBag72x20x12CmInSouthKorea />} />
+          <Route path="/natural-coco-coir-grow-bag-90x15x12-cm-in-netherlands" element={<NaturalCocoCoirGrowBag90x15x12cmInNetherlands />} />
+          <Route path="/natural-coco-peat-block-1kg-in-vietnam" element={<NaturalCocoPeatBlock1kgInVietnam />} />
+          <Route path="/natural-coco-peat-block-2kg-in-singapore" element={<NaturalCocoPeatBlock2kgInSingapore />} />
+          <Route path="/natural-coco-peat-block-3kg-in-uk" element={<NaturalCocoPeatBlock3kgInUk />} />
+          <Route path="/natural-coco-peat-block-45kg-in-netherlands" element={<NaturalCocoPeatBlock45kgInNetherlands />} />
+          <Route path="/natural-coco-peat-block-4kg-in-south-korea" element={<NaturalCocoPeatBlock4kgInSouthKorea />} />
+          <Route path="/natural-coco-peat-block-5kg-in-usa" element={<NaturalCocoPeatBlock5kgInUsa />} />
+          <Route path="/natural-coco-peat-block-650g-in-saudi-arabia" element={<NaturalCocoPeatBlock650gInSaudiArabia />} />
+          <Route path="/natural-coco-peat-briquette-australia" element={<NaturalCocoPeatBriquetteAustralia />} />
+          <Route path="/natural-plus-coco-peat-briquette-saudi-arabia" element={<NaturalPlusCocoPeatBriquetteSaudiArabia />} />
+          <Route path="/propagation-mix-substrate-bag-in-germany" element={<PropagationMixSubstrateBagInGermany />} />
+          <Route path="/raspberry-mix-substrate-bag-in-vietnam" element={<RaspberryMixSubstrateBagInVietnam />} />
+          <Route path="/strawberry-mix-substrate-bag-in-australia" element={<StrawberryMixSubstrateBagInAustralia />} />
+          <Route path="/twisted-coconut-coir-rope-in-uae" element={<TwistedCoconutCoirRopeInUAE />} />
+          <Route path="/vegetation-mix-substrate-bag-in-uae" element={<VegetationMixSubstrateBagInUAE />} />
+          <Route path="/washed-coco-coir-grow-bag-50x20x11-cm-in-usa" element={<WashedCocoCoirGrowBag50x20x11CmInUsa />} />
+          <Route path="/washed-coco-coir-grow-bag-60x15x10-cm-in-vietnam" element={<WashedCocoCoirGrowBag60x15x10CmInVietnam />} />
+          <Route path="/washed-coco-coir-grow-bag-72x20x12-cm-in-uae" element={<WashedCocoCoirGrowBag72x20x12CmInUae />} />
+          <Route path="/washed-coco-coir-grow-bag-90x15x12-cm-in-germany" element={<WashedCocoCoirGrowBag90x15x12cmInGermany />} />
+          <Route path="/washed-coco-husk-chips-briquette-uk" element={<WashedCocoHuskChipsBriquetteUK />} />
+          <Route path="/washed-low-ec-coco-coir-cube-in-uk" element={<WashedLowEcCocoCoirCubeInUk />} />
+          <Route path="/washed-low-ec-coco-peat-block-5kg-in-netherlands" element={<WashedLowEcCocoPeatBlock5kgInNetherlands />} />
           <Route path="/product/:id" element={<ProductView />} />
           <Route path="/products/:id" element={<ProductView />} />
           <Route path="/productview/:id" element={<ProductView />} />

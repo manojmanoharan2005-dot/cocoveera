@@ -23,7 +23,7 @@ const pageData = {
     productsH2: "Discover Our Range of Coir Briquettes & Compact Substrates",
     aboutH2: "Precision Compressed Coir Media for Global Buyers",
     aboutParagraphs: [
-        "Cocoveera is a trusted coir manufacturer specializing in compressed 650g briquettes, 5kg blocks, and custom coir substrates for agricultural markets worldwide.",
+        "Cocoveera is a trusted coir supplier and exporter specializing in compressed 650g briquettes, 5kg blocks, and custom coir substrates for agricultural markets worldwide.",
         "Our bulk coir briquettes offer exceptional expansion yield, high cation exchange capacity, and clean, uniform fiber texture for professional growers and soil mix blenders."
     ],
     benefitsTag: "COIR BRIQUETTES ADVANTAGE",
@@ -46,8 +46,8 @@ const pageData = {
         },
         {
             icon: "/landing-page-images/icons/wide-range.png",
-            title: "Trusted Manufacturer",
-            text: "Direct factory production ensures strict quality control and competitive wholesale pricing."
+            title: "Verified Supplier",
+            text: "Direct sourcing and batch testing ensure strict quality control and competitive wholesale pricing."
         },
         {
             icon: "/landing-page-images/icons/affordable-prices.png",
@@ -77,7 +77,7 @@ const pageData = {
             text: "Great low EC parameters. We use these briquettes for seed starting plugs and seedling trays with outstanding germination rates."
         }
     ],
-    processH2: "Manufacturing Process of Coir Briquettes",
+    processH2: "Production & Quality Processing of Coir Briquettes",
     processSubtitle: "High-pressure hydraulic compression and strict quality control.",
     processSteps: [
         {

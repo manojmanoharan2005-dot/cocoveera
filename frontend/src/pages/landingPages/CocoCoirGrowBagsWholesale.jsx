@@ -25,7 +25,7 @@ const pageData = {
     productsH2: "Explore Our Full Range of Hydroponic Grow Bags & Coir Substrates",
     aboutH2: "Custom Engineered Substrates for Commercial Agriculture",
     aboutParagraphs: [
-        "Cocoveera is a global coir manufacturer and substrate exporter committed to delivering high-performance growing solutions for modern commercial agriculture.",
+        "Cocoveera is a global coir supplier and substrate exporter committed to delivering high-performance growing solutions for modern commercial agriculture.",
         "Our coco coir grow bags are custom engineered to optimize root aeration, water drainage, and nutrient retention for greenhouse and hydroponic production."
     ],
     benefitsTag: "COMMERCIAL GROW BAG ADVANTAGE",
