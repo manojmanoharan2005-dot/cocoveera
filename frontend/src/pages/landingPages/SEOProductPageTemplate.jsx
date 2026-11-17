@@ -1,6 +1,7 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SEO from "../../components/SEO";
+import { handleProtectedCTA } from "../../utils/productNavigation";
 
 import "./landingpageStyle.css";
 /**
@@ -52,6 +53,20 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
 
     const siteUrl = organizationUrl.replace(/\/$/, "");
     const canonicalUrl = `${siteUrl}${canonicalPath}`;
+    const navigate = useNavigate();
+
+    const handleCTANavigation = (e, target) => {
+        if (!target) return;
+        const isProtected = target.startsWith('/dashboard') || 
+                            target.startsWith('/request-quote') || 
+                            target.startsWith('/cart') || 
+                            target.startsWith('/checkout') || 
+                            target.startsWith('/orders');
+        if (isProtected) {
+            e.preventDefault();
+            handleProtectedCTA(navigate, canonicalPath, target);
+        }
+    };
 
     const structuredSchema = [
         {
@@ -189,6 +204,7 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                         <div className="mt-8 flex flex-wrap gap-3">
                             <a
                                 href={ctaButtonLink}
+                                onClick={(e) => handleCTANavigation(e, ctaButtonLink)}
                                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-800 px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-green-900"
                             >
                                 {ctaButtonText}
@@ -272,6 +288,7 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                         </dl>
                         <a
                             href={ctaButtonLink}
+                            onClick={(e) => handleCTANavigation(e, ctaButtonLink)}
                             className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-stone-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-green-900"
                         >
                             Request Product Information
@@ -570,6 +587,7 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                             {whyChooseSection.buttonText && (
                                 <a
                                     href={whyChooseSection.buttonLink || "/contact"}
+                                    onClick={(e) => handleCTANavigation(e, whyChooseSection.buttonLink || "/contact")}
                                     className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-green-800 px-6 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-green-900"
                                 >
                                     {whyChooseSection.buttonText}

@@ -50,8 +50,9 @@ export const checkIsAuthenticated = () => {
  * @param {Function} navigate - React Router navigate function
  * @param {boolean} [userAuthOverride] - Optional explicit auth boolean from useAuth()
  * @param {Event} [e] - Optional click event to prevent default link action
+ * @param {Object} [options] - Optional redirect configuration (e.g. returnUrl)
  */
-export const navigateToProduct = (product, navigate, userAuthOverride, e) => {
+export const navigateToProduct = (product, navigate, userAuthOverride, e, options = {}) => {
   if (e && typeof e.preventDefault === 'function') {
     e.preventDefault();
   }
@@ -80,9 +81,36 @@ export const navigateToProduct = (product, navigate, userAuthOverride, e) => {
   if (isAuthenticated) {
     navigate(targetPath);
   } else {
-    // Safely store intended product route for post-login return
-    sessionStorage.setItem('postLoginRedirect', targetPath);
-    navigate(`/login?returnUrl=${encodeURIComponent(targetPath)}`, { state: { from: targetPath } });
+    // If an original SEO landing page URL is provided or options.returnUrl is specified,
+    // preserve that exact URL so user returns there after login.
+    const redirectTarget = options?.returnUrl || targetPath;
+    sessionStorage.setItem('postLoginRedirect', redirectTarget);
+    navigate(`/login?returnUrl=${encodeURIComponent(redirectTarget)}`, { state: { from: redirectTarget } });
+  }
+};
+
+/**
+ * Direct CTA auth guard for SEO landing pages and promotional banners.
+ * If user is authenticated, executes onSuccess callback or navigates to targetPath.
+ * If user is guest, stores returnUrl in sessionStorage and redirects to /login.
+ *
+ * @param {Function} navigate - React Router navigate function
+ * @param {string} [returnUrl] - Exact SEO landing page to return to after login
+ * @param {string|Function} [onSuccess] - Target path or callback if already authenticated
+ */
+export const handleProtectedCTA = (navigate, returnUrl, onSuccess) => {
+  const currentUrl = returnUrl || (typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/');
+  const isAuth = checkIsAuthenticated();
+
+  if (isAuth) {
+    if (typeof onSuccess === 'function') {
+      onSuccess();
+    } else if (typeof onSuccess === 'string' && onSuccess) {
+      navigate(onSuccess);
+    }
+  } else {
+    sessionStorage.setItem('postLoginRedirect', currentUrl);
+    navigate(`/login?returnUrl=${encodeURIComponent(currentUrl)}`, { state: { from: currentUrl } });
   }
 };
 

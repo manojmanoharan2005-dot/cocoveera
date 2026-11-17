@@ -1496,7 +1496,7 @@
     background:
         linear-gradient(rgba(32, 91, 35, 0.93),
             rgba(32, 91, 35, 0.93)),
-        url("/images/green-leaves.jpg") center / cover;
+        url("/landing-page-images/counter-bg.webp") center / cover;
     overflow: hidden;
 }
 

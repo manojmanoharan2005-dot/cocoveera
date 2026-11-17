@@ -584,7 +584,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
 
                                                     <button
                                                         type="button"
-                                                        onClick={(e) => navigateToProduct(product, navigate, user, e)}
+                                                        onClick={(e) => navigateToProduct(product, navigate, user, e, { returnUrl: pageData.canonicalPath || window.location.pathname })}
                                                         className="primary-btn w-fit inline-flex items-center gap-1 cursor-pointer"
                                                     >
                                                         View Product <span>→</span>

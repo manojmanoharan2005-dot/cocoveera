@@ -285,8 +285,8 @@ const pageData = {
     organizationLogo: "https://www.cocoveera.com/favicon.webp"
 };
 
-const CocoHuskChipsBriquetteInGermany = () => {
+const CocoHuskChipsBriquetteGermany = () => {
     return <SEOProductPageTemplate pageData={pageData} />;
 };
 
-export default CocoHuskChipsBriquetteInGermany;
+export default CocoHuskChipsBriquetteGermany;
