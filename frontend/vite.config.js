@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     target: 'es2022',
-    minify: 'esbuild',
+    minify: true,
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
@@ -14,11 +14,21 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
-          framer: ['framer-motion'],
-          ui: ['lucide-react', 'react-hook-form', 'react-tooltip'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react/') || id.includes('react-dom/') || id.includes('react-router-dom/')) {
+              return 'vendor';
+            }
+            if (id.includes('three') || id.includes('@react-three')) {
+              return 'three';
+            }
+            if (id.includes('framer-motion')) {
+              return 'framer';
+            }
+            if (id.includes('lucide-react') || id.includes('react-hook-form') || id.includes('react-tooltip')) {
+              return 'ui';
+            }
+          }
         },
       },
     },
