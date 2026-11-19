@@ -107,6 +107,7 @@ async function generateSitemap() {
     '/coco-peat-disc-40cm-in-saudi-arabia',
     '/coco-peat-disc-4cm-in-singapore',
     '/coco-peat-disc-6cm-in-vietnam',
+    '/coco-peat-disc-75cm-in-germany',
     '/coco-peat-disc-7.5cm-in-germany',
     '/coconut-coir-twine-rope-in-saudi-arabia',
     '/cocopeat-blocks-wholesale-usa',

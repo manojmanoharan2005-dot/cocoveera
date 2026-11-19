@@ -429,8 +429,12 @@ function AppContent() {
           <Route path="/coco-peat-disc-22cm-in-uk" element={<CocoPeatDisc22cmInUK />} />
           <Route path="/coco-peat-disc-16cm-in-south-korea" element={<CocoPeatDisc16cmInSouthKorea />} />
           <Route path="/coco-peat-disc-135cm-in-usa" element={<CocoPeatDisc135cmInUSA />} />
+          <Route path="/coco-peat-disc-13.5cm-in-usa" element={<CocoPeatDisc135cmInUSA />} />
           <Route path="/coco-peat-disc-10cm-in-japan" element={<CocoPeatDisc10cmInJapan />} />
+          <Route path="/coco-peat-disc-75cm-in-germany" element={<CocoPeatDisc75cmInGermany />} />
           <Route path="/coco-peat-disc-7.5cm-in-germany" element={<CocoPeatDisc75cmInGermany />} />
+          <Route path="/products/coco-peat-disc-75cm-in-germany" element={<CocoPeatDisc75cmInGermany />} />
+          <Route path="/products/coco-peat-disc-7.5cm-in-germany" element={<CocoPeatDisc75cmInGermany />} />
           <Route path="/coco-peat-disc-6cm-in-vietnam" element={<CocoPeatDisc6cmInVietnam />} />
           <Route path="/coco-peat-disc-4cm-in-singapore" element={<CocoPeatDisc4cmInSingapore />} />
           <Route path="/custom-coco-coir-mix-substrate-bag-in-spain" element={<CustomCocoCoirMixSubstrateBagInSpain />} />

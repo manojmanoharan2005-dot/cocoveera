@@ -3,7 +3,7 @@ import React from "react";
 import SEOProductPageTemplate from "../SEOProductPageTemplate";
 
 const pageData = {
-    canonicalPath: "/coco-peat-disc-7.5cm-in-germany",
+    canonicalPath: "/coco-peat-disc-75cm-in-germany",
     breadcrumbName: "Coco Peat Disc 7.5cm in Germany",
     metaTitle: "Coco Peat Disc 7.5cm for Germany | Cocoveera",
     metaDescription:
