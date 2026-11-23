@@ -12,6 +12,7 @@ import Document from '../models/Document.js';
 import Timeline from '../models/Timeline.js';
 import { generateAndStoreDocument } from '../utils/documentService.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
+import { runPostPaymentSideEffects } from './paymentController.js';
 
 // @desc    Get all orders (Admin)
 // @route   GET /api/admin/orders
@@ -295,54 +296,26 @@ export const advancePaymentMilestone = async (orderId, adminUser = null, transac
   const order = await Order.findById(orderId).populate('user').populate('items.product');
   if (!order) throw new Error('Order not found');
 
-  // Determine current milestone index to complete (0 -> 40%, 1 -> 60%, 2 -> 80%, 3 -> 100%)
-  let nextIdx = 0;
-  if (order.paymentProgress >= 80) nextIdx = 3;
-  else if (order.paymentProgress >= 60) nextIdx = 2;
-  else if (order.paymentProgress >= 40) nextIdx = 1;
-  else nextIdx = 0;
+  // Determine current milestone index to complete:
+  // First check if any milestone is explicitly "Under Review"
+  let nextIdx = order.paymentMilestones?.findIndex(m => m.status === 'Under Review');
+  if (nextIdx === -1 || nextIdx === undefined) {
+    if (order.paymentProgress >= 80) nextIdx = 3;
+    else if (order.paymentProgress >= 60) nextIdx = 2;
+    else if (order.paymentProgress >= 40) nextIdx = 1;
+    else nextIdx = 0;
+  }
 
-  const targetProgress = [40, 60, 80, 100][nextIdx];
   const milestoneTypes = ['40% Advance Payment', '60% Production Payment', '80% Container Loading Payment', '100% Final Delivery Payment'];
-
-  order.paymentProgress = targetProgress;
   const total = order.totalAmount || 0;
-  order.amountPaid = (total * targetProgress) / 100;
-  order.remainingAmount = Math.max(0, total - order.amountPaid);
-  order.invoiceVersion = targetProgress === 100 ? 'v4' : (targetProgress >= 80 ? 'v3' : (targetProgress >= 60 ? 'v2' : 'v1'));
-
-  if (adminUser) {
-    order.verifiedBy = adminUser._id || adminUser;
-    order.verifiedAt = new Date();
-  }
-  if (transactionRef) {
-    order.transactionReference = transactionRef;
-    order.paymentId = transactionRef;
-  }
-
-  if (targetProgress === 100) {
-    order.paymentStatus = 'paid';
-    order.orderStatus = 'delivered';
-    order.shipmentStatus = 'Delivered';
-  } else {
-    order.paymentStatus = 'partially_paid';
-    if (targetProgress === 40) order.orderStatus = 'confirmed';
-    else if (targetProgress === 60) {
-      order.orderStatus = 'packed';
-      order.productionStatus = 'Completed';
-    } else if (targetProgress === 80) {
-      order.orderStatus = 'loaded';
-      order.shipmentStatus = 'Loaded';
-    }
-  }
 
   // Update paymentMilestones array
   if (!order.paymentMilestones || order.paymentMilestones.length === 0) {
     order.paymentMilestones = [
-      { milestoneType: '40% Advance Payment', percentage: 40, amount: total * 0.4, currency: order.currency || 'USD', status: 'Paid', paidAt: new Date() },
-      { milestoneType: '60% Payment Unlocked', percentage: 20, amount: total * 0.2, currency: order.currency || 'USD', status: targetProgress >= 60 ? 'Paid' : 'Pending' },
-      { milestoneType: '80% Payment Unlocked', percentage: 20, amount: total * 0.2, currency: order.currency || 'USD', status: targetProgress >= 80 ? 'Paid' : 'Pending' },
-      { milestoneType: '100% Final Payment', percentage: 20, amount: total * 0.2, currency: order.currency || 'USD', status: targetProgress >= 100 ? 'Paid' : 'Pending' },
+      { milestoneType: '40% Advance Payment', percentage: 40, amount: Math.round(total * 0.4 * 100) / 100, currency: order.currency || 'USD', status: 'Paid', paidAt: new Date() },
+      { milestoneType: '60% Payment Unlocked', percentage: 20, amount: Math.round(total * 0.2 * 100) / 100, currency: order.currency || 'USD', status: nextIdx >= 1 ? 'Paid' : 'Pending' },
+      { milestoneType: '80% Payment Unlocked', percentage: 20, amount: Math.round(total * 0.2 * 100) / 100, currency: order.currency || 'USD', status: nextIdx >= 2 ? 'Paid' : 'Pending' },
+      { milestoneType: '100% Final Payment', percentage: 20, amount: Math.round((total - (Math.round(total * 0.4 * 100) / 100) - 2 * (Math.round(total * 0.2 * 100) / 100)) * 100) / 100, currency: order.currency || 'USD', status: nextIdx >= 3 ? 'Paid' : 'Pending' },
     ];
   } else {
     if (order.paymentMilestones[nextIdx]) {
@@ -355,27 +328,65 @@ export const advancePaymentMilestone = async (orderId, adminUser = null, transac
     }
   }
 
+  // Derive dynamic payment progress from actual milestone amounts
+  const totalPaidSoFar = order.paymentMilestones
+    .filter(m => m.status === 'Paid')
+    .reduce((sum, m) => sum + (m.amount || 0), 0);
+
+  const targetProgress = total > 0 ? Math.min(100, Math.round((totalPaidSoFar / total) * 100)) : 0;
+  order.paymentProgress = targetProgress;
+  order.amountPaid = Math.round(totalPaidSoFar * 100) / 100;
+  order.remainingAmount = Math.max(0, Math.round((total - totalPaidSoFar) * 100) / 100);
+  order.invoiceVersion = targetProgress === 100 ? 'v4' : (targetProgress >= 80 ? 'v3' : (targetProgress >= 60 ? 'v2' : 'v1'));
+
+  if (adminUser) {
+    order.verifiedBy = adminUser._id || adminUser;
+    order.verifiedAt = new Date();
+  }
+  if (transactionRef) {
+    order.transactionReference = transactionRef;
+    order.paymentId = transactionRef;
+  }
+
+  if (targetProgress >= 100) {
+    order.paymentStatus = 'paid';
+    order.orderStatus = 'delivered';
+    order.shipmentStatus = 'Delivered';
+  } else {
+    order.paymentStatus = 'partially_paid';
+    if (targetProgress >= 40 && targetProgress < 60) order.orderStatus = 'confirmed';
+    else if (targetProgress >= 60 && targetProgress < 80) {
+      order.orderStatus = 'packed';
+      order.productionStatus = 'Completed';
+    } else if (targetProgress >= 80) {
+      order.orderStatus = 'loaded';
+      order.shipmentStatus = 'Loaded';
+    }
+  }
+
+  const milestonePaidAmount = order.paymentMilestones[nextIdx]?.amount || (total * 0.2);
+
   // Log payment history
   order.paymentHistory.push({
-    amount: (total * (targetProgress - (nextIdx > 0 ? [40, 60, 80][nextIdx - 1] : 0))) / 100,
+    amount: milestonePaidAmount,
     percentage: targetProgress,
     transactionId: transactionRef || order.paymentId || 'N/A',
     paidAt: new Date(),
-    milestoneType: milestoneTypes[nextIdx],
+    milestoneType: milestoneTypes[nextIdx] || `Milestone ${nextIdx + 1}`,
     verifiedBy: adminUser?._id || null,
     verifiedAt: new Date(),
   });
 
   await order.save();
 
-  // Create Payment Record
+  // Create Payment Record (idempotent safe)
   try {
     await Payment.create({
       order: order._id,
-      amount: order.amountPaid,
+      amount: milestonePaidAmount,
       status: 'completed',
       method: order.paymentGateway || 'wire',
-      transactionId: transactionRef || order.paymentId || 'N/A',
+      transactionId: transactionRef || order.paymentId || ('wire_' + Date.now()),
       paymentDate: new Date(),
       description: `${targetProgress}% Payment Verified for Order ${order._id}`,
       user: order.user._id,
@@ -396,21 +407,8 @@ export const advancePaymentMilestone = async (orderId, adminUser = null, transac
     console.error('Timeline entry error:', tlErr);
   }
 
-  // Automatically Regenerate PDF & Cloudinary Document
-  try {
-    const docType = targetProgress === 100 ? 'taxInvoicePdf' : 'commercialInvoicePdf';
-    const docRecord = await generateAndStoreDocument({
-      orderId: order._id,
-      type: docType,
-      user: order.user,
-    });
-    if (docRecord && docRecord.url) {
-      order.invoiceUrl = docRecord.url;
-      await order.save();
-    }
-  } catch (docErr) {
-    console.error('Document regeneration error:', docErr);
-  }
+  // Non-blocking side effects: generate documents & send consolidated Brevo email
+  runPostPaymentSideEffects(order).catch(docErr => console.error('[Bank Transfer SideEffects]', docErr.message));
 
   return order;
 };
@@ -420,7 +418,7 @@ export const advancePaymentMilestone = async (orderId, adminUser = null, transac
 // @access  Private/Admin
 export const verifyBankTransferPayment = async (req, res) => {
   try {
-    const { action, transactionReference, rejectionReason } = req.body;
+    const { action, transactionReference, rejectionReason, milestoneIndex } = req.body;
     let order = await Order.findById(req.params.id);
 
     if (!order) {
@@ -428,9 +426,28 @@ export const verifyBankTransferPayment = async (req, res) => {
     }
 
     if (action === 'reject') {
-      order.paymentStatus = 'failed';
+      const targetIdx = milestoneIndex !== undefined && milestoneIndex !== null
+        ? parseInt(milestoneIndex)
+        : order.paymentMilestones?.findIndex(m => m.status === 'Under Review');
+
+      if (targetIdx !== -1 && order.paymentMilestones?.[targetIdx]) {
+        order.paymentMilestones[targetIdx].status = 'Pending';
+      }
+      order.paymentStatus = order.paymentProgress > 0 ? 'partially_paid' : 'Awaiting Initial Payment';
       order.cancellationReason = rejectionReason || 'Bank transfer verification rejected by admin.';
       await order.save();
+
+      // Log timeline
+      try {
+        const Timeline = (await import('../models/Timeline.js')).default;
+        await Timeline.create({
+          order: order._id,
+          status: 'PAYMENT REJECTED',
+          title: 'Bank Transfer Rejected',
+          description: rejectionReason || 'Bank transfer verification rejected by admin. Please contact support.',
+        });
+      } catch (e) {}
+
       return res.status(200).json({
         success: true,
         message: 'Bank transfer payment rejected.',

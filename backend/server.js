@@ -99,7 +99,12 @@ app.use(
 );
 
 // 3. Body Parser
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({
+  limit: '100kb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 
 // 4. Cookie Parser
 app.use(cookieParser());

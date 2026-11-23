@@ -163,18 +163,18 @@ const Checkout = () => {
     try {
       setIsProcessing(true);
 
-      // 1. Wire transfer / Cash payments
-      if (paymentMethod === 'wire' || paymentMethod === 'cod') {
-        await apiClient.post('/payments/confirm', {
+      // 1. Wire transfer / Bank Transfer
+      if (paymentMethod === 'wire') {
+        await apiClient.post('/payments/submit-wire', {
           orderId: targetOrderId,
-          gateway: paymentMethod,
-          status: 'success',
           milestoneIndex,
+          transactionReference: 'WIRE-INIT-' + targetOrderId.slice(-6).toUpperCase(),
+          notes: 'Order checkout wire transfer proof pending admin verification.'
         });
         
         setPaymentSuccessData({
           orderId: targetOrderId,
-          paymentId: 'T/T Transfer Pending',
+          paymentId: 'T/T Verification Pending',
           amount: milestoneAmount
         });
         setShowSuccessAnimation(true);

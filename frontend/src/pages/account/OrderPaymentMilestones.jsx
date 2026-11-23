@@ -23,6 +23,20 @@ const OrderPaymentMilestones = () => {
   // Duplicate-click guard — prevents two concurrent payment submissions
   const isSubmitting = useRef(false);
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   // Fetch the Order details
   const { data: order, isLoading, error, refetch } = useQuery(
     ['order', id],
@@ -241,6 +255,7 @@ const OrderPaymentMilestones = () => {
           },
         };
 
+        await loadRazorpayScript();
         const rzp = new window.Razorpay(options);
         rzp.on('payment.failed', (response) => {
           setErrorMessage('Payment failed: ' + (response.error?.description || 'Unknown error'));

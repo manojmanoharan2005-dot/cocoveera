@@ -7,6 +7,10 @@ import {
   initiatePayment,
   confirmPayment,
   verifyRazorpayPayment,
+  submitWireTransferProof,
+  handleRazorpayWebhook,
+  handleStripeWebhook,
+  handlePaypalWebhook,
   getMyPayments,
   getAllPayments,
   requestRefund,
@@ -23,6 +27,10 @@ const router = express.Router();
 router.post('/initiate', protect, paymentInitiateLimiter, initiatePayment);
 router.post('/confirm', protect, confirmPayment);
 router.post('/verify-payment', protect, verifyRazorpayPayment);
+router.post('/submit-wire', protect, submitWireTransferProof);
+router.post('/webhook/razorpay', handleRazorpayWebhook);
+router.post('/webhook/stripe', handleStripeWebhook);
+router.post('/webhook/paypal', handlePaypalWebhook);
 router.get('/sync-status/:orderId', protect, getPaymentSyncStatus);
 router.get('/history', protect, getMyPayments);
 router.get('/admin', protect, (req, res, next) => { if (req.user && ['admin','manager','support'].includes(req.user.role)) return next(); return res.status(403).json({ success:false, message:'Not authorized' }); }, getAllPayments);

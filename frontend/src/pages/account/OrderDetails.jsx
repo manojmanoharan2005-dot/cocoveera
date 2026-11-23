@@ -70,8 +70,8 @@ const OrderDetails = () => {
     date: backendOrder.createdAt,
     shippingDate: backendOrder.shippingDate,
     estimatedDeliveryDate: backendOrder.estimatedDeliveryDate,
-    status: backendOrder.orderStatus.charAt(0).toUpperCase() + backendOrder.orderStatus.slice(1),
-    paymentStatus: backendOrder.paymentStatus.charAt(0).toUpperCase() + backendOrder.paymentStatus.slice(1),
+    status: backendOrder.orderStatus ? (backendOrder.orderStatus.charAt(0).toUpperCase() + backendOrder.orderStatus.slice(1)) : 'Pending',
+    paymentStatus: backendOrder.paymentStatus ? (backendOrder.paymentStatus.charAt(0).toUpperCase() + backendOrder.paymentStatus.slice(1)) : 'Pending',
     container: {
       type: backendOrder.shippingDetails?.containerType || backendOrder.recommendedContainer || 'LCL',
       number: backendOrder.trackingNumber || 'Pending',

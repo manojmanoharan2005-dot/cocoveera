@@ -1,6 +1,10 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, Eye, Download, Truck, RotateCcw, Package, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Check } from 'lucide-react';
+import {
+  Search, Eye, Download, Truck, RotateCcw, Package, ChevronLeft, ChevronRight,
+  AlertCircle, CheckCircle2, Check, Loader2, Building2, CreditCard, X,
+  UploadCloud, ShieldCheck, Copy, ExternalLink, Clock
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { FixedSizeList as List } from 'react-window';
@@ -103,6 +107,15 @@ const Orders = () => {
   const [activePdfUrl, setActivePdfUrl] = useState('');
   const [activeOrderNum, setActiveOrderNum] = useState('');
   
+  // Payment Modal State
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [activeOrderForPayment, setActiveOrderForPayment] = useState(null);
+  const [activeMilestoneIndex, setActiveMilestoneIndex] = useState(0);
+  const [selectedGateway, setSelectedGateway] = useState('razorpay');
+  const [wireReference, setWireReference] = useState('');
+  const [wireReceiptUrl, setWireReceiptUrl] = useState('');
+  const [wireNotes, setWireNotes] = useState('');
+  const [copiedField, setCopiedField] = useState(null);
   const [errorState, setErrorState] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState('');
@@ -246,16 +259,58 @@ const Orders = () => {
     }
   };
 
-  const handlePayMilestone = async (orderId, milestoneIndex, orderNumber) => {
-    setIsProcessing(true);
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const copyToClipboard = (text, fieldName) => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2000);
+    }
+  };
+
+  const openPaymentModal = (order, milestoneIdx) => {
+    setActiveOrderForPayment(order);
+    setActiveMilestoneIndex(milestoneIdx);
+    const isDomestic = (order.currency === 'INR') ||
+      (order.shippingAddress?.country?.toLowerCase() === 'india') ||
+      (user?.country?.toLowerCase() === 'india');
+    setSelectedGateway(isDomestic ? 'razorpay' : 'stripe');
+    setWireReference('');
+    setWireReceiptUrl('');
+    setWireNotes('');
     setPaymentError('');
     setPaymentSuccess('');
+    setPaymentModalOpen(true);
+  };
+
+  const handleRazorpayCheckout = async () => {
+    if (!activeOrderForPayment) return;
+    setIsProcessing(true);
+    setPaymentError('');
 
     try {
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        throw new Error('Failed to load Razorpay SDK. Please check your internet connection.');
+      }
+
       const initRes = await apiClient.post('/payments/initiate', {
-        orderId,
+        orderId: activeOrderForPayment._id,
         gateway: 'razorpay',
-        milestoneIndex,
+        milestoneIndex: activeMilestoneIndex,
       });
 
       if (!initRes.data.success) {
@@ -264,92 +319,222 @@ const Orders = () => {
 
       const paymentData = initRes.data;
 
-      if (paymentData.gateway === 'razorpay') {
-        const isMock = !paymentData.key || paymentData.key.startsWith('mock_');
-
-        if (isMock) {
-          setTimeout(async () => {
-            try {
-              const confirmRes = await apiClient.post('/payments/confirm', {
-                orderId,
-                paymentId: 'mock_milestone_pay_' + Date.now(),
-                gateway: 'mock',
-                status: 'success',
-                milestoneIndex,
-              });
-
-              if (confirmRes.data.success) {
-                setPaymentSuccess('Payment successful! Next milestone unlocked.');
-                refetch();
-              } else {
-                throw new Error(confirmRes.data.message || 'Failed to confirm mock payment');
-              }
-            } catch (confirmErr) {
-              setPaymentError(confirmErr.message || 'Failed to process payment');
-            } finally {
-              setIsProcessing(false);
+      if (!paymentData.key || paymentData.key.startsWith('mock_')) {
+        setTimeout(async () => {
+          try {
+            const confirmRes = await apiClient.post('/payments/confirm', {
+              orderId: activeOrderForPayment._id,
+              paymentId: 'mock_rzp_' + Date.now(),
+              gateway: 'mock',
+              status: 'success',
+              milestoneIndex: activeMilestoneIndex,
+            });
+            if (confirmRes.data.success) {
+              setPaymentSuccess('Payment completed successfully!');
+              setPaymentModalOpen(false);
+              refetch();
+            } else {
+              throw new Error(confirmRes.data.message || 'Verification failed');
             }
-          }, 1500);
-          return;
-        }
-
-        const options = {
-          key: paymentData.key,
-          amount: paymentData.amount,
-          currency: paymentData.currency,
-          name: 'Cocoveera Export',
-          description: `Milestone ${milestoneIndex + 1} payment for Order #${orderNumber || orderId}`,
-          order_id: paymentData.id,
-          handler: async function (response) {
-            try {
-              const confirmRes = await apiClient.post('/payments/confirm', {
-                orderId,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                paymentId: response.razorpay_payment_id,
-                gateway: 'razorpay',
-                status: 'success',
-                milestoneIndex,
-              });
-
-              if (confirmRes.data.success) {
-                setPaymentSuccess('Payment completed successfully!');
-                refetch();
-              } else {
-                throw new Error(confirmRes.data.message || 'Verification failed');
-              }
-            } catch (err) {
-              setPaymentError(err.response?.data?.message || err.message || 'Verification failed.');
-            } finally {
-              setIsProcessing(false);
-            }
-          },
-          prefill: {
-            name: user?.name || '',
-            email: user?.email || '',
-            contact: user?.phone || '',
-          },
-          theme: { color: '#2E7D32' },
-          modal: {
-            ondismiss: function () {
-              setIsProcessing(false);
-            },
-          },
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response) {
-          setPaymentError('Payment failed: ' + response.error.description);
-          setIsProcessing(false);
-        });
-        rzp.open();
+          } catch (e) {
+            setPaymentError(e.message);
+          } finally {
+            setIsProcessing(false);
+          }
+        }, 1000);
+        return;
       }
+
+      const options = {
+        key: paymentData.key,
+        amount: paymentData.amount,
+        currency: paymentData.currency || 'INR',
+        name: 'Cocoveera Export',
+        description: `Milestone ${activeMilestoneIndex + 1} payment for Order #${activeOrderForPayment.orderNumber || activeOrderForPayment._id}`,
+        order_id: paymentData.id,
+        handler: async function (response) {
+          try {
+            setIsProcessing(true);
+            const verifyRes = await apiClient.post('/payments/verify-payment', {
+              orderId: activeOrderForPayment._id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              milestoneIndex: activeMilestoneIndex,
+            });
+
+            if (verifyRes.data.success) {
+              setPaymentSuccess('Payment verified successfully! Next milestone unlocked.');
+              setPaymentModalOpen(false);
+              refetch();
+            } else {
+              throw new Error(verifyRes.data.message || 'Verification failed');
+            }
+          } catch (err) {
+            setPaymentError(err.response?.data?.message || err.message || 'Verification failed.');
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: user?.phone || '',
+        },
+        theme: { color: '#2E7D32' },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        setPaymentError('Payment failed: ' + (response.error?.description || 'Gateway error'));
+        setIsProcessing(false);
+      });
+      rzp.open();
     } catch (err) {
       setPaymentError(err.response?.data?.message || err.message || 'Could not connect to payment gateway.');
       setIsProcessing(false);
     }
   };
+
+  const handleWireSubmit = async () => {
+    if (!activeOrderForPayment) return;
+    if (!wireReference.trim()) {
+      setPaymentError('Please enter your Bank UTR / Transaction Reference Number.');
+      return;
+    }
+
+    setIsProcessing(true);
+    setPaymentError('');
+
+    try {
+      const res = await apiClient.post('/payments/submit-wire', {
+        orderId: activeOrderForPayment._id,
+        milestoneIndex: activeMilestoneIndex,
+        transactionReference: wireReference.trim(),
+        paymentProofUrl: wireReceiptUrl.trim(),
+        notes: wireNotes.trim(),
+      });
+
+      if (res.data.success) {
+        setPaymentSuccess('Wire transfer details submitted! Status updated to Under Review.');
+        setTimeout(() => {
+          setPaymentModalOpen(false);
+          refetch();
+        }, 1500);
+      } else {
+        throw new Error(res.data.message || 'Failed to submit wire transfer details');
+      }
+    } catch (err) {
+      setPaymentError(err.response?.data?.message || err.message || 'Failed to submit wire proof.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleStripeCheckout = async () => {
+    if (!activeOrderForPayment) return;
+    setIsProcessing(true);
+    setPaymentError('');
+    try {
+      const initRes = await apiClient.post('/payments/initiate', {
+        orderId: activeOrderForPayment._id,
+        gateway: 'stripe',
+        milestoneIndex: activeMilestoneIndex,
+      });
+      if (!initRes.data.success) throw new Error(initRes.data.message || 'Failed to initiate Stripe session');
+
+      const confirmRes = await apiClient.post('/payments/confirm', {
+        orderId: activeOrderForPayment._id,
+        paymentId: 'stripe_' + (initRes.data.clientSecret || Date.now()),
+        gateway: 'stripe',
+        status: 'success',
+        milestoneIndex: activeMilestoneIndex,
+      });
+      if (confirmRes.data.success) {
+        setPaymentSuccess('Stripe card payment processed successfully!');
+        setTimeout(() => {
+          setPaymentModalOpen(false);
+          refetch();
+        }, 1200);
+      } else {
+        throw new Error(confirmRes.data.message || 'Stripe payment confirmation failed');
+      }
+    } catch (err) {
+      setPaymentError(err.response?.data?.message || err.message || 'Stripe payment error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePaypalCheckout = async () => {
+    if (!activeOrderForPayment) return;
+    setIsProcessing(true);
+    setPaymentError('');
+    try {
+      const initRes = await apiClient.post('/payments/initiate', {
+        orderId: activeOrderForPayment._id,
+        gateway: 'paypal',
+        milestoneIndex: activeMilestoneIndex,
+      });
+      if (!initRes.data.success) throw new Error(initRes.data.message || 'Failed to initiate PayPal session');
+
+      const confirmRes = await apiClient.post('/payments/confirm', {
+        orderId: activeOrderForPayment._id,
+        paymentId: 'paypal_' + (initRes.data.orderId || Date.now()),
+        gateway: 'paypal',
+        status: 'success',
+        milestoneIndex: activeMilestoneIndex,
+      });
+      if (confirmRes.data.success) {
+        setPaymentSuccess('PayPal payment processed successfully!');
+        setTimeout(() => {
+          setPaymentModalOpen(false);
+          refetch();
+        }, 1200);
+      } else {
+        throw new Error(confirmRes.data.message || 'PayPal payment confirmation failed');
+      }
+    } catch (err) {
+      setPaymentError(err.response?.data?.message || err.message || 'PayPal payment error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  class OrderCardErrorBoundary extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false };
+    }
+    static getDerivedStateFromError() {
+      return { hasError: true };
+    }
+    componentDidCatch(err, info) {
+      console.error('OrderCard rendering error:', err, info);
+    }
+    render() {
+      if (this.state.hasError) {
+        return (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900">
+            <p className="font-bold">Order Details Temporary Display Issue</p>
+            <p className="text-stone-600 mt-1">This order's details encountered an issue during display.</p>
+            <button
+              onClick={() => this.setState({ hasError: false })}
+              className="mt-2 px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded font-semibold cursor-pointer"
+            >
+              Retry Order
+            </button>
+          </div>
+        );
+      }
+      return this.props.children;
+    }
+  }
 
   // Reusable Single Order Card Item
   const OrderCardItem = React.memo(({ order, idx }) => {
@@ -399,17 +584,41 @@ const Orders = () => {
       const milestones = Array.isArray(order.paymentMilestones) ? order.paymentMilestones : [];
       if (milestones.length === 0) return null;
       return (
-        <div className="space-y-1 mt-1">
-          {milestones.map((m, mIdx) => (
-            <div key={mIdx} className="flex items-center gap-2 text-xs">
-              <span className={m.paid ? 'text-green-600 font-bold' : 'text-stone-400'}>
-                {m.paid ? '✓' : '○'}
-              </span>
-              <span className={m.paid ? 'font-bold text-stone-800' : 'text-stone-500'}>
-                {m.name || `Milestone ${mIdx + 1}`}: {m.percentage || 0}% ({convertCurrency(m.amount || 0, order.currency || user?.currency || 'USD').formatted})
-              </span>
-            </div>
-          ))}
+        <div className="space-y-1.5 mt-1">
+          {milestones.map((m, mIdx) => {
+            const isPaid = m.status === 'Paid' || m.paid;
+            const isUnderReview = m.status === 'Under Review';
+            const isPending = m.status === 'Pending';
+            const mTitle = m.milestoneType || m.name || `Milestone ${mIdx + 1}`;
+            const mPercent = m.percentage || (mIdx === 0 ? 40 : 20);
+            const mAmount = convertCurrency(m.amount || 0, order.currency || user?.currency || 'USD').formatted;
+
+            return (
+              <div key={mIdx} className="flex items-center gap-2 text-xs">
+                {isPaid ? (
+                  <span className="text-green-600 font-bold flex items-center">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </span>
+                ) : isUnderReview ? (
+                  <span className="text-amber-600 font-bold flex items-center" title="Under Admin Review">
+                    <Clock className="w-3.5 h-3.5" />
+                  </span>
+                ) : isPending ? (
+                  <span className="text-blue-600 font-bold">●</span>
+                ) : (
+                  <span className="text-stone-300">○</span>
+                )}
+                <span className={isPaid ? 'font-bold text-stone-800' : isUnderReview ? 'font-semibold text-amber-700' : isPending ? 'font-semibold text-blue-700' : 'text-stone-500'}>
+                  {mTitle}: {mPercent}% ({mAmount})
+                  {isUnderReview && (
+                    <span className="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">
+                      Under Review
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
         </div>
       );
     };
@@ -418,17 +627,35 @@ const Orders = () => {
     const renderCardActionButtons = () => {
       if (rawStatus === 'cancelled') return null;
 
+      const milestones = Array.isArray(order.paymentMilestones) ? order.paymentMilestones : [];
+
       if (progress === 0) {
+        const isUnderReview = milestones[0]?.status === 'Under Review';
         return (
           <>
-            <button
-              onClick={() => handlePayMilestone(order._id, 0, order.orderNumber || order._id)}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
-            >
-              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Pay 40% Advance & Start Production</span>
-            </button>
+            {isUnderReview ? (
+              <div className="flex items-center gap-2">
+                <span className="px-4 py-2 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+                  <span>Wire Payment Under Review</span>
+                </span>
+                <button
+                  onClick={() => openPaymentModal(order, 0)}
+                  className="text-xs text-[#2E7D32] hover:underline font-bold px-2 py-1 cursor-pointer"
+                >
+                  Update Reference
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => openPaymentModal(order, 0)}
+                disabled={isProcessing}
+                className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Pay 40% Advance & Start Production</span>
+              </button>
+            )}
             <button
               onClick={() => handleCancelClick(order._id)}
               className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-red-600 text-xs font-semibold rounded-full transition-colors cursor-pointer"
@@ -440,16 +667,32 @@ const Orders = () => {
       }
 
       if (progress === 40) {
+        const isUnderReview = milestones[1]?.status === 'Under Review';
         return (
           <>
-            <button
-              onClick={() => handlePayMilestone(order._id, 1, order.orderNumber || order._id)}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
-            >
-              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Pay 20% Second Milestone</span>
-            </button>
+            {isUnderReview ? (
+              <div className="flex items-center gap-2">
+                <span className="px-4 py-2 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+                  <span>Wire Payment Under Review</span>
+                </span>
+                <button
+                  onClick={() => openPaymentModal(order, 1)}
+                  className="text-xs text-[#2E7D32] hover:underline font-bold px-2 py-1 cursor-pointer"
+                >
+                  Update Reference
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => openPaymentModal(order, 1)}
+                disabled={isProcessing}
+                className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Pay 20% Second Milestone</span>
+              </button>
+            )}
             <button
               onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}
               className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
@@ -461,16 +704,32 @@ const Orders = () => {
       }
 
       if (progress === 60) {
+        const isUnderReview = milestones[2]?.status === 'Under Review';
         return (
           <>
-            <button
-              onClick={() => handlePayMilestone(order._id, 2, order.orderNumber || order._id)}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
-            >
-              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Pay 20% Third Milestone</span>
-            </button>
+            {isUnderReview ? (
+              <div className="flex items-center gap-2">
+                <span className="px-4 py-2 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+                  <span>Wire Payment Under Review</span>
+                </span>
+                <button
+                  onClick={() => openPaymentModal(order, 2)}
+                  className="text-xs text-[#2E7D32] hover:underline font-bold px-2 py-1 cursor-pointer"
+                >
+                  Update Reference
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => openPaymentModal(order, 2)}
+                disabled={isProcessing}
+                className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Pay 20% Third Milestone</span>
+              </button>
+            )}
             <button
               onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}
               className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
@@ -482,16 +741,32 @@ const Orders = () => {
       }
 
       if (progress === 80) {
+        const isUnderReview = milestones[3]?.status === 'Under Review';
         return (
           <>
-            <button
-              onClick={() => handlePayMilestone(order._id, 3, order.orderNumber || order._id)}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
-            >
-              {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Pay Final 20% Balance</span>
-            </button>
+            {isUnderReview ? (
+              <div className="flex items-center gap-2">
+                <span className="px-4 py-2 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+                  <span>Wire Payment Under Review</span>
+                </span>
+                <button
+                  onClick={() => openPaymentModal(order, 3)}
+                  className="text-xs text-[#2E7D32] hover:underline font-bold px-2 py-1 cursor-pointer"
+                >
+                  Update Reference
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => openPaymentModal(order, 3)}
+                disabled={isProcessing}
+                className="px-4 py-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-full transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                {isProcessing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Pay Final 20% Balance</span>
+              </button>
+            )}
             <button
               onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}
               className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-850 text-xs font-semibold rounded-full border border-stone-300 shadow-sm transition-colors cursor-pointer"
@@ -713,7 +988,9 @@ const Orders = () => {
         >
           {({ index, style }) => (
             <div style={{ ...style, paddingBottom: '20px' }}>
-              <OrderCardItem order={orders[index]} idx={index} />
+              <OrderCardErrorBoundary>
+                <OrderCardItem order={orders[index]} idx={index} />
+              </OrderCardErrorBoundary>
             </div>
           )}
         </List>
@@ -723,7 +1000,9 @@ const Orders = () => {
     return (
       <div className="space-y-6">
         {orders.map((order, idx) => (
-          <OrderCardItem key={order._id} order={order} idx={idx} />
+          <OrderCardErrorBoundary key={order._id}>
+            <OrderCardItem order={order} idx={idx} />
+          </OrderCardErrorBoundary>
         ))}
       </div>
     );
@@ -830,6 +1109,369 @@ const Orders = () => {
                 Confirm Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Selection & Wire Transfer Modal */}
+      {paymentModalOpen && activeOrderForPayment && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl border border-stone-200 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#2E7D32] bg-[#E8F5E9] px-2.5 py-1 rounded-full">
+                  Secure B2B Payment
+                </span>
+                <h2 className="text-xl font-black text-stone-900 mt-2 font-poppins">
+                  Milestone #{activeMilestoneIndex + 1} Payment
+                </h2>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Order #{activeOrderForPayment.orderNumber || activeOrderForPayment._id?.slice(-8).toUpperCase()}
+                </p>
+              </div>
+              <button
+                onClick={() => setPaymentModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 hover:text-stone-800 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Amount Banner */}
+            {(() => {
+              const activeMilestone = activeOrderForPayment.paymentMilestones?.[activeMilestoneIndex];
+              const milestoneAmt = activeMilestone?.amount || (activeOrderForPayment.totalAmount * (activeMilestoneIndex === 0 ? 0.4 : 0.2));
+              const milestoneName = activeMilestone?.milestoneType || `Milestone ${activeMilestoneIndex + 1}`;
+              const isDomestic = (activeOrderForPayment.currency === 'INR') ||
+                (activeOrderForPayment.shippingAddress?.country?.toLowerCase() === 'india') ||
+                (user?.country?.toLowerCase() === 'india');
+
+              return (
+                <div className="my-5 space-y-4">
+                  <div className="bg-gradient-to-r from-[#F1F8E9] to-[#E8F5E9] p-4 rounded-2xl border border-[#2E7D32]/20 flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold text-stone-600 block uppercase tracking-wide">
+                        {milestoneName} ({activeMilestone?.percentage || (activeMilestoneIndex === 0 ? 40 : 20)}%)
+                      </span>
+                      <span className="text-xs text-stone-500">Total Order: {convertCurrency(activeOrderForPayment.totalAmount || 0, activeOrderForPayment.currency || user?.currency || 'INR').formatted}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-2xl font-black text-[#1B5E20]">
+                        {convertCurrency(milestoneAmt, activeOrderForPayment.currency || user?.currency || 'INR').formatted}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Payment Gateway Options */}
+                  <div>
+                    <label className="text-xs font-black uppercase tracking-wider text-stone-600 block mb-2">
+                      Select Payment Method
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {isDomestic ? (
+                        <>
+                          <div
+                            onClick={() => setSelectedGateway('razorpay')}
+                            className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
+                              selectedGateway === 'razorpay'
+                                ? 'border-[#2E7D32] bg-[#F1F8E9]/60 shadow-sm'
+                                : 'border-stone-200 hover:border-stone-300 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-[#2E7D32]" />
+                                Razorpay
+                              </span>
+                              <span className="text-[10px] bg-[#2E7D32] text-white px-2 py-0.5 rounded-full font-bold">
+                                Recommended
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-500 leading-relaxed">
+                              UPI, Cards (Debit/Credit), Net Banking & Wallets in INR.
+                            </p>
+                          </div>
+
+                          <div
+                            onClick={() => setSelectedGateway('wire')}
+                            className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
+                              selectedGateway === 'wire'
+                                ? 'border-[#2E7D32] bg-[#F1F8E9]/60 shadow-sm'
+                                : 'border-stone-200 hover:border-stone-300 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-[#2E7D32]" />
+                                Bank Wire (NEFT/RTGS)
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-500 leading-relaxed">
+                              Direct bank transfer to official company account with UTR.
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div
+                            onClick={() => setSelectedGateway('stripe')}
+                            className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
+                              selectedGateway === 'stripe'
+                                ? 'border-[#2E7D32] bg-[#F1F8E9]/60 shadow-sm'
+                                : 'border-stone-200 hover:border-stone-300 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-[#2E7D32]" />
+                                Stripe Card
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-500 leading-relaxed">
+                              Global credit / debit card processing in USD/EUR.
+                            </p>
+                          </div>
+
+                          <div
+                            onClick={() => setSelectedGateway('paypal')}
+                            className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
+                              selectedGateway === 'paypal'
+                                ? 'border-[#2E7D32] bg-[#F1F8E9]/60 shadow-sm'
+                                : 'border-stone-200 hover:border-stone-300 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                                <span className="font-black text-blue-700">P</span>
+                                PayPal
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-500 leading-relaxed">
+                              Pay securely using your PayPal account balance or cards.
+                            </p>
+                          </div>
+
+                          <div
+                            onClick={() => setSelectedGateway('wire')}
+                            className={`col-span-1 sm:col-span-2 p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
+                              selectedGateway === 'wire'
+                                ? 'border-[#2E7D32] bg-[#F1F8E9]/60 shadow-sm'
+                                : 'border-stone-200 hover:border-stone-300 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-[#2E7D32]" />
+                                International Wire Transfer (SWIFT / T/T)
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-500 leading-relaxed">
+                              Telegraphic transfer to our global export bank account with SWIFT code.
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Gateway Content Section */}
+                  {selectedGateway === 'wire' ? (
+                    <div className="space-y-4 pt-2">
+                      {/* Bank Details Card */}
+                      <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 text-xs space-y-2">
+                        <div className="flex items-center justify-between pb-2 border-b border-stone-200">
+                          <span className="font-extrabold text-stone-700 uppercase tracking-wide flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5 text-[#2E7D32]" />
+                            Official Company Bank Account
+                          </span>
+                          <span className="text-[10px] text-green-700 font-bold bg-green-100 px-2 py-0.5 rounded">
+                            Verified Beneficiary
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                          <div>
+                            <span className="text-stone-400 block font-semibold">Beneficiary Name</span>
+                            <span className="font-bold text-stone-800">COCOVEERA EXPORTS PRIVATE LIMITED</span>
+                          </div>
+                          <div>
+                            <span className="text-stone-400 block font-semibold">Bank Name</span>
+                            <span className="font-bold text-stone-800">HDFC BANK LTD</span>
+                          </div>
+                          <div>
+                            <span className="text-stone-400 block font-semibold">Account Number</span>
+                            <div className="flex items-center gap-1 font-mono font-bold text-stone-900">
+                              <span>50200088912345</span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard('50200088912345', 'acc')}
+                                className="text-stone-400 hover:text-stone-700 cursor-pointer"
+                                title="Copy"
+                              >
+                                {copiedField === 'acc' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-stone-400 block font-semibold">IFSC Code</span>
+                            <div className="flex items-center gap-1 font-mono font-bold text-stone-900">
+                              <span>HDFC0001234</span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard('HDFC0001234', 'ifsc')}
+                                className="text-stone-400 hover:text-stone-700 cursor-pointer"
+                                title="Copy"
+                              >
+                                {copiedField === 'ifsc' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-stone-400 block font-semibold">SWIFT / BIC</span>
+                            <div className="flex items-center gap-1 font-mono font-bold text-stone-900">
+                              <span>HDFCINBBXXX</span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard('HDFCINBBXXX', 'swift')}
+                                className="text-stone-400 hover:text-stone-700 cursor-pointer"
+                                title="Copy"
+                              >
+                                {copiedField === 'swift' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-stone-400 block font-semibold">Branch</span>
+                            <span className="font-bold text-stone-800">Coimbatore Main, Tamil Nadu, India</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Wire Form */}
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-bold text-stone-700 block mb-1">
+                            Transaction / UTR Reference Number <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. UTR1234567890 / SWIFT-REF-892"
+                            value={wireReference}
+                            onChange={(e) => setWireReference(e.target.value)}
+                            className="w-full bg-white border border-stone-300 rounded-xl px-3.5 py-2.5 text-xs font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-stone-700 block mb-1">
+                            Receipt / Proof URL (Optional)
+                          </label>
+                          <input
+                            type="url"
+                            placeholder="https://drive.google.com/... or receipt link"
+                            value={wireReceiptUrl}
+                            onChange={(e) => setWireReceiptUrl(e.target.value)}
+                            className="w-full bg-white border border-stone-300 rounded-xl px-3.5 py-2.5 text-xs font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-stone-700 block mb-1">
+                            Notes / Remarks (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Remitter bank name, date of transfer, etc."
+                            value={wireNotes}
+                            onChange={(e) => setWireNotes(e.target.value)}
+                            className="w-full bg-white border border-stone-300 rounded-xl px-3.5 py-2.5 text-xs font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32]"
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleWireSubmit}
+                          disabled={isProcessing}
+                          className="w-full py-3 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+                        >
+                          {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                          <span>Submit Wire Transfer Reference</span>
+                        </button>
+                        <p className="text-[10px] text-stone-400 text-center">
+                          Once submitted, our finance officer verifies the bank credit and updates your milestone to Paid.
+                        </p>
+                      </div>
+                    </div>
+                  ) : selectedGateway === 'razorpay' ? (
+                    <div className="pt-2 space-y-3">
+                      <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
+                        <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold block">Instant Automated Verification</span>
+                          <span className="text-[11px] text-blue-800 leading-relaxed">
+                            Click below to open the Razorpay checkout overlay. Supports UPI, Google Pay, PhonePe, Netbanking, and Debit/Credit Cards. Your milestone unlocks immediately upon payment.
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleRazorpayCheckout}
+                        disabled={isProcessing}
+                        className="w-full py-3 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                        <span>Proceed to Razorpay Checkout ({convertCurrency(milestoneAmt, activeOrderForPayment.currency || user?.currency || 'INR').formatted})</span>
+                      </button>
+                    </div>
+                  ) : selectedGateway === 'stripe' ? (
+                    <div className="pt-2 space-y-3">
+                      <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl text-xs text-purple-900 flex items-start gap-2.5">
+                        <ShieldCheck className="w-4 h-4 text-purple-700 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold block">Stripe Global Processing</span>
+                          <span className="text-[11px] text-purple-800 leading-relaxed">
+                            Pay with international credit or debit cards. 256-bit SSL encrypted.
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleStripeCheckout}
+                        disabled={isProcessing}
+                        className="w-full py-3 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                        <span>Pay via Stripe ({convertCurrency(milestoneAmt, activeOrderForPayment.currency || user?.currency || 'USD').formatted})</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="pt-2 space-y-3">
+                      <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+                        <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold block">PayPal Checkout</span>
+                          <span className="text-[11px] text-amber-800 leading-relaxed">
+                            Pay using PayPal balance or linked international cards.
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handlePaypalCheckout}
+                        disabled={isProcessing}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                        <span>Pay via PayPal ({convertCurrency(milestoneAmt, activeOrderForPayment.currency || user?.currency || 'USD').formatted})</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

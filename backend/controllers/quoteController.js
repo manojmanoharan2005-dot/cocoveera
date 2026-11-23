@@ -12,6 +12,7 @@ import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import { sendQuoteRevisionRequestEmail, sendQuoteResponseEmail } from '../utils/mailer.js';
 import { generateAndStoreDocument, generateSequentialNumber } from '../utils/documentService.js';
+import { calculatePaymentMilestones } from '../utils/pricingEngine.js';
 
 // Helper to check and update quote expiration status dynamically
 const checkQuoteExpiration = async (quote) => {
@@ -371,38 +372,8 @@ export const acceptQuote = async (req, res) => {
           }
         ];
 
-    // Setup payment milestones
-    const paymentMilestones = [
-      {
-        milestoneType: '40% Advance Payment',
-        percentage: 40,
-        amount: Math.round(totalAmt * 0.40 * 100) / 100,
-        currency: quote.currency || 'USD',
-        status: 'Pending',
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
-      },
-      {
-        milestoneType: '60% Payment Unlocked',
-        percentage: 20,
-        amount: Math.round(totalAmt * 0.20 * 100) / 100,
-        currency: quote.currency || 'USD',
-        status: 'Locked',
-      },
-      {
-        milestoneType: '80% Payment Unlocked',
-        percentage: 20,
-        amount: Math.round(totalAmt * 0.20 * 100) / 100,
-        currency: quote.currency || 'USD',
-        status: 'Locked',
-      },
-      {
-        milestoneType: '100% Final Payment',
-        percentage: 20,
-        amount: Math.round(totalAmt * 0.20 * 100) / 100,
-        currency: quote.currency || 'USD',
-        status: 'Locked',
-      },
-    ];
+    // Setup decimal-safe payment milestones (with final installment remainder adjustment)
+    const paymentMilestones = calculatePaymentMilestones(totalAmt, quote.currency || 'USD');
 
     // Create the Order
     const order = await Order.create({

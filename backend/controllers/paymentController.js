@@ -1071,3 +1071,261 @@ export const getPaymentSyncStatus = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Submit bank wire transfer payment proof
+// @route   POST /api/payments/submit-wire
+// @access  Private
+export const submitWireTransferProof = async (req, res) => {
+  const { orderId, milestoneIndex, transactionReference, paymentProofUrl, notes } = req.body;
+  const isMilestone = milestoneIndex !== undefined && milestoneIndex !== null;
+  const idx = isMilestone ? parseInt(milestoneIndex) : 0;
+
+  try {
+    const order = await Order.findById(orderId).populate('user', 'name email phone companyName');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Verify user owns order or is admin
+    if (order.user._id.toString() !== req.user._id.toString() && !['admin', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Not authorized to submit payment for this order' });
+    }
+
+    if (!transactionReference || !transactionReference.trim()) {
+      return res.status(400).json({ success: false, message: 'Transaction reference (UTR / Wire Ref) is required' });
+    }
+
+    const cleanRef = transactionReference.trim();
+
+    // Check milestone validity
+    if (isMilestone && order.paymentMilestones && order.paymentMilestones[idx]) {
+      if (order.paymentMilestones[idx].status === 'Paid') {
+        return res.status(400).json({ success: false, message: 'This milestone has already been paid and verified' });
+      }
+      order.paymentMilestones[idx].status = 'Under Review';
+      order.paymentMilestones[idx].transactionRef = cleanRef;
+      if (paymentProofUrl) order.paymentMilestones[idx].proofUrl = paymentProofUrl;
+      order.paymentMilestones[idx].submittedAt = new Date();
+    }
+
+    order.paymentGateway = 'wire';
+    order.paymentStatus = 'payment_under_review';
+    order.transactionReference = cleanRef;
+    if (paymentProofUrl) order.paymentProofUrl = paymentProofUrl;
+
+    // Add Timeline event
+    try {
+      const Timeline = (await import('../models/Timeline.js')).default;
+      const milestoneLabel = isMilestone && order.paymentMilestones?.[idx]
+        ? order.paymentMilestones[idx].milestoneType
+        : 'Payment';
+      await Timeline.create({
+        order: order._id,
+        status: 'PAYMENT UNDER REVIEW',
+        title: `Bank Wire Proof Submitted`,
+        description: `Customer submitted wire transfer reference: ${cleanRef} for ${milestoneLabel}. Pending admin verification.`,
+      });
+    } catch (e) {
+      console.warn('[Timeline error]', e.message);
+    }
+
+    await order.save();
+
+    // Notify Admin via email
+    try {
+      const SibApiV3Sdk = (await import('sib-api-v3-sdk')).default;
+      const defaultClient = SibApiV3Sdk.ApiClient.instance;
+      defaultClient.basePath = 'https://api.brevo.com/v3';
+      const apiKey = defaultClient.authentications['api-key'];
+      apiKey.apiKey = process.env.BREVO_API_KEY;
+      const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+      const adminEmail = process.env.ADMIN_EMAIL || 'adminteam@cocoveera.com';
+      const orderShortId = order._id.toString().slice(-8).toUpperCase();
+      const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+      sendSmtpEmail.subject = `[Action Required] Bank Wire Payment Proof Submitted – Order #${orderShortId}`;
+      sendSmtpEmail.sender = { name: 'Cocoveera System', email: 'servicedesk@cocoveera.com' };
+      sendSmtpEmail.to = [{ email: adminEmail, name: 'Cocoveera Admin' }];
+      sendSmtpEmail.htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2 style="color: #2E7D32;">Bank Wire Payment Proof Submitted</h2>
+          <p>A customer has submitted bank wire transfer proof for verification:</p>
+          <ul>
+            <li><strong>Order ID:</strong> #${orderShortId}</li>
+            <li><strong>Customer:</strong> ${order.user?.name} (${order.user?.email})</li>
+            <li><strong>Company:</strong> ${order.user?.companyName || 'N/A'}</li>
+            <li><strong>Milestone:</strong> ${order.paymentMilestones?.[idx]?.milestoneType || 'Initial'}</li>
+            <li><strong>Amount:</strong> ${order.currency} ${order.paymentMilestones?.[idx]?.amount || order.totalAmount}</li>
+            <li><strong>Transaction / UTR Reference:</strong> <code>${cleanRef}</code></li>
+            <li><strong>Proof Document / Receipt:</strong> ${paymentProofUrl ? `<a href="${paymentProofUrl}">View Document</a>` : 'None attached'}</li>
+            ${notes ? `<li><strong>Notes:</strong> ${notes}</li>` : ''}
+          </ul>
+          <p><a href="https://www.cocoveera.com/admin/orders" style="display:inline-block; padding:10px 18px; background:#2E7D32; color:#fff; text-decoration:none; border-radius:4px;">Open Admin Orders Portal</a></p>
+        </div>
+      `;
+      if (process.env.BREVO_API_KEY && !process.env.BREVO_API_KEY.startsWith('mock_')) {
+        await apiInstance.sendTransacEmail(sendSmtpEmail);
+      }
+    } catch (mailErr) {
+      console.warn('[Admin Wire Notification Mail Error]', mailErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Wire transfer details submitted successfully. Your payment is currently under admin verification.',
+      data: order,
+    });
+  } catch (error) {
+    console.error('[submitWireTransferProof] Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Handle Razorpay Webhook
+// @route   POST /api/payments/webhook/razorpay
+// @access  Public (Webhook)
+export const handleRazorpayWebhook = async (req, res) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_SECRET;
+    const signature = req.headers['x-razorpay-signature'];
+
+    if (webhookSecret && signature && req.rawBody) {
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(req.rawBody)
+        .digest('hex');
+
+      if (expectedSignature !== signature) {
+        console.warn('[Razorpay Webhook] Signature mismatch');
+        return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
+      }
+    }
+
+    const event = req.body;
+    console.log(`[Razorpay Webhook] Received event: ${event?.event}`);
+
+    if (event?.event === 'order.paid' || event?.event === 'payment.captured') {
+      const paymentEntity = event.payload?.payment?.entity || event.payload?.order?.entity;
+      const notes = paymentEntity?.notes || {};
+      const orderId = notes.orderId;
+      const milestoneIndex = notes.milestoneIndex !== undefined && notes.milestoneIndex !== '' ? parseInt(notes.milestoneIndex) : null;
+      const paymentId = paymentEntity?.id;
+
+      if (orderId && paymentId) {
+        const order = await Order.findById(orderId).populate('user', 'name email phone');
+        if (order) {
+          const isMilestone = milestoneIndex !== null && !isNaN(milestoneIndex);
+          if (isMilestone && order.paymentMilestones?.[milestoneIndex]?.status !== 'Paid') {
+            const paidAmount = order.paymentMilestones[milestoneIndex].amount;
+            const milestoneDescription = `Milestone payment for ${order.paymentMilestones[milestoneIndex].milestoneType} (Order ${order._id})`;
+            await applyPaymentToOrder(order, { milestoneIndex, effectivePaymentId: paymentId, gateway: 'razorpay', paidAmount, milestoneDescription });
+            await upsertPaymentRecord({ transactionId: paymentId, orderId: order._id, amount: paidAmount, method: 'razorpay', description: milestoneDescription, userId: order.user?._id });
+            runPostPaymentSideEffects(order).catch(e => console.error('[Webhook SideEffects]', e));
+          } else if (!isMilestone && order.paymentStatus !== 'paid') {
+            const paidAmount = order.totalAmount;
+            const milestoneDescription = `Full payment for Order ${order._id}`;
+            await applyPaymentToOrder(order, { milestoneIndex: null, effectivePaymentId: paymentId, gateway: 'razorpay', paidAmount, milestoneDescription });
+            await upsertPaymentRecord({ transactionId: paymentId, orderId: order._id, amount: paidAmount, method: 'razorpay', description: milestoneDescription, userId: order.user?._id });
+            runPostPaymentSideEffects(order).catch(e => console.error('[Webhook SideEffects]', e));
+          }
+        }
+      }
+    }
+
+    res.status(200).json({ status: 'ok' });
+  } catch (error) {
+    console.error('[handleRazorpayWebhook] Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Handle Stripe Webhook
+// @route   POST /api/payments/webhook/stripe
+// @access  Public (Webhook)
+export const handleStripeWebhook = async (req, res) => {
+  try {
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    let event = req.body;
+
+    if (webhookSecret && sig && req.rawBody && process.env.STRIPE_SECRET && !process.env.STRIPE_SECRET.startsWith('mock_')) {
+      const activeStripe = new Stripe(process.env.STRIPE_SECRET);
+      try {
+        event = activeStripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+      } catch (err) {
+        console.warn(`[Stripe Webhook] Verification failed: ${err.message}`);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+      }
+    }
+
+    console.log(`[Stripe Webhook] Received event: ${event?.type}`);
+
+    if (event?.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data?.object;
+      const orderId = paymentIntent?.metadata?.orderId;
+      const milestoneIndex = paymentIntent?.metadata?.milestoneIndex !== undefined && paymentIntent?.metadata?.milestoneIndex !== ''
+        ? parseInt(paymentIntent.metadata.milestoneIndex)
+        : null;
+      const paymentId = paymentIntent?.id;
+
+      if (orderId && paymentId) {
+        const order = await Order.findById(orderId).populate('user', 'name email phone');
+        if (order) {
+          const isMilestone = milestoneIndex !== null && !isNaN(milestoneIndex);
+          if (isMilestone && order.paymentMilestones?.[milestoneIndex]?.status !== 'Paid') {
+            const paidAmount = order.paymentMilestones[milestoneIndex].amount;
+            const milestoneDescription = `Milestone payment for ${order.paymentMilestones[milestoneIndex].milestoneType} (Order ${order._id})`;
+            await applyPaymentToOrder(order, { milestoneIndex, effectivePaymentId: paymentId, gateway: 'stripe', paidAmount, milestoneDescription });
+            await upsertPaymentRecord({ transactionId: paymentId, orderId: order._id, amount: paidAmount, method: 'stripe', description: milestoneDescription, userId: order.user?._id });
+            runPostPaymentSideEffects(order).catch(e => console.error('[Webhook SideEffects]', e));
+          } else if (!isMilestone && order.paymentStatus !== 'paid') {
+            const paidAmount = order.totalAmount;
+            const milestoneDescription = `Full Stripe payment for Order ${order._id}`;
+            await applyPaymentToOrder(order, { milestoneIndex: null, effectivePaymentId: paymentId, gateway: 'stripe', paidAmount, milestoneDescription });
+            await upsertPaymentRecord({ transactionId: paymentId, orderId: order._id, amount: paidAmount, method: 'stripe', description: milestoneDescription, userId: order.user?._id });
+            runPostPaymentSideEffects(order).catch(e => console.error('[Webhook SideEffects]', e));
+          }
+        }
+      }
+    }
+
+    res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('[handleStripeWebhook] Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Handle PayPal Webhook
+// @route   POST /api/payments/webhook/paypal
+// @access  Public (Webhook)
+export const handlePaypalWebhook = async (req, res) => {
+  try {
+    const event = req.body;
+    console.log(`[PayPal Webhook] Event: ${event?.event_type}`);
+
+    if (event?.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
+      const capture = event.resource;
+      const orderId = capture?.custom_id || capture?.supplementary_data?.related_ids?.order_id;
+      const paymentId = capture?.id;
+
+      if (orderId && paymentId) {
+        const order = await Order.findById(orderId).populate('user', 'name email phone');
+        if (order && order.paymentStatus !== 'paid') {
+          const paidAmount = order.totalAmount;
+          const milestoneDescription = `PayPal Payment for Order ${order._id}`;
+          await applyPaymentToOrder(order, { milestoneIndex: null, effectivePaymentId: paymentId, gateway: 'paypal', paidAmount, milestoneDescription });
+          await upsertPaymentRecord({ transactionId: paymentId, orderId: order._id, amount: paidAmount, method: 'paypal', description: milestoneDescription, userId: order.user?._id });
+          runPostPaymentSideEffects(order).catch(e => console.error('[PayPal Webhook SideEffects]', e));
+        }
+      }
+    }
+
+    res.status(200).json({ status: 'ok' });
+  } catch (error) {
+    console.error('[handlePaypalWebhook] Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export { computePaymentFields, applyPaymentToOrder, runPostPaymentSideEffects };

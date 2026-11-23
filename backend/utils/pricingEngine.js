@@ -142,3 +142,49 @@ export function formatQuotePrice(amount, currency = 'USD') {
   const num = Number(amount) || 0;
   return `${sym}${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+
+/**
+ * Decimal-safe four-milestone payment calculation.
+ * Ensures sum of all 4 milestones strictly equals totalAmount by adjusting
+ * the final installment for any rounding remainder.
+ */
+export function calculatePaymentMilestones(totalAmount, currency = 'USD') {
+  const total = Math.round((Number(totalAmount) || 0) * 100) / 100;
+  const m1 = Math.round(total * 0.40 * 100) / 100;
+  const m2 = Math.round(total * 0.20 * 100) / 100;
+  const m3 = Math.round(total * 0.20 * 100) / 100;
+  // Remainder-safe adjustment on final installment
+  const m4 = Math.round((total - m1 - m2 - m3) * 100) / 100;
+
+  return [
+    {
+      milestoneType: '40% Advance Payment',
+      percentage: 40,
+      amount: m1,
+      currency: currency || 'USD',
+      status: 'Pending',
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+    {
+      milestoneType: '60% Payment Unlocked',
+      percentage: 20,
+      amount: m2,
+      currency: currency || 'USD',
+      status: 'Locked',
+    },
+    {
+      milestoneType: '80% Payment Unlocked',
+      percentage: 20,
+      amount: m3,
+      currency: currency || 'USD',
+      status: 'Locked',
+    },
+    {
+      milestoneType: '100% Final Payment',
+      percentage: 20,
+      amount: m4,
+      currency: currency || 'USD',
+      status: 'Locked',
+    },
+  ];
+}

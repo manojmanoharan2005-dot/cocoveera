@@ -72,7 +72,7 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded', 'Awaiting Initial Payment', 'partially_paid'],
+      enum: ['pending', 'paid', 'failed', 'refunded', 'Awaiting Initial Payment', 'partially_paid', 'payment_under_review', 'Under Review'],
       default: 'pending',
     },
     paymentGateway: {
@@ -159,10 +159,13 @@ const OrderSchema = new mongoose.Schema(
         percentage: { type: Number, required: true },
         amount: { type: Number, required: true },
         currency: { type: String, required: true },
-        status: { type: String, enum: ['Pending', 'Paid', 'Locked'], default: 'Locked' },
+        status: { type: String, enum: ['Pending', 'Paid', 'Locked', 'Under Review'], default: 'Locked' },
         dueDate: { type: Date },
         paidAt: { type: Date },
         paymentId: { type: String, default: '' },
+        transactionRef: { type: String, default: '' },
+        proofUrl: { type: String, default: '' },
+        submittedAt: { type: Date },
       }
     ],
     totalContainers: {
