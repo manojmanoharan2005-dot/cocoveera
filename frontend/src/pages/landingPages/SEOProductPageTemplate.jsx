@@ -1,7 +1,7 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import SEO from "../../components/SEO";
-import { handleProtectedCTA } from "../../utils/productNavigation";
+import SEOInternalLinks from "../../components/SEOInternalLinks";
 
 import "./landingpageStyle.css";
 /**
@@ -53,20 +53,6 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
 
     const siteUrl = organizationUrl.replace(/\/$/, "");
     const canonicalUrl = `${siteUrl}${canonicalPath}`;
-    const navigate = useNavigate();
-
-    const handleCTANavigation = (e, target) => {
-        if (!target) return;
-        const isProtected = target.startsWith('/dashboard') || 
-                            target.startsWith('/request-quote') || 
-                            target.startsWith('/cart') || 
-                            target.startsWith('/checkout') || 
-                            target.startsWith('/orders');
-        if (isProtected) {
-            e.preventDefault();
-            handleProtectedCTA(navigate, canonicalPath, target);
-        }
-    };
 
     const structuredSchema = [
         {
@@ -83,6 +69,11 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                 "@type": "Brand",
                 name: organizationName,
             },
+            manufacturer: {
+                "@type": "Organization",
+                name: organizationName,
+                url: siteUrl,
+            },
         },
         {
             "@context": "https://schema.org",
@@ -97,12 +88,6 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                 {
                     "@type": "ListItem",
                     position: 2,
-                    name: "Products",
-                    item: `${siteUrl}/products`,
-                },
-                {
-                    "@type": "ListItem",
-                    position: 3,
                     name: breadcrumbName || productName,
                     item: canonicalUrl,
                 },
@@ -144,28 +129,22 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
             />
 
             {/* BREADCRUMB */}
-            <nav
+            {/* <nav
                 aria-label="Breadcrumb"
                 className="mx-auto w-full max-w-7xl px-5 pt-5 text-sm text-stone-500 sm:px-6 lg:px-8"
             >
                 <ol className="flex flex-wrap items-center gap-2">
                     <li>
-                        <Link to="/" className="transition hover:text-green-700">
+                        <Link to="/" className="transition hover:text-primary">
                             Home
                         </Link>
                     </li>
                     <li aria-hidden="true">/</li>
-                    <li>
-                        <Link to="/products" className="transition hover:text-green-700">
-                            Products
-                        </Link>
-                    </li>
-                    <li aria-hidden="true">/</li>
-                    <li className="font-medium text-stone-800" aria-current="page">
+                    <li className="font-medium text-stone-800">
                         {breadcrumbName || productName}
                     </li>
                 </ol>
-            </nav>
+            </nav> */}
 
             {/* HERO */}
             <section className="relative isolate">
@@ -204,7 +183,6 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                         <div className="mt-8 flex flex-wrap gap-3">
                             <a
                                 href={ctaButtonLink}
-                                onClick={(e) => handleCTANavigation(e, ctaButtonLink)}
                                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-800 px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-green-900"
                             >
                                 {ctaButtonText}
@@ -288,7 +266,6 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                         </dl>
                         <a
                             href={ctaButtonLink}
-                            onClick={(e) => handleCTANavigation(e, ctaButtonLink)}
                             className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-stone-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-green-900"
                         >
                             Request Product Information
@@ -493,18 +470,11 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
 
                         {/* LEFT IMAGE */}
                         <div className="why-choose-image">
-                            <img
-                                src={whyChooseSection.image || "/landing-page-images/why-choose.webp"}
-                                alt={whyChooseSection.imageAlt || "Why choose Cocoveera"}
-                                loading="lazy"
-                                decoding="async"
-                            />
-                            {whyChooseSection.badge && (
-                                <div className="why-image-badge">
-                                    <strong>{whyChooseSection.badge.value}</strong>
-                                    <span>{whyChooseSection.badge.label}</span>
-                                </div>
-                            )}
+                            <img src="/dashboard-bg.png" alt="Why choose Cocoveera" />
+                            <div className="why-image-badge">
+                                <strong>{whyChooseSection.badge.value}</strong>
+                                <span>{whyChooseSection.badge.label}</span>
+                            </div>
                         </div>
 
                         {/* <div className="why-choose-image relative">
@@ -587,7 +557,6 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                             {whyChooseSection.buttonText && (
                                 <a
                                     href={whyChooseSection.buttonLink || "/contact"}
-                                    onClick={(e) => handleCTANavigation(e, whyChooseSection.buttonLink || "/contact")}
                                     className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-green-800 px-6 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-green-900"
                                 >
                                     {whyChooseSection.buttonText}
@@ -595,41 +564,6 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                                 </a>
                             )}
 
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* FAQ */}
-            {faqs.length > 0 && (
-                <section className="bg-stone-50 py-10">
-                    <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
-                        <div className="section-heading text-start">
-                            <span className="text-xs font-bold tracking-[0.18em] text-green-800">
-                                NEED TO KNOW
-                            </span>
-                            <h2 className="mt-3 text-2xl font-bold text-stone-900 sm:text-3xl">
-                                Frequently Asked Questions
-                            </h2>
-                        </div>
-
-                        <div className="mt-8 space-y-3">
-                            {faqs.map((faq, index) => (
-                                <details
-                                    key={index}
-                                    className="group rounded-xl border border-stone-200 bg-white p-5"
-                                >
-                                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-stone-900 marker:hidden">
-                                        <span>{faq.question}</span>
-                                        <span className="text-xl text-green-800 transition group-open:rotate-45">
-                                            +
-                                        </span>
-                                    </summary>
-                                    <p className="mt-4 border-t border-stone-100 pt-4 text-sm leading-7 text-stone-600">
-                                        {faq.answer}
-                                    </p>
-                                </details>
-                            ))}
                         </div>
                     </div>
                 </section>
@@ -704,25 +638,43 @@ const SEOProductPageTemplate = ({ pageData = {} }) => {
                 </div>
             </section>
 
-            {/* <section className="bg-green-900 py-14 text-white sm:py-16">
-                <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-7 px-5 sm:px-6 md:flex-row md:items-center lg:px-8">
-                    <div className="max-w-3xl">
-                        <h2 className="text-2xl font-bold sm:text-3xl">
-                            {ctaTitle}
-                        </h2>
-                        <p className="mt-3 text-sm leading-7 text-green-50 sm:text-base">
-                            {ctaDescription}
-                        </p>
+            {/* FAQ */}
+            {faqs.length > 0 && (
+                <section className="bg-stone-50 py-10">
+                    <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
+                        <div className="section-heading text-start">
+                            <span className="text-xs font-bold tracking-[0.18em] text-green-800">
+                                NEED TO KNOW
+                            </span>
+                            <h2 className="mt-3 text-2xl font-bold text-stone-900 sm:text-3xl">
+                                Frequently Asked Questions
+                            </h2>
+                        </div>
+
+                        <div className="mt-8 space-y-3">
+                            {faqs.map((faq, index) => (
+                                <details
+                                    key={index}
+                                    className="group rounded-xl border border-stone-200 bg-white p-5"
+                                >
+                                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-stone-900 marker:hidden">
+                                        <span>{faq.question}</span>
+                                        <span className="text-xl text-green-800 transition group-open:rotate-45">
+                                            +
+                                        </span>
+                                    </summary>
+                                    <p className="mt-4 border-t border-stone-100 pt-4 text-sm leading-7 text-stone-600">
+                                        {faq.answer}
+                                    </p>
+                                </details>
+                            ))}
+                        </div>
                     </div>
-                    <a
-                        href={ctaButtonLink}
-                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-green-900 transition hover:bg-green-50"
-                    >
-                        {ctaButtonText}
-                        <span aria-hidden="true">→</span>
-                    </a>
-                </div>
-            </section> */}
+                </section>
+            )}
+
+            {/* SEO INTERNAL LINKING SECTION */}
+            <SEOInternalLinks />
         </main>
     );
 };

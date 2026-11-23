@@ -7,6 +7,7 @@ import { API_URL } from "../../utils/config";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import ImageWithFallback from "../../components/common/ImageWithFallback";
 import SEO from "../../components/SEO";
+import SEOInternalLinks from "../../components/SEOInternalLinks";
 import { useAuth } from "../../context/AuthContext";
 import { navigateToProduct } from "../../utils/productNavigation";
 
@@ -445,7 +446,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
                                 </h2>
 
                                 {(pageData.aboutParagraphs || [
-                                    "We are Cocoveera, a premier coconut substrate and coir sourcing platform focused on supplying dependable growing media to customers across global markets.",
+                                    "We are Cocoveera, a high-quality coir manufacturer and cocopeat supplier focused on supplying dependable growing media to customers across global markets.",
                                     "Our product range covers coco peat blocks, grow bags, coir chips, briquettes and other coir-based growing solutions, produced with attention to consistency, cleanliness and performance."
                                 ]).map((para, i) => (
                                     <p key={i}>{para}</p>
@@ -584,7 +585,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
 
                                                     <button
                                                         type="button"
-                                                        onClick={(e) => navigateToProduct(product, navigate, user, e, { returnUrl: pageData.canonicalPath || window.location.pathname })}
+                                                        onClick={(e) => navigateToProduct(product, navigate, user, e)}
                                                         className="primary-btn w-fit inline-flex items-center gap-1 cursor-pointer"
                                                     >
                                                         View Product <span>→</span>
@@ -826,7 +827,7 @@ const SEOLandingPageTemplate = ({ pageData }) => {
                                     <em>Committed to Quality</em>
                                 </h2>
                                 <p className="why-intro">
-                                    We combine the power of natural coconut coir with verified quality testing and sustainable sourcing to provide reliable growing solutions for modern agriculture, horticulture and gardening.
+                                    We combine the power of natural coconut coir with responsible manufacturing to create reliable and sustainable growing solutions for modern agriculture, horticulture and gardening.
                                 </p>
                                 <div className="why-benefits">
                                     <div className="why-benefit">
@@ -883,6 +884,53 @@ const SEOLandingPageTemplate = ({ pageData }) => {
                                             <p>Efficient order processing and dependable delivery support for every customer.</p>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ================= CTA ================= */}
+                <section className="cta-section" id="contact">
+                    <div className="cta-overlay"></div>
+                    <div className="container m-auto cta-container">
+                        <div className="cta-content">
+                            <span className="section-tag">GROW WITH COCOVEERA</span>
+                            <h2>
+                                Grow Better. Grow Naturally.
+                            </h2>
+                            <p>
+                                Discover sustainable coconut coir solutions designed to support healthier plants and a greener future.
+                            </p>
+                            <div className="cta-buttons">
+                                <Link to="/products" className="primary-btn">
+                                    Explore Our Products <span>→</span>
+                                </Link>
+                                <Link to="/contact" className="secondary-btn">
+                                    Get In Touch
+                                </Link>
+                            </div>
+                        </div>
+                        <div className="cta-features">
+                            <div>
+                                <span>✓</span>
+                                <div>
+                                    <strong>Natural Products</strong>
+                                    <small>Made from quality coconut coir</small>
+                                </div>
+                            </div>
+                            <div>
+                                <span>✓</span>
+                                <div>
+                                    <strong>Sustainable Solutions</strong>
+                                    <small>Better for plants and the planet</small>
+                                </div>
+                            </div>
+                            <div>
+                                <span>✓</span>
+                                <div>
+                                    <strong>Consistent Quality</strong>
+                                    <small>Reliable growing performance</small>
                                 </div>
                             </div>
                         </div>
@@ -949,52 +997,8 @@ const SEOLandingPageTemplate = ({ pageData }) => {
                     </div>
                 </section>
 
-                {/* ================= CTA ================= */}
-                <section className="cta-section" id="contact">
-                    <div className="cta-overlay"></div>
-                    <div className="container m-auto cta-container">
-                        <div className="cta-content">
-                            <span className="section-tag">GROW WITH COCOVEERA</span>
-                            <h2>
-                                Grow Better. Grow Naturally.
-                            </h2>
-                            <p>
-                                Discover sustainable coconut coir solutions designed to support healthier plants and a greener future.
-                            </p>
-                            <div className="cta-buttons">
-                                <Link to="/products" className="primary-btn">
-                                    Explore Our Products <span>→</span>
-                                </Link>
-                                <Link to="/contact" className="secondary-btn">
-                                    Get In Touch
-                                </Link>
-                            </div>
-                        </div>
-                        <div className="cta-features">
-                            <div>
-                                <span>✓</span>
-                                <div>
-                                    <strong>Natural Products</strong>
-                                    <small>Made from quality coconut coir</small>
-                                </div>
-                            </div>
-                            <div>
-                                <span>✓</span>
-                                <div>
-                                    <strong>Sustainable Solutions</strong>
-                                    <small>Better for plants and the planet</small>
-                                </div>
-                            </div>
-                            <div>
-                                <span>✓</span>
-                                <div>
-                                    <strong>Consistent Quality</strong>
-                                    <small>Reliable growing performance</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                {/* ================= SEO INTERNAL LINKING ================= */}
+                <SEOInternalLinks />
             </main>
         </>
     );
