@@ -112,7 +112,7 @@ export default function AdminQuoteRequests() {
               <Search className="absolute left-3 top-3 text-gray-400" size={16} />
               <input
                 type="text"
-                placeholder="Search by customer, company, email..."
+                placeholder="Search by Quote ID, customer, company, email..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -132,13 +132,15 @@ export default function AdminQuoteRequests() {
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-semibold"
             >
               <option value="">All Statuses</option>
+              <option value="submitted">New RFQs (Submitted)</option>
               <option value="NEW">New</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
+              <option value="pending_review">Pending Review</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
               <option value="INFO_REQUESTED">Info Requested</option>
               <option value="CUSTOMER_REPLIED">Customer Replied</option>
               <option value="CONTACTED">Contacted</option>
-              <option value="CLOSED">Closed</option>
+              <option value="expired">Closed / Expired</option>
             </select>
 
             {/* Filter Country */}
@@ -199,6 +201,9 @@ export default function AdminQuoteRequests() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      Quote ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Customer
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -241,6 +246,11 @@ export default function AdminQuoteRequests() {
 
                     return (
                       <tr key={req._id} className="hover:bg-gray-50 transition">
+                        <td className="px-6 py-4 text-xs font-mono font-bold">
+                          <span className="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-md border border-emerald-200 inline-block font-semibold">
+                            {req.quoteNumber || (req.linkedQuote?.quoteNumber || (req._id ? '#' + req._id.slice(-6).toUpperCase() : 'N/A'))}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
                           <div>{req.contactPerson}</div>
                           <div className="text-xs text-gray-400 font-normal">{req.email}</div>

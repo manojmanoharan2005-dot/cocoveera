@@ -147,8 +147,9 @@ export default function AdminQuoteRequestDetails() {
       const calculatedSubtotal = initialProducts.reduce((acc, curr) => acc + curr.subtotal, 0);
 
       // Pre-fill approve form default values
+      const qNum = data.quoteNumber || data.linkedQuote?.quoteNumber || `#${data._id.slice(-6).toUpperCase()}`;
       setApproveForm({
-        subject: `Quote Request Approved - Cocoveera Export (Ref: #${data._id.slice(-6).toUpperCase()})`,
+        subject: `Quote Request Approved - Cocoveera Export (${qNum})`,
         emailBody: `Dear ${data.contactPerson},\n\nWe have reviewed your quotation request. Attached is our official pricing proposal.`,
         price: data.price || calculatedSubtotal,
         currency: data.currency || 'USD',
@@ -383,9 +384,12 @@ export default function AdminQuoteRequestDetails() {
             {/* Header Details & Actions Bar */}
             <div className="bg-white rounded-2xl shadow p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-stone-200/60">
               <div>
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                  <span className="text-[11px] font-mono bg-emerald-50 text-emerald-800 font-bold px-3 py-1 rounded-full border border-emerald-200">
+                    Quote ID: {request.quoteNumber || request.linkedQuote?.quoteNumber || `#${request._id.slice(-6).toUpperCase()}`}
+                  </span>
                   <span className="text-[10px] bg-blue-100 text-blue-800 font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-blue-200">
-                    Reference: #{request._id.slice(-6).toUpperCase()}
+                    Ref: #{request._id.slice(-6).toUpperCase()}
                   </span>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-bold ${

@@ -46,7 +46,7 @@ const QuoteRequestSchema = new mongoose.Schema(
         product: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Product',
-          required: true,
+          required: false,
         },
         productName: {
           type: String,
@@ -55,14 +55,17 @@ const QuoteRequestSchema = new mongoose.Schema(
         category: {
           type: String,
           required: false,
+          default: '',
         },
         categoryName: {
           type: String,
-          required: true,
+          required: false,
+          default: 'General Coir Products',
         },
         quantity: {
           type: Number,
           required: true,
+          default: 1,
         },
       }
     ],
@@ -155,6 +158,11 @@ const QuoteRequestSchema = new mongoose.Schema(
       type: String,
       enum: ['FOB', 'CIF', 'CFR', 'EXW', 'DDP', ''],
       default: '',
+    },
+    quoteNumber: {
+      type: String,
+      default: '',
+      index: true,
     },
     preferredPort: {
       type: String,

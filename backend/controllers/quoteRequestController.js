@@ -100,8 +100,16 @@ export const submitQuoteRequest = async (req, res) => {
 
     const totalContainers = products.reduce((acc, p) => acc + (parseFloat(p.quantity) || 0), 0);
     const quantityStr = `${totalContainers.toFixed(2)} Containers`;
-    const categoryFallback = products[0]?.categoryName || category || 'Coco Substrates';
+    const categoryFallback = products[0]?.categoryName || products[0]?.category || category || 'Coco Substrates';
     const productFallback = products[0]?.product || productId || null;
+
+    products = products.map((p) => ({
+      product: p.product || productFallback || null,
+      productName: p.productName || 'Coco Substrates',
+      category: p.category || p.categoryName || categoryFallback || 'General Coir Products',
+      categoryName: p.categoryName || p.category || categoryFallback || 'General Coir Products',
+      quantity: parseFloat(p.quantity) || 1.0,
+    }));
 
     if (email && productFallback) {
       const activeDuplicate = await QuoteRequest.findOne({
@@ -124,7 +132,14 @@ export const submitQuoteRequest = async (req, res) => {
     // Map address string for legacy admin fields compatibility
     const compiledLegacyAddress = `${addressLine1}${addressLine2 ? ', ' + addressLine2 : ''}, ${city}, ${state}, ${postalCode}`;
 
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const day = String(new Date().getDate()).padStart(2, '0');
+    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+    const quoteNumber = `QT-${year}${month}${day}-${randomSuffix}`;
+
     const quoteRequest = await QuoteRequest.create({
+      quoteNumber,
       category: categoryFallback,
       product: productFallback,
       products,
@@ -197,12 +212,6 @@ export const submitQuoteRequest = async (req, res) => {
         }
       }
     }
-
-    const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    const day = String(new Date().getDate()).padStart(2, '0');
-    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
-    const quoteNumber = `QT-${year}${month}${day}-${randomSuffix}`;
 
     await Quote.create({
       quoteNumber,
@@ -318,21 +327,61 @@ export const getAdminQuoteRequests = async (req, res) => {
 
     let query = {};
 
-    // Apply Search (Contact Person, Company Name, Email)
-    if (search) {
-      query.$or = [
-        { contactPerson: { $regex: search, $options: 'i' } },
-        { companyName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
+    // Apply Search (Contact Person, Company Name, Email, Quote ID, Country)
+    if (search && search.trim()) {
+      const trimmedSearch = search.trim();
+      const searchRegex = { $regex: trimmedSearch, $options: 'i' };
+
+      // Also search linked RFQs by quoteNumber from Quote collection
+      const matchingQuotes = await Quote.find({ quoteNumber: searchRegex }, 'rfq').lean();
+      const matchingRfqIds = matchingQuotes.map((q) => q.rfq).filter(Boolean);
+
+      const orConditions = [
+        { contactPerson: searchRegex },
+        { companyName: searchRegex },
+        { email: searchRegex },
+        { quoteNumber: searchRegex },
+        { country: searchRegex },
       ];
+
+      if (matchingRfqIds.length > 0) {
+        orConditions.push({ _id: { $in: matchingRfqIds } });
+      }
+
+      query.$or = orConditions;
     }
 
-    // Apply Filters
-    if (status) {
-      query.status = status;
+    // Apply Status Filter with mapping for UI parameters vs database status enum values
+    if (status && status.trim()) {
+      const s = status.trim().toLowerCase();
+      if (s === 'submitted' || s === 'new') {
+        query.status = { $in: ['NEW', 'SUBMITTED', 'RFQ Submitted', 'new', 'submitted'] };
+      } else if (s === 'pending_review' || s === 'pending') {
+        query.status = {
+          $in: [
+            'PENDING',
+            'PENDING_REVIEW',
+            'Pending Review',
+            'INFO_REQUESTED',
+            'CUSTOMER_REPLIED',
+            'CONTACTED',
+            'pending_review',
+            'pending',
+          ],
+        };
+      } else if (s === 'approved') {
+        query.status = { $in: ['APPROVED', 'Quote Approved', 'CONFIRMED', 'QUOTED', 'approved'] };
+      } else if (s === 'rejected') {
+        query.status = { $in: ['REJECTED', 'Quote Rejected', 'rejected'] };
+      } else if (s === 'expired' || s === 'closed') {
+        query.status = { $in: ['CLOSED', 'EXPIRED', 'Quote Expired', 'expired', 'closed'] };
+      } else {
+        query.status = { $regex: `^${status.trim()}$`, $options: 'i' };
+      }
     }
-    if (country) {
-      query.country = { $regex: country, $options: 'i' };
+
+    if (country && country.trim()) {
+      query.country = { $regex: country.trim(), $options: 'i' };
     }
     if (product) {
       query.product = product;
@@ -350,11 +399,29 @@ export const getAdminQuoteRequests = async (req, res) => {
       .populate('products.product', 'name category images packageSize')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
+
+    // Enrich requests with linked quoteNumber and quote metadata if needed
+    const rfqIds = quoteRequests.map((r) => r._id);
+    const linkedQuotes = await Quote.find({ rfq: { $in: rfqIds } }, 'quoteNumber status rfq').lean();
+    const quoteMap = new Map();
+    linkedQuotes.forEach((q) => {
+      if (q.rfq) quoteMap.set(q.rfq.toString(), q);
+    });
+
+    const enrichedRequests = quoteRequests.map((r) => {
+      const linked = quoteMap.get(r._id.toString());
+      return {
+        ...r,
+        quoteNumber: r.quoteNumber || linked?.quoteNumber || '',
+        linkedQuote: linked || null,
+      };
+    });
 
     res.status(200).json({
       success: true,
-      data: quoteRequests,
+      data: enrichedRequests,
       pagination: {
         total,
         pages: Math.ceil(total / parseInt(limit)),
@@ -374,10 +441,17 @@ export const getAdminQuoteRequestById = async (req, res) => {
   try {
     const quoteRequest = await QuoteRequest.findById(req.params.id)
       .populate('product', 'name category images packageSize description')
-      .populate('products.product', 'name category images packageSize description');
+      .populate('products.product', 'name category images packageSize description')
+      .lean();
 
     if (!quoteRequest) {
       return res.status(404).json({ success: false, message: 'Quote Request not found' });
+    }
+
+    const linkedQuote = await Quote.findOne({ rfq: quoteRequest._id }).lean();
+    if (linkedQuote) {
+      quoteRequest.quoteNumber = quoteRequest.quoteNumber || linkedQuote.quoteNumber;
+      quoteRequest.linkedQuote = linkedQuote;
     }
 
     res.status(200).json({ success: true, data: quoteRequest });
@@ -393,7 +467,22 @@ export const updateQuoteRequestStatus = async (req, res) => {
   try {
     const { status } = req.body;
     
-    if (!['NEW', 'CONTACTED', 'QUOTED', 'CLOSED'].includes(status)) {
+    const validStatuses = [
+      'NEW',
+      'PENDING',
+      'APPROVED',
+      'REJECTED',
+      'INFO_REQUESTED',
+      'MAIL_SENT',
+      'CUSTOMER_REPLIED',
+      'NEGOTIATION',
+      'CONFIRMED',
+      'COMPLETED',
+      'CONTACTED',
+      'QUOTED',
+      'CLOSED',
+    ];
+    if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status value' });
     }
 
@@ -405,12 +494,14 @@ export const updateQuoteRequestStatus = async (req, res) => {
     quoteRequest.status = status;
     await quoteRequest.save();
 
-    // Update matching Quote status if state transitions
+    // Synchronize matching Quote status
     let quoteStatus = 'Pending Review';
-    if (status === 'CLOSED') {
+    if (status === 'CLOSED' || status === 'REJECTED') {
       quoteStatus = 'Quote Rejected';
     } else if (status === 'NEW') {
       quoteStatus = 'RFQ Submitted';
+    } else if (status === 'APPROVED' || status === 'CONFIRMED') {
+      quoteStatus = 'Quote Approved';
     }
     await Quote.updateOne({ rfq: quoteRequest._id }, { status: quoteStatus });
 

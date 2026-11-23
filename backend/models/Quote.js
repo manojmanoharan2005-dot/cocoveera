@@ -145,7 +145,7 @@ const QuoteSchema = new mongoose.Schema(
         product: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Product',
-          required: true,
+          required: false,
         },
         productName: {
           type: String,
@@ -153,11 +153,13 @@ const QuoteSchema = new mongoose.Schema(
         },
         category: {
           type: String,
-          required: true,
+          required: false,
+          default: '',
         },
         categoryName: {
           type: String,
-          required: true,
+          required: false,
+          default: 'General Coir Products',
         },
         quantity: {
           type: Number,
@@ -310,7 +312,6 @@ const QuoteSchema = new mongoose.Schema(
 // Indexing for faster search/filter
 QuoteSchema.index({ user: 1 });
 QuoteSchema.index({ status: 1 });
-QuoteSchema.index({ quoteNumber: 1 });
 QuoteSchema.index({ email: 1 });
 QuoteSchema.index({ createdAt: -1 });
 QuoteSchema.index({ user: 1, createdAt: -1 });

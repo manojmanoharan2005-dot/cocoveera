@@ -170,7 +170,7 @@ export default function AdminLayout({ children }) {
                 <a
                   href="/admin/quote-requests?status=submitted"
                   className={`flex items-center space-x-2.5 rounded-lg px-3 py-2 text-[11px] font-bold transition-all ${
-                    isActive('/admin/quote-requests', 'status=submitted')
+                    isActive('/admin/quote-requests', 'status=submitted') || isActive('/admin/quote-requests', 'status=NEW')
                       ? 'bg-amber-500/10 text-amber-400 border-l-2 border-amber-400'
                       : 'text-gray-500 hover:bg-gray-800 hover:text-gray-200'
                   }`}
