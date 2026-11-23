@@ -397,7 +397,9 @@ export const getRFQApprovalTemplate = (customerName, details) => {
         </tr>
         <tr style="border-bottom: 1px solid #EEEEEE;">
           <td style="padding: 10px 0; font-weight: bold; color: #777777;">Estimated Price:</td>
-          <td style="padding: 10px 0; font-weight: bold; color: #1E5B2E; font-size: 16px;">${currency} ${price ? parseFloat(price).toLocaleString() : 'N/A'}</td>
+          <td style="padding: 10px 0; font-weight: bold; color: #1E5B2E; font-size: 16px;">
+            ${currency} ${price !== undefined && price !== null ? Number(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}
+          </td>
         </tr>
         <tr style="border-bottom: 1px solid #EEEEEE;">
           <td style="padding: 10px 0; font-weight: bold; color: #777777;">Shipping Terms:</td>
@@ -425,6 +427,16 @@ export const getRFQApprovalTemplate = (customerName, details) => {
       }
     </div>
 
+    <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
+      <tr>
+        <td align="center" bgcolor="#1E5B2E" style="border-radius: 6px; box-shadow: 0 4px 12px rgba(30, 91, 46, 0.25);">
+          <a href="${process.env.FRONTEND_URL || 'https://www.cocoveera.com'}/quotes" target="_blank" style="padding: 14px 32px; display: inline-block; font-family: Arial, sans-serif; font-size: 14px; color: #FFFFFF; text-decoration: none; font-weight: bold; letter-spacing: 0.5px; border-radius: 6px;">
+            View Quotation in My Quotes
+          </a>
+        </td>
+      </tr>
+    </table>
+
     <p style="color: #666666; font-size: 13px; margin-bottom: 20px;">The quotation PDF is attached to this email for your official records.</p>
     <p style="color: #4A4A4A; font-size: 14px; margin-bottom: 25px;">If you have any questions, simply reply directly to this email.</p>
 
@@ -434,7 +446,7 @@ export const getRFQApprovalTemplate = (customerName, details) => {
       <p style="margin: 3px 0 0 0; color: #777777; font-size: 12px;">Email: <a href="mailto:supportdesk@cocoveera.com" style="color: #1E5B2E;">supportdesk@cocoveera.com</a></p>
     </div>
   `;
-  return baseTemplate({ title: 'Quote Request Approved - Cocoveera Export', content });
+  return baseTemplate({ title: 'Official Quotation Available - Cocoveera Export', content });
 };
 
 export const getRFQRejectionTemplate = (customerName, productName, reason) => {

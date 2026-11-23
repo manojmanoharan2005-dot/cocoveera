@@ -273,6 +273,26 @@ export default function AdminQuoteRequestDetails() {
     }));
   };
 
+  const handleCurrencyChange = (newCurrency) => {
+    const defaultRates = {
+      INR: 1,
+      USD: 83.33,
+      EUR: 90.50,
+      GBP: 106.38,
+      AED: 22.68,
+      AUD: 54.50,
+      CAD: 61.20,
+      SGD: 62.10,
+      JPY: 0.55
+    };
+    const rate = defaultRates[newCurrency] || 1;
+    setApproveForm(prev => ({
+      ...prev,
+      currency: newCurrency,
+      exchangeRate: rate
+    }));
+  };
+
   const handleApproveSubmit = async (e) => {
     e.preventDefault();
     if (!approveForm.price || isNaN(approveForm.price)) {
@@ -857,7 +877,7 @@ export default function AdminQuoteRequestDetails() {
                         <label className="block text-stone-600 font-bold mb-1">Currency</label>
                         <select
                           value={approveForm.currency}
-                          onChange={(e) => setApproveForm({ ...approveForm, currency: e.target.value })}
+                          onChange={(e) => handleCurrencyChange(e.target.value)}
                           className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none"
                         >
                           <option value="USD">USD ($)</option>

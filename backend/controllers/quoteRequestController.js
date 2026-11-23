@@ -19,6 +19,7 @@ import {
 } from '../utils/mailer.js';
 import { formatDateFriendly } from '../utils/dateFormatter.js';
 import { generateAndStoreDocument } from '../utils/documentService.js';
+import { calculateQuotePricing } from '../utils/pricingEngine.js';
 
 // @desc    Submit a quote request (RFQ)
 // @route   POST /api/quote-requests
@@ -587,33 +588,6 @@ export const approveQuoteRequest = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Quote Request not found.' });
     }
 
-    const approvalPrice = Number(grandTotal) || Number(price) || 0;
-
-    // Update quote request in database
-    quoteRequest.status = 'APPROVED';
-    quoteRequest.approvedBy = req.user?._id;
-    quoteRequest.approvedAt = new Date();
-    quoteRequest.price = approvalPrice;
-    quoteRequest.currency = currency;
-    quoteRequest.shippingTerms = incoterms || shippingTerms || 'FOB';
-    quoteRequest.validity = Number(validity || quoteValidity) || 15;
-    quoteRequest.deliveryDate = expectedDelivery || deliveryDate || '';
-    quoteRequest.additionalNotes = additionalNotes || '';
-    quoteRequest.emailSent = true;
-    quoteRequest.emailSentAt = new Date();
-    quoteRequest.emailStatus = 'delivered';
-
-    // Push timeline log
-    quoteRequest.timeline.push({
-      status: 'APPROVED',
-      title: 'Approved by Admin',
-      description: `Quote approved at ${currency} ${approvalPrice} (${incoterms || shippingTerms}). Official quotation generated.`,
-      timestamp: new Date(),
-      updatedBy: req.user?._id,
-    });
-
-    await quoteRequest.save();
-
     // Find or create Quote in database
     let quote = await Quote.findOne({ rfq: quoteRequest._id });
     if (!quote) {
@@ -648,9 +622,9 @@ export const approveQuoteRequest = async (req, res) => {
       });
     }
 
-    // Save multiple products details with historical string categories
+    // Prepare products with correct categories and individual properties
     const rawProducts = (products && products.length > 0) ? products : (quoteRequest.products || []);
-    quote.products = rawProducts.map(p => {
+    const mappedProducts = rawProducts.map(p => {
       const prodId = p.product?._id || p.product || p.productId || quoteRequest.product?._id || quoteRequest.product;
       const prodName = p.productName || p.name || quoteRequest.product?.name || 'Coco Substrate Product';
       let catStr = 'General Coir Products';
@@ -664,45 +638,60 @@ export const approveQuoteRequest = async (req, res) => {
         catStr = quoteRequest.category;
       }
 
+      const qQty = Number(p.quantity) || 1;
+      const uPrice = Number(p.unitPrice) || 0;
+      const iDisc = Number(p.discount) || 0;
+
       return {
         product: prodId,
         productName: prodName,
         category: catStr,
         categoryName: catStr,
-        quantity: Number(p.quantity) || 1,
+        quantity: qQty,
         unit: p.unit || 'Containers',
         dimensions: p.dimensions || '',
         weight: Number(p.weight) || 0,
         volume: Number(p.volume) || 0,
-        unitPrice: Number(p.unitPrice) || 0,
+        unitPrice: uPrice,
         pieces: Number(p.pieces) || 0,
         containerAllocation: Number(p.containerAllocation) || 0,
-        discount: Number(p.discount) || 0,
-        subtotal: Number(p.subtotal) || 0,
+        discount: iDisc,
+        subtotal: (qQty * uPrice) - iDisc,
       };
     });
 
-    // Calculate INR base values
-    const rates = { INR: 1, USD: 0.012, EUR: 0.011, GBP: 0.0094 };
-    const rateToInr = exchangeRate ? Number(exchangeRate) : (1 / (rates[currency] || 1));
-    const calculatedInrAmount = approvalPrice * rateToInr;
+    // Authoritative Centralized Pricing Calculation
+    const pricing = calculateQuotePricing({
+      products: mappedProducts,
+      currency: currency || quoteRequest.currency || 'USD',
+      exchangeRate: exchangeRate ? Number(exchangeRate) : undefined,
+      freightCharges: Number(freightCharges) || 0,
+      packingCharges: Number(packingCharges) || 0,
+      handlingCharges: Number(handlingCharges) || 0,
+      insuranceCharges: Number(insuranceCharges) || 0,
+      shippingCharges: Number(shippingCharges) || 0,
+      tax: Number(tax) || 0,
+      discount: Number(discount) || 0,
+    });
+
+    // Update Quote document with exact calculated snapshot
+    quote.products = pricing.products;
+    quote.currency = pricing.currency;
+    quote.exchangeRate = pricing.exchangeRate;
+    quote.grandTotal = pricing.grandTotal;
+    quote.convertedAmount = pricing.convertedAmount;
+    quote.originalInrAmount = pricing.originalInrAmount;
+    quote.discount = pricing.discount;
+    quote.freightCharges = pricing.freightCharges;
+    quote.packingCharges = pricing.packingCharges;
+    quote.handlingCharges = pricing.handlingCharges;
+    quote.insuranceCharges = pricing.insuranceCharges;
+    quote.shippingCharges = pricing.shippingCharges;
+    quote.tax = pricing.tax;
 
     quote.status = 'Quote Approved';
     quote.quoteDate = new Date();
     quote.validUntil = new Date(Date.now() + (Number(validity || quoteValidity) || 15) * 24 * 60 * 60 * 1000);
-    quote.currency = currency;
-    quote.exchangeRate = rateToInr;
-    quote.convertedAmount = approvalPrice;
-    quote.originalInrAmount = calculatedInrAmount;
-    
-    // Admin editable fields
-    quote.discount = Number(discount) || 0;
-    quote.freightCharges = Number(freightCharges) || 0;
-    quote.packingCharges = Number(packingCharges) || 0;
-    quote.handlingCharges = Number(handlingCharges) || 0;
-    quote.insuranceCharges = Number(insuranceCharges) || 0;
-    quote.shippingCharges = Number(shippingCharges) || 0;
-    quote.tax = Number(tax) || 0;
     quote.containerCount = Number(containerCount) || 1;
     quote.estimatedWeight = Number(estimatedWeight) || 0;
     quote.estimatedVolume = Number(estimatedVolume) || 0;
@@ -715,7 +704,6 @@ export const approveQuoteRequest = async (req, res) => {
     quote.paymentTerms = paymentTerms || '';
     quote.quoteValidity = Number(validity || quoteValidity) || 15;
     quote.productionTime = productionTime || '';
-    quote.grandTotal = approvalPrice;
     quote.shippingTerms = incoterms || shippingTerms || 'FOB';
     quote.estimatedProductionTime = productionTime || '';
     quote.commercialNotes = additionalNotes || '';
@@ -747,25 +735,53 @@ export const approveQuoteRequest = async (req, res) => {
     });
 
     // Sync URLs to quote
-    quote.pdfUrl = docRecord.url;
-    await quote.save();
-
-    // Prepare Official_Quotation.pdf attachment for single branded email dispatch
-    let pdfAttachment = null;
-    try {
-      if (quote.pdfPath && fs.existsSync(quote.pdfPath)) {
-        const pdfBuffer = fs.readFileSync(quote.pdfPath);
-        pdfAttachment = {
-          name: 'Official_Quotation.pdf',
-          content: pdfBuffer.toString('base64'),
-          type: 'application/pdf'
-        };
-      }
-    } catch (attError) {
-      console.warn('[quoteRequestController] Could not attach PDF to email:', attError.message);
+    if (docRecord?.url) {
+      quote.pdfUrl = docRecord.url;
+      await quote.save();
     }
 
-    // Send single branded "Official Quotation Available" email
+    // Update QuoteRequest document in database
+    quoteRequest.status = 'APPROVED';
+    quoteRequest.approvedBy = req.user?._id;
+    quoteRequest.approvedAt = new Date();
+    quoteRequest.price = pricing.grandTotal;
+    quoteRequest.currency = pricing.currency;
+    quoteRequest.shippingTerms = incoterms || shippingTerms || 'FOB';
+    quoteRequest.validity = Number(validity || quoteValidity) || 15;
+    quoteRequest.deliveryDate = expectedDelivery || deliveryDate || '';
+    quoteRequest.additionalNotes = additionalNotes || '';
+
+    // Push timeline log for approval
+    quoteRequest.timeline.push({
+      status: 'APPROVED',
+      title: 'Approved by Admin',
+      description: `Quote approved at ${pricing.currency} ${pricing.grandTotal.toFixed(2)} (${incoterms || shippingTerms}). Official quotation generated.`,
+      timestamp: new Date(),
+      updatedBy: req.user?._id,
+    });
+
+    // Prepare PDF attachment for branded email dispatch directly from memory buffer
+    let pdfAttachment = null;
+    if (docRecord?.pdfBuffer) {
+      pdfAttachment = {
+        name: `Quotation_${quote.quoteNumber || 'Official'}.pdf`,
+        content: docRecord.pdfBuffer.toString('base64'),
+        type: 'application/pdf',
+      };
+    } else if (quote.pdfPath && fs.existsSync(quote.pdfPath)) {
+      try {
+        const fileBuf = fs.readFileSync(quote.pdfPath);
+        pdfAttachment = {
+          name: `Quotation_${quote.quoteNumber || 'Official'}.pdf`,
+          content: fileBuf.toString('base64'),
+          type: 'application/pdf',
+        };
+      } catch (fErr) {
+        console.warn('[quoteRequestController] Could not read local PDF path:', fErr.message);
+      }
+    }
+
+    // Send single branded "Official Quotation Available" email and track delivery accurately
     try {
       await sendRFQApprovalEmail(
         quoteRequest.email,
@@ -776,23 +792,47 @@ export const approveQuoteRequest = async (req, res) => {
           productName: quoteRequest.product?.name,
           products: quote.products,
           containerSize: quote.containerDetails?.containerSize,
-          price: quote.grandTotal || quote.convertedAmount,
-          currency: quote.currency || 'USD',
+          price: pricing.grandTotal,
+          currency: pricing.currency,
           shippingTerms: quote.incoterms || quote.shippingTerms || 'FOB',
           validity: quote.quoteValidity || 15,
           deliveryDate: quote.expectedDelivery,
           emailBody: quote.commercialNotes,
-          additionalNotes: quote.commercialNotes
+          additionalNotes: quote.commercialNotes,
         },
         pdfAttachment
       );
+
+      quoteRequest.emailSent = true;
+      quoteRequest.emailSentAt = new Date();
+      quoteRequest.emailStatus = 'delivered';
+      quoteRequest.timeline.push({
+        status: 'MAIL_SENT',
+        title: 'Quotation Email Sent',
+        description: `Official quotation email successfully delivered to ${quoteRequest.email} with PDF attached.`,
+        timestamp: new Date(),
+        updatedBy: req.user?._id,
+      });
     } catch (mailError) {
       console.error('[quoteRequestController] Error sending quotation approval email:', mailError.message);
+      quoteRequest.emailSent = false;
+      quoteRequest.emailStatus = 'failed';
+      quoteRequest.timeline.push({
+        status: 'MAIL_FAILED',
+        title: 'Quotation Email Failed',
+        description: `Failed to deliver quotation email: ${mailError.message}`,
+        timestamp: new Date(),
+        updatedBy: req.user?._id,
+      });
     }
+
+    await quoteRequest.save();
 
     res.status(200).json({
       success: true,
       message: 'Quote approved successfully, PDF generated and email sent.',
+      data: quoteRequest,
+    });
       data: quoteRequest,
     });
   } catch (error) {

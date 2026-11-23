@@ -148,22 +148,31 @@ export const buildInvoiceDataFromQuote = (quote) => {
     quoteValidity: quote.quoteValidity || 15,
     destinationCountry: quote.shippingAddress?.country || 'Unknown',
 
-    items: quote.products?.map(item => ({
-      productName: item.productName || 'Product',
-      sku: item.product?._id?.toString().slice(-6) || 'COCO-ITEM',
-      quantity: item.quantity || 1,
-      unitPrice: item.unitPrice || 0,
-      pieces: item.pieces || 0,
-      containerAllocation: item.containerAllocation || 0,
-      weight: item.weight || 0,
-      volume: item.volume || 0,
-      discount: item.discount || 0,
-      subtotal: item.subtotal || 0,
-    })) || [],
+    items: quote.products?.map(item => {
+      const q = item.quantity || 1;
+      const u = item.unitPrice || 0;
+      const d = item.discount || 0;
+      const s = (item.subtotal !== undefined && item.subtotal !== null && item.subtotal > 0)
+        ? item.subtotal
+        : Math.round(((q * u) - d) * 100) / 100;
+
+      return {
+        productName: item.productName || 'Product',
+        sku: item.product?._id?.toString().slice(-6) || 'COCO-ITEM',
+        quantity: q,
+        unitPrice: u,
+        pieces: item.pieces || 0,
+        containerAllocation: item.containerAllocation || 0,
+        weight: item.weight || 0,
+        volume: item.volume || 0,
+        discount: d,
+        subtotal: s,
+      };
+    }) || [],
 
     subtotal: quote.products && quote.products.length > 0
       ? quote.products.reduce((acc, curr) => acc + (curr.subtotal || 0), 0)
-      : (quote.convertedAmount || 0),
+      : (quote.convertedAmount || quote.grandTotal || 0),
     discount: quote.discount || 0,
     freightCharges: quote.freightCharges || 0,
     packingCharges: quote.packingCharges || 0,
@@ -171,7 +180,7 @@ export const buildInvoiceDataFromQuote = (quote) => {
     insuranceCharges: quote.insuranceCharges || 0,
     shippingCharge: quote.shippingCharges || 0,
     tax: quote.tax || 0,
-    totalAmount: quote.grandTotal || quote.convertedAmount || 0,
+    totalAmount: (quote.grandTotal !== undefined && quote.grandTotal !== null) ? quote.grandTotal : (quote.convertedAmount || 0),
 
     paymentMethod: 'Wire Transfer',
     transactionId: 'N/A',
@@ -250,16 +259,26 @@ export const generateAndStoreDocument = async ({ orderId, quoteId, type, user, d
 
     // Save locally for compatibility with legacy view-pdf controllers
     try {
-      const localDir = path.join('uploads', orderId ? 'orders' : 'quotes');
-      if (!fs.existsSync(localDir)) {
-        fs.mkdirSync(localDir, { recursive: true });
-      }
+      const subDir = orderId ? 'orders' : 'quotes';
       const fileName = orderId 
         ? `invoice_${orderId}.pdf` 
         : `quote_${quoteId}.pdf`;
-      const localPath = path.join(localDir, fileName);
-      fs.writeFileSync(localPath, pdfBuffer);
+
+      const possibleDirs = [
+        path.join(process.cwd(), 'uploads', subDir),
+        path.join(process.cwd(), 'cocoveera', 'backend', 'uploads', subDir),
+      ];
+
+      for (const dir of possibleDirs) {
+        try {
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
+          fs.writeFileSync(path.join(dir, fileName), pdfBuffer);
+        } catch (e) {}
+      }
       
+      const localPath = path.join('uploads', subDir, fileName);
       if (order) order.pdfPath = localPath;
       if (quote) quote.pdfPath = localPath;
     } catch (localErr) {

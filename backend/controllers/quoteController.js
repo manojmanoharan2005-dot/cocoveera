@@ -168,7 +168,22 @@ export const viewQuotePDF = async (req, res) => {
 
     // Resolve the best available PDF source
     const cloudinaryUrl = quote.pdfUrl || quote.quotationPdf || '';
-    const hasLocalFile = quote.pdfPath && fs.existsSync(quote.pdfPath);
+    let resolvedPdfPath = quote.pdfPath;
+    if (resolvedPdfPath && !fs.existsSync(resolvedPdfPath)) {
+      const candidatePaths = [
+        path.join(process.cwd(), 'uploads', 'quotes', path.basename(resolvedPdfPath)),
+        path.join(process.cwd(), 'cocoveera', 'backend', 'uploads', 'quotes', path.basename(resolvedPdfPath)),
+        path.join('d:/cocoveera/cocoveera/backend/uploads/quotes', path.basename(resolvedPdfPath)),
+        path.join('d:/cocoveera/uploads/quotes', path.basename(resolvedPdfPath)),
+      ];
+      for (const p of candidatePaths) {
+        if (fs.existsSync(p)) {
+          resolvedPdfPath = p;
+          break;
+        }
+      }
+    }
+    const hasLocalFile = resolvedPdfPath && fs.existsSync(resolvedPdfPath);
 
     if (!hasLocalFile && !cloudinaryUrl) {
       return res.status(404).json({ success: false, message: 'Quotation PDF file not found on server.' });
@@ -184,7 +199,7 @@ export const viewQuotePDF = async (req, res) => {
       );
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="Quotation_${quote.quoteNumber}.pdf"`);
-      const fileStream = fs.createReadStream(quote.pdfPath);
+      const fileStream = fs.createReadStream(resolvedPdfPath);
       fileStream.pipe(res);
       return;
     }
@@ -219,7 +234,22 @@ export const downloadQuotePDF = async (req, res) => {
 
     // Resolve the best available PDF source
     const cloudinaryUrl = quote.pdfUrl || quote.quotationPdf || '';
-    const hasLocalFile = quote.pdfPath && fs.existsSync(quote.pdfPath);
+    let resolvedPdfPath = quote.pdfPath;
+    if (resolvedPdfPath && !fs.existsSync(resolvedPdfPath)) {
+      const candidatePaths = [
+        path.join(process.cwd(), 'uploads', 'quotes', path.basename(resolvedPdfPath)),
+        path.join(process.cwd(), 'cocoveera', 'backend', 'uploads', 'quotes', path.basename(resolvedPdfPath)),
+        path.join('d:/cocoveera/cocoveera/backend/uploads/quotes', path.basename(resolvedPdfPath)),
+        path.join('d:/cocoveera/uploads/quotes', path.basename(resolvedPdfPath)),
+      ];
+      for (const p of candidatePaths) {
+        if (fs.existsSync(p)) {
+          resolvedPdfPath = p;
+          break;
+        }
+      }
+    }
+    const hasLocalFile = resolvedPdfPath && fs.existsSync(resolvedPdfPath);
 
     if (!hasLocalFile && !cloudinaryUrl) {
       return res.status(404).json({ success: false, message: 'Quotation PDF file not found on server.' });
@@ -228,7 +258,7 @@ export const downloadQuotePDF = async (req, res) => {
     if (hasLocalFile) {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="Quotation_${quote.quoteNumber}.pdf"`);
-      const fileStream = fs.createReadStream(quote.pdfPath);
+      const fileStream = fs.createReadStream(resolvedPdfPath);
       fileStream.pipe(res);
       return;
     }
@@ -320,7 +350,9 @@ export const acceptQuote = async (req, res) => {
     const orderNumber = await generateSequentialNumber('ORD');
 
     // Structure items array
-    const totalAmt = quote.convertedAmount || 0;
+    const totalAmt = (quote.convertedAmount !== undefined && quote.convertedAmount !== null && quote.convertedAmount > 0)
+      ? quote.convertedAmount
+      : (quote.grandTotal || 0);
     const orderItems = (quote.products && quote.products.length > 0)
       ? quote.products.map(item => ({
           product: item.product || null,

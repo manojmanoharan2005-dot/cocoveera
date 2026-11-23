@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
-import { convertCurrency } from '../../utils/currencyConverter';
+import { convertCurrency, formatCurrency } from '../../utils/currencyConverter';
 import SEO from '../../components/SEO';
 import { formatDateFriendly } from '../../utils/dateFormatter';
 
@@ -604,6 +604,50 @@ const QuoteDetails = () => {
                 <span>Currency</span>
                 <span className="text-stone-900 font-bold">{quote?.currency || 'USD'}</span>
               </div>
+              {quote?.products && quote.products.length > 0 && (
+                <div className="flex justify-between text-xs text-stone-500">
+                  <span>Items Subtotal</span>
+                  <span className="font-bold text-stone-800">
+                    {formatCurrency(quote.products.reduce((acc, curr) => acc + (curr.subtotal || 0), 0), quote?.currency || 'USD')}
+                  </span>
+                </div>
+              )}
+              {quote?.discount > 0 && (
+                <div className="flex justify-between text-xs text-emerald-600">
+                  <span>Discount</span>
+                  <span className="font-bold">- {formatCurrency(quote.discount, quote?.currency || 'USD')}</span>
+                </div>
+              )}
+              {quote?.freightCharges > 0 && (
+                <div className="flex justify-between text-xs text-stone-500">
+                  <span>Freight Charges</span>
+                  <span className="font-bold text-stone-800">{formatCurrency(quote.freightCharges, quote?.currency || 'USD')}</span>
+                </div>
+              )}
+              {quote?.packingCharges > 0 && (
+                <div className="flex justify-between text-xs text-stone-500">
+                  <span>Packing Charges</span>
+                  <span className="font-bold text-stone-800">{formatCurrency(quote.packingCharges, quote?.currency || 'USD')}</span>
+                </div>
+              )}
+              {quote?.handlingCharges > 0 && (
+                <div className="flex justify-between text-xs text-stone-500">
+                  <span>Handling Charges</span>
+                  <span className="font-bold text-stone-800">{formatCurrency(quote.handlingCharges, quote?.currency || 'USD')}</span>
+                </div>
+              )}
+              {quote?.insuranceCharges > 0 && (
+                <div className="flex justify-between text-xs text-stone-500">
+                  <span>Insurance Charges</span>
+                  <span className="font-bold text-stone-800">{formatCurrency(quote.insuranceCharges, quote?.currency || 'USD')}</span>
+                </div>
+              )}
+              {quote?.tax > 0 && (
+                <div className="flex justify-between text-xs text-stone-500">
+                  <span>Tax Amount</span>
+                  <span className="font-bold text-stone-800">{formatCurrency(quote.tax, quote?.currency || 'USD')}</span>
+                </div>
+              )}
               {quote?.exchangeRate && quote?.currency && quote?.currency !== 'INR' && (
                 <div className="flex justify-between text-xs text-stone-400">
                   <span>Exchange rate</span>
@@ -614,11 +658,18 @@ const QuoteDetails = () => {
 
             <div className="border-t border-stone-100 pt-3 flex justify-between items-end">
               <span className="text-xs font-black text-stone-900 uppercase tracking-wider mb-0.5">Grand Total</span>
-              <span className="text-xl font-black text-[#2E7D32]">
-                {quote?.convertedAmount > 0
-                  ? convertCurrency(quote?.originalInrAmount || 0, quote?.currency || user?.currency || 'USD').formatted
-                  : 'Pending'}
-              </span>
+              <div className="text-right">
+                <span className="text-xl font-black text-[#2E7D32]">
+                  {(quote?.convertedAmount > 0 || quote?.grandTotal > 0)
+                    ? formatCurrency(quote?.convertedAmount || quote?.grandTotal, quote?.currency || 'USD')
+                    : (quote?.originalInrAmount > 0 ? formatCurrency(quote.originalInrAmount, 'INR') : 'Pending')}
+                </span>
+                {quote?.currency && quote?.currency !== 'INR' && quote?.originalInrAmount > 0 && (
+                  <p className="text-[11px] text-stone-400 font-semibold mt-0.5">
+                    ≈ ₹{Number(quote.originalInrAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} INR
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

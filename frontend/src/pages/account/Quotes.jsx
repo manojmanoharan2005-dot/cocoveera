@@ -7,7 +7,7 @@ import { FixedSizeList as List } from 'react-window';
 import confetti from 'canvas-confetti';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
-import { convertCurrency } from '../../utils/currencyConverter';
+import { convertCurrency, formatCurrency } from '../../utils/currencyConverter';
 import SEO from '../../components/SEO';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import { formatDateFriendly } from '../../utils/dateFormatter';
@@ -370,9 +370,11 @@ const Quotes = () => {
             <div className="flex flex-col">
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Price Quoted</span>
               <span className="font-black text-stone-900 text-sm sm:text-base">
-                {(quote.originalInrAmount > 0 || quote.convertedAmount > 0)
-                  ? convertCurrency(quote.originalInrAmount || quote.convertedAmount, quote.currency || user?.currency || 'USD').formatted
-                  : 'Under Review'}
+                {(quote.convertedAmount > 0 || quote.grandTotal > 0)
+                  ? formatCurrency(quote.convertedAmount || quote.grandTotal, quote.currency || 'USD')
+                  : (quote.originalInrAmount > 0
+                      ? formatCurrency(quote.originalInrAmount, 'INR')
+                      : 'Under Review')}
               </span>
             </div>
 
