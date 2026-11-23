@@ -3,10 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import { X, CheckCircle2, AlertCircle, Calendar, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient, useAuth } from '../context/AuthContext';
-import PhoneInput from 'react-phone-input-2';
+import PhoneInputPkg from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { getPhoneCountry } from '../utils/countryHelpers';
 import { useQueryClient } from '@tanstack/react-query';
+
+// Safely extract the component function for Vite/Rollup CJS-ESM interop (Fixes React Error #130)
+const PhoneInputComponent = (typeof PhoneInputPkg === 'function')
+  ? PhoneInputPkg
+  : (typeof PhoneInputPkg === 'object' && PhoneInputPkg !== null && typeof PhoneInputPkg.default === 'function')
+    ? PhoneInputPkg.default
+    : null;
+
+const SafePhoneInput = (props) => {
+  if (!PhoneInputComponent) {
+    return (
+      <input
+        type="tel"
+        value={props.value || ''}
+        onChange={(e) => props.onChange && props.onChange(e.target.value.replace(/[^0-9+]/g, ''))}
+        className="w-full bg-stone-50 border border-stone-200 text-stone-900 rounded-[10px] h-9.5 px-3 text-xs font-semibold focus:outline-none focus:border-[#2E7D32] focus:bg-white transition-all"
+        placeholder="+1 (555) 000-0000"
+      />
+    );
+  }
+  return <PhoneInputComponent {...props} />;
+};
 
 export const RequestQuoteModal = ({
   isOpen,
@@ -555,7 +577,7 @@ export const RequestQuoteModal = ({
 
                       <div className="space-y-1">
                         <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">Phone <span className="text-red-500">*</span></label>
-                        <PhoneInput
+                        <SafePhoneInput
                           country={getPhoneCountry(rfqFormData.country) || 'us'}
                           value={rfqFormData.phone}
                           onChange={phone => {

@@ -23,12 +23,45 @@ import {
   Anchor
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import PhoneInput from 'react-phone-input-2';
+import PhoneInputPkg from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import SEO from '../../components/SEO';
+
+// Safely extract the component function for Vite/Rollup CJS-ESM interop (Fixes React Error #130)
+const PhoneInputComponent = (typeof PhoneInputPkg === 'function')
+  ? PhoneInputPkg
+  : (typeof PhoneInputPkg === 'object' && PhoneInputPkg !== null && typeof PhoneInputPkg.default === 'function')
+    ? PhoneInputPkg.default
+    : null;
+
+// Safe wrapper component preventing React Error #130 and providing graceful fallback
+const SafePhoneInput = (props) => {
+  if (!PhoneInputComponent) {
+    return (
+      <input
+        type="tel"
+        value={props.value || ''}
+        onChange={(e) => props.onChange && props.onChange(e.target.value.replace(/[^0-9+]/g, ''))}
+        className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-xs font-bold text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/30 transition min-w-0"
+        placeholder="+1 (555) 000-0000"
+      />
+    );
+  }
+
+  return (
+    <div className="w-full relative">
+      <PhoneInputComponent
+        containerClass="!w-full"
+        containerStyle={{ width: '100%' }}
+        dropdownStyle={{ zIndex: 60, maxWidth: '280px' }}
+        {...props}
+      />
+    </div>
+  );
+};
 
 const SHIPPING_TERMS_OPTIONS = [
   { value: 'FOB', label: 'FOB (Free On Board)', description: 'Seller delivers goods on board the vessel at origin port' },
@@ -141,8 +174,12 @@ export const RequestQuotePage = () => {
       }
     } catch (err) {
       console.error('Failed to fetch product for RFQ:', err);
-      setProduct(null);
-      setRfqError('This product is no longer available.');
+      if (fallbackProductObj) {
+        setProduct(fallbackProductObj);
+      } else {
+        setProduct(null);
+        setRfqError('This product is no longer available.');
+      }
     } finally {
       setLoadingProduct(false);
     }
@@ -282,6 +319,7 @@ export const RequestQuotePage = () => {
           postalCode: rfqFormData.postalCode.trim(),
           country: rfqFormData.country.trim(),
         },
+        address: `${rfqFormData.addressLine1.trim()}, ${rfqFormData.city.trim()}, ${rfqFormData.state.trim()}, ${rfqFormData.country.trim()}`,
         expectedDeliveryDate: rfqFormData.expectedDeliveryDate,
         attachments: attachments.map(a => a.name)
       };
@@ -318,22 +356,22 @@ export const RequestQuotePage = () => {
   const productSku = product?._id ? `CV-${product._id.slice(-6).toUpperCase()}` : 'CV-EXPORT-001';
 
   return (
-    <div className="w-full min-h-screen bg-stone-50/50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+    <div className="w-full min-h-screen py-3 sm:py-6 lg:py-8 px-1 sm:px-4 lg:px-6">
       <SEO title="Request Quote (RFQ) | Cocoveera Dashboard" description="Submit enterprise B2B Request for Quote" />
       
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header Breadcrumb & Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-stone-200">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-wider mb-1">
               <span>Dashboard</span>
               <span>/</span>
               <span className="text-[#2E7D32]">Request Quote (RFQ)</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-poppins font-black text-stone-900 flex items-center gap-3">
-              <FileText className="w-7 h-7 text-[#2E7D32]" />
-              Enterprise B2B Request for Quote
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-poppins font-black text-stone-900 flex items-center gap-2.5 sm:gap-3">
+              <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-[#2E7D32] shrink-0" />
+              <span className="leading-tight">Enterprise B2B Request for Quote</span>
             </h1>
           </div>
           <button
@@ -349,14 +387,14 @@ export const RequestQuotePage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl border border-stone-200 p-8 sm:p-12 text-center shadow-lg space-y-6"
+            className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-12 text-center shadow-lg space-y-6"
           >
-            <div className="w-20 h-20 bg-green-100 text-[#2E7D32] rounded-full flex items-center justify-center mx-auto shadow-inner">
-              <CheckCircle2 className="w-12 h-12 stroke-[2.5]" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 text-[#2E7D32] rounded-full flex items-center justify-center mx-auto shadow-inner">
+              <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
             </div>
             <div className="space-y-2 max-w-lg mx-auto">
-              <h2 className="text-2xl font-poppins font-black text-stone-900">RFQ Submitted Successfully!</h2>
-              <p className="text-sm font-semibold text-stone-600 leading-relaxed">
+              <h2 className="text-xl sm:text-2xl font-poppins font-black text-stone-900">RFQ Submitted Successfully!</h2>
+              <p className="text-xs sm:text-sm font-semibold text-stone-600 leading-relaxed">
                 Thank you for submitting your Request for Quote. Our export desk has received your specifications and will issue a formal Proforma / Quotation shortly.
               </p>
             </div>
@@ -365,11 +403,11 @@ export const RequestQuotePage = () => {
             </div>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             
             {/* Left Side: Product Summary Card */}
-            <div className="lg:col-span-4 space-y-6 sticky top-24">
-              <div className="bg-white rounded-3xl border border-stone-200/80 p-6 shadow-xs space-y-5">
+            <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+              <div className="bg-white rounded-2xl sm:rounded-3xl border border-stone-200/80 p-4 sm:p-6 shadow-xs space-y-4 sm:space-y-5">
                 <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                   <span className="text-xs font-poppins font-black uppercase tracking-wider text-stone-400">Selected Product</span>
                   <span className="text-[10px] font-bold bg-[#E8F5E9] text-[#2E7D32] px-2.5 py-1 rounded-md">B2B Export</span>
@@ -382,7 +420,7 @@ export const RequestQuotePage = () => {
                   </div>
                 ) : product ? (
                   <div className="space-y-4">
-                    <div className="w-full h-48 bg-stone-50 rounded-2xl overflow-hidden border border-stone-100 flex items-center justify-center p-3 relative group">
+                    <div className="w-full h-44 sm:h-48 bg-stone-50 rounded-2xl overflow-hidden border border-stone-100 flex items-center justify-center p-3 relative group">
                       <ImageWithFallback
                         src={product.images?.[0]}
                         alt={product.name}
@@ -393,32 +431,44 @@ export const RequestQuotePage = () => {
                       <span className="text-[10px] font-bold text-[#2E7D32] uppercase tracking-wider block">
                         {product.category || 'Coco Substrates'}
                       </span>
-                      <h2 className="text-lg font-poppins font-extrabold text-stone-900 leading-snug mt-0.5">
+                      <h2 className="text-base sm:text-lg font-poppins font-extrabold text-stone-900 leading-snug mt-0.5">
                         {product.name}
                       </h2>
                     </div>
 
-                    <div className="bg-stone-50/80 rounded-2xl p-4 border border-stone-100/80 space-y-2 text-xs">
-                      <div className="flex justify-between text-stone-600 font-semibold">
-                        <span className="text-stone-400">SKU / Item Code:</span>
-                        <span className="font-mono font-bold text-stone-800">{productSku}</span>
+                    <div className="bg-stone-50/80 rounded-2xl p-3.5 sm:p-4 border border-stone-100/80 space-y-2 text-xs">
+                      <div className="flex justify-between items-center text-stone-600 font-semibold gap-2">
+                        <span className="text-stone-400 shrink-0">SKU / Item Code:</span>
+                        <span className="font-mono font-bold text-stone-800 truncate">{productSku}</span>
                       </div>
+                      {product.price > 0 && (
+                        <div className="flex justify-between items-center text-stone-600 font-semibold gap-2">
+                          <span className="text-stone-400 shrink-0">Reference Price:</span>
+                          <span className="font-bold text-[#2E7D32] truncate">₹{product.price.toLocaleString()} / Unit</span>
+                        </div>
+                      )}
                       {product.packageSize && (
-                        <div className="flex justify-between text-stone-600 font-semibold">
-                          <span className="text-stone-400">Packaging:</span>
-                          <span className="font-bold text-stone-800">{product.packageSize}</span>
+                        <div className="flex justify-between items-center text-stone-600 font-semibold gap-2">
+                          <span className="text-stone-400 shrink-0">Packaging:</span>
+                          <span className="font-bold text-stone-800 truncate">{product.packageSize}</span>
+                        </div>
+                      )}
+                      {product.weight && (
+                        <div className="flex justify-between items-center text-stone-600 font-semibold gap-2">
+                          <span className="text-stone-400 shrink-0">Weight:</span>
+                          <span className="font-bold text-stone-800 truncate">{product.weight} kg</span>
                         </div>
                       )}
                       {product.specifications?.ph && (
-                        <div className="flex justify-between text-stone-600 font-semibold">
-                          <span className="text-stone-400">pH Level:</span>
-                          <span className="font-bold text-stone-800">{product.specifications.ph}</span>
+                        <div className="flex justify-between items-center text-stone-600 font-semibold gap-2">
+                          <span className="text-stone-400 shrink-0">pH Level:</span>
+                          <span className="font-bold text-stone-800 truncate">{product.specifications.ph}</span>
                         </div>
                       )}
                       {product.specifications?.ec && (
-                        <div className="flex justify-between text-stone-600 font-semibold">
-                          <span className="text-stone-400">EC Value:</span>
-                          <span className="font-bold text-stone-800">{product.specifications.ec}</span>
+                        <div className="flex justify-between items-center text-stone-600 font-semibold gap-2">
+                          <span className="text-stone-400 shrink-0">EC Value:</span>
+                          <span className="font-bold text-stone-800 truncate">{product.specifications.ec}</span>
                         </div>
                       )}
                     </div>
@@ -429,9 +479,9 @@ export const RequestQuotePage = () => {
                   </div>
                 )}
 
-                <div className="p-4 bg-[#F7F9F7] rounded-2xl border border-[#2E7D32]/10 space-y-2 text-xs text-stone-600 font-semibold">
+                <div className="p-3.5 sm:p-4 bg-[#F7F9F7] rounded-2xl border border-[#2E7D32]/10 space-y-2 text-xs text-stone-600 font-semibold">
                   <div className="flex items-center gap-2 text-[#2E7D32] font-extrabold">
-                    <ShieldCheck className="w-4 h-4" /> Direct Manufacturer Guarantee
+                    <ShieldCheck className="w-4 h-4 shrink-0" /> Direct Manufacturer Guarantee
                   </div>
                   <p className="text-[11px] leading-relaxed text-stone-500">
                     Your request goes directly to Cocoveera's export desk. You will receive customized container pricing, shipping lead times, and lab COA documents.
@@ -442,7 +492,7 @@ export const RequestQuotePage = () => {
 
             {/* Right Side: Enterprise RFQ Form */}
             <div className="lg:col-span-8">
-              <form onSubmit={handleRfqSubmit} className="bg-white rounded-3xl border border-stone-200/80 p-6 sm:p-8 shadow-xs space-y-8">
+              <form onSubmit={handleRfqSubmit} className="bg-white rounded-2xl sm:rounded-3xl border border-stone-200/80 p-4 sm:p-6 lg:p-8 shadow-xs space-y-6 sm:space-y-8">
                 
                 {rfqError && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 text-red-700 text-xs font-bold">
@@ -460,7 +510,7 @@ export const RequestQuotePage = () => {
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {/* Container Size */}
                     <div className="space-y-1.5">
                       <label className="block text-xs font-extrabold text-stone-700">Container Size</label>
@@ -470,14 +520,14 @@ export const RequestQuotePage = () => {
                             key={size}
                             type="button"
                             onClick={() => setRfqFormData(prev => ({ ...prev, containerSize: size }))}
-                            className={`py-3 px-4 text-xs font-black rounded-xl border transition-all flex items-center justify-center gap-2 ${
+                            className={`py-2.5 px-2 sm:px-4 text-[11px] sm:text-xs font-black rounded-xl border transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                               rfqFormData.containerSize === size
                                 ? 'bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm'
                                 : 'bg-stone-50 text-stone-700 border-stone-200 hover:border-stone-300'
                             }`}
                           >
-                            <Ship className="w-4 h-4" />
-                            {size} Container
+                            <Ship className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                            <span className="truncate">{size} Container</span>
                           </button>
                         ))}
                       </div>
@@ -728,7 +778,7 @@ export const RequestQuotePage = () => {
                       <label className="block text-xs font-extrabold text-stone-700">
                         Phone / WhatsApp <span className="text-red-500">*</span>
                       </label>
-                      <PhoneInput
+                      <SafePhoneInput
                         country={'us'}
                         value={rfqFormData.phone}
                         onChange={(phoneVal) => {
