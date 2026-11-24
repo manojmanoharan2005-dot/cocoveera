@@ -141,6 +141,29 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated, sanitizeCartItems, showToast, fetchProfile]);
 
+  // Remove a specific cart item
+  const removeFromCart = useCallback(async (itemId, silent = false) => {
+    if (!isAuthenticated || !itemId) return false;
+    setLoading(true);
+    try {
+      const res = await apiClient.delete(`/cart/${itemId}`);
+      if (res.data?.success) {
+        const items = res.data.data || res.data.cart || [];
+        setCart(sanitizeCartItems(items));
+        if (!silent) showToast('Item removed from cart');
+        if (fetchProfile) fetchProfile().catch(() => {});
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Remove from Cart Error:', err);
+      if (!silent) showToast('Failed to remove item', 'error');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, sanitizeCartItems, showToast, fetchProfile]);
+
   // Update existing cart item (Edit configuration or quantity)
   const updateCartItem = useCallback(async (itemId, payload, silent = false) => {
     if (!isAuthenticated || !itemId) return false;
@@ -174,29 +197,6 @@ export const CartProvider = ({ children }) => {
     }
     return updateCartItem(itemId, { quantity: newQuantity, mainQuantity: newQuantity, totalContainers: newQuantity }, silent);
   }, [isAuthenticated, updateCartItem, removeFromCart]);
-
-  // Remove a specific cart item
-  const removeFromCart = useCallback(async (itemId, silent = false) => {
-    if (!isAuthenticated || !itemId) return false;
-    setLoading(true);
-    try {
-      const res = await apiClient.delete(`/cart/${itemId}`);
-      if (res.data?.success) {
-        const items = res.data.data || res.data.cart || [];
-        setCart(sanitizeCartItems(items));
-        if (!silent) showToast('Item removed from cart');
-        if (fetchProfile) fetchProfile().catch(() => {});
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error('Remove from Cart Error:', err);
-      if (!silent) showToast('Failed to remove item', 'error');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated, sanitizeCartItems, showToast, fetchProfile]);
 
   // Clear entire cart
   const clearCart = useCallback(async () => {
