@@ -42,6 +42,16 @@ const Navbar = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1280) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -205,7 +215,7 @@ const Navbar = () => {
 
         {/* ── MOBILE DRAWER ── */}
         {isOpen && (
-          <div className="xl:hidden border-t border-[#E8D7B0]/60 bg-[#FAF2DD] px-5 pt-5 pb-6 flex flex-col gap-1.5 animate-slide-down">
+          <div className="xl:hidden border-t border-[#E8D7B0]/60 bg-[#FAF2DD] px-5 pt-4 pb-5 flex flex-col gap-1.5 animate-slide-down shadow-lg max-h-[calc(100dvh-52px)] overflow-y-auto">
             {navLinks.map((link) => (
               <NavLink
                 key={link.name}
@@ -223,29 +233,12 @@ const Navbar = () => {
                 {link.name}
               </NavLink>
             ))}
-
-            <div className="border-t border-[#E8D7B0] mt-4 pt-5 flex flex-col gap-3">
-              <Link
-                to="/login"
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center border border-[#E0D0AB] text-[#4A3A1F] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:text-[#2E7D32] transition-colors"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center border-2 border-[#2E7D32] text-[#2E7D32] py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-[#2E7D32] hover:text-white transition-all"
-              >
-                Register
-              </Link>
-            </div>
           </div>
         )}
       </nav>
 
-      {/* ── SUSTAINABILITY ANNOUNCEMENT TICKER ── */}
-      <SustainabilityTicker />
+      {/* ── SUSTAINABILITY ANNOUNCEMENT TICKER (Hidden when mobile menu is open) ── */}
+      {!isOpen && <SustainabilityTicker />}
     </header>
   );
 };

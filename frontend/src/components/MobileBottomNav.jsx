@@ -9,9 +9,16 @@ const MobileBottomNav = () => {
   const { user, loading, isAuthenticated } = useAuth();
   const { cartCount } = useCart();
   
-  // Hide on desktop (>=768px handled by md:hidden)
-  // Hide on admin routes and auth pages
-  const hiddenRoutes = ['/admin', '/login', '/register', '/verify-otp'];
+  // 1. Loading check: prevent navigation flashing during initial authentication verification
+  if (loading) return null;
+
+  // 2. Strict Authentication check: Mobile bottom navigation must NOT appear before login
+  // Only display for authenticated users who have an active, validated session
+  if (!isAuthenticated || !user) return null;
+
+  // 3. Hide on desktop (>=768px handled by md:hidden in CSS)
+  // Hide on admin routes, auth pages, or sensitive workflows
+  const hiddenRoutes = ['/admin', '/login', '/register', '/verify-otp', '/forgot-password', '/reset-password'];
   const shouldHide = hiddenRoutes.some(route => location.pathname.startsWith(route));
 
   if (shouldHide) return null;
@@ -48,13 +55,13 @@ const MobileBottomNav = () => {
     { 
       name: 'Home', 
       icon: Home, 
-      path: isAuthenticated ? '/dashboard' : '/', 
+      path: '/dashboard', 
       isActive: isHomeActive 
     },
     { 
       name: 'Quality Test', 
       icon: FlaskConical, 
-      path: isAuthenticated ? '/testing-reports' : '/production-process', 
+      path: '/testing-reports', 
       isActive: isQualityActive 
     },
     { 
@@ -67,7 +74,7 @@ const MobileBottomNav = () => {
     { 
       name: 'Account', 
       icon: User, 
-      path: isAuthenticated ? '/mobile' : '/login', 
+      path: '/mobile', 
       isActive: isAccountActive 
     },
   ];
