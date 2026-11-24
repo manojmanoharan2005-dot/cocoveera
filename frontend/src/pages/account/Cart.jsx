@@ -117,13 +117,14 @@ const Cart = () => {
     }
 
     // Fallback if mainQuantity provided directly
-    if ((!item.completedContainers || item.completedContainers.length === 0) && item.mainQuantity > 0) {
-      grandTotalContainers += item.mainQuantity;
-      grandTotalWeightMT += item.mainQuantity * getWeightMTForContainer(cType);
-      grandTotalVolumeCBM += item.mainQuantity * getVolumeCBMForContainer(cType);
-      const pieces = item.mainQuantity * containerPieces;
+    if (!item.completedContainers || item.completedContainers.length === 0) {
+      const q = Number(item.mainQuantity) || Number(item.totalContainers) || 1;
+      grandTotalContainers += q;
+      grandTotalWeightMT += q * getWeightMTForContainer(cType);
+      grandTotalVolumeCBM += q * getVolumeCBMForContainer(cType);
+      const pieces = q * containerPieces;
       grandTotalPieces += pieces;
-      grandSubtotal += mainPrice * pieces;
+      grandSubtotal += mainPrice * (pieces > 0 ? pieces : q);
     }
   });
 
@@ -181,7 +182,7 @@ const Cart = () => {
               Container Shopping Cart
             </h1>
             <span className="text-[11px] font-extrabold text-[#2E7D32] bg-[#E8F5E9] border border-[#2E7D32]/20 px-2.5 py-0.5 rounded-full shrink-0">
-              {cart.length} {cart.length === 1 ? 'Config' : 'Configs'}
+              {cartCount} {cartCount === 1 ? 'Item' : 'Items'} ({cart.length} {cart.length === 1 ? 'Config' : 'Configs'})
             </span>
           </div>
           <p className="text-[11px] xs:text-xs text-stone-500 font-medium mt-1">
@@ -227,6 +228,32 @@ const Cart = () => {
             const itemTotalPallets = Math.round(itemTotalContainers * getPalletsForContainer(cType));
             const itemEstWeightMT = itemTotalContainers * getWeightMTForContainer(cType);
             const itemEstVolumeCBM = Math.round(itemTotalContainers * getVolumeCBMForContainer(cType));
+            const currentQty = Number(item.mainQuantity) || Number(item.totalContainers) || 1;
+
+            let itemSubtotal = 0;
+            if (completedList.length > 0 || activeLoad > 0) {
+              completedList.forEach(c => {
+                (c.items || []).forEach(prodItem => {
+                  const p = prodItem.product;
+                  if (p && typeof p === 'object') {
+                    const pieces = (prodItem.quantity || 0) * getPiecesForContainer(c.containerType || cType, p.palletCount || 300);
+                    itemSubtotal += (p.price || 0) * pieces;
+                  }
+                });
+              });
+              if (item.activeContainer && item.activeContainer.totalLoad > 0) {
+                (item.activeContainer.items || []).forEach(prodItem => {
+                  const p = prodItem.product;
+                  if (p && typeof p === 'object') {
+                    const pieces = (prodItem.quantity || 0) * getPiecesForContainer(item.activeContainer.containerType || cType, p.palletCount || 300);
+                    itemSubtotal += (p.price || 0) * pieces;
+                  }
+                });
+              }
+            } else {
+              const pieces = currentQty * containerPieces;
+              itemSubtotal = (mainProd.price || 0) * (pieces > 0 ? pieces : currentQty);
+            }
 
             return (
               <motion.div 
@@ -297,7 +324,61 @@ const Cart = () => {
                   </div>
                 </div>
 
-                {/* 2C. Container Specifications Grid (Weight, Volume, Pallets, Load) */}
+                {/* 2C. Price, Quantity Stepper & Subtotal Row */}
+                <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-3.5 bg-[#FAFBF9] border border-stone-200/70 rounded-2xl">
+                  {/* Unit Price */}
+                  <div>
+                    <span className="text-[9px] xs:text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                      Unit Price
+                    </span>
+                    <span className="text-xs xs:text-sm font-poppins font-black text-stone-900">
+                      {convertCurrency(mainProd.price || 0, user?.currency).formatted}
+                      <span className="text-[10px] text-stone-400 font-medium ml-1">/ unit</span>
+                    </span>
+                  </div>
+
+                  {/* Quantity Stepper (+ / -) */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9.5px] xs:text-[10px] font-bold text-stone-400 uppercase tracking-wider hidden xs:inline-block">
+                      Quantity:
+                    </span>
+                    <div className="inline-flex items-center bg-white border border-stone-300/80 rounded-xl shadow-2xs overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => handleQuantityChange(item._id, currentQty - 1)}
+                        className="w-8 h-8 flex items-center justify-center text-stone-600 hover:text-red-600 hover:bg-stone-50 active:bg-stone-100 transition-colors font-bold text-base cursor-pointer select-none"
+                        title="Decrease quantity"
+                        aria-label="Decrease quantity"
+                      >
+                        -
+                      </button>
+                      <span className="w-9 text-center font-poppins font-black text-xs xs:text-sm text-stone-900 select-none">
+                        {currentQty}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleQuantityChange(item._id, currentQty + 1)}
+                        className="w-8 h-8 flex items-center justify-center text-stone-600 hover:text-[#2E7D32] hover:bg-stone-50 active:bg-stone-100 transition-colors font-bold text-base cursor-pointer select-none"
+                        title="Increase quantity"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Item Subtotal */}
+                  <div className="text-right">
+                    <span className="text-[9px] xs:text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                      Subtotal
+                    </span>
+                    <span className="text-sm xs:text-base font-poppins font-black text-[#2E7D32]">
+                      {convertCurrency(itemSubtotal, user?.currency).formatted}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2D. Container Specifications Grid (Weight, Volume, Pallets, Load) */}
                 <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 pt-1">
                   <div className="bg-[#FAFBF9] rounded-xl p-2 xs:p-2.5 border border-stone-200/60 text-center">
                     <span className="text-[9px] xs:text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Container Size</span>
@@ -428,6 +509,10 @@ const Cart = () => {
             </div>
 
             <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between items-center text-stone-600 font-semibold">
+                <span>Total Items</span>
+                <span className="text-[#2E7D32] font-black font-poppins">{cartCount}</span>
+              </div>
               <div className="flex justify-between items-center text-stone-600 font-semibold">
                 <span>Total Configurations</span>
                 <span className="text-stone-900 font-black font-poppins">{cart.length}</span>

@@ -17,6 +17,17 @@ const Profile = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const checkMobile = () => {
+      if (window.innerWidth < 1024) {
+        navigate('/mobile', { replace: true });
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [navigate]);
+
+  useEffect(() => {
     if (fetchProfile) {
       fetchProfile().catch(() => {});
     }
