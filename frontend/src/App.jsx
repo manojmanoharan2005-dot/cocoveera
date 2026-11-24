@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import MobileBottomNav from './components/MobileBottomNav';
 import axios from 'axios';
 import { API_URL } from './utils/config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -310,10 +311,25 @@ const PublicLayout = () => {
 
   const authPaths = ['/login', '/register', '/verify-otp'];
   const hideFooter = authPaths.includes(location.pathname);
+  const isAuthPage = authPaths.includes(location.pathname);
+
+  useEffect(() => {
+    if (isAuthPage) {
+      document.documentElement.classList.add('auth-page');
+      document.body.classList.add('auth-page');
+    } else {
+      document.documentElement.classList.remove('auth-page');
+      document.body.classList.remove('auth-page');
+    }
+    return () => {
+      document.documentElement.classList.remove('auth-page');
+      document.body.classList.remove('auth-page');
+    };
+  }, [isAuthPage]);
 
   return (
     <div
-      className="flex flex-col min-h-screen relative text-[#1A1A1A] font-sans bg-stone-50"
+      className={`flex flex-col min-h-screen relative text-[#1A1A1A] font-sans bg-stone-50 ${isAuthPage ? 'auth-page' : ''}`}
     >
       <div className="relative z-10 flex flex-col flex-grow w-full">
         <Navbar />
@@ -326,6 +342,7 @@ const PublicLayout = () => {
         </div>
         {!hideFooter && <Footer />}
       </div>
+      {!isAuthPage && <MobileBottomNav />}
     </div>
   );
 };

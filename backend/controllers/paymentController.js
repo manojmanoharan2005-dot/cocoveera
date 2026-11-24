@@ -17,6 +17,7 @@ import User from '../models/User.js';
 import { generateInvoicePDF } from '../utils/InvoiceGenerator.js';
 import { sendOrderConfirmationNotification } from '../utils/NotificationService.js';
 import { generateAndStoreDocument } from '../utils/documentService.js';
+import { validateUTRNumber } from '../utils/utrValidator.js';
 
 // In-memory idempotency lock to prevent concurrent duplicate payment processing
 // Key: `${orderId}-${milestoneIndex|full}` → true while in-flight
@@ -1091,11 +1092,13 @@ export const submitWireTransferProof = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to submit payment for this order' });
     }
 
-    if (!transactionReference || !transactionReference.trim()) {
-      return res.status(400).json({ success: false, message: 'Transaction reference (UTR / Wire Ref) is required' });
+    // Strict UTR validation
+    const utrValidation = validateUTRNumber(transactionReference);
+    if (!utrValidation.isValid) {
+      return res.status(400).json({ success: false, message: utrValidation.error });
     }
 
-    const cleanRef = transactionReference.trim();
+    const cleanRef = utrValidation.cleanUtr;
 
     // Check milestone validity
     if (isMilestone && order.paymentMilestones && order.paymentMilestones[idx]) {

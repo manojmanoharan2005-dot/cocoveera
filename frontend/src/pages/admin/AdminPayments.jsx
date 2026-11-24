@@ -45,17 +45,17 @@ export default function AdminPayments() {
         <div className="bg-white p-6 rounded shadow-sm">No payments</div>
       ) : (
         payments.map(p => (
-          <div key={p._id} className="bg-white p-4 rounded shadow-sm flex justify-between items-center">
-            <div>
-              <div className="text-sm font-bold">{p.user?.name || (p.user && p.user.email) || 'Customer'}</div>
-              <div className="text-xs text-stone-500">Amount: {p.amount} • Status: {p.status}</div>
-              <div className="text-xs text-stone-400">Txn: {p.transactionId}</div>
+          <div key={p._id} className="bg-white p-4 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-stone-100">
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-stone-900 truncate">{p.user?.name || (p.user && p.user.email) || 'Customer'}</div>
+              <div className="text-xs text-stone-500 mt-0.5">Amount: <span className="font-semibold text-stone-800">{p.amount}</span> • Status: <span className="font-semibold">{p.status}</span></div>
+              <div className="text-xs text-stone-400 font-mono break-all mt-0.5">Txn: {p.transactionId}</div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 shrink-0">
               {p.status === 'refund_requested' && (
                 <>
-                  <button onClick={() => decide(p._id, 'approve')} className="px-3 py-1 bg-green-600 text-white rounded">Approve</button>
-                  <button onClick={() => decide(p._id, 'reject')} className="px-3 py-1 bg-red-600 text-white rounded">Reject</button>
+                  <button onClick={() => decide(p._id, 'approve')} className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg cursor-pointer">Approve</button>
+                  <button onClick={() => decide(p._id, 'reject')} className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg cursor-pointer">Reject</button>
                 </>
               )}
             </div>

@@ -152,10 +152,10 @@ export default function AdminSettings() {
   return (
     <AdminLayout>
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-            <p className="text-gray-600 mt-1">Manage your account and platform preferences</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
+            <p className="text-gray-600 text-sm mt-1">Manage your account and platform preferences</p>
           </div>
         </div>
 
@@ -174,7 +174,7 @@ export default function AdminSettings() {
         )}
 
         <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-gray-200 min-w-max">
             <button
               onClick={() => setActiveTab('profile')}
               className={`flex-1 py-4 px-6 text-sm font-medium flex items-center justify-center space-x-2 transition ${

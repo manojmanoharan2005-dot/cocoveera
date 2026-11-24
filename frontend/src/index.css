@@ -9,7 +9,7 @@
     box-sizing: border-box;
   }
 
-  html, body, #root {
+  html, body {
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
@@ -17,7 +17,6 @@
     max-width: 100%;
     min-height: 100%;
     overflow-x: hidden;
-    overflow-y: auto;
   }
 
   body {
@@ -29,6 +28,17 @@
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   img, video, canvas, svg {
@@ -163,10 +173,16 @@ html {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   select,
   textarea {
-    min-height: 52px;
-    font-size: 16px !important; /* prevents iOS zoom */
-    padding: 14px 16px;
+    min-height: 48px;
+    font-size: 16px; /* prevents iOS zoom */
     border-radius: 12px;
+  }
+
+  /* Default horizontal padding only when not explicitly set by utility or auth classes */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([class*="pl-"]):not([class*="px-"]):not([class*="p-"]):not([class*="auth-input"]),
+  select:not([class*="pl-"]):not([class*="px-"]):not([class*="p-"]):not([class*="auth-select"]),
+  textarea:not([class*="pl-"]):not([class*="px-"]):not([class*="p-"]) {
+    padding: 14px 16px;
   }
 
   textarea {
@@ -301,5 +317,99 @@ html {
 .animate-marquee-track {
   animation: marquee-track 28s linear infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTHENTICATION UI RESPONSIVE & ICON-SAFE STYLES
+   Bulletproof input padding, vertical centering, and autofill rules
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Inputs with a single leading icon (e.g. Email, Full Name, Currency) */
+.auth-input-leading-icon {
+  padding-left: 2.75rem !important; /* 44px ensures 14px gap after 16px icon */
+  padding-right: 1rem !important;
+}
+
+/* Inputs with both leading icon and trailing visibility toggle (e.g. Password, Confirm Password) */
+.auth-input-both-icons {
+  padding-left: 2.75rem !important; /* 44px ensures 14px gap after 16px icon */
+  padding-right: 2.75rem !important; /* 44px ensures clearance before eye toggle button */
+}
+
+/* Country select with leading Globe icon and trailing ChevronDown icon */
+.auth-select-both-icons {
+  padding-left: 2.75rem !important;
+  padding-right: 2.5rem !important;
+}
+
+/* Password toggle button reset */
+.auth-toggle-btn {
+  min-height: unset !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  padding: 0 !important;
+}
+
+/* Browser Autofill styling: preserves theme background and prevents icon overlap */
+input.auth-input-leading-icon:-webkit-autofill,
+input.auth-input-leading-icon:-webkit-autofill:hover,
+input.auth-input-leading-icon:-webkit-autofill:focus,
+input.auth-input-leading-icon:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #F3F6F8 inset !important;
+  -webkit-text-fill-color: #1c1917 !important;
+  caret-color: #1c1917 !important;
+  padding-left: 2.75rem !important;
+  padding-right: 1rem !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input.auth-input-both-icons:-webkit-autofill,
+input.auth-input-both-icons:-webkit-autofill:hover,
+input.auth-input-both-icons:-webkit-autofill:focus,
+input.auth-input-both-icons:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #F3F6F8 inset !important;
+  -webkit-text-fill-color: #1c1917 !important;
+  caret-color: #1c1917 !important;
+  padding-left: 2.75rem !important;
+  padding-right: 2.75rem !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH PAGE CLEAN SCROLLBAR STYLING
+   Hides visible scrollbar track on auth pages while preserving 100% natural scrolling
+   ═══════════════════════════════════════════════════════════════ */
+html.auth-page,
+body.auth-page,
+.auth-page {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html.auth-page,
+body.auth-page {
+  scroll-behavior: auto !important;
+  overscroll-behavior-y: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STANDARDIZED MODAL BACKDROP BLUR & OVERLAY
+   Applies smooth 6px blur and 40% dark overlay across the entire viewport
+   ═══════════════════════════════════════════════════════════════ */
+.modal-backdrop-blur {
+  background-color: rgba(0, 0, 0, 0.40) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+html.auth-page::-webkit-scrollbar,
+body.auth-page::-webkit-scrollbar,
+.auth-page::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+
 
 

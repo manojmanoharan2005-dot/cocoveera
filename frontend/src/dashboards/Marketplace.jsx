@@ -22,6 +22,19 @@ const fetcher = url => axios.get(url).then(res => {
 });
 
 import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
+
+const CATEGORY_DESCRIPTIONS = {
+  'Coco Peat Blocks': '5kg & 650g low-EC blocks',
+  'Coco Coir Grow Bags': 'Hydroponic slab bags',
+  'Grow Bags': 'Hydroponic slab bags',
+  'Coco Chips': 'High-aeration washed chips',
+  'Coco Peat Discs': 'Seed starter coir discs',
+  'Coir Pith': 'Fine low-EC washed media',
+  'Erosion Control Nets & Logs': 'Coir logs & geo-blankets',
+  'Coconut Coir Rope & Twine': 'High-tensile organic twines',
+  'Coco Cubes': 'Seedling propagation cubes',
+};
 
 // Helper for flexible, case-insensitive, singular/plural category matching
 const isCategoryMatch = (productCat, selectedCat) => {
@@ -43,6 +56,7 @@ const isCategoryMatch = (productCat, selectedCat) => {
 export const Marketplace = () => {
   const { user, fetchProfile } = useAuth();
   const { wishlist, toggleWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -81,19 +95,23 @@ export const Marketplace = () => {
 
   const onAddToCart = async (product) => {
     try {
-      const token = sessionStorage.getItem('cocoveera_token');
-      const res = await axios.post(`${API_URL}/users/cart`, { productId: product._id, quantity: 1, increment: true }, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.data.success) {
-        await fetchProfile();
-      }
+      if (!product) return;
+      await addToCart(product, 1);
     } catch (err) {
       console.error('[Marketplace Debug] onAddToCart error:', err);
     }
   };
 
   const onBuyNow = async (product) => {
-    await onAddToCart(product);
-    navigate('/cart');
+    try {
+      if (!product) return;
+      const success = await addToCart(product, 1);
+      if (success) {
+        navigate('/cart');
+      }
+    } catch (err) {
+      console.error('[Marketplace Debug] onBuyNow error:', err);
+    }
   };
 
   // Filters & Sorting state
@@ -370,22 +388,27 @@ export const Marketplace = () => {
 
       {/* Product Catalog Grid Area or Category Grid Area */}
       {selectedCollection === 'All' && !searchQuery ? (
-        <div className="space-y-6">
-          <h3 className="font-poppins font-extrabold text-xl text-stone-900">Browse by Category</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="font-poppins font-extrabold text-base sm:text-xl text-stone-900">Browse by Category</h3>
+            <span className="text-[11px] sm:text-xs font-semibold text-stone-400">
+              {categoryCards.length} Categories
+            </span>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6">
             {(loading || (products || []).length === 0) && categoryCards.length === 0 ? (
               [...Array(4)].map((_, idx) => (
                 <div 
                   key={idx}
-                  className="bg-white rounded-[24px] border border-stone-200 overflow-hidden flex flex-col animate-pulse"
+                  className="bg-white rounded-2xl sm:rounded-[24px] border border-stone-200 overflow-hidden flex flex-col animate-pulse"
                 >
-                  <div className="h-48 sm:h-56 w-full bg-stone-100/80"></div>
-                  <div className="p-4 sm:p-6 bg-white flex items-center justify-between">
-                    <div className="flex-1 pr-3">
-                      <div className="h-5 bg-stone-200 rounded-md w-2/3 mb-2"></div>
-                      <div className="h-3 bg-stone-100 rounded-md w-1/2"></div>
+                  <div className="h-28 xs:h-32 sm:h-52 w-full bg-stone-100/80"></div>
+                  <div className="p-2.5 xs:p-3 sm:p-5 bg-white flex items-center justify-between">
+                    <div className="flex-1 pr-2">
+                      <div className="h-3.5 sm:h-5 bg-stone-200 rounded-md w-3/4 mb-1.5 sm:mb-2"></div>
+                      <div className="h-2.5 sm:h-3 bg-stone-100 rounded-md w-1/2"></div>
                     </div>
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full bg-stone-100"></div>
+                    <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-10 sm:h-10 shrink-0 rounded-full bg-stone-100"></div>
                   </div>
                 </div>
               ))
@@ -394,36 +417,36 @@ export const Marketplace = () => {
                 <div 
                   key={idx}
                   onClick={() => setSelectedCollection(cat.name)}
-                  className="group cursor-pointer bg-white rounded-[24px] border border-stone-200 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-300 flex flex-col active:scale-[0.99]"
+                  className="group cursor-pointer bg-white rounded-2xl sm:rounded-[24px] border border-stone-200/80 overflow-hidden hover:shadow-[0_16px_36px_rgba(0,0,0,0.08)] hover:border-[#2E7D32]/50 transition-all duration-300 flex flex-col active:scale-[0.98]"
                 >
-                  {/* Full bleed image area */}
-                  <div className="relative h-36 xs:h-40 sm:h-56 w-full overflow-hidden bg-stone-100 flex items-center justify-center p-2.5 sm:p-3">
-                    <div className="h-full aspect-square rounded-[1rem] sm:rounded-[1.5rem] overflow-hidden flex items-center justify-center">
+                  {/* Full bleed / clean image area */}
+                  <div className="relative h-28 xs:h-32 sm:h-52 w-full overflow-hidden bg-gradient-to-b from-[#FAFBF9] to-[#F1F5F1] flex items-center justify-center p-2 xs:p-2.5 sm:p-4 border-b border-stone-100/80">
+                    <div className="h-full w-full flex items-center justify-center">
                       <img 
                         src={cat.image} 
                         alt={cat.name} 
-                        className="w-full h-full object-contain group-hover:scale-108 transition-transform duration-500 ease-out"
+                        className="max-h-full max-w-full object-contain object-center group-hover:scale-105 transition-transform duration-500 ease-out"
                       />
                     </div>
-                    {/* Subtle dark overlay for premium feel */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/5 to-transparent opacity-40 group-hover:opacity-70 transition-opacity duration-300 pointer-events-none"></div>
                     
                     {/* Item count badge floating top-left */}
-                    <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4">
-                      <span className="bg-white/95 backdrop-blur-md text-stone-800 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                      <span className="bg-white/95 backdrop-blur-xs text-[#2E7D32] border border-[#2E7D32]/20 text-[8.5px] sm:text-[10px] font-extrabold px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full uppercase tracking-wider shadow-xs">
                         {cat.count} Item{cat.count !== 1 ? 's' : ''}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="p-4 sm:p-5 bg-white flex items-center justify-between min-w-0">
-                    <div className="pr-3 flex-1 min-w-0">
-                      <h4 className="font-poppins font-extrabold text-stone-900 text-base sm:text-lg group-hover:text-[#2E7D32] transition-colors leading-tight truncate">{cat.name}</h4>
-                      <p className="text-xs sm:text-sm text-stone-500 font-medium mt-0.5 truncate">Explore collection</p>
+                  <div className="p-2.5 xs:p-3 sm:p-5 bg-white flex items-center justify-between min-w-0">
+                    <div className="pr-1.5 xs:pr-2 sm:pr-3 flex-1 min-w-0">
+                      <h4 className="font-poppins font-bold text-stone-900 text-[11.5px] xs:text-xs sm:text-base group-hover:text-[#2E7D32] transition-colors leading-tight truncate">{cat.name}</h4>
+                      <p className="text-[9.5px] xs:text-[10.5px] sm:text-xs text-stone-400 font-medium mt-0.5 sm:mt-1 truncate">
+                        {CATEGORY_DESCRIPTIONS[cat.name] || 'Premium substrate media'}
+                      </p>
                     </div>
                     {/* Action button */}
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300 transform group-hover:translate-x-0.5 shadow-sm">
-                      <ChevronRight className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                    <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-9 sm:h-9 shrink-0 rounded-full bg-stone-50 border border-stone-200/80 flex items-center justify-center text-stone-400 group-hover:bg-[#2E7D32] group-hover:border-[#2E7D32] group-hover:text-white transition-all duration-300 transform group-hover:translate-x-0.5 shadow-xs">
+                      <ChevronRight className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
                     </div>
                   </div>
                 </div>

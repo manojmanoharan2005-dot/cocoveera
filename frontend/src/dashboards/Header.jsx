@@ -9,11 +9,12 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
 
 export const Header = ({
   searchQuery,
   setSearchQuery,
-  cartCount,
+  cartCount: propCartCount,
   activeTab,
   onNotificationClick,
   showSearchAndFilters,
@@ -26,6 +27,8 @@ export const Header = ({
   const location = useLocation();
   const { user, logout } = useAuth();
   const { wishlistCount } = useWishlist();
+  const { cartCount: contextCartCount } = useCart();
+  const cartCount = propCartCount !== undefined ? propCartCount : (contextCartCount || 0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -62,35 +65,35 @@ export const Header = ({
   return (
     <>
       {/* ========================================================================= */}
-      {/* MOBILE TOP NAVIGATION (< 1024px) - Clean 3-Row Professional Ecommerce Header */}
+      {/* MOBILE TOP NAVIGATION (< 1024px) - Premium Compact E-commerce App Header */}
       {/* ========================================================================= */}
-      <header className="lg:hidden w-full bg-white border-b border-stone-200 sticky top-0 z-[100] px-3.5 pt-2 pb-2.5 shadow-xs select-none pt-[env(safe-area-inset-top,0px)]">
-        {/* ROW 1: Height 48px - Hamburger Menu | Centered Logo | Wishlist Icon */}
-        <div className="flex items-center justify-between gap-2 w-full h-[48px]">
+      <header className="lg:hidden w-full bg-white/95 backdrop-blur-md border-b border-stone-200/80 sticky top-0 z-[100] px-3.5 pt-2 pb-2.5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] select-none pt-[env(safe-area-inset-top,0px)]">
+        {/* ROW 1: Height 50px - Hamburger Menu | Centered Logo | Wishlist Icon */}
+        <div className="flex items-center justify-between gap-3 w-full h-[50px]">
           {/* Left: Hamburger Menu */}
           {onMenuClick ? (
             <button
               type="button"
               onClick={onMenuClick}
-              className="w-9 h-9 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-xl transition-colors shrink-0"
+              className="w-10 h-10 flex items-center justify-center text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200/70 rounded-2xl transition-all shadow-2xs active:scale-95 shrink-0"
               aria-label="Open Navigation Menu"
             >
               <Menu className="w-5 h-5 text-stone-800" />
             </button>
           ) : (
-            <div className="w-9 h-9 shrink-0" />
+            <div className="w-10 h-10 shrink-0" />
           )}
 
           {/* Center: Cocoveera Logo + Wordmark */}
           <div 
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 cursor-pointer select-none"
+            className="flex items-center gap-2 cursor-pointer select-none py-1"
             title="Cocoveera Home"
           >
             <img
               src="/logo.webp"
               alt="Cocoveera Logo"
-              className="w-8 h-8 object-contain rounded-lg"
+              className="w-8 h-8 object-contain rounded-lg shadow-2xs"
             />
             <span className="font-poppins font-black text-base tracking-wide leading-none">
               <span className="text-[#7B4F1E]">COCO</span><span className="text-[#2E7D32]">VEERA</span>
@@ -100,43 +103,42 @@ export const Header = ({
           {/* Right: Wishlist Icon */}
           <button
             onClick={() => navigate('/wishlist')}
-            className="relative w-9 h-9 flex items-center justify-center text-stone-700 hover:bg-stone-100 rounded-xl transition-all shrink-0"
+            className="relative w-10 h-10 flex items-center justify-center text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200/70 rounded-2xl transition-all shadow-2xs active:scale-95 shrink-0"
             title="Wishlist"
+            aria-label="View Wishlist"
           >
             <Heart className="w-5 h-5 text-stone-800" />
             {wishlistCount > 0 && (
-              <span className="absolute top-0.5 right-0.5 bg-[#2E7D32] text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white shadow-xs">
+              <span className="absolute -top-0.5 -right-0.5 bg-[#2E7D32] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
                 {wishlistCount}
               </span>
             )}
           </button>
         </div>
 
-        {/* ROW 2: Full Width Search Bar (40px height, 10px rounded, mt-2) */}
-        {showSearchAndFilters && (
-          <div className="relative w-full mt-2">
-            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search coir products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-[40px] bg-[#F7F9F7] border border-stone-200 rounded-[10px] pl-10 pr-4 text-xs font-semibold text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#2E7D32] focus:bg-white focus:shadow-[0_0_0_3px_rgba(46,125,50,0.08)] transition-all"
-            />
-          </div>
-        )}
-
-        {/* ROW 3: Filter Row - ONLY Filter Button */}
+        {/* ROW 2: Compact Modern Search Bar + Filter Button (Side-by-side) */}
         {showSearchAndFilters && (
           <div className="flex items-center gap-2 w-full mt-2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search coir products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-[40px] bg-[#F5F7F5] border border-stone-200/90 rounded-xl pl-9 pr-3 text-xs font-semibold text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#2E7D32] focus:bg-white focus:ring-2 focus:ring-[#2E7D32]/15 transition-all shadow-2xs"
+              />
+            </div>
+
             {/* Filter Button */}
             <button
               type="button"
               onClick={onFilterClick}
-              className="w-full h-[38px] bg-white border border-stone-200 hover:border-[#2E7D32] text-stone-800 font-poppins font-bold text-xs rounded-[10px] flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="h-[40px] px-3 bg-[#F5F7F5] hover:bg-[#E8F5E9] border border-stone-200/90 hover:border-[#2E7D32]/40 text-stone-700 hover:text-[#2E7D32] font-poppins font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shrink-0 shadow-2xs transition-all active:scale-95 cursor-pointer"
+              title="Filter Products"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#2E7D32]" />
-              <span>Filter</span>
+              <span className="text-xs">Filter</span>
             </button>
           </div>
         )}
@@ -220,6 +222,21 @@ export const Header = ({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2 shrink-0">
+
+          {/* Cart */}
+          <button
+            onClick={() => navigate('/cart')}
+            className="relative w-9 h-9 flex items-center justify-center text-[#6B7280] hover:text-[#2E7D32] hover:bg-[#F0FAF0] rounded-[10px] transition-all active:scale-95 cursor-pointer"
+            title="Shopping Cart"
+            aria-label="View Shopping Cart"
+          >
+            <ShoppingCart className="w-4.5 h-4.5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-[#2E7D32] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                {cartCount}
+              </span>
+            )}
+          </button>
 
           {/* Wishlist */}
           <button

@@ -321,16 +321,16 @@ const QuoteDetails = () => {
       </AnimatePresence>
       
       {/* Header Bar */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-start sm:items-center gap-3">
         <button
           onClick={() => navigate('/quotes')}
-          className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors cursor-pointer"
+          className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors cursor-pointer shrink-0 mt-0.5 sm:mt-0"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div>
-          <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Quotation #{quote?.quoteNumber}</h1>
-          <p className="text-stone-500 font-semibold text-sm">Request Date: {quote?.rfq?.createdAt ? new Date(quote.rfq.createdAt).toLocaleString() : (quote?.createdAt ? new Date(quote.createdAt).toLocaleString() : 'N/A')}</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-stone-900 font-poppins break-all">Quotation #{quote?.quoteNumber}</h1>
+          <p className="text-stone-500 font-semibold text-xs sm:text-sm">Request Date: {quote?.rfq?.createdAt ? new Date(quote.rfq.createdAt).toLocaleString() : (quote?.createdAt ? new Date(quote.createdAt).toLocaleString() : 'N/A')}</p>
           {quote?.validUntil && quote?.status === 'Quote Approved' && (
             <p className="text-red-600 font-bold text-xs mt-1">Valid Until: {new Date(quote.validUntil).toLocaleDateString()}</p>
           )}

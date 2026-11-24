@@ -56,6 +56,20 @@ const parseErrorMessage = (err, fallback = 'An error occurred. Please try again.
   return fallback;
 };
 
+const getPasswordStrength = (pass) => {
+  if (!pass) return { score: 0, label: '', color: 'bg-stone-200', textColor: 'text-stone-500' };
+  let score = 0;
+  if (pass.length >= 6) score += 1;
+  if (pass.length >= 8) score += 1;
+  if (/[A-Z]/.test(pass)) score += 1;
+  if (/[0-9]/.test(pass)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+  if (score <= 2) return { score, label: 'Weak', color: 'bg-red-400', textColor: 'text-red-500' };
+  if (score <= 4) return { score, label: 'Good', color: 'bg-amber-400', textColor: 'text-amber-600' };
+  return { score, label: 'Strong', color: 'bg-[#2E7D32]', textColor: 'text-[#2E7D32]' };
+};
+
 export const LoginForm = () => {
   const { login } = useAuth();
   const { verifyAdminKey } = useAdminAuth();
@@ -84,20 +98,6 @@ export const LoginForm = () => {
   const [successStage, setSuccessStage] = useState('idle'); // 'idle' | 'morphing' | 'checkmark' | 'fadeCard'
   const [failureActive, setFailureActive] = useState(false);
   const passwordRef = useRef(null);
-
-  const getPasswordStrength = (pass) => {
-    if (!pass) return { score: 0, label: '', color: 'bg-stone-200', textColor: 'text-stone-500' };
-    let score = 0;
-    if (pass.length >= 6) score += 1;
-    if (pass.length >= 8) score += 1;
-    if (/[A-Z]/.test(pass)) score += 1;
-    if (/[0-9]/.test(pass)) score += 1;
-    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
-
-    if (score <= 2) return { score, label: 'Weak', color: 'bg-red-400', textColor: 'text-red-500' };
-    if (score <= 4) return { score, label: 'Good', color: 'bg-amber-400', textColor: 'text-amber-600' };
-    return { score, label: 'Strong', color: 'bg-[#2E7D32]', textColor: 'text-[#2E7D32]' };
-  };
 
   const {
     register,
@@ -297,9 +297,9 @@ export const LoginForm = () => {
       variants={cardVariants}
       initial="hidden"
       animate={isFadeCard ? { opacity: 0, scale: 0.95, filter: 'blur(10px)', transition: { duration: 0.35 } } : "visible"}
-      className="bg-white border border-stone-200/80 rounded-3xl p-8 shadow-soft text-stone-900 max-w-md w-full mx-auto relative overflow-hidden"
+      className="bg-white border border-stone-200/80 rounded-2xl sm:rounded-3xl p-5 xs:p-6 sm:p-8 shadow-soft text-stone-900 max-w-md w-full mx-auto relative overflow-hidden"
     >
-      <div className="text-center mb-8">
+      <div className="text-center mb-6 sm:mb-8">
         <motion.img 
           variants={logoVariants}
           src="/logo.webp" 
@@ -308,13 +308,13 @@ export const LoginForm = () => {
         />
         <motion.span 
           variants={headerVariants}
-          className="text-[#2E5E35] font-poppins text-[10px] font-bold uppercase tracking-widest"
+          className="text-[#2E5E35] font-poppins text-[10px] font-bold uppercase tracking-widest block"
         >
           Secure Portal
         </motion.span>
         <motion.h2 
           variants={headerVariants}
-          className="text-2xl font-poppins font-extrabold text-stone-900 mt-1"
+          className="text-xl sm:text-2xl font-poppins font-extrabold text-stone-900 mt-1"
         >
           Welcome Back
         </motion.h2>
@@ -353,11 +353,11 @@ export const LoginForm = () => {
             animate={(errors.email || apiError) ? { x: [0, -4, 4, -4, 4, 0] } : { x: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
               EMAIL ADDRESS
             </label>
             <div className="relative group">
-              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
+              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
               <input
                 type="email"
                 autoComplete="username"
@@ -371,14 +371,14 @@ export const LoginForm = () => {
                     if (apiError) setApiError(null);
                   }
                 })}
-                className={`w-full bg-[#F3F6F8] border text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-400/80 ${
-                  (errors.email || (apiError && mode === 'login')) ? 'border-red-400 bg-red-50/30' : 'border-transparent'
+                className={`auth-input-leading-icon w-full h-12 bg-[#F3F6F8] border text-stone-900 rounded-xl pl-11 pr-4 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-400/80 ${
+                  (errors.email || (apiError && mode === 'login')) ? 'border-red-400 bg-red-50/30' : 'border-stone-200/60'
                 }`}
                 placeholder="you@email.com"
               />
             </div>
             {errors.email && (
-              <span className="text-[10px] font-bold text-red-500 mt-1 block">
+              <span className="text-[11px] font-semibold text-red-500 mt-1 block">
                 {errors.email.message}
               </span>
             )}
@@ -389,11 +389,11 @@ export const LoginForm = () => {
             animate={(errors.password || apiError) ? { x: [0, -4, 4, -4, 4, 0] } : { x: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
+            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
               PASSWORD
             </label>
             <div className="relative group">
-              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
+              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
@@ -407,35 +407,36 @@ export const LoginForm = () => {
                   passwordRegister.ref(e);
                   passwordRef.current = e;
                 }}
-                className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-450 ${
-                  (errors.password || (apiError && mode === 'login')) ? 'border-red-400 bg-red-50/30' : 'border-transparent'
+                className={`auth-input-both-icons w-full h-12 bg-[#F3F6F8] border text-stone-900 rounded-xl pl-11 pr-11 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 focus:shadow-[0_0_12px_rgba(46,94,53,0.1)] transition-all placeholder:text-stone-400 ${
+                  (errors.password || (apiError && mode === 'login')) ? 'border-red-400 bg-red-50/30' : 'border-stone-200/60'
                 }`}
                 placeholder="••••••"
               />
               <button
                 type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none"
+                className="auth-toggle-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 focus:outline-none focus:ring-1 focus:ring-[#2E5E35]/30 transition-colors z-10"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
             {errors.password && (
-              <span className="text-[10px] font-bold text-red-500 mt-1 block">
+              <span className="text-[11px] font-semibold text-red-500 mt-1 block">
                 {errors.password.message}
               </span>
             )}
           </motion.div>
 
           {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
             <label className="flex items-center space-x-2 cursor-pointer select-none">
               <input
                 type="checkbox"
                 {...register('rememberMe')}
-                className="w-4 h-4 rounded bg-[#EEF2F6] border-transparent text-[#2E5E35] focus:ring-0 focus:ring-offset-0 cursor-pointer accent-[#2E5E35]"
+                className="w-4 h-4 rounded bg-[#EEF2F6] border-stone-300 text-[#2E5E35] focus:ring-0 cursor-pointer accent-[#2E5E35]"
               />
-              <span className="text-[11px] font-semibold text-stone-500 hover:text-stone-700">
+              <span className="text-[11px] font-semibold text-stone-600 hover:text-stone-800">
                 Remember email
               </span>
             </label>
@@ -446,7 +447,7 @@ export const LoginForm = () => {
                 setApiError(null);
                 setSuccessMessage(null);
               }}
-              className="text-[11px] font-bold text-[#2E5E35] hover:text-[#1F4625] transition-colors focus:outline-none"
+              className="text-[11px] font-bold text-[#2E5E35] hover:text-[#1F4625] transition-colors focus:outline-none min-h-0 py-1"
             >
               Forgot password?
             </button>
@@ -562,17 +563,17 @@ export const LoginForm = () => {
       {mode === 'forgot' && (
         <motion.form onSubmit={handleForgotSubmit} className="space-y-4">
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
-            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
               EMAIL ADDRESS
             </label>
             <div className="relative group">
-              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
+              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
               <input
                 type="email"
                 required
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
-                className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
+                className="auth-input-leading-icon w-full h-12 bg-[#F3F6F8] border border-stone-200/60 text-stone-900 rounded-xl pl-11 pr-4 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
                 placeholder="you@email.com"
               />
             </div>
@@ -586,7 +587,7 @@ export const LoginForm = () => {
             disabled={loading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
+            className="w-full h-12 bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -622,11 +623,11 @@ export const LoginForm = () => {
       {mode === 'reset' && (
         <motion.form onSubmit={isOtpVerified ? handleResetSubmit : handleVerifyOtpCode} className="space-y-4">
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
-            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
               RESET CODE (OTP)
             </label>
             <div className="relative group">
-              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
+              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
               <input
                 type="text"
                 required
@@ -634,7 +635,7 @@ export const LoginForm = () => {
                 disabled={isOtpVerified}
                 value={resetOtp}
                 onChange={(e) => setResetOtp(e.target.value)}
-                className={`w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400 ${
+                className={`auth-input-leading-icon w-full h-12 bg-[#F3F6F8] border border-stone-200/60 text-stone-900 rounded-xl pl-11 pr-4 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400 ${
                   isOtpVerified ? 'opacity-65 cursor-not-allowed' : ''
                 }`}
                 placeholder="Enter 6-digit code"
@@ -651,7 +652,7 @@ export const LoginForm = () => {
               disabled={loading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
+              className="w-full h-12 bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -665,24 +666,25 @@ export const LoginForm = () => {
           ) : (
             <>
               <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
+                <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
                   NEW PASSWORD
                 </label>
                 <div className="relative group">
-                  <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
+                  <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
                   <input
                     type={showNewPassword ? 'text' : 'password'}
                     required
                     minLength={6}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
+                    className="auth-input-both-icons w-full h-12 bg-[#F3F6F8] border border-stone-200/60 text-stone-900 rounded-xl pl-11 pr-11 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
                     placeholder="•••••"
                   />
                   <button
                     type="button"
+                    aria-label={showNewPassword ? "Hide password" : "Show password"}
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none bg-transparent border-none cursor-pointer"
+                    className="auth-toggle-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 focus:outline-none focus:ring-1 focus:ring-[#2E5E35]/30 transition-colors z-10"
                   >
                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -698,23 +700,24 @@ export const LoginForm = () => {
               </motion.div>
 
               <motion.div variants={itemVariants} initial="hidden" animate="visible">
-                <label className="block text-[10px] font-bold text-stone-900 uppercase tracking-wider mb-1.5">
+                <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
                   CONFIRM NEW PASSWORD
                 </label>
                 <div className="relative group">
-                  <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
+                  <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
                   <input
                     type={showConfirmNewPassword ? 'text' : 'password'}
                     required
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
+                    className="auth-input-both-icons w-full h-12 bg-[#F3F6F8] border border-stone-200/60 text-stone-900 rounded-xl pl-11 pr-11 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400"
                     placeholder="•••••"
                   />
                   <button
                     type="button"
+                    aria-label={showConfirmNewPassword ? "Hide password" : "Show password"}
                     onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                    className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none bg-transparent border-none cursor-pointer"
+                    className="auth-toggle-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 focus:outline-none focus:ring-1 focus:ring-[#2E5E35]/30 transition-colors z-10"
                   >
                     {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -739,7 +742,7 @@ export const LoginForm = () => {
                 disabled={loading}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
+                className="w-full h-12 bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -783,23 +786,24 @@ export const LoginForm = () => {
             <p className="text-xs text-stone-500 mt-1 font-medium">Please enter your 2-Step Verification Key to continue.</p>
           </div>
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
-            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
               ADMIN VERIFICATION KEY
             </label>
             <div className="relative group">
-              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 transition-colors group-focus-within:text-[#2E5E35]" />
+              <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={verificationKey}
                 onChange={(e) => setVerificationKey(e.target.value)}
-                className="w-full bg-[#F3F6F8] border border-transparent text-stone-900 rounded-xl py-3.5 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20 transition-all placeholder:text-stone-400"
+                className="auth-input-both-icons w-full h-12 bg-[#F3F6F8] border border-stone-200/60 text-stone-900 rounded-xl pl-11 pr-11 text-sm sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2E5E35]/20 transition-all placeholder:text-stone-400"
                 placeholder="Enter Key"
               />
               <button
                 type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none bg-transparent border-none cursor-pointer"
+                className="auth-toggle-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 focus:outline-none focus:ring-1 focus:ring-[#2E5E35]/30 transition-colors z-10"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -814,7 +818,7 @@ export const LoginForm = () => {
             disabled={loading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
+            className="w-full h-12 bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -851,7 +855,7 @@ export const LoginForm = () => {
       {mode === 'login' && (
         <p
           key="register-link"
-          className="text-center text-xs text-stone-555 mt-6 font-semibold animate-fade-in"
+          className="text-center text-xs text-stone-500 mt-6 font-semibold animate-fade-in"
         >
           New to Cocoveera?{' '}
           <span
@@ -866,4 +870,4 @@ export const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default React.memo(LoginForm);

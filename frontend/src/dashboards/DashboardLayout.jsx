@@ -7,6 +7,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, apiClient } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import MobileBottomNav from '../components/MobileBottomNav';
@@ -261,7 +262,7 @@ export const DashboardLayout = () => {
     };
   }, [sidebarOpen]);
 
-  const cartCount = user?.cart?.length || 0;
+  const { cartCount } = useCart();
   const wishlistCount = user?.wishlist?.length || 0;
 
   // Determine active tab purely from pathname
@@ -316,7 +317,7 @@ export const DashboardLayout = () => {
           onMenuClick={() => setSidebarOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto px-4 sm:px-5 lg:px-8 py-4 sm:py-5 md:py-6 pb-24 sm:pb-6 lg:pb-8">
+        <main className="flex-1 overflow-y-auto px-3.5 xs:px-4 sm:px-5 lg:px-8 py-3.5 sm:py-5 md:py-6 pb-44 md:pb-44 lg:pb-8">
           <ErrorBoundary>
             <Suspense fallback={
               <div className="w-full h-full flex flex-col items-center justify-center py-12">

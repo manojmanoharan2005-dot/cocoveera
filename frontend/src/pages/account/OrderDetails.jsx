@@ -114,25 +114,27 @@ const OrderDetails = () => {
   return (
     <div className="w-full space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/orders')} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-extrabold text-stone-900 font-poppins">Order {backendOrder.orderNumber || order.id}</h1>
-          <p className="text-stone-500 font-semibold text-sm">Placed on {new Date(order.date).toLocaleString()}</p>
-          {(order.shippingDate || order.estimatedDeliveryDate || backendOrder.expectedDeliveryDate) && (
-            <p className="text-stone-500 font-semibold text-xs mt-1">
-              {order.shippingDate && <span>Est. Shipping: {new Date(order.shippingDate).toLocaleDateString()}</span>}
-              {order.shippingDate && order.estimatedDeliveryDate && <span className="mx-2">&bull;</span>}
-              {order.estimatedDeliveryDate && <span>Est. Delivery: {new Date(order.estimatedDeliveryDate).toLocaleDateString()}</span>}
-              {(order.estimatedDeliveryDate || order.shippingDate) && backendOrder.expectedDeliveryDate && <span className="mx-2">&bull;</span>}
-              {backendOrder.expectedDeliveryDate && <span>Expected Delivery: {formatDateFriendly(backendOrder.expectedDeliveryDate)}</span>}
-            </p>
-          )}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3 min-w-0">
+          <button onClick={() => navigate('/orders')} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-stone-200 hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors shrink-0 mt-0.5 sm:mt-0">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-stone-900 font-poppins break-all">Order {backendOrder.orderNumber || order.id}</h1>
+            <p className="text-stone-500 font-semibold text-xs sm:text-sm">Placed on {new Date(order.date).toLocaleString()}</p>
+            {(order.shippingDate || order.estimatedDeliveryDate || backendOrder.expectedDeliveryDate) && (
+              <p className="text-stone-500 font-semibold text-xs mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                {order.shippingDate && <span>Est. Shipping: {new Date(order.shippingDate).toLocaleDateString()}</span>}
+                {order.shippingDate && order.estimatedDeliveryDate && <span>&bull;</span>}
+                {order.estimatedDeliveryDate && <span>Est. Delivery: {new Date(order.estimatedDeliveryDate).toLocaleDateString()}</span>}
+                {(order.estimatedDeliveryDate || order.shippingDate) && backendOrder.expectedDeliveryDate && <span>&bull;</span>}
+                {backendOrder.expectedDeliveryDate && <span>Expected Delivery: {formatDateFriendly(backendOrder.expectedDeliveryDate)}</span>}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="ml-auto flex gap-2">
-          <button onClick={() => navigate(`/track/${order.id}`)} className="px-4 py-2 bg-[#2E7D32] text-white font-bold text-sm rounded-xl hover:bg-[#1B5E20] transition-colors flex items-center gap-2 shadow-md shadow-[#2E7D32]/20">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <button onClick={() => navigate(`/track/${order.id}`)} className="w-full sm:w-auto px-4 py-2 bg-[#2E7D32] text-white font-bold text-sm rounded-xl hover:bg-[#1B5E20] transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#2E7D32]/20 cursor-pointer">
             <Truck className="w-4 h-4" /> Track Container
           </button>
         </div>
@@ -181,17 +183,17 @@ const OrderDetails = () => {
             <h3 className="text-sm font-black text-stone-900 uppercase tracking-wider mb-4 border-b border-stone-100 pb-2">Products ({order.products.length})</h3>
             <div className="space-y-4">
               {order.products.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center bg-stone-50 p-4 rounded-xl border border-stone-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-stone-200">
+                <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-50 p-4 rounded-xl border border-stone-100">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-stone-200 shrink-0">
                       <Package className="w-6 h-6 text-stone-400" />
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-stone-900">{item.name}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-stone-900 truncate">{item.name}</p>
                       <p className="text-xs text-stone-500 font-semibold">{item.quantity} {item.unit} &bull; {convertCurrency(item.price, user?.currency).formatted} / {item.unit}</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-200/60">
                     <p className="text-sm font-black text-[#2E7D32]">{convertCurrency(item.quantity * item.price, user?.currency).formatted}</p>
                   </div>
                 </div>

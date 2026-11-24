@@ -18,9 +18,21 @@ const Navbar = () => {
   const [langDropdown, setLangDropdown] = useState(false);
   const [language, setLanguage] = useState('EN');
 
+  const isAuthPage = ['/login', '/register', '/verify-otp'].includes(location.pathname);
+
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', handleScroll);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrolled = window.scrollY > 40;
+          setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -60,14 +72,14 @@ const Navbar = () => {
       {/* ── TOP STRIP ── */}
       <div
         className={`bg-primary text-white text-[11px] font-medium transition-all duration-300 overflow-hidden ${
-          isScrolled ? 'max-h-0 py-0 opacity-0' : 'max-h-10 py-2 opacity-100'
+          !isAuthPage && isScrolled ? 'max-h-0 py-0 opacity-0' : 'max-h-10 py-2 opacity-100'
         }`}
       >
-        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 flex justify-between items-center h-full">
-          <div className="flex items-center gap-3 sm:gap-6 flex-wrap justify-center w-full sm:w-auto">
-            <a href="mailto:supportdesk@cocoveera.com" className="flex items-center gap-1.5 hover:text-green-200 transition-colors">
-              <Mail className="w-3 h-3" />
-              supportdesk@cocoveera.com
+        <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 flex justify-between items-center h-full">
+          <div className="flex items-center gap-2 sm:gap-6 flex-wrap justify-center w-full sm:w-auto">
+            <a href="mailto:supportdesk@cocoveera.com" className="flex items-center gap-1.5 hover:text-green-200 transition-colors text-[10px] sm:text-[11px] truncate">
+              <Mail className="w-3 h-3 shrink-0" />
+              <span>supportdesk@cocoveera.com</span>
             </a>
           </div>
           <div className="hidden sm:flex items-center gap-1.5">
@@ -79,8 +91,38 @@ const Navbar = () => {
 
       {/* ── MAIN NAV ── */}
       <nav className="bg-white shadow-[0_3px_12px_rgba(0,0,0,0.04)] border-b border-stone-200/60 transition-all duration-500">
-        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 flex items-center h-[60px] gap-4 sm:gap-8">
+        {/* MOBILE VIEW (< xl) - Compact Modern Header (Hamburger Left | Logo Center | Wishlist/Login Right) */}
+        <div className="flex xl:hidden items-center justify-between w-full h-[52px] px-3.5">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
+            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-stone-50 hover:bg-stone-100 border border-stone-200/70 text-stone-700 transition-all shadow-2xs active:scale-95 shrink-0"
+          >
+            {isOpen ? <X className="w-5 h-5 text-[#2E7D32]" /> : <Menu className="w-5 h-5 text-stone-800" />}
+          </button>
 
+          <Link to="/" className="flex items-center gap-2 cursor-pointer select-none py-1">
+            <img
+              src="/logo.webp"
+              alt="Cocoveera Logo"
+              className="h-8 object-contain rounded-lg shadow-2xs"
+            />
+            <span className="font-poppins font-black text-base tracking-wide leading-none">
+              <span className="text-[#8B4513]">COCO</span><span className="text-[#2E7D32]">VEERA</span>
+            </span>
+          </Link>
+
+          <Link
+            to="/login"
+            aria-label="Account Login"
+            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-stone-50 hover:bg-stone-100 border border-stone-200/70 text-stone-700 transition-all shadow-2xs active:scale-95 shrink-0"
+          >
+            <User className="w-5 h-5 text-stone-800" />
+          </Link>
+        </div>
+
+        {/* DESKTOP VIEW (>= xl) - Exact Unchanged Desktop Layout */}
+        <div className="hidden xl:flex w-full px-4 sm:px-8 lg:px-12 xl:px-16 items-center h-[60px] gap-3 sm:gap-8">
           {/* LOGO */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <img
@@ -95,7 +137,7 @@ const Navbar = () => {
           </Link>
 
           {/* CENTER NAV – hidden below xl */}
-          <div className="hidden xl:flex flex-1 items-center justify-center gap-6">
+          <div className="flex flex-1 items-center justify-center gap-6">
             {navLinks.map((link) => (
               <NavLink
                 key={link.name}
@@ -115,7 +157,7 @@ const Navbar = () => {
           </div>
 
           {/* RIGHT ACTIONS – desktop */}
-          <div className="hidden xl:flex items-center gap-4 flex-shrink-0">
+          <div className="flex items-center gap-4 flex-shrink-0">
             {/* Language picker */}
             <div className="relative">
               <button
@@ -158,17 +200,6 @@ const Navbar = () => {
             >
               Register
             </Link>
-          </div>
-
-          {/* MOBILE TOGGLE */}
-          <div className="xl:hidden ml-auto">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label={isOpen ? 'Close menu' : 'Open menu'}
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-[#4A3A1F] hover:bg-[#E8D7B0]/50 transition-colors"
-            >
-              {isOpen ? <X className="w-5 h-5 text-[#2E7D32]" /> : <Menu className="w-5 h-5 text-[#4A3A1F]" />}
-            </button>
           </div>
         </div>
 

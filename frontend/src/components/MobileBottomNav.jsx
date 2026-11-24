@@ -1,68 +1,132 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Package, FlaskConical, ShoppingCart, User } from 'lucide-react';
+import { Home, FlaskConical, ShoppingCart, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 const MobileBottomNav = () => {
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
+  const { cartCount } = useCart();
   
   // Hide on desktop (>=768px handled by md:hidden)
-  // Hide on admin routes
-  // Hide on checkout/product view where specific action bars exist at the bottom
-  const hiddenRoutes = ['/admin', '/checkout', '/product/', '/productview/', '/mobile'];
-  const shouldHide = hiddenRoutes.some(route => location.pathname.includes(route));
+  // Hide on admin routes and auth pages
+  const hiddenRoutes = ['/admin', '/login', '/register', '/verify-otp'];
+  const shouldHide = hiddenRoutes.some(route => location.pathname.startsWith(route));
 
-  if (shouldHide || loading) return null;
+  if (shouldHide) return null;
 
-  const cartCount = user?.cart?.length || 0;
+  // Determine active states for the 4 primary tabs
+  const isHomeActive = 
+    location.pathname === '/' || 
+    location.pathname === '/dashboard' || 
+    location.pathname === '/products' || 
+    location.pathname.startsWith('/product/') || 
+    location.pathname.startsWith('/products/') || 
+    location.pathname.startsWith('/productview/') || 
+    location.pathname.startsWith('/dashboard/product');
+
+  const isQualityActive = 
+    location.pathname === '/testing-reports' || 
+    location.pathname === '/production-process' || 
+    location.pathname === '/quality-testing';
+
+  const isCartActive = 
+    location.pathname === '/cart' || 
+    location.pathname.startsWith('/checkout');
+
+  const isAccountActive = 
+    location.pathname === '/mobile' || 
+    location.pathname.startsWith('/profile') || 
+    location.pathname.startsWith('/orders') || 
+    location.pathname.startsWith('/quotes') || 
+    location.pathname.startsWith('/settings') || 
+    location.pathname.startsWith('/address') || 
+    location.pathname.startsWith('/payments');
 
   const navItems = [
-    { name: 'Home', icon: Home, path: '/dashboard' },
-    { name: 'Quality Test', icon: FlaskConical, path: '/testing-reports' },
-    { name: 'Cart', icon: ShoppingCart, path: '/cart', badge: cartCount },
-    { name: 'Account', icon: User, path: '/mobile' },
+    { 
+      name: 'Home', 
+      icon: Home, 
+      path: isAuthenticated ? '/dashboard' : '/', 
+      isActive: isHomeActive 
+    },
+    { 
+      name: 'Quality Test', 
+      icon: FlaskConical, 
+      path: isAuthenticated ? '/testing-reports' : '/production-process', 
+      isActive: isQualityActive 
+    },
+    { 
+      name: 'Cart', 
+      icon: ShoppingCart, 
+      path: '/cart', 
+      badge: cartCount, 
+      isActive: isCartActive 
+    },
+    { 
+      name: 'Account', 
+      icon: User, 
+      path: isAuthenticated ? '/mobile' : '/login', 
+      isActive: isAccountActive 
+    },
   ];
 
   return (
     <>
-      {/* Global padding added dynamically to body when this component mounts, 
-          but adding an invisible spacer here is safer for the React tree */}
-      <div className="h-[58px] md:hidden w-full shrink-0" aria-hidden="true" />
+      {/* Spacer to prevent content from being covered by floating bottom nav */}
+      <div className="h-20 md:hidden w-full shrink-0 pointer-events-none" aria-hidden="true" />
       
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-stone-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[9999] px-2 flex items-center justify-between" style={{ height: 'calc(56px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 4px)' }}>
-        {navItems.map((item) => {
-          const isActive = 
-            location.pathname === item.path || 
-            (item.name === 'Account' && location.pathname.startsWith('/account') && location.pathname !== '/cart' && location.pathname !== '/testing-reports');
-          
-          return (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              className={`relative flex flex-col items-center justify-center w-full h-full space-y-0.5 transition-all duration-300 ${
-                isActive ? 'text-[#2E7D32]' : 'text-stone-400 hover:text-stone-600'
-              }`}
-            >
-              <div className="relative">
-                <item.icon 
-                  className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-105' : 'scale-100'}`} 
-                  strokeWidth={isActive ? 2.5 : 2} 
-                />
-                {item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1.5 bg-[#2E7D32] text-white text-[8px] font-black min-w-[13px] h-[13px] rounded-full flex items-center justify-center border border-white">
-                    {item.badge}
-                  </span>
-                )}
-              </div>
-              <span className={`text-[9.5px] tracking-tight transition-all duration-300 ${
-                isActive ? 'font-black text-[#2E7D32]' : 'font-semibold text-stone-500'
-              }`}>
-                {item.name}
-              </span>
-            </NavLink>
-          );
-        })}
+      {/* Floating Pill Mobile Navigation */}
+      <div 
+        className="md:hidden fixed z-[9999] pointer-events-auto transition-all duration-300 left-3 right-3 xs:left-4 xs:right-4 max-w-[390px] sm:max-w-md mx-auto"
+        style={{ 
+          bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', 
+        }}
+      >
+        <nav 
+          className="w-full bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.12)] px-2 py-1.5 flex items-center justify-between"
+          aria-label="Mobile Navigation"
+        >
+          {navItems.map((item) => {
+            const { isActive } = item;
+            
+            return (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                className="flex-1 flex flex-col items-center justify-center min-w-0 py-0.5 relative group cursor-pointer select-none"
+              >
+                <div className="relative flex items-center justify-center">
+                  <div 
+                    className={`w-10 h-7 xs:w-11 xs:h-7.5 rounded-full flex items-center justify-center transition-all duration-200 ${
+                      isActive ? 'bg-[#2E7D32]/12 text-[#2E7D32]' : 'text-stone-400 group-hover:bg-stone-100/60 group-hover:text-stone-600'
+                    }`}
+                  >
+                    <item.icon 
+                      className={`w-4.5 h-4.5 transition-transform duration-200 ${
+                        isActive ? 'scale-105 stroke-[#2E7D32]' : 'scale-100 stroke-stone-400 group-hover:stroke-stone-600'
+                      }`} 
+                      strokeWidth={isActive ? 2.4 : 1.8} 
+                    />
+                  </div>
+                  {item.badge > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-[#2E7D32] text-white text-[8px] font-black min-w-[15px] h-[15px] rounded-full flex items-center justify-center border-2 border-white shadow-xs leading-none">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
+                </div>
+                <span 
+                  className={`text-[9px] xs:text-[9.5px] leading-tight tracking-tight mt-1 whitespace-nowrap transition-all duration-200 ${
+                    isActive ? 'font-black text-[#2E7D32]' : 'font-semibold text-stone-400 group-hover:text-stone-600'
+                  }`}
+                >
+                  {item.name}
+                </span>
+              </NavLink>
+            );
+          })}
+        </nav>
       </div>
     </>
   );

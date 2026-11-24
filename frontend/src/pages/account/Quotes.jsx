@@ -351,25 +351,25 @@ const Quotes = () => {
         className="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
       >
         {/* Header (Flipkart/Amazon style) */}
-        <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3.5 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
-          <div className="flex flex-wrap gap-6 md:gap-12">
-            <div className="flex flex-col">
+        <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3.5 text-xs text-stone-600 flex flex-col md:flex-row justify-between gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-3 sm:gap-4 md:gap-8 lg:gap-12">
+            <div className="flex flex-col min-w-0">
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Request Date</span>
-              <span className="font-bold text-stone-700">
+              <span className="font-bold text-stone-700 truncate">
                 {requestDateStr}
               </span>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Expected Delivery</span>
-              <span className="font-bold text-stone-700">
+              <span className="font-bold text-stone-700 truncate">
                 {quote.rfq?.expectedDeliveryDate ? formatDateFriendly(quote.rfq.expectedDeliveryDate) : 'N/A'}
               </span>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Price Quoted</span>
-              <span className="font-black text-stone-900 text-sm sm:text-base">
+              <span className="font-black text-stone-900 text-xs sm:text-sm truncate">
                 {(quote.convertedAmount > 0 || quote.grandTotal > 0)
                   ? formatCurrency(quote.convertedAmount || quote.grandTotal, quote.currency || 'USD')
                   : (quote.originalInrAmount > 0
@@ -378,26 +378,26 @@ const Quotes = () => {
               </span>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Ship To</span>
-              <span className="font-bold text-stone-700">
+              <span className="font-bold text-stone-700 truncate">
                 {quote.shippingAddress?.country || quote.rfq?.country || user?.country || 'Destination Port'}
               </span>
             </div>
 
             {quote.validUntil && quote.status === 'Quote Approved' && (
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span className="uppercase text-[9px] font-bold text-stone-400 tracking-wider mb-0.5">Valid Until</span>
-                <span className="font-bold text-red-600">
+                <span className="font-bold text-red-600 truncate">
                   {new Date(quote.validUntil).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col md:items-end justify-center">
-            <span className="uppercase text-[9px] font-black text-stone-400 tracking-widest mb-0.5">Quote #{quote.quoteNumber}</span>
-            <div className="flex gap-2.5 text-[#007185] font-semibold mt-0.5 text-xs">
+          <div className="flex flex-col md:items-end justify-center border-t md:border-t-0 pt-2.5 md:pt-0 border-stone-200/80">
+            <span className="uppercase text-[9px] font-black text-stone-400 tracking-widest mb-0.5 break-all">Quote #{quote.quoteNumber}</span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[#007185] font-semibold mt-0.5 text-xs">
               <span
                 className="hover:text-[#C45500] hover:underline cursor-pointer"
                 onClick={() => navigate(`/quotes/${quote._id}`)}

@@ -780,18 +780,18 @@ Timestamp: ${new Date().toLocaleString()}
     }
     setActionLoading(true);
     try {
-      const res = await apiClient.post('/users/cart', { 
+      const success = await addContainerToCart({ 
         productId: product._id, 
+        mainProductId: product._id,
         quantity, 
         increment: true 
       });
       localStorage.setItem('preferredContainer', containerType === '40FT' ? '40FT Container' : '20FT Container');
-      if (res.data.success) {
-        await fetchProfile();
+      if (success) {
         navigate('/cart');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Buy Now error:', err);
     } finally {
       setActionLoading(false);
     }

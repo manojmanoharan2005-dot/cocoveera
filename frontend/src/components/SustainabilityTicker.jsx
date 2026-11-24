@@ -24,7 +24,7 @@ const SustainabilityTicker = () => {
 
   return (
     <div 
-      className="w-full bg-[#2E7D32] h-[42px] flex items-center overflow-hidden select-none pointer-events-auto z-40 relative"
+      className="w-full bg-[#2E7D32] h-[42px] flex items-center overflow-hidden select-none pointer-events-none z-40 relative"
       aria-label="Sustainability Announcement Ticker"
     >
       <div className="flex w-max animate-marquee-track will-change-transform">
@@ -35,5 +35,5 @@ const SustainabilityTicker = () => {
   );
 };
 
-export default SustainabilityTicker;
+export default React.memo(SustainabilityTicker);
 

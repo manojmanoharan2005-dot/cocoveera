@@ -10,9 +10,11 @@ import { useQuery } from '@tanstack/react-query';
 import { FixedSizeList as List } from 'react-window';
 
 import { apiClient, useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { convertCurrency } from '../../utils/currencyConverter';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import SEO from '../../components/SEO';
+import { validateUTRNumber } from '../../utils/utrValidator';
 
 // Lazy load common PDFModal component for inline invoice preview
 const PDFModal = React.lazy(() => import('../../components/common/PDFModal'));
@@ -66,6 +68,7 @@ const Orders = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, fetchProfile } = useAuth();
+  const { addToCart } = useCart();
   
   // Highlight state for newly created/updated orders (Requirement 6 & 9)
   const [highlightedOrderId, setHighlightedOrderId] = useState(location.state?.newOrderId || location.state?.updatedOrderId || null);
@@ -116,6 +119,7 @@ const Orders = () => {
   const [wireReceiptUrl, setWireReceiptUrl] = useState('');
   const [wireNotes, setWireNotes] = useState('');
   const [copiedField, setCopiedField] = useState(null);
+  const [utrError, setUtrError] = useState('');
   const [errorState, setErrorState] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState('');
@@ -130,6 +134,18 @@ const Orders = () => {
     'Payment issue',
     'Other'
   ];
+
+  // Prevent body scrolling when any modal is open
+  useEffect(() => {
+    if (paymentModalOpen || isCancelModalOpen || pdfModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [paymentModalOpen, isCancelModalOpen, pdfModalOpen]);
 
   // 300ms Debounce search input
   useEffect(() => {
@@ -249,10 +265,9 @@ const Orders = () => {
     try {
       for (const item of order.items) {
         if (item.product && item.product._id) {
-          await apiClient.post('/users/cart', { productId: item.product._id, quantity: item.quantity, increment: true });
+          await addToCart(item.product, item.quantity);
         }
       }
-      await fetchProfile();
       navigate('/checkout');
     } catch (error) {
       alert('Failed to reorder. Please try again.');
@@ -289,11 +304,23 @@ const Orders = () => {
       (user?.country?.toLowerCase() === 'india');
     setSelectedGateway(isDomestic ? 'razorpay' : 'stripe');
     setWireReference('');
+    setUtrError('');
     setWireReceiptUrl('');
     setWireNotes('');
     setPaymentError('');
     setPaymentSuccess('');
     setPaymentModalOpen(true);
+  };
+
+  const handleUtrChange = (val) => {
+    const clean = val.replace(/\s+/g, '').toUpperCase();
+    setWireReference(clean);
+    if (clean.length === 0) {
+      setUtrError('');
+      return;
+    }
+    const result = validateUTRNumber(clean);
+    setUtrError(result.isValid ? '' : result.error);
   };
 
   const handleRazorpayCheckout = async () => {
@@ -403,11 +430,14 @@ const Orders = () => {
 
   const handleWireSubmit = async () => {
     if (!activeOrderForPayment) return;
-    if (!wireReference.trim()) {
-      setPaymentError('Please enter your Bank UTR / Transaction Reference Number.');
+    const valResult = validateUTRNumber(wireReference);
+    if (!valResult.isValid) {
+      setUtrError(valResult.error);
+      setPaymentError(valResult.error);
       return;
     }
 
+    setUtrError('');
     setIsProcessing(true);
     setPaymentError('');
 
@@ -415,7 +445,7 @@ const Orders = () => {
       const res = await apiClient.post('/payments/submit-wire', {
         orderId: activeOrderForPayment._id,
         milestoneIndex: activeMilestoneIndex,
-        transactionReference: wireReference.trim(),
+        transactionReference: valResult.cleanUtr,
         paymentProofUrl: wireReceiptUrl.trim(),
         notes: wireNotes.trim(),
       });
@@ -430,7 +460,11 @@ const Orders = () => {
         throw new Error(res.data.message || 'Failed to submit wire transfer details');
       }
     } catch (err) {
-      setPaymentError(err.response?.data?.message || err.message || 'Failed to submit wire proof.');
+      if (err.response?.status === 404 || err.response?.data?.message?.includes('not found')) {
+        setPaymentError('Backend payment service is deploying on Render. Please click "Manual Deploy -> Deploy latest commit" on your Render dashboard, or retry shortly.');
+      } else {
+        setPaymentError(err.response?.data?.message || err.message || 'Failed to submit wire proof.');
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -838,23 +872,26 @@ const Orders = () => {
 
         {/* Card Header (Amazon/Flipkart Style) */}
         <div className="bg-[#F0F2F2] border-b border-stone-200 px-4 md:px-6 py-3 text-sm text-stone-600 flex flex-col md:flex-row justify-between gap-4">
-          <div className="flex gap-6 md:gap-12">
-            <div className="flex flex-col">
-              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order placed</span>
-              <span className="font-semibold text-stone-700">{orderDate}</span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:items-center gap-3 sm:gap-4 md:gap-8 lg:gap-12 w-full md:w-auto">
+            <div className="flex flex-col min-w-0">
+              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5 tracking-wider">Order placed</span>
+              <span className="font-semibold text-xs sm:text-sm text-stone-700 truncate">{orderDate}</span>
             </div>
-            <div className="flex flex-col">
-              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Total</span>
-              <span className="font-semibold text-stone-700">{convertCurrency((order.totalAmount || order.total || 0), order.currency || user?.currency || 'USD').formatted}</span>
+            <div className="flex flex-col min-w-0">
+              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5 tracking-wider">Total</span>
+              <span className="font-semibold text-xs sm:text-sm text-stone-700 truncate">{convertCurrency((order.totalAmount || order.total || 0), order.currency || user?.currency || 'USD').formatted}</span>
             </div>
-            <div className="flex flex-col">
-              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Ship to</span>
-              <span className="font-semibold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer">{order.shippingDetails?.country || user?.country || 'Destination Port'}</span>
+            <div className="flex flex-col col-span-2 sm:col-span-1 min-w-0">
+              <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5 tracking-wider">Ship to</span>
+              <span className="font-semibold text-xs sm:text-sm text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer truncate max-w-[200px]">{order.shippingDetails?.country || user?.country || 'Destination Port'}</span>
             </div>
           </div>
-          <div className="flex flex-col md:items-end">
-            <span className="uppercase text-[10px] font-bold text-stone-500 mb-0.5">Order # {shortOrderId}</span>
-            <div className="flex gap-2 text-[#007185] font-semibold mt-0.5 text-xs">
+          <div className="flex flex-col md:items-end justify-between border-t md:border-t-0 pt-2.5 md:pt-0 border-stone-200/80">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="uppercase text-[10px] font-bold text-stone-500 tracking-wider">Order #</span>
+              <span className="font-mono text-xs font-semibold text-stone-700 break-all">{shortOrderId}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[#007185] font-semibold mt-1 text-xs">
               <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => navigate(`/orders/${order._id}`)}>Order details</span>
               <span className="text-stone-300">|</span>
               <span className="hover:text-[#C45500] hover:underline cursor-pointer" onClick={() => handlePreviewInvoice(order._id, order.orderNumber || order._id)}>Invoice Preview</span>
@@ -867,29 +904,29 @@ const Orders = () => {
         {/* Card Body - Products List */}
         <div className="p-4 md:p-6 space-y-6">
           {/* Status & Milestones Column Layout */}
-          <div className="flex flex-col md:flex-row justify-between items-start border-b border-stone-100 pb-5 gap-6">
-            <div>
-              <h3 className={`text-lg md:text-xl font-bold ${statusColorClass}`}>
+          <div className="flex flex-col md:flex-row justify-between items-start border-b border-stone-100 pb-5 gap-4 md:gap-6">
+            <div className="w-full md:w-auto">
+              <h3 className={`text-base sm:text-lg md:text-xl font-bold ${statusColorClass}`}>
                 {displayStatusText}
               </h3>
               
               {/* Payment Progress Bar */}
               {order.paymentMilestones && order.paymentMilestones.length > 0 && (
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="w-40 sm:w-56 bg-stone-100 rounded-full h-2 border border-stone-200 overflow-hidden relative">
+                <div className="mt-3 flex items-center gap-3 w-full sm:w-auto">
+                  <div className="flex-1 sm:w-56 max-w-xs bg-stone-100 rounded-full h-2 border border-stone-200 overflow-hidden relative">
                     <div 
                       className="bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] h-full transition-all" 
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <span className="text-xs font-black text-stone-700">{progress}% Paid</span>
+                  <span className="text-xs font-black text-stone-700 shrink-0">{progress}% Paid</span>
                 </div>
               )}
             </div>
 
             {/* Vertical milestones status tracker list */}
             {order.paymentMilestones && order.paymentMilestones.length > 0 && (
-              <div className="bg-stone-50 border border-stone-200/50 rounded-xl p-3 shrink-0">
+              <div className="bg-stone-50 border border-stone-200/50 rounded-xl p-3 w-full md:w-auto md:shrink-0">
                 <span className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block mb-1">Payment Progress</span>
                 {renderProgressChecklist()}
               </div>
@@ -897,9 +934,9 @@ const Orders = () => {
           </div>
 
           {(isExpanded ? safeItems : safeItems.slice(0, 3)).map((item, itemIdx) => (
-            <div key={itemIdx} className="flex flex-col md:flex-row gap-6 border-b border-stone-100 last:border-b-0 pb-5 last:pb-0">
+            <div key={itemIdx} className="flex flex-row items-start gap-3 sm:gap-4 md:gap-6 border-b border-stone-100 last:border-b-0 pb-5 last:pb-0">
               {/* Product Image */}
-              <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}>
                 {item.product?.images?.[0] ? (
                   <div className="w-full h-full relative p-1 overflow-hidden group">
                     <ImageWithFallback src={item.product.images[0]} alt={item.product.name || item.productName} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" />
@@ -910,17 +947,17 @@ const Orders = () => {
               </div>
               
               {/* Product Details */}
-              <div className="flex-grow flex flex-col justify-start">
+              <div className="flex-grow flex flex-col justify-start min-w-0">
                 <h4 
-                  className="text-base font-bold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer line-clamp-2"
+                  className="text-sm sm:text-base font-bold text-[#007185] hover:text-[#C45500] hover:underline cursor-pointer line-clamp-2"
                   onClick={() => item.product?.slug && navigate(`/product/${item.product.slug}`)}
                 >
                   {item.productName || item.product?.name || 'Unknown Product'}
                 </h4>
-                <div className="text-xs text-stone-500 mt-1 mb-2 space-y-1">
-                  <p>Quantity: {item.pieces || 0} Pieces</p>
-                  <p>Container Quantity: {item.quantity || 1}</p>
-                  <p>Container Type: {order.shippingDetails?.containerType || '20 FT FCL'}</p>
+                <div className="text-xs text-stone-500 mt-1 mb-2 space-y-0.5 sm:space-y-1">
+                  <p>Quantity: <span className="font-semibold text-stone-700">{item.pieces || 0} Pieces</span></p>
+                  <p>Container Quantity: <span className="font-semibold text-stone-700">{item.quantity || 1}</span></p>
+                  <p className="truncate">Container Type: <span className="font-semibold text-stone-700">{order.shippingDetails?.containerType || '20 FT FCL'}</span></p>
                 </div>
               </div>
             </div>
@@ -1062,8 +1099,19 @@ const Orders = () => {
 
       {/* Cancellation Modal */}
       {isCancelModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 overflow-y-auto">
+          {/* Blurred Dark Backdrop (covers entire viewport, sidebar, navbar, order cards) */}
+          <div 
+            onClick={() => setIsCancelModalOpen(false)}
+            className="fixed inset-0 modal-backdrop-blur transition-opacity duration-300 ease-out cursor-pointer"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.40)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+            aria-hidden="true"
+          />
+          <div className="relative z-10 bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-stone-200 my-auto animate-fade-in">
             <h2 className="text-xl font-bold text-stone-900 mb-4">Cancel Order</h2>
             <p className="text-sm text-stone-600 mb-4">Please select a reason for cancellation:</p>
             
@@ -1098,13 +1146,13 @@ const Orders = () => {
             <div className="flex gap-3 mt-6">
               <button 
                 onClick={() => setIsCancelModalOpen(false)}
-                className="flex-1 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded-xl transition-colors"
+                className="flex-1 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded-xl transition-colors cursor-pointer"
               >
                 Go Back
               </button>
               <button 
                 onClick={submitCancellation}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md shadow-red-600/20 transition-colors"
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md shadow-red-600/20 transition-colors cursor-pointer"
               >
                 Confirm Cancel
               </button>
@@ -1115,8 +1163,21 @@ const Orders = () => {
 
       {/* Payment Selection & Wire Transfer Modal */}
       {paymentModalOpen && activeOrderForPayment && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl border border-stone-200 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 overflow-y-auto">
+          {/* Blurred Dark Backdrop: covers entire viewport, sidebar, navbar, order cards */}
+          <div 
+            onClick={() => setPaymentModalOpen(false)}
+            className="fixed inset-0 modal-backdrop-blur transition-opacity duration-300 ease-out cursor-pointer"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.40)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+            aria-hidden="true"
+          />
+
+          {/* Modal Card: completely sharp, clear, unaffected by blur, preserves white background, rounded-3xl, shadow-2xl, and dimensions */}
+          <div className="relative z-10 bg-white rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl border border-stone-200 max-h-[90vh] overflow-y-auto my-auto animate-fade-in">
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
               <div>
@@ -1137,6 +1198,20 @@ const Orders = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Modal-Level Error & Success Alerts */}
+            {paymentError && (
+              <div className="mt-4 p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2.5 text-red-800 font-semibold text-xs shadow-inner animate-fade-in">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{paymentError}</span>
+              </div>
+            )}
+            {paymentSuccess && (
+              <div className="mt-4 p-3.5 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2.5 text-green-800 font-semibold text-xs shadow-inner animate-fade-in">
+                <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                <span>{paymentSuccess}</span>
+              </div>
+            )}
 
             {/* Amount Banner */}
             {(() => {
@@ -1350,16 +1425,60 @@ const Orders = () => {
                       {/* Wire Form */}
                       <div className="space-y-3">
                         <div>
-                          <label className="text-xs font-bold text-stone-700 block mb-1">
-                            Transaction / UTR Reference Number <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="e.g. UTR1234567890 / SWIFT-REF-892"
-                            value={wireReference}
-                            onChange={(e) => setWireReference(e.target.value)}
-                            className="w-full bg-white border border-stone-300 rounded-xl px-3.5 py-2.5 text-xs font-medium text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32]"
-                          />
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-xs font-bold text-stone-700">
+                              Transaction / UTR Reference Number <span className="text-red-500">*</span>
+                            </label>
+                            <span className={`text-[10px] font-semibold ${
+                              wireReference.length === 0 ? 'text-stone-400' :
+                              utrError ? 'text-red-500 font-bold' : 'text-green-600 font-bold'
+                            }`}>
+                              {wireReference.length}/22 chars
+                            </span>
+                          </div>
+
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="e.g. 432789541290 (12-digit UPI/IMPS) or HDFCN24089123456 (NEFT/RTGS)"
+                              value={wireReference}
+                              onChange={(e) => handleUtrChange(e.target.value)}
+                              maxLength={22}
+                              className={`w-full bg-white border rounded-xl px-3.5 py-2.5 pr-10 text-xs font-mono font-medium transition-all ${
+                                wireReference.length === 0
+                                  ? 'border-stone-300 text-stone-900 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32]'
+                                  : utrError
+                                    ? 'border-red-500 bg-red-50/20 text-red-900 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                                    : 'border-green-600 bg-green-50/20 text-green-950 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600'
+                              }`}
+                            />
+                            {wireReference && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                {utrError ? (
+                                  <AlertCircle className="w-4 h-4 text-red-500" />
+                                ) : (
+                                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Validation Message */}
+                          {utrError ? (
+                            <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-start gap-1">
+                              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red-500" />
+                              <span>{utrError}</span>
+                            </p>
+                          ) : wireReference && !utrError ? (
+                            <p className="text-[11px] text-green-700 font-semibold mt-1 flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5 text-green-600" />
+                              <span>Valid reference format ({wireReference.length} characters)</span>
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-stone-400 mt-1">
+                              Enter your 12-digit UPI/IMPS reference, 16-character NEFT, or 22-character RTGS UTR without spaces.
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -1391,8 +1510,8 @@ const Orders = () => {
                         <button
                           type="button"
                           onClick={handleWireSubmit}
-                          disabled={isProcessing}
-                          className="w-full py-3 bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+                          disabled={isProcessing || !wireReference.trim() || !!utrError}
+                          className="w-full py-3 bg-[#2E7D32] hover:bg-[#1B5E20] disabled:bg-stone-300 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer mt-2"
                         >
                           {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
                           <span>Submit Wire Transfer Reference</span>

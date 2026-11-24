@@ -4,6 +4,7 @@
  */
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 
 const POPULATE_PRODUCT_FIELDS = 'name price images slug category stock packageSize weight specifications';
 
@@ -14,6 +15,40 @@ const populateCart = async (cartQuery) => {
     .populate('items.completedContainers.items.product', POPULATE_PRODUCT_FIELDS)
     .populate('items.activeContainer.items.product', POPULATE_PRODUCT_FIELDS)
     .populate('items.extraItems.product', POPULATE_PRODUCT_FIELDS);
+};
+
+// Helper to calculate total items (sum of quantities) and total amount
+const calculateCartTotals = (items = []) => {
+  let totalItems = 0;
+  let totalAmount = 0;
+
+  (items || []).forEach(item => {
+    if (!item) return;
+    const qty = Number(item.mainQuantity) || Number(item.totalContainers) || 1;
+    totalItems += qty;
+    const price = Number(item.mainProduct?.price) || 0;
+    totalAmount += price * qty;
+  });
+
+  return { totalItems, totalAmount };
+};
+
+// Helper to sync User.cart on User model for backward compatibility
+const syncUserCart = async (userId, cartItems = []) => {
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      user.cart = (cartItems || [])
+        .filter(item => Boolean(item && item.mainProduct))
+        .map(item => ({
+          product: item.mainProduct._id || item.mainProduct,
+          quantity: Number(item.mainQuantity) || Number(item.totalContainers) || 1,
+        }));
+      await user.save();
+    }
+  } catch (err) {
+    console.warn('syncUserCart warning:', err.message);
+  }
 };
 
 // @desc    Get user's shopping cart
@@ -27,9 +62,14 @@ export const getCart = async (req, res) => {
       cart = await Cart.create({ user: req.user._id, items: [] });
     }
 
+    const { totalItems, totalAmount } = calculateCartTotals(cart.items || []);
+
     res.status(200).json({
       success: true,
       data: cart.items || [],
+      cart: cart.items || [],
+      totalItems,
+      totalAmount,
     });
   } catch (error) {
     console.error('Error fetching cart:', error);
@@ -44,22 +84,31 @@ export const addToCart = async (req, res) => {
   try {
     const {
       mainProductId,
+      productId,
       containerType = '20FT',
       completedContainers = [],
       activeContainer = { containerType: '20FT', totalLoad: 0, items: [] },
       extraItems = [],
-      mainQuantity = 0,
-      totalContainers = 1,
+      mainQuantity,
+      quantity,
+      totalContainers,
       cartItemId,
+      increment = true,
     } = req.body;
 
-    if (!mainProductId) {
-      return res.status(400).json({ success: false, message: 'mainProductId is required' });
+    const targetProductId = mainProductId || productId;
+    if (!targetProductId) {
+      return res.status(400).json({ success: false, message: 'Product ID is required' });
     }
 
-    const mainProduct = await Product.findById(mainProductId);
+    const mainProduct = await Product.findById(targetProductId);
     if (!mainProduct) {
-      return res.status(404).json({ success: false, message: 'Main product not found' });
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    // Stock availability check
+    if (mainProduct.stock !== undefined && mainProduct.stock !== null && Number(mainProduct.stock) <= 0) {
+      return res.status(400).json({ success: false, message: 'Product is currently out of stock' });
     }
 
     let cart = await Cart.findOne({ user: req.user._id });
@@ -67,8 +116,16 @@ export const addToCart = async (req, res) => {
       cart = new Cart({ user: req.user._id, items: [] });
     }
 
-    // If quantity is 0 or less and no completed containers, remove item from cart persistence
-    const isZeroQuantity = Number(mainQuantity) <= 0 && 
+    // Determine incoming quantity
+    let incomingQty = 1;
+    if (quantity !== undefined && quantity !== null) {
+      incomingQty = Number(quantity);
+    } else if (mainQuantity !== undefined && mainQuantity !== null) {
+      incomingQty = Number(mainQuantity);
+    }
+
+    // Check if user is removing by sending quantity <= 0
+    const isZeroQuantity = incomingQty <= 0 && 
       (!completedContainers || completedContainers.length === 0) &&
       (!activeContainer || Number(activeContainer.totalLoad || 0) <= 0);
 
@@ -76,23 +133,30 @@ export const addToCart = async (req, res) => {
       if (cartItemId) {
         cart.items = cart.items.filter(item => item._id.toString() !== cartItemId);
       } else {
-        cart.items = cart.items.filter(item => item.mainProduct.toString() !== mainProductId);
+        cart.items = cart.items.filter(item => item.mainProduct.toString() !== targetProductId.toString());
       }
       await cart.save();
       const updatedCart = await populateCart(Cart.findById(cart._id));
+      await syncUserCart(req.user._id, updatedCart.items || []);
+      const { totalItems, totalAmount } = calculateCartTotals(updatedCart.items || []);
       return res.status(200).json({
         success: true,
-        message: 'Zero quantity item removed from cart',
+        message: 'Item removed from cart',
         data: updatedCart.items || [],
+        cart: updatedCart.items || [],
+        totalItems,
+        totalAmount,
       });
     }
 
+    const isComplexConfiguration = completedContainers && completedContainers.length > 0;
+
     const newItemData = {
-      mainProduct: mainProductId,
-      containerType,
+      mainProduct: targetProductId,
+      containerType: containerType || '20FT',
       completedContainers: (completedContainers || []).map(c => ({
         containerNumber: Number(c.containerNumber),
-        containerType: c.containerType || containerType,
+        containerType: c.containerType || containerType || '20FT',
         totalLoad: Number(c.totalLoad || 1.00),
         items: (c.items || []).map(i => ({
           product: i.product._id || i.product.id || i.product,
@@ -101,9 +165,9 @@ export const addToCart = async (req, res) => {
         completedAt: c.completedAt || new Date(),
       })),
       activeContainer: {
-        containerType: activeContainer.containerType || containerType,
-        totalLoad: Number(activeContainer.totalLoad || 0),
-        items: (activeContainer.items || []).map(i => ({
+        containerType: activeContainer?.containerType || containerType || '20FT',
+        totalLoad: Number(activeContainer?.totalLoad || 0),
+        items: (activeContainer?.items || []).map(i => ({
           product: i.product._id || i.product.id || i.product,
           quantity: Number(i.quantity),
         })),
@@ -112,11 +176,11 @@ export const addToCart = async (req, res) => {
         product: i.product._id || i.product.id || i.product,
         quantity: Number(i.quantity),
       })),
-      mainQuantity: Number(mainQuantity),
-      totalContainers: Number(totalContainers),
+      mainQuantity: incomingQty,
+      totalContainers: Number(totalContainers) > 0 ? Number(totalContainers) : incomingQty,
       configurationSnapshot: {
         savedAt: new Date().toISOString(),
-        containerType,
+        containerType: containerType || '20FT',
       },
     };
 
@@ -129,16 +193,24 @@ export const addToCart = async (req, res) => {
         cart.items.push(newItemData);
       }
     } else {
-      // Check for duplicate identical configuration
-      const duplicateIndex = cart.items.findIndex(item => {
-        return item.mainProduct.toString() === mainProductId &&
-          item.containerType === containerType &&
-          JSON.stringify(item.completedContainers) === JSON.stringify(newItemData.completedContainers);
+      // Find existing item with same product ID
+      const existingIndex = cart.items.findIndex(item => {
+        return item.mainProduct.toString() === targetProductId.toString() &&
+          item.containerType === (containerType || '20FT');
       });
 
-      if (duplicateIndex > -1) {
-        // Update existing duplicate item with latest configuration
-        cart.items[duplicateIndex] = { ...cart.items[duplicateIndex].toObject(), ...newItemData };
+      if (existingIndex > -1) {
+        const existingItem = cart.items[existingIndex];
+        if (isComplexConfiguration) {
+          // Replace with updated complex container configuration
+          cart.items[existingIndex] = { ...existingItem.toObject(), ...newItemData };
+        } else {
+          // Increment existing quantity without creating duplicate entry
+          const currentQty = Number(existingItem.mainQuantity) || Number(existingItem.totalContainers) || 1;
+          const newQty = increment ? (currentQty + incomingQty) : incomingQty;
+          existingItem.mainQuantity = newQty;
+          existingItem.totalContainers = newQty;
+        }
       } else {
         cart.items.push(newItemData);
       }
@@ -147,11 +219,17 @@ export const addToCart = async (req, res) => {
     await cart.save();
 
     const updatedCart = await populateCart(Cart.findById(cart._id));
+    await syncUserCart(req.user._id, updatedCart.items || []);
+
+    const { totalItems, totalAmount } = calculateCartTotals(updatedCart.items || []);
 
     res.status(200).json({
       success: true,
-      message: 'Container configuration saved to cart',
+      message: 'Cart updated successfully',
       data: updatedCart.items || [],
+      cart: updatedCart.items || [],
+      totalItems,
+      totalAmount,
     });
   } catch (error) {
     console.error('Error adding to cart:', error);
@@ -178,31 +256,41 @@ export const updateCartItem = async (req, res) => {
 
     const {
       mainProductId,
+      productId,
       containerType,
       completedContainers,
       activeContainer,
       extraItems,
       mainQuantity,
+      quantity,
       totalContainers,
     } = req.body;
 
-    if (mainQuantity !== undefined && Number(mainQuantity) <= 0 && (!completedContainers || completedContainers.length === 0)) {
+    const newQty = quantity !== undefined ? Number(quantity) : (mainQuantity !== undefined ? Number(mainQuantity) : undefined);
+
+    if (newQty !== undefined && newQty <= 0 && (!completedContainers || completedContainers.length === 0)) {
       cart.items = cart.items.filter(item => item._id.toString() !== itemId);
       await cart.save();
       const updatedCart = await populateCart(Cart.findById(cart._id));
+      await syncUserCart(req.user._id, updatedCart.items || []);
+      const { totalItems, totalAmount } = calculateCartTotals(updatedCart.items || []);
       return res.status(200).json({
         success: true,
         message: 'Cart item removed due to zero quantity',
         data: updatedCart.items || [],
+        cart: updatedCart.items || [],
+        totalItems,
+        totalAmount,
       });
     }
 
-    if (mainProductId) cart.items[itemIndex].mainProduct = mainProductId;
+    const targetProductId = mainProductId || productId;
+    if (targetProductId) cart.items[itemIndex].mainProduct = targetProductId;
     if (containerType) cart.items[itemIndex].containerType = containerType;
     if (completedContainers) {
       cart.items[itemIndex].completedContainers = completedContainers.map(c => ({
         containerNumber: Number(c.containerNumber),
-        containerType: c.containerType || containerType,
+        containerType: c.containerType || containerType || '20FT',
         totalLoad: Number(c.totalLoad || 1.00),
         items: (c.items || []).map(i => ({
           product: i.product._id || i.product.id || i.product,
@@ -213,7 +301,7 @@ export const updateCartItem = async (req, res) => {
     }
     if (activeContainer) {
       cart.items[itemIndex].activeContainer = {
-        containerType: activeContainer.containerType || containerType,
+        containerType: activeContainer.containerType || containerType || '20FT',
         totalLoad: Number(activeContainer.totalLoad || 0),
         items: (activeContainer.items || []).map(i => ({
           product: i.product._id || i.product.id || i.product,
@@ -227,17 +315,26 @@ export const updateCartItem = async (req, res) => {
         quantity: Number(i.quantity),
       }));
     }
-    if (mainQuantity !== undefined) cart.items[itemIndex].mainQuantity = Number(mainQuantity);
+    if (newQty !== undefined) {
+      cart.items[itemIndex].mainQuantity = newQty;
+      cart.items[itemIndex].totalContainers = newQty;
+    }
     if (totalContainers !== undefined) cart.items[itemIndex].totalContainers = Number(totalContainers);
 
     await cart.save();
 
     const updatedCart = await populateCart(Cart.findById(cart._id));
+    await syncUserCart(req.user._id, updatedCart.items || []);
+
+    const { totalItems, totalAmount } = calculateCartTotals(updatedCart.items || []);
 
     res.status(200).json({
       success: true,
       message: 'Cart item updated successfully',
       data: updatedCart.items || [],
+      cart: updatedCart.items || [],
+      totalItems,
+      totalAmount,
     });
   } catch (error) {
     console.error('Error updating cart item:', error);
@@ -261,11 +358,17 @@ export const removeFromCart = async (req, res) => {
     await cart.save();
 
     const updatedCart = await populateCart(Cart.findById(cart._id));
+    await syncUserCart(req.user._id, updatedCart.items || []);
+
+    const { totalItems, totalAmount } = calculateCartTotals(updatedCart.items || []);
 
     res.status(200).json({
       success: true,
       message: 'Item removed from cart',
       data: updatedCart.items || [],
+      cart: updatedCart.items || [],
+      totalItems,
+      totalAmount,
     });
   } catch (error) {
     console.error('Error removing from cart:', error);
@@ -283,10 +386,15 @@ export const clearCart = async (req, res) => {
       cart.items = [];
       await cart.save();
     }
+    await syncUserCart(req.user._id, []);
+
     res.status(200).json({
       success: true,
       message: 'Cart cleared successfully',
       data: [],
+      cart: [],
+      totalItems: 0,
+      totalAmount: 0,
     });
   } catch (error) {
     console.error('Error clearing cart:', error);

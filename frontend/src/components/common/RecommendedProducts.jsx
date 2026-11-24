@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { apiClient, useAuth } from '../../context/AuthContext';
 import { Heart, ShoppingBag, ArrowRight, Package } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
+import { useCart } from '../../context/CartContext';
 import ImageWithFallback from './ImageWithFallback';
 
 const RecommendedProducts = () => {
@@ -11,6 +12,7 @@ const RecommendedProducts = () => {
   const [loading, setLoading] = useState(true);
   const { user, fetchProfile } = useAuth();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,10 +52,9 @@ const RecommendedProducts = () => {
       return;
     }
     try {
-      await apiClient.post('/users/cart', { productId: product._id, quantity: 1, increment: true });
-      await fetchProfile();
+      await addToCart(product, 1);
     } catch (err) {
-      console.error(err);
+      console.error('RecommendedProducts handleAddToCart error:', err);
     }
   };
 

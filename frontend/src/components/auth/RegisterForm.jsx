@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link as LinkIcon, Eye, EyeOff, Briefcase, AlertCircle } from 'lucide-react';
+import { User, Mail, KeyRound, ArrowRight, ShieldCheck, RefreshCw, Globe, Link as LinkIcon, Eye, EyeOff, Briefcase, AlertCircle, ChevronDown } from 'lucide-react';
 import { authService } from '../../services/authService';
 import RegistrationSuccessAnimation from './RegistrationSuccessAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +16,20 @@ import { getPostLoginRedirect, isSafeInternalRoute } from '../../utils/productNa
 const formVariants = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.05 } }
+};
+
+const getPasswordStrength = (pass) => {
+  if (!pass) return { score: 0, label: '', color: 'bg-stone-200', textColor: 'text-stone-500' };
+  let score = 0;
+  if (pass.length >= 6) score += 1;
+  if (pass.length >= 8) score += 1;
+  if (/[A-Z]/.test(pass)) score += 1;
+  if (/[0-9]/.test(pass)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+  if (score <= 2) return { score, label: 'Weak', color: 'bg-red-400', textColor: 'text-red-500' };
+  if (score <= 4) return { score, label: 'Good', color: 'bg-amber-400', textColor: 'text-amber-600' };
+  return { score, label: 'Strong', color: 'bg-[#2E7D32]', textColor: 'text-[#2E7D32]' };
 };
 
 export const RegisterForm = () => {
@@ -62,23 +76,8 @@ export const RegisterForm = () => {
   const selectedCountry = watch('country');
   const passwordVal = watch('password');
   const confirmPasswordVal = watch('confirmPassword');
-  const emailVal = watch('email');
-  const nameVal = watch('name');
 
-  const getPasswordStrength = (pass) => {
-    if (!pass) return { score: 0, label: '', color: 'bg-stone-200', textColor: 'text-stone-500' };
-    let score = 0;
-    if (pass.length >= 6) score += 1;
-    if (pass.length >= 8) score += 1;
-    if (/[A-Z]/.test(pass)) score += 1;
-    if (/[0-9]/.test(pass)) score += 1;
-    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
-
-    if (score <= 2) return { score, label: 'Weak', color: 'bg-red-400', textColor: 'text-red-500' };
-    if (score <= 4) return { score, label: 'Good', color: 'bg-amber-400', textColor: 'text-amber-600' };
-    return { score, label: 'Strong', color: 'bg-[#2E7D32]', textColor: 'text-[#2E7D32]' };
-  };
-  const strength = getPasswordStrength(passwordVal);
+  const strength = React.useMemo(() => getPasswordStrength(passwordVal), [passwordVal]);
 
   // Auto fill currency
   useEffect(() => {
@@ -259,16 +258,20 @@ export const RegisterForm = () => {
   };
 
   return (
-    <div className="bg-white border border-stone-200/85 rounded-3xl p-6 shadow-soft text-stone-900 max-w-md w-full mx-auto">
-      <div className="text-center mb-6">
+    <div className="bg-white border border-stone-200/80 rounded-2xl sm:rounded-3xl p-5 xs:p-6 sm:p-8 shadow-soft text-stone-900 max-w-md w-full mx-auto relative overflow-hidden">
+      <div className="text-center mb-6 sm:mb-8">
         <img src="/logo.webp" alt="Cocoveera Logo" className="w-12 h-12 object-contain mx-auto mb-3 rounded-lg shadow-sm border border-stone-100" />
-        <h2 className="text-2xl font-extrabold font-poppins text-stone-900">Register</h2>
-        <p className="text-xs text-stone-500 font-semibold mt-1">Create your account</p>
+        <span className="text-[#2E5E35] font-poppins text-[10px] font-bold uppercase tracking-widest block">
+          Secure Registration
+        </span>
+        <h2 className="text-xl sm:text-2xl font-extrabold font-poppins text-stone-900 mt-1">Register</h2>
+        <p className="text-stone-500 text-xs mt-1.5 font-medium">Create your trade account</p>
       </div>
 
       {apiError && (
-        <div className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center animate-fade-in">
-          {typeof apiError === 'string' ? apiError : (apiError?.message || 'Registration error. Please try again.')}
+        <div className="bg-red-50 text-red-650 text-xs p-3.5 rounded-xl border border-red-100 mb-5 font-semibold text-center animate-fade-in flex items-center justify-center gap-2 shadow-sm">
+          <AlertCircle className="w-4 h-4 text-red-650 shrink-0" />
+          <span>{typeof apiError === 'string' ? apiError : (apiError?.message || 'Registration error. Please try again.')}</span>
         </div>
       )}
 
@@ -281,23 +284,23 @@ export const RegisterForm = () => {
       <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={otpSent ? handleVerifyOtp : handleSubmit(handleRegisterSubmit)} className="space-y-4">
         {/* Full Name */}
         <div>
-          <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
+          <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
             FULL NAME
           </label>
-          <div className="relative">
-            <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+          <div className="relative group">
+            <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
             <input
               type="text"
               disabled={otpSent}
               {...register('name', { required: 'Full name is required' })}
-              className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary/60 focus:bg-white transition-all placeholder:text-stone-400 ${
-                errors.name ? 'border-red-300' : 'border-transparent'
+              className={`auth-input-leading-icon w-full h-12 bg-[#F3F6F8] border text-stone-900 rounded-xl pl-11 pr-4 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400 ${
+                errors.name ? 'border-red-400 bg-red-50/30' : 'border-stone-200/60'
               } ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
               placeholder="e.g. John Grower"
             />
           </div>
           {errors.name && (
-            <span className="text-[10px] font-bold text-red-500 mt-1 block">
+            <span className="text-[11px] font-semibold text-red-500 mt-1 block">
               {errors.name.message}
             </span>
           )}
@@ -305,11 +308,11 @@ export const RegisterForm = () => {
 
         {/* Corporate Email */}
         <div>
-          <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
+          <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
             EMAIL ADDRESS
           </label>
-          <div className="relative">
-            <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+          <div className="relative group">
+            <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
             <input
               type="email"
               disabled={otpSent}
@@ -320,45 +323,46 @@ export const RegisterForm = () => {
                   message: 'Please enter a valid email address',
                 },
               })}
-              className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary/60 focus:bg-white transition-all placeholder:text-stone-400 ${
-                errors.email ? 'border-red-300' : 'border-transparent'
+              className={`auth-input-leading-icon w-full h-12 bg-[#F3F6F8] border text-stone-900 rounded-xl pl-11 pr-4 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400 ${
+                errors.email ? 'border-red-400 bg-red-50/30' : 'border-stone-200/60'
               } ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
               placeholder="you@email.com"
             />
           </div>
           {errors.email && (
-            <span className="text-[10px] font-bold text-red-500 mt-1 block">
+            <span className="text-[11px] font-semibold text-red-500 mt-1 block">
               {errors.email.message}
             </span>
           )}
         </div>
 
         {/* Country & Currency Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Country */}
           <div>
-            <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
               COUNTRY
             </label>
-            <div className="relative">
-              <Globe className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 pointer-events-none" />
+            <div className="relative group">
+              <Globe className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
               <select
                 disabled={otpSent}
                 {...register('country', { required: 'Country is required' })}
-                className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary/60 focus:bg-white transition-all appearance-none ${
-                  errors.country ? 'border-red-300' : 'border-transparent'
+                className={`auth-select-both-icons w-full h-12 bg-[#F3F6F8] border text-stone-900 rounded-xl pl-11 pr-9 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all appearance-none cursor-pointer truncate ${
+                  errors.country ? 'border-red-400 bg-red-50/30' : 'border-stone-200/60'
                 } ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
               >
-                <option value="" className="text-stone-500">Select...</option>
+                <option value="" className="text-stone-500">Select country...</option>
                 {COUNTRIES_LIST.map((country) => (
                   <option key={country.code} value={country.code} className="text-stone-900 bg-white">
                     {country.name}
                   </option>
                 ))}
               </select>
+              <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
             </div>
             {errors.country && (
-              <span className="text-[10px] font-bold text-red-500 mt-1 block">
+              <span className="text-[11px] font-semibold text-red-500 mt-1 block">
                 {errors.country.message}
               </span>
             )}
@@ -366,17 +370,17 @@ export const RegisterForm = () => {
 
           {/* Currency */}
           <div>
-            <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
               CURRENCY
             </label>
-            <div className="relative">
-              <LinkIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5 pointer-events-none" />
+            <div className="relative group">
+              <LinkIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
               <input
                 type="text"
                 autoComplete="off"
                 {...register('currency')}
                 readOnly
-                className="w-full bg-[#EEF2F6]/75 border border-transparent text-stone-550 rounded-xl py-3 pl-10 pr-4 text-xs font-bold focus:outline-none cursor-not-allowed"
+                className="auth-input-leading-icon w-full h-12 bg-[#F3F6F8]/75 border border-stone-200/60 text-stone-600 rounded-xl pl-11 pr-4 text-sm sm:text-xs font-bold focus:outline-none cursor-not-allowed"
                 placeholder="Auto-filled"
               />
             </div>
@@ -385,11 +389,11 @@ export const RegisterForm = () => {
 
         {/* Password */}
         <div>
-          <label className="block text-[10px] font-bold text-stone-705 uppercase tracking-wider mb-1">
+          <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
             PASSWORD
           </label>
-          <div className="relative">
-            <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+          <div className="relative group">
+            <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
             <input
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
@@ -401,23 +405,24 @@ export const RegisterForm = () => {
                   message: 'Min 6 characters',
                 },
               })}
-              className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-primary/60 focus:bg-white transition-all placeholder:text-stone-400 ${
-                errors.password ? 'border-red-300' : 'border-transparent'
+              className={`auth-input-both-icons w-full h-12 bg-[#F3F6F8] border text-stone-900 rounded-xl pl-11 pr-11 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400 ${
+                errors.password ? 'border-red-400 bg-red-50/30' : 'border-stone-200/60'
               } ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
               placeholder="••••••"
             />
             {!otpSent && (
               <button
                 type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none"
+                className="auth-toggle-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 focus:outline-none focus:ring-1 focus:ring-[#2E5E35]/30 transition-colors z-10"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             )}
           </div>
           {errors.password && (
-            <span className="text-[10px] font-bold text-red-500 mt-1 block">
+            <span className="text-[11px] font-semibold text-red-500 mt-1 block">
               {errors.password.message}
             </span>
           )}
@@ -433,11 +438,11 @@ export const RegisterForm = () => {
 
         {/* Confirm Password */}
         <div>
-          <label className="block text-[10px] font-bold text-stone-750 uppercase tracking-wider mb-1">
+          <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider mb-1.5">
             CONFIRM PASSWORD
           </label>
-          <div className="relative">
-            <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+          <div className="relative group">
+            <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-[#2E5E35] z-10" />
             <input
               type={showConfirmPassword ? 'text' : 'password'}
               disabled={otpSent}
@@ -445,23 +450,24 @@ export const RegisterForm = () => {
                 required: 'Confirm your password',
                 validate: (value) => value === passwordVal || 'Passwords must match',
               })}
-              className={`w-full bg-[#EEF2F6] border text-stone-900 rounded-xl py-3 pl-10 pr-11 text-xs font-semibold focus:outline-none focus:border-primary/60 focus:bg-white transition-all placeholder:text-stone-400 ${
-                errors.confirmPassword ? 'border-red-300' : 'border-transparent'
+              className={`auth-input-both-icons w-full h-12 bg-[#F3F6F8] border text-stone-900 rounded-xl pl-11 pr-11 text-sm sm:text-xs font-semibold focus:outline-none focus:border-[#2E5E35] focus:bg-white focus:ring-2 focus:ring-[#2E5E35]/15 transition-all placeholder:text-stone-400 ${
+                errors.confirmPassword ? 'border-red-400 bg-red-50/30' : 'border-stone-200/60'
               } ${otpSent ? 'opacity-65 cursor-not-allowed' : ''}`}
               placeholder="••••••"
             />
             {!otpSent && (
               <button
                 type="button"
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3.5 top-3.5 text-stone-400 hover:text-stone-600 focus:outline-none"
+                className="auth-toggle-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 focus:outline-none focus:ring-1 focus:ring-[#2E5E35]/30 transition-colors z-10"
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             )}
           </div>
           {errors.confirmPassword && (
-            <span className="text-[10px] font-bold text-red-500 mt-1 block">
+            <span className="text-[11px] font-semibold text-red-500 mt-1 block">
               {errors.confirmPassword.message}
             </span>
           )}
@@ -479,13 +485,13 @@ export const RegisterForm = () => {
 
         {/* INLINE OTP BOX (Hidden until registration succeeds) */}
         {otpSent && (
-          <div className="bg-stone-50 border border-stone-200/60 rounded-2xl p-4.5 space-y-4 animate-slide-down mt-2">
+          <div className="bg-stone-50 border border-stone-200/60 rounded-2xl p-4 sm:p-5 space-y-4 animate-slide-down mt-2">
             <div>
               <label className="block text-[10px] font-extrabold text-stone-800 uppercase tracking-wider text-center mb-2.5">
                 ENTER 6-DIGIT EMAIL CODE
               </label>
 
-              <div className="flex justify-center space-x-2.5">
+              <div className="flex justify-center space-x-1.5 xs:space-x-2.5">
                 {otpValues.map((value, idx) => (
                   <input
                     key={idx}
@@ -496,7 +502,7 @@ export const RegisterForm = () => {
                     onChange={(e) => handleOtpChange(idx, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(idx, e)}
                     onPaste={handleOtpPaste}
-                    className="w-10 h-11 bg-white border border-stone-300 text-stone-900 rounded-xl text-center text-md font-poppins font-bold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-9 sm:w-11 h-11 sm:h-12 bg-white border border-stone-300 text-stone-900 rounded-xl text-center text-base sm:text-lg font-poppins font-bold focus:outline-none focus:border-[#2E5E35] focus:ring-1 focus:ring-[#2E5E35] transition-all"
                   />
                 ))}
               </div>
@@ -513,7 +519,7 @@ export const RegisterForm = () => {
                   type="button"
                   onClick={handleResendOtp}
                   disabled={loading}
-                  className="flex items-center justify-center gap-1 text-[10px] text-[#2E5E35] hover:text-[#1F4625] transition-colors font-bold mx-auto focus:outline-none"
+                  className="flex items-center justify-center gap-1 text-[10px] text-[#2E5E35] hover:text-[#1F4625] transition-colors font-bold mx-auto focus:outline-none min-h-0 py-1"
                 >
                   <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
                   <span>Resend Verification Code</span>
@@ -527,7 +533,7 @@ export const RegisterForm = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50"
+          className="w-full h-12 bg-[#2E5E35] hover:bg-[#1F4625] text-white font-poppins text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-1.5 mt-6 disabled:opacity-50 cursor-pointer border-none"
         >
           {loading ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -547,7 +553,7 @@ export const RegisterForm = () => {
               setSuccessMsg(null);
               setApiError(null);
             }}
-            className="w-full text-center text-xs text-stone-500 hover:text-stone-700 font-semibold"
+            className="w-full text-center text-xs text-stone-500 hover:text-stone-700 font-semibold min-h-0 py-1"
           >
             Edit Registration Details
           </button>
@@ -555,7 +561,7 @@ export const RegisterForm = () => {
       </motion.form>
 
       {!otpSent && (
-        <p className="text-center text-xs text-stone-555 mt-6 font-semibold">
+        <p className="text-center text-xs text-stone-500 mt-6 font-semibold">
           Already trading with us?{' '}
           <span
             onClick={() => navigate('/login', { state: location.state })}
@@ -569,4 +575,4 @@ export const RegisterForm = () => {
   );
 };
 
-export default RegisterForm;
+export default React.memo(RegisterForm);

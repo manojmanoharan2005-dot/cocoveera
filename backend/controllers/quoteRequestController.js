@@ -833,8 +833,6 @@ export const approveQuoteRequest = async (req, res) => {
       message: 'Quote approved successfully, PDF generated and email sent.',
       data: quoteRequest,
     });
-      data: quoteRequest,
-    });
   } catch (error) {
     console.error('Quote approval error:', error);
     if (error.name === 'ValidationError') {

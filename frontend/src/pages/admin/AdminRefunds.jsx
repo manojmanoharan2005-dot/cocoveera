@@ -397,8 +397,19 @@ const AdminRefunds = () => {
 
       {/* ══ Refund Detail Modal ══ */}
       {modalOpen && selectedRefund && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
+          {/* Blurred Dark Backdrop */}
+          <div 
+            onClick={() => setModalOpen(false)}
+            className="fixed inset-0 modal-backdrop-blur transition-opacity duration-300 ease-out cursor-pointer"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.40)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+            aria-hidden="true"
+          />
+          <div className="relative z-10 bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg max-h-[90vh] overflow-y-auto my-auto animate-fade-in">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
@@ -488,8 +499,19 @@ const AdminRefunds = () => {
 
       {/* ══ Confirmation Modal ══ */}
       {confirmModal.open && (
-        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5 text-center">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-y-auto">
+          {/* Blurred Dark Backdrop */}
+          <div 
+            onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+            className="fixed inset-0 modal-backdrop-blur transition-opacity duration-300 ease-out cursor-pointer"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.40)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+            aria-hidden="true"
+          />
+          <div className="relative z-10 bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-sm p-6 space-y-5 text-center my-auto animate-fade-in">
             <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto">
               <CheckCircle size={28} className="text-emerald-600" />
             </div>

@@ -50,16 +50,16 @@ export default function PaymentHistory() {
       ) : (
         <div className="space-y-4">
           {payments.map(p => (
-            <div key={p._id} className="bg-white rounded-2xl p-5 border border-stone-100 shadow-sm flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-stone-900">{p.method.toUpperCase()} • {p.status}</h3>
-                <p className="text-xs text-stone-500 mt-1">Amount: {p.amount}</p>
-                <p className="text-[10px] text-stone-400 mt-1">Date: {new Date(p.createdAt).toLocaleString()}</p>
+            <div key={p._id} className="bg-white rounded-2xl p-5 border border-stone-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-stone-900 truncate">{p.method.toUpperCase()} • {p.status}</h3>
+                <p className="text-xs text-stone-500 mt-1">Amount: <span className="font-semibold text-stone-800">{p.amount}</span></p>
+                <p className="text-[10px] text-stone-400 mt-0.5">Date: {new Date(p.createdAt).toLocaleString()}</p>
               </div>
-              <div className="flex flex-col gap-2 items-end">
-                {p.status === 'completed' && <button onClick={() => requestRefund(p._id)} disabled={requesting === p._id} className="text-xs font-bold text-[#2E7D32]">{requesting===p._id ? 'Requesting...' : 'Request Refund'}</button>}
-                {p.status === 'refund_requested' && <span className="text-xs font-bold text-yellow-600">Refund Requested</span>}
-                {p.status === 'refunded' && <span className="text-xs font-bold text-green-600">Refunded</span>}
+              <div className="flex sm:flex-col gap-2 items-start sm:items-end pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100">
+                {p.status === 'completed' && <button onClick={() => requestRefund(p._id)} disabled={requesting === p._id} className="text-xs font-bold text-[#2E7D32] hover:underline cursor-pointer">{requesting===p._id ? 'Requesting...' : 'Request Refund'}</button>}
+                {p.status === 'refund_requested' && <span className="text-xs font-bold text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded">Refund Requested</span>}
+                {p.status === 'refunded' && <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">Refunded</span>}
               </div>
             </div>
           ))}

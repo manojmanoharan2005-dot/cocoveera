@@ -3,6 +3,7 @@
  * Purpose: Handles the business logic and request processing for user operations.
  */
 import User from '../models/User.js';
+import Cart from '../models/Cart.js';
 import { sendOTPNotification } from '../utils/NotificationService.js';
 
 // @desc    Get user profile
@@ -232,26 +233,55 @@ export const updateCart = async (req, res) => {
     const user = await User.findById(req.user._id).populate('cart.product', 'name price images slug category stock packageSize weight').populate('wishlist', 'name price images slug category stock packageSize weight');
     const { productId, quantity, increment = false } = req.body;
     
-    // Ensure quantity is a multiple of 0.25
-    if (quantity !== 0 && (quantity % 0.25 !== 0)) {
-      return res.status(400).json({ success: false, message: 'Quantity must be in increments of 0.25' });
-    }
+    const numQty = Number(quantity);
 
-    const existingItem = user.cart.find(c => c.product._id.toString() === productId || c.product.toString() === productId);
+    const existingItem = user.cart.find(c => c.product && (c.product._id?.toString() === productId || c.product?.toString() === productId));
     if (existingItem) {
-      if (quantity <= 0 && !increment) {
-        user.cart = user.cart.filter(c => c.product._id.toString() !== productId && c.product.toString() !== productId);
+      if (numQty <= 0 && !increment) {
+        user.cart = user.cart.filter(c => c.product && c.product._id?.toString() !== productId && c.product?.toString() !== productId);
       } else {
         if (increment) {
-          existingItem.quantity += quantity;
+          existingItem.quantity += numQty;
         } else {
-          existingItem.quantity = quantity;
+          existingItem.quantity = numQty;
         }
       }
-    } else if (quantity > 0) {
-      user.cart.push({ product: productId, quantity });
+    } else if (numQty > 0) {
+      user.cart.push({ product: productId, quantity: numQty });
     }
     await user.save();
+
+    // Synchronize Cart collection so CartContext / /api/cart stays in sync
+    try {
+      let cartDoc = await Cart.findOne({ user: req.user._id });
+      if (!cartDoc) {
+        cartDoc = new Cart({ user: req.user._id, items: [] });
+      }
+      const existingCartIndex = cartDoc.items.findIndex(item => item.mainProduct && item.mainProduct.toString() === productId.toString());
+      if (numQty <= 0 && !increment) {
+        if (existingCartIndex > -1) {
+          cartDoc.items.splice(existingCartIndex, 1);
+        }
+      } else if (existingCartIndex > -1) {
+        const currentQ = Number(cartDoc.items[existingCartIndex].mainQuantity) || Number(cartDoc.items[existingCartIndex].totalContainers) || 1;
+        const finalQ = increment ? (currentQ + numQty) : numQty;
+        cartDoc.items[existingCartIndex].mainQuantity = finalQ;
+        cartDoc.items[existingCartIndex].totalContainers = finalQ;
+      } else if (numQty > 0) {
+        cartDoc.items.push({
+          mainProduct: productId,
+          containerType: '20FT',
+          mainQuantity: numQty,
+          totalContainers: numQty,
+          completedContainers: [],
+          activeContainer: { containerType: '20FT', totalLoad: 0, items: [] },
+          extraItems: [],
+        });
+      }
+      await cartDoc.save();
+    } catch (cartSyncErr) {
+      console.warn('Cart model sync warning from userController:', cartSyncErr.message);
+    }
     
     // Repopulate for frontend
     const updatedUser = await User.findById(req.user._id).populate('cart.product', 'name price images slug category stock packageSize weight').populate('wishlist', 'name price images slug category stock packageSize weight');
@@ -269,6 +299,15 @@ export const clearCart = async (req, res) => {
     const user = await User.findById(req.user._id);
     user.cart = [];
     await user.save();
+
+    try {
+      const cartDoc = await Cart.findOne({ user: req.user._id });
+      if (cartDoc) {
+        cartDoc.items = [];
+        await cartDoc.save();
+      }
+    } catch (e) {}
+
     res.status(200).json({ success: true, data: user.cart });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

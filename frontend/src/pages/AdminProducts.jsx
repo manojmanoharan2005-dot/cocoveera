@@ -184,10 +184,10 @@ export default function AdminProducts() {
     <AdminLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-            <p className="text-gray-600 mt-1">Manage your product catalog</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
+            <p className="text-gray-600 text-sm mt-1">Manage your product catalog</p>
           </div>
           <button
             onClick={() => {
@@ -204,7 +204,7 @@ export default function AdminProducts() {
                 imageUrls: [],
               });
             }}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition w-full sm:w-auto"
           >
             <Plus size={20} />
             <span>Add Product</span>
@@ -415,7 +415,7 @@ export default function AdminProducts() {
                     </div>
                     {/* Image Previews */}
                     {formData.imageUrls && formData.imageUrls.length > 0 && (
-                      <div className="grid grid-cols-4 gap-4 mt-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
                         {formData.imageUrls.map((url, idx) => (
                            <div key={idx} className="relative group">
                              <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-24 object-cover rounded-lg shadow-sm border border-gray-200" />

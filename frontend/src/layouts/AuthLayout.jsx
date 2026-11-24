@@ -1,19 +1,14 @@
 /**
  * File: frontend/src/layouts/AuthLayout.jsx
- * Purpose: Source code file for the Cocoveera project.
+ * Purpose: Authentication layout with smooth natural scrolling and optimized rendering.
  */
 import React from 'react';
-import { Link, Outlet } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Outlet } from 'react-router-dom';
 
 export const AuthLayout = ({ children }) => {
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-      className="min-h-screen text-stone-100 flex flex-col justify-between font-sans relative overflow-hidden bg-stone-900"
+    <div 
+      className="auth-page min-h-[calc(100vh-134px)] sm:min-h-[calc(100dvh-134px)] text-stone-100 flex flex-col justify-start items-center font-sans relative bg-stone-900 w-full py-6 sm:py-10"
       style={{
         backgroundImage: "url('/bg-auth.webp')",
         backgroundSize: 'cover',
@@ -21,48 +16,25 @@ export const AuthLayout = ({ children }) => {
       }}
     >
       {/* Blurry dark overlay */}
-      <div className="absolute inset-0 bg-stone-950/30 backdrop-blur-sm z-0" />
+      <div className="absolute inset-0 bg-stone-950/30 backdrop-blur-sm z-0 pointer-events-none" />
 
-      {/* Background floating decoration elements */}
-      <motion.div 
-        animate={{
-          x: [0, 40, -20, 0],
-          y: [0, -30, 20, 0],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-primary/20 blur-[150px] pointer-events-none z-0" 
-      />
-      <motion.div 
-        animate={{
-          x: [0, -30, 40, 0],
-          y: [0, 20, -30, 0],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[130px] pointer-events-none" 
-      />
+      {/* Background decoration elements contained to prevent overflow without GPU stall */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div 
+          className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/20 blur-[120px] pointer-events-none" 
+        />
+        <div 
+          className="absolute bottom-[-10%] right-[-10%] w-[450px] h-[450px] rounded-full bg-secondary/10 blur-[100px] pointer-events-none" 
+        />
+      </div>
 
-
-      {/* Main Content Area */}
-      <main className="flex-grow flex items-start justify-center px-4 sm:px-6 pt-2 sm:pt-4 pb-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="w-full max-w-md"
-        >
+      {/* Main Content Area: uses my-auto to center vertically when space allows without clipping on scroll */}
+      <main className="flex-grow flex flex-col items-center justify-start px-3.5 xs:px-4 sm:px-6 relative z-10 w-full my-auto">
+        <div className="w-full max-w-md mx-auto">
           {children || <Outlet />}
-        </motion.div>
+        </div>
       </main>
-
-    </motion.div>
+    </div>
   );
 };
 
