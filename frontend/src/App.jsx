@@ -195,7 +195,7 @@ const SavedCart = lazyWithRetry(() => import('./pages/account/SavedCart'), 'Save
 const Address = lazyWithRetry(() => import('./pages/account/Address'), 'Address');
 const Settings = lazyWithRetry(() => import('./pages/account/Settings'), 'Settings');
 const Profile = lazyWithRetry(() => import('./pages/account/Profile'), 'Profile');
-import ProductView from './pages/account/ProductView';
+const ProductView = lazyWithRetry(() => import('./pages/account/ProductView'), 'ProductView');
 const Quotes = lazyWithRetry(() => import('./pages/account/Quotes'), 'Quotes');
 const QuoteDetails = lazyWithRetry(() => import('./pages/account/QuoteDetails'), 'QuoteDetails');
 const RequestQuotePage = lazyWithRetry(() => import('./pages/account/RequestQuotePage'), 'RequestQuotePage');

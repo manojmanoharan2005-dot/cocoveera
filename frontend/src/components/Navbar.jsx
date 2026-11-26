@@ -11,6 +11,7 @@ import { Menu, X, ChevronDown, Globe, Mail, ShieldCheck, Heart, ShoppingCart, Us
 import SustainabilityTicker from './SustainabilityTicker';
 
 const Navbar = () => {
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -77,7 +78,7 @@ const Navbar = () => {
   ];
 
   return (
-    <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/85 backdrop-blur-lg shadow-md border-b border-white/20' : 'bg-white shadow-sm'}`}>
+    <header className={`fixed top-0 left-0 w-full max-w-[100vw] overflow-x-hidden z-50 transition-all duration-500 ${isScrolled ? 'bg-white/85 backdrop-blur-lg shadow-md border-b border-white/20' : 'bg-white shadow-sm'}`}>
 
       {/* ── TOP STRIP ── */}
       <div
@@ -101,31 +102,34 @@ const Navbar = () => {
 
       {/* ── MAIN NAV ── */}
       <nav className="bg-white shadow-[0_3px_12px_rgba(0,0,0,0.04)] border-b border-stone-200/60 transition-all duration-500">
-        {/* MOBILE VIEW (< xl) - Compact Modern Header (Hamburger Left | Logo Center | Wishlist/Login Right) */}
-        <div className="flex xl:hidden items-center justify-between w-full h-[52px] px-3.5">
+        {/* MOBILE VIEW (< xl) - Compact Modern Header (Hamburger Left | Logo Center | Profile/Login Right) */}
+        <div className="relative flex xl:hidden items-center justify-between w-full h-[54px] px-3 xs:px-4">
           <button
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Close menu' : 'Open menu'}
-            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-stone-50 hover:bg-stone-100 border border-stone-200/70 text-stone-700 transition-all shadow-2xs active:scale-95 shrink-0"
+            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-stone-50 hover:bg-stone-100 border border-stone-200/70 text-stone-700 transition-all shadow-2xs active:scale-95 shrink-0 z-10"
           >
             {isOpen ? <X className="w-5 h-5 text-[#2E7D32]" /> : <Menu className="w-5 h-5 text-stone-800" />}
           </button>
 
-          <Link to="/" className="flex items-center gap-2 cursor-pointer select-none py-1">
+          <Link 
+            to="/" 
+            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 xs:gap-2 cursor-pointer select-none py-1 shrink-0"
+          >
             <img
               src="/logo.webp"
               alt="Cocoveera Logo"
-              className="h-8 object-contain rounded-lg shadow-2xs"
+              className="h-7 xs:h-8 object-contain rounded-lg shadow-2xs"
             />
-            <span className="font-poppins font-black text-base tracking-wide leading-none">
+            <span className="font-poppins font-black text-sm xs:text-base tracking-wide leading-none whitespace-nowrap">
               <span className="text-[#8B4513]">COCO</span><span className="text-[#2E7D32]">VEERA</span>
             </span>
           </Link>
 
           <Link
-            to="/login"
-            aria-label="Account Login"
-            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-stone-50 hover:bg-stone-100 border border-stone-200/70 text-stone-700 transition-all shadow-2xs active:scale-95 shrink-0"
+            to={isAuthenticated ? "/account" : "/login"}
+            aria-label={isAuthenticated ? "My Account" : "Account Login"}
+            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-stone-50 hover:bg-stone-100 border border-stone-200/70 text-stone-700 transition-all shadow-2xs active:scale-95 shrink-0 z-10"
           >
             <User className="w-5 h-5 text-stone-800" />
           </Link>

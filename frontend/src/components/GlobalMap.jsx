@@ -3,14 +3,16 @@
  * Purpose: Enterprise Global Shipping Network Dashboard for Cocoveera B2B Export Website.
  * Features real-time SVG cargo vessel transit from Tuticorin Port to global destination ports,
  * 100% precise SVG path tracking via native getPointAtLength API, smooth 2.6s voyage,
- * and dynamic Haversine distance calculation (KM) from Tuticorin Port for every destination.
+ * dynamic Haversine distance calculation (KM) from Tuticorin Port for every destination,
+ * mobile-specific responsive scale, smart route-centering on mobile, interactive touch zoom/pan,
+ * on-map zoom controls, and stacked telemetry below map on mobile (< 768px).
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { geoMercator } from 'd3-geo';
-import { Anchor, Ship, CheckCircle2, MapPin } from 'lucide-react';
+import { Anchor, Ship, CheckCircle2, MapPin, Plus, Minus, RotateCcw } from 'lucide-react';
 
 const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 
@@ -192,6 +194,90 @@ const getCurvedPathString = (start, end, offset = -30) => {
   return `M ${start[0]} ${start[1]} Q ${ctrlX} ${ctrlY} ${end[0]} ${end[1]}`;
 };
 
+// Helper to determine optimal mobile map center for each destination
+const getRouteCenter = (dest) => {
+  if (!dest) return [65, 20];
+  const [destLon, destLat] = dest.coordinates;
+  
+  if (dest.id === 'usa') {
+    return [-30, 26];
+  }
+  if (dest.id === 'australia' || dest.id === 'nz') {
+    return [118, -16];
+  }
+  if (dest.id === 'uk' || dest.id === 'netherlands' || dest.id === 'germany' || dest.id === 'spain') {
+    return [38, 32];
+  }
+  if (dest.id === 'uae' || dest.id === 'saudi') {
+    return [58, 17];
+  }
+  if (dest.id === 'singapore' || dest.id === 'vietnam') {
+    return [92, 8];
+  }
+  if (dest.id === 'skorea' || dest.id === 'japan') {
+    return [108, 24];
+  }
+  return [(78.1348 + destLon) / 2, (8.7642 + destLat) / 2];
+};
+
+// Reusable Telemetry Card for Desktop (Floating) & Mobile (Stacked)
+const TelemetryCard = ({ activeDest, isDelivered, progress, isMobile = false }) => {
+  return (
+    <div className={`bg-white/95 border border-emerald-100 backdrop-blur-xl rounded-[22px] shadow-xl shadow-emerald-950/10 pointer-events-auto ${
+      isMobile ? 'w-full p-4' : 'p-4 sm:p-5 max-w-sm'
+    }`}>
+      {/* Route Header */}
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-extrabold text-emerald-800 text-xs shadow-xs shrink-0">
+            {activeDest.code}
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs xs:text-sm font-extrabold text-stone-900 leading-tight truncate">
+              Tuticorin ➔ {activeDest.country}
+            </div>
+            <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5 truncate">
+              <Anchor className="w-3 h-3 text-emerald-600 shrink-0" />
+              <span className="truncate">{activeDest.port}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="shrink-0">
+          {isDelivered ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-1 rounded-full shadow-xs whitespace-nowrap">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> DELIVERED
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-teal-800 bg-teal-100/90 border border-teal-300 px-2.5 py-1 rounded-full shadow-xs whitespace-nowrap">
+              <Ship className="w-3 h-3 text-teal-600 animate-bounce" /> IN TRANSIT
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="relative w-full bg-stone-100 rounded-full h-2.5 mb-3 overflow-hidden border border-stone-200/60">
+        <div
+          className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 h-full transition-all duration-75 rounded-full"
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+
+      {/* Dynamic Distance Metric */}
+      <div className="pt-2.5 border-t border-stone-100 flex items-center justify-between text-left">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-stone-500">
+          <MapPin className="w-4 h-4 text-emerald-600 shrink-0 animate-pulse" />
+          <span>Voyage Distance:</span>
+        </div>
+        <div className="text-base xs:text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight font-poppins">
+          {getDistanceKm(ORIGIN.coordinates, activeDest.coordinates)}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const GlobalMap = ({ onSelectDestination, activeDestId }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedDestId, setSelectedDestId] = useState('vietnam');
@@ -202,11 +288,18 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
   const [isDelivered, setIsDelivered] = useState(false);
   const [shipState, setShipState] = useState({ x: 0, y: 0, angle: 0 });
 
+  // Interactive Zoom and Pan State
+  const [mapZoom, setMapZoom] = useState(1);
+  const [mapCenter, setMapCenter] = useState([20, 15]);
+
   const activePathRef = useRef(null);
   const animFrameRef = useRef(null);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -217,18 +310,29 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
     return DESTINATIONS.find((d) => d.id === id) || DESTINATIONS[8]; // Default Vietnam
   }, [activeDestId, selectedDestId]);
 
+  // Update center when activeDest or screen width changes
+  useEffect(() => {
+    if (isMobile) {
+      setMapCenter(getRouteCenter(activeDest));
+      setMapZoom(1);
+    } else {
+      setMapCenter([20, 15]);
+      setMapZoom(1);
+    }
+  }, [activeDest?.id, isMobile]);
+
   // Map Projection Dimensions & Positioning
-  const width = 1000;
-  const height = isMobile ? 460 : 580;
-  const scale = isMobile ? 145 : 155;
-  const center = useMemo(() => (isMobile ? [15, 10] : [20, 15]), [isMobile]);
+  // Mobile uses a narrower 480x540 viewBox with scale 230 so map fills mobile viewport without empty letterboxing
+  const width = isMobile ? 480 : 1000;
+  const height = isMobile ? 540 : 580;
+  const scale = isMobile ? 230 : 155;
 
   const projection = useMemo(() => {
     return geoMercator()
       .scale(scale)
-      .center(center)
+      .center(mapCenter)
       .translate([width / 2, height / 2]);
-  }, [scale, center, width, height]);
+  }, [scale, mapCenter, width, height]);
 
   const hqPos = useMemo(() => projection(ORIGIN.coordinates), [projection]);
   const activeDestPos = useMemo(() => projection(activeDest.coordinates), [projection, activeDest]);
@@ -258,7 +362,6 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
       const currentProgress = Math.min(1, elapsed / duration);
       setProgress(currentProgress);
 
-      // Query native SVGPathElement for exact coordinates and tangent direction
       if (activePathRef.current) {
         try {
           const totalLen = activePathRef.current.getTotalLength();
@@ -286,10 +389,9 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
       }
     };
 
-    // Small delay to allow SVG path element ref to register
     const timer = setTimeout(() => {
       animFrameRef.current = requestAnimationFrame(updateVesselPosition);
-    }, 30);
+    }, 40);
 
     return () => {
       clearTimeout(timer);
@@ -299,53 +401,121 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
 
   const handleSelectCountry = (dest) => {
     setSelectedDestId(dest.id);
+    if (isMobile) {
+      setMapCenter(getRouteCenter(dest));
+      setMapZoom(1);
+    }
     if (onSelectDestination) {
       onSelectDestination(dest);
     }
   };
 
+  // Zoom controls
+  const handleZoomIn = () => setMapZoom((prev) => Math.min(5, prev + 0.35));
+  const handleZoomOut = () => setMapZoom((prev) => Math.max(1, prev - 0.35));
+  const handleResetView = () => {
+    setMapZoom(1);
+    setMapCenter(isMobile ? getRouteCenter(activeDest) : [20, 15]);
+  };
+
   return (
-    <div className="w-full bg-[#F4FAF6] rounded-[32px] border border-emerald-100/90 p-4 sm:p-8 shadow-2xl overflow-hidden font-sans text-stone-800 relative">
+    <div className="w-full bg-[#F4FAF6] rounded-[20px] sm:rounded-[32px] border border-emerald-100/90 p-2.5 xs:p-3 sm:p-6 lg:p-8 shadow-2xl overflow-hidden font-sans text-stone-800 relative">
       
       {/* ═══════════════════════════════════════════════════════════════════
-          1. TOP COUNTRY SELECTOR PILLS
+          1. RESPONSIVE SELECT COUNTRY SECTION
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 scrollbar-none border-b border-emerald-100/70 relative z-20">
-        <span className="text-[11px] font-extrabold text-stone-400 uppercase tracking-widest whitespace-nowrap mr-2">
-          SELECT COUNTRY:
-        </span>
-        {DESTINATIONS.map((dest) => {
-          const isSelected = activeDest.id === dest.id;
-          return (
-            <button
-              key={`chip-${dest.id}`}
-              onClick={() => handleSelectCountry(dest)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${
-                isSelected
-                  ? 'bg-[#10B981] text-white border-[#059669] shadow-md shadow-emerald-500/30 scale-105'
-                  : 'bg-white hover:bg-emerald-50 text-stone-700 border-stone-200/80 hover:border-emerald-300'
-              }`}
-            >
-              <span className="text-[10px] opacity-75 font-semibold">{dest.code}</span>
-              <span>{dest.country}</span>
-            </button>
-          );
-        })}
+      <div className="mb-3 sm:mb-4 pb-2.5 sm:pb-3 border-b border-emerald-100/70 relative z-20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] xs:text-[11px] font-extrabold text-stone-500 uppercase tracking-widest">
+              SELECT COUNTRY:
+            </span>
+            <span className="text-[9.5px] xs:text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              {DESTINATIONS.length} Global Destinations
+            </span>
+          </div>
+          <span className="text-[11px] text-stone-400 hidden sm:inline">
+            Tap any destination to focus &amp; trace cargo vessel
+          </span>
+        </div>
+
+        {/* Smooth scrollable country selector pills */}
+        <div className="flex items-center gap-1.5 xs:gap-2 overflow-x-auto pb-1 hide-scrollbar touch-pan-x -mx-1 px-1">
+          {DESTINATIONS.map((dest) => {
+            const isSelected = activeDest.id === dest.id;
+            return (
+              <button
+                key={`chip-${dest.id}`}
+                onClick={() => handleSelectCountry(dest)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border shrink-0 active:scale-95 cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#10B981] text-white border-[#059669] shadow-md shadow-emerald-500/30 font-extrabold scale-102'
+                    : 'bg-white hover:bg-emerald-50 text-stone-700 border-stone-200/80 hover:border-emerald-300'
+                }`}
+              >
+                <span className="text-sm leading-none">{dest.flag}</span>
+                <span className="text-[10px] opacity-75 font-semibold">{dest.code}</span>
+                <span>{dest.country}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          2. LIGHT MAP CANVAS
+          2. LIGHT MAP CANVAS (Occupies ~440px on mobile, fill container)
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="relative w-full bg-[#F8FBF9] rounded-[26px] border border-emerald-100/80 overflow-hidden shadow-inner h-[360px] xs:h-[420px] sm:h-[520px] lg:h-[620px] select-none flex items-center justify-center">
+      <div className="relative w-full bg-[#F8FBF9] rounded-[18px] sm:rounded-[26px] border border-emerald-100/80 overflow-hidden shadow-inner h-[430px] xs:h-[460px] sm:h-[520px] lg:h-[620px] select-none flex items-center justify-center touch-manipulation">
         
+        {/* Floating Interactive Zoom & Reset Controls */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-30 pointer-events-auto">
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            aria-label="Zoom In"
+            className="w-8 h-8 rounded-xl bg-white/95 shadow-md border border-emerald-200/80 flex items-center justify-center text-stone-700 hover:text-[#2E7D32] hover:bg-emerald-50 active:scale-90 transition-all select-none cursor-pointer"
+            title="Zoom In"
+          >
+            <Plus className="w-4 h-4 text-stone-700" />
+          </button>
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            aria-label="Zoom Out"
+            className="w-8 h-8 rounded-xl bg-white/95 shadow-md border border-emerald-200/80 flex items-center justify-center text-stone-700 hover:text-[#2E7D32] hover:bg-emerald-50 active:scale-90 transition-all select-none cursor-pointer"
+            title="Zoom Out"
+          >
+            <Minus className="w-4 h-4 text-stone-700" />
+          </button>
+          <button
+            type="button"
+            onClick={handleResetView}
+            aria-label="Reset Map View"
+            className="w-8 h-8 rounded-xl bg-white/95 shadow-md border border-emerald-200/80 flex items-center justify-center text-stone-700 hover:text-[#2E7D32] hover:bg-emerald-50 active:scale-90 transition-all select-none cursor-pointer"
+            title="Reset View"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-stone-700" />
+          </button>
+        </div>
+
+        {/* Live Map Canvas */}
         <ComposableMap
           projection="geoMercator"
-          projectionConfig={{ scale, center }}
+          projectionConfig={{ scale, center: mapCenter }}
           width={width}
           height={height}
           style={{ width: "100%", height: "100%", backgroundColor: "#F8FBF9" }}
         >
-          <ZoomableGroup center={center} zoom={1} minZoom={1} maxZoom={1} disableZoom disablePanning>
+          <ZoomableGroup
+            center={mapCenter}
+            zoom={mapZoom}
+            minZoom={1}
+            maxZoom={5}
+            onMoveEnd={({ coordinates, zoom }) => {
+              if (coordinates) setMapCenter(coordinates);
+              if (zoom) setMapZoom(zoom);
+            }}
+          >
             
             {/* World Land Mass */}
             <Geographies geography={geoUrl}>
@@ -404,7 +574,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                   d={activePathD}
                   fill="none"
                   stroke="#10B981"
-                  strokeWidth={6}
+                  strokeWidth={isMobile ? 5 : 6}
                   opacity={0.3}
                   filter="url(#routeGlow)"
                 />
@@ -416,7 +586,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                   d={activePathD}
                   fill="none"
                   stroke="#059669"
-                  strokeWidth={3.5}
+                  strokeWidth={isMobile ? 3 : 3.5}
                   strokeLinecap="round"
                   strokeDasharray="7 5"
                 />
@@ -431,15 +601,15 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                 
                 <foreignObject x="-14" y="-14" width="28" height="28" className="pointer-events-none">
                   <div className="w-full h-full flex items-center justify-center text-white">
-                    <Anchor className="w-4 h-4 text-white" />
+                    <Anchor className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                   </div>
                 </foreignObject>
 
                 {/* Permanent Tuticorin Port Label Badge */}
-                <foreignObject x="-85" y="18" width="170" height="48" className="pointer-events-none overflow-visible">
+                <foreignObject x="-85" y="16" width="170" height="48" className="pointer-events-none overflow-visible">
                   <div className="flex flex-col items-center">
-                    <div className="bg-white/95 text-stone-900 px-3 py-1 rounded-xl border border-emerald-300 shadow-xl text-center whitespace-nowrap backdrop-blur-md">
-                      <div className="text-[10px] font-extrabold tracking-wider leading-tight text-emerald-800 flex items-center justify-center gap-1">
+                    <div className="bg-white/95 text-stone-900 px-2.5 py-1 rounded-xl border border-emerald-300 shadow-xl text-center whitespace-nowrap backdrop-blur-md">
+                      <div className="text-[9.5px] sm:text-[10px] font-extrabold tracking-wider leading-tight text-emerald-800 flex items-center justify-center gap-1">
                         <span>🇮🇳</span> {ORIGIN.name}
                       </div>
                       <div className="text-[8px] text-emerald-700 font-semibold leading-tight">
@@ -470,8 +640,8 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                     {/* Destination Arrival Ripple when Delivered */}
                     {isSelected && isDelivered && (
                       <>
-                        <circle r={isMobile ? 26 : 32} fill="#34D399" opacity={0.35} className="animate-ping" />
-                        <circle r={isMobile ? 18 : 22} fill="#059669" opacity={0.25} className="animate-pulse" />
+                        <circle r={isMobile ? 24 : 32} fill="#34D399" opacity={0.35} className="animate-ping" />
+                        <circle r={isMobile ? 16 : 22} fill="#059669" opacity={0.25} className="animate-pulse" />
                       </>
                     )}
 
@@ -497,7 +667,7 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                       {isSelected && (
                         <foreignObject
                           x="-95"
-                          y={isMobile ? "-75" : "-85"}
+                          y={isMobile ? "-70" : "-85"}
                           width="190"
                           height="80"
                           className="pointer-events-none overflow-visible z-50"
@@ -509,13 +679,13 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
                             transition={{ duration: 0.2 }}
                             className="flex flex-col items-center"
                           >
-                            <div className="bg-white/95 text-stone-900 px-3.5 py-2 rounded-2xl shadow-xl border border-emerald-300 text-center whitespace-nowrap min-w-[140px] backdrop-blur-md">
-                              <div className="text-[11px] font-extrabold flex items-center justify-center gap-1.5 leading-tight text-stone-900">
-                                <span>{dest.code}</span>
+                            <div className="bg-white/95 text-stone-900 px-3 py-1.5 rounded-2xl shadow-xl border border-emerald-300 text-center whitespace-nowrap min-w-[130px] backdrop-blur-md">
+                              <div className="text-[10px] sm:text-[11px] font-extrabold flex items-center justify-center gap-1.5 leading-tight text-stone-900">
+                                <span>{dest.flag}</span>
                                 <span>{dest.country}</span>
                               </div>
-                              <div className="text-[9px] text-emerald-700 font-semibold leading-tight mt-0.5 flex items-center justify-center gap-1">
-                                <Anchor className="w-2.5 h-2.5 text-emerald-600" /> {dest.port}
+                              <div className="text-[8.5px] sm:text-[9px] text-emerald-700 font-semibold leading-tight mt-0.5 flex items-center justify-center gap-1">
+                                <Anchor className="w-2.5 h-2.5 text-emerald-600 shrink-0" /> {dest.port}
                               </div>
                               <div className="mt-1 flex items-center justify-center gap-1 text-[8px] font-extrabold uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                                 {isDelivered ? (
@@ -584,61 +754,19 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
         </ComposableMap>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            3. FLOATING WHITE TELEMETRY CARD (BOTTOM-LEFT)
+            3. DESKTOP FLOATING TELEMETRY CARD (BOTTOM-LEFT, >= 768px)
         ═══════════════════════════════════════════════════════════════════ */}
-        <div className="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-auto bg-white/95 border border-emerald-100 backdrop-blur-xl p-4 sm:p-5 rounded-[24px] shadow-2xl shadow-emerald-950/10 max-w-sm pointer-events-auto">
-          
-          <div className="flex items-center justify-between gap-4 mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-extrabold text-emerald-800 text-xs shadow-xs">
-                {activeDest.code}
-              </div>
-              <div>
-                <div className="text-sm font-extrabold text-stone-900 leading-tight">
-                  Tuticorin ➔ {activeDest.country}
-                </div>
-                <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
-                  <Anchor className="w-3 h-3 text-emerald-600" /> {activeDest.port}
-                </div>
-              </div>
-            </div>
-
-            <div>
-              {isDelivered ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-1 rounded-full shadow-xs">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> DELIVERED
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-teal-800 bg-teal-100/90 border border-teal-300 px-2.5 py-1 rounded-full shadow-xs">
-                  <Ship className="w-3 h-3 text-teal-600 animate-bounce" /> IN TRANSIT
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* GREEN PROGRESS BAR WITH GLIDING VESSEL ICON */}
-          <div className="relative w-full bg-stone-100 rounded-full h-2.5 mb-3 overflow-hidden border border-stone-200/60">
-            <div 
-              className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 h-full transition-all duration-75 rounded-full"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </div>
-
-          {/* SINGLE CENTERED DYNAMIC DISTANCE (KM) METRIC */}
-          <div className="pt-3 border-t border-stone-100 flex flex-col items-center justify-center text-center">
-            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-stone-500 mb-1">
-              <MapPin className="w-4 h-4 text-emerald-600 animate-pulse" />
-              <span>Distance</span>
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
-              {getDistanceKm(ORIGIN.coordinates, activeDest.coordinates)}
-            </div>
-          </div>
-
+        <div className="hidden md:block absolute bottom-5 left-5 z-30">
+          <TelemetryCard
+            activeDest={activeDest}
+            isDelivered={isDelivered}
+            progress={progress}
+            isMobile={false}
+          />
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            4. BOTTOM-RIGHT MAP LEGEND BAR
+            4. BOTTOM-RIGHT MAP LEGEND BAR (DESKTOP)
         ═══════════════════════════════════════════════════════════════════ */}
         <div className="absolute bottom-4 right-4 hidden sm:flex items-center gap-4 bg-white/95 border border-emerald-100/90 px-4 py-2 rounded-full shadow-lg text-[11px] font-bold text-stone-700">
           <div className="flex items-center gap-1.5">
@@ -656,6 +784,20 @@ const GlobalMap = ({ onSelectDestination, activeDestId }) => {
         </div>
 
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          5. MOBILE STACKED TELEMETRY CARD (< 768px)
+          Placed cleanly below map so map canvas has 100% unobstructed view
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div className="block md:hidden mt-3">
+        <TelemetryCard
+          activeDest={activeDest}
+          isDelivered={isDelivered}
+          progress={progress}
+          isMobile={true}
+        />
+      </div>
+
     </div>
   );
 };

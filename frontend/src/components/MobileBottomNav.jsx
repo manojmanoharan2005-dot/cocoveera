@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, FlaskConical, ShoppingCart, User } from 'lucide-react';
+import { Home, LayoutGrid, ShoppingCart, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -26,17 +26,14 @@ const MobileBottomNav = () => {
   // Determine active states for the 4 primary tabs
   const isHomeActive = 
     location.pathname === '/' || 
-    location.pathname === '/dashboard' || 
+    location.pathname === '/dashboard';
+
+  const isCategoriesActive = 
     location.pathname === '/products' || 
     location.pathname.startsWith('/product/') || 
     location.pathname.startsWith('/products/') || 
     location.pathname.startsWith('/productview/') || 
     location.pathname.startsWith('/dashboard/product');
-
-  const isQualityActive = 
-    location.pathname === '/testing-reports' || 
-    location.pathname === '/production-process' || 
-    location.pathname === '/quality-testing';
 
   const isCartActive = 
     location.pathname === '/cart' || 
@@ -59,10 +56,10 @@ const MobileBottomNav = () => {
       isActive: isHomeActive 
     },
     { 
-      name: 'Quality Test', 
-      icon: FlaskConical, 
-      path: '/testing-reports', 
-      isActive: isQualityActive 
+      name: 'Categories', 
+      icon: LayoutGrid, 
+      path: '/products', 
+      isActive: isCategoriesActive 
     },
     { 
       name: 'Cart', 

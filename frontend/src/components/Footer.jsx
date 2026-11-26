@@ -3,7 +3,7 @@
  * Purpose: Redesigned official Cocoveera main footer featuring brand summary,
  *          verified quick links, dynamic product categories, operating hours,
  *          official contact information, social links, and bottom copyright bar.
- *          Styled with a dark, professional theme inspired by the V Furnish layout reference.
+ *          Fully responsive across mobile (320px–430px), tablet, and desktop breakpoints.
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -62,27 +62,27 @@ const Footer = () => {
       : FALLBACK_CATEGORIES;
 
   return (
-    <footer className="bg-[#142014] text-stone-300 border-t border-white/10">
-      {/* Top Main Footer Grid */}
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pt-14 sm:pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
+    <footer className="bg-[#142014] text-stone-300 border-t border-white/10 overflow-x-hidden">
+      {/* Top Main Footer Container */}
+      <div className="max-w-7xl mx-auto px-4 xs:px-5 sm:px-6 lg:px-8 pt-10 xs:pt-12 sm:pt-16 pb-10 sm:pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-8">
           
           {/* Column 1: About Cocoveera (lg:col-span-4) */}
-          <div className="lg:col-span-4">
-            <Link to="/" className="inline-flex items-center space-x-2.5 mb-5 group">
-              <img src="/logo.webp" alt="Cocoveera" className="h-10 w-auto object-contain transition-transform group-hover:scale-105" />
-              <span className="font-poppins font-extrabold text-xl tracking-wider text-white">
+          <div className="lg:col-span-4 space-y-4">
+            <Link to="/" className="inline-flex items-center space-x-2.5 group">
+              <img src="/logo.webp" alt="Cocoveera" className="h-9 xs:h-10 w-auto object-contain transition-transform group-hover:scale-105" />
+              <span className="font-poppins font-extrabold text-lg xs:text-xl tracking-wider text-white">
                 <span className="text-[#C68B59]">COCO</span>
                 <span className="text-primary-light">VEERA</span>
               </span>
             </Link>
 
-            <p className="text-stone-400 text-xs sm:text-[13px] leading-relaxed mb-6">
+            <p className="text-stone-400 text-xs sm:text-[13px] leading-relaxed">
               Cocoveera is an international manufacturer and bulk exporter of premium organic coconut coir substrates, coco peat blocks, grow bags, and customized growing media. Powered by sustainable coconut husk processing in Coimbatore, India, we support commercial greenhouse growers, berry cultivators, and agricultural enterprises worldwide.
             </p>
 
-            <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">
+            <div className="pt-1 space-y-2">
+              <span className="text-[10px] xs:text-[11px] font-bold uppercase tracking-wider text-stone-400 block">
                 Connect With Us
               </span>
               <div className="flex items-center space-x-3">
@@ -91,7 +91,7 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
-                  className="w-9 h-9 rounded-lg bg-white/5 hover:bg-primary-dark border border-white/10 flex items-center justify-center transition-all duration-300 text-stone-300 hover:text-white"
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-primary-dark border border-white/10 flex items-center justify-center transition-all duration-300 text-stone-300 hover:text-white active:scale-95 shadow-xs"
                 >
                   <Linkedin className="w-4 h-4" />
                 </a>
@@ -100,14 +100,14 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="WhatsApp"
-                  className="w-9 h-9 rounded-lg bg-white/5 hover:bg-[#25D366] border border-white/10 flex items-center justify-center transition-all duration-300 text-stone-300 hover:text-white"
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#25D366] border border-white/10 flex items-center justify-center transition-all duration-300 text-stone-300 hover:text-white active:scale-95 shadow-xs"
                 >
                   <WhatsAppIcon className="w-4 h-4" />
                 </a>
                 <a
                   href="mailto:supportdesk@cocoveera.com"
                   aria-label="Email Us"
-                  className="w-9 h-9 rounded-lg bg-white/5 hover:bg-primary-dark border border-white/10 flex items-center justify-center transition-all duration-300 text-stone-300 hover:text-white"
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-primary-dark border border-white/10 flex items-center justify-center transition-all duration-300 text-stone-300 hover:text-white active:scale-95 shadow-xs"
                 >
                   <Mail className="w-4 h-4" />
                 </a>
@@ -117,7 +117,7 @@ const Footer = () => {
 
           {/* Column 2: Quick Links (lg:col-span-2) */}
           <div className="lg:col-span-2">
-            <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-5 flex items-center gap-2">
+            <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-4 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-primary-light"></span>
               Quick Links
             </h4>
@@ -126,9 +126,9 @@ const Footer = () => {
                 <li key={item.label}>
                   <Link
                     to={item.path}
-                    className="text-stone-400 hover:text-primary-light hover:translate-x-1 transition-all inline-flex items-center gap-1.5 duration-200"
+                    className="text-stone-400 hover:text-primary-light hover:translate-x-1 transition-all inline-flex items-center gap-1.5 duration-200 py-0.5"
                   >
-                    <ArrowRight className="w-3 h-3 text-stone-600" />
+                    <ArrowRight className="w-3 h-3 text-stone-600 shrink-0" />
                     <span>{item.label}</span>
                   </Link>
                 </li>
@@ -138,7 +138,7 @@ const Footer = () => {
 
           {/* Column 3: Product Range (lg:col-span-3) */}
           <div className="lg:col-span-3">
-            <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-5 flex items-center gap-2">
+            <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-4 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-primary-light"></span>
               Product Range
             </h4>
@@ -147,9 +147,9 @@ const Footer = () => {
                 <li key={catName}>
                   <Link
                     to={`/products?category=${encodeURIComponent(catName)}`}
-                    className="text-stone-400 hover:text-primary-light hover:translate-x-1 transition-all inline-flex items-center gap-1.5 duration-200"
+                    className="text-stone-400 hover:text-primary-light hover:translate-x-1 transition-all inline-flex items-center gap-1.5 duration-200 py-0.5"
                   >
-                    <ArrowRight className="w-3 h-3 text-stone-600" />
+                    <ArrowRight className="w-3 h-3 text-stone-600 shrink-0" />
                     <span>{catName}</span>
                   </Link>
                 </li>
@@ -158,22 +158,24 @@ const Footer = () => {
           </div>
 
           {/* Column 4: Operating Hours & Contact (lg:col-span-3) */}
-          <div className="lg:col-span-3">
-            <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-5 flex items-center gap-2">
+          <div className="lg:col-span-3 space-y-4">
+            <h4 className="text-white font-poppins font-bold text-xs uppercase tracking-wider mb-4 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-primary-light"></span>
               Contact &amp; Hours
             </h4>
 
             {/* Operating Hours Box */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 mb-5">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
               <div className="flex items-start gap-2.5">
                 <Clock className="w-4 h-4 text-primary-light mt-0.5 shrink-0" />
-                <div>
+                <div className="min-w-0">
                   <p className="text-white font-semibold text-xs">Operating Hours</p>
-                  <p className="text-stone-400 text-[11.5px] mt-0.5">Monday – Saturday: 9:00 AM – 6:00 PM IST</p>
+                  <p className="text-stone-400 text-[11px] xs:text-[11.5px] mt-0.5 leading-snug">
+                    Monday – Saturday: 9:00 AM – 6:00 PM IST
+                  </p>
                   <p className="text-stone-500 text-[11px]">Sunday: Closed</p>
-                  <div className="mt-2 inline-flex items-center gap-1.5 bg-primary/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full border border-primary/30 font-medium">
-                    <ShieldCheck className="w-3 h-3" /> Response Within 24 Hours
+                  <div className="mt-2.5 inline-flex items-center gap-1.5 bg-primary/20 text-emerald-300 text-[10px] px-2.5 py-0.5 rounded-full border border-primary/30 font-medium">
+                    <ShieldCheck className="w-3 h-3 shrink-0" /> Response Within 24 Hours
                   </div>
                 </div>
               </div>
@@ -183,7 +185,7 @@ const Footer = () => {
             <ul className="space-y-3 text-xs">
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-primary-light mt-0.5 shrink-0" />
-                <span className="text-stone-400 leading-relaxed text-[11.5px]">
+                <span className="text-stone-400 leading-relaxed text-[11px] xs:text-[11.5px]">
                   96/1, Vikas Layout, Kalluri Nagar, Anna Nagar, Peelamedu, Coimbatore, Tamil Nadu – 641004, India
                 </span>
               </li>
@@ -192,7 +194,7 @@ const Footer = () => {
                 <Phone className="w-4 h-4 text-primary-light shrink-0" />
                 <a
                   href="tel:+916383469877"
-                  className="text-stone-300 hover:text-primary-light transition-colors font-medium text-[12px]"
+                  className="text-stone-300 hover:text-primary-light transition-colors font-medium text-xs xs:text-[12px]"
                 >
                   +91 63834 69877
                 </a>
@@ -202,7 +204,7 @@ const Footer = () => {
                 <Mail className="w-4 h-4 text-primary-light shrink-0" />
                 <a
                   href="mailto:supportdesk@cocoveera.com"
-                  className="text-stone-300 hover:text-primary-light transition-colors text-[12px]"
+                  className="text-stone-300 hover:text-primary-light transition-colors text-xs xs:text-[12px] truncate"
                 >
                   supportdesk@cocoveera.com
                 </a>
@@ -215,9 +217,11 @@ const Footer = () => {
 
       {/* Visually Distinct Bottom Copyright Bar */}
       <div className="bg-[#0b140b] border-t border-white/10 py-5">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-[11px] text-stone-400 gap-3">
-          <p>© 2026 Cocoveera Private Limited. All rights reserved.</p>
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 font-medium">
+        <div className="max-w-7xl mx-auto px-4 xs:px-5 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-[11px] text-stone-400 gap-3">
+          <p className="text-center sm:text-left">
+            © 2026 Cocoveera Private Limited. All rights reserved.
+          </p>
+          <div className="flex flex-wrap justify-center sm:justify-end items-center gap-3 xs:gap-4 sm:gap-6 font-medium">
             <Link to="/privacy-policy" className="hover:text-primary-light transition-colors">
               Privacy Policy
             </Link>
