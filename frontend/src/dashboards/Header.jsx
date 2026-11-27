@@ -68,14 +68,14 @@ export const Header = ({
       {/* MOBILE TOP NAVIGATION (< 1024px) - Premium Compact E-commerce App Header */}
       {/* ========================================================================= */}
       <header className="lg:hidden w-full bg-white/95 backdrop-blur-md border-b border-stone-200/80 sticky top-0 z-[100] px-3.5 pt-2 pb-2.5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] select-none pt-[env(safe-area-inset-top,0px)]">
-        {/* ROW 1: Height 50px - Hamburger Menu | Centered Logo | Wishlist Icon */}
-        <div className="flex items-center justify-between gap-3 w-full h-[50px]">
+        {/* ROW 1: Height 50px - Hamburger Menu (Left) | Perfectly Centered Logo | Balanced Spacer (Right) */}
+        <div className="relative flex items-center justify-between gap-3 w-full h-[50px]">
           {/* Left: Hamburger Menu */}
           {onMenuClick ? (
             <button
               type="button"
               onClick={onMenuClick}
-              className="w-10 h-10 flex items-center justify-center text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200/70 rounded-2xl transition-all shadow-2xs active:scale-95 shrink-0"
+              className="w-10 h-10 flex items-center justify-center text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200/70 rounded-2xl transition-all shadow-2xs active:scale-95 shrink-0 z-10"
               aria-label="Open Navigation Menu"
             >
               <Menu className="w-5 h-5 text-stone-800" />
@@ -84,10 +84,10 @@ export const Header = ({
             <div className="w-10 h-10 shrink-0" />
           )}
 
-          {/* Center: Cocoveera Logo + Wordmark */}
+          {/* Center: Perfectly Centered Cocoveera Logo + Wordmark */}
           <div 
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 cursor-pointer select-none py-1"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 cursor-pointer select-none py-1 z-10"
             title="Cocoveera Home"
           >
             <img
@@ -100,20 +100,8 @@ export const Header = ({
             </span>
           </div>
 
-          {/* Right: Wishlist Icon */}
-          <button
-            onClick={() => navigate('/wishlist')}
-            className="relative w-10 h-10 flex items-center justify-center text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200/70 rounded-2xl transition-all shadow-2xs active:scale-95 shrink-0"
-            title="Wishlist"
-            aria-label="View Wishlist"
-          >
-            <Heart className="w-5 h-5 text-stone-800" />
-            {wishlistCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-[#2E7D32] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
-                {wishlistCount}
-              </span>
-            )}
-          </button>
+          {/* Right: Balanced Empty Spacer (ensures logo remains centered without right icon) */}
+          <div className="w-10 h-10 shrink-0 pointer-events-none" aria-hidden="true" />
         </div>
 
         {/* ROW 2: Compact Modern Search Bar + Filter Button (Side-by-side) */}

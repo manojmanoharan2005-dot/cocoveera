@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, Star, ShoppingBag, Check, 
-  Droplet, Wind, ShieldCheck, FileText, ChevronRight, ChevronLeft,
+  Droplet, Wind, ShieldCheck, FileText, ChevronRight, ChevronLeft, ChevronDown, ExternalLink,
   Plus, Minus, Info, AlertCircle, Sparkles, Package, CheckCircle2, Home, Beaker,
   Share2, MoreVertical, HelpCircle, Maximize2, X, Pencil, Trash2, Edit3, RotateCcw
 } from 'lucide-react';
@@ -70,6 +70,8 @@ const ProductView = () => {
   const [completedContainers, setCompletedContainers] = useState([]);
   const [activeContainerIndex, setActiveContainerIndex] = useState(1);
   const containerBuilderRef = useRef(null);
+  const mobileContainerBuilderRef = useRef(null);
+  const touchStartX = useRef(null);
 
   // Compute active container load (for current active container)
   const activeContainerLoad = parseFloat((quantity + extraItems.reduce((acc, item) => acc + item.quantity, 0)).toFixed(2));
@@ -129,6 +131,9 @@ const ProductView = () => {
         if (containerBuilderRef.current) {
           containerBuilderRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+        if (mobileContainerBuilderRef.current) {
+          mobileContainerBuilderRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       }, 300);
     }
   }, [activeContainerLoad, activeContainerIndex, containerType, product, quantity, extraItems, completedContainers, user, editingCartItemId]);
@@ -171,6 +176,9 @@ const ProductView = () => {
 
     if (containerBuilderRef.current) {
       containerBuilderRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (mobileContainerBuilderRef.current) {
+      mobileContainerBuilderRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -977,6 +985,24 @@ Timestamp: ${new Date().toLocaleString()}
     'https://placehold.co/600x600/eeeeee/999999?text=Image+Not+Available'
   ];
 
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0 && activeImageIndex < imagesList.length - 1) {
+        setActiveImageIndex(prev => prev + 1);
+      } else if (diff < 0 && activeImageIndex > 0) {
+        setActiveImageIndex(prev => prev - 1);
+      }
+    }
+    touchStartX.current = null;
+  };
+
   const productSchema = {
     "@context": "https://schema.org/",
     "@type": "Product",
@@ -998,7 +1024,7 @@ Timestamp: ${new Date().toLocaleString()}
   };
 
   return (
-    <div className="max-w-6xl space-y-4 sm:space-y-5 pb-24 lg:pb-16">
+    <div className="max-w-6xl space-y-4 sm:space-y-5 pb-24 lg:pb-16 pb-[max(6rem,calc(env(safe-area-inset-bottom)+5rem))]">
       <SEO 
         title={product.name}
         description={product.description?.substring(0, 160) || `Buy premium ${product.name} at Cocoveera.`}
@@ -1006,9 +1032,6 @@ Timestamp: ${new Date().toLocaleString()}
         image={product.images?.[0]}
         schema={productSchema}
       />
-
-      
-
 
       {/* Floating Toast Notification */}
       <AnimatePresence>
@@ -1026,6 +1049,11 @@ Timestamp: ${new Date().toLocaleString()}
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* DESKTOP VIEW (lg: 1024px and above) - 100% UNTOUCHED ORIGINAL LAYOUT     */}
+      {/* ========================================================================= */}
+      <div className="hidden lg:block space-y-6">
 
       {/* Breadcrumbs and navigation */}
       <div className="flex flex-wrap items-center justify-between gap-3 w-full max-w-full overflow-hidden">
@@ -2028,23 +2056,774 @@ Timestamp: ${new Date().toLocaleString()}
         </div>
       )}
 
-      {/* Mobile Sticky Action Bar (Authenticated Users Only) */}
-      {user && (
-        <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-50 lg:hidden flex gap-2 items-center backdrop-blur-md bg-white/95">
+      </div>
+
+      {/* ========================================================================= */}
+      {/* DEDICATED MOBILE VIEW (below lg: 1024px) - PURPOSE-BUILT B2B EXPERIENCE   */}
+      {/* ========================================================================= */}
+      <div className="block lg:hidden space-y-4">
+
+        {/* 1. COMPACT MOBILE HEADER */}
+        <div className="flex items-center justify-between py-2 px-1 border-b border-stone-100">
+          <button
+            type="button"
+            onClick={handleBackNav}
+            className="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+            aria-label="Go Back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            <span className="font-poppins font-black text-base text-stone-900 tracking-tight">Cocoveera</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32]"></span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleShareProduct}
+            className="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+            aria-label="Share Product"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* 2. PRODUCT GALLERY (Touch Swipe, Indicators, Fullscreen, Action Row) */}
+        <div className="bg-white border border-stone-200/80 rounded-2xl p-3 space-y-3 shadow-2xs">
+          {/* Swipeable Hero Image Container */}
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className="relative w-full aspect-square max-h-[340px] bg-[#F7F9F7] rounded-xl overflow-hidden border border-stone-100 flex items-center justify-center p-3 select-none touch-pan-y"
+          >
+            <ImageWithFallback
+              src={imagesList[activeImageIndex]}
+              alt={product.name}
+              className="w-full h-full object-contain pointer-events-none transition-all duration-300"
+            />
+
+            {/* Fullscreen Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setFullscreenImageIndex(activeImageIndex);
+                setIsFullscreenOpen(true);
+              }}
+              className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs text-stone-700 hover:text-[#2E7D32] flex items-center justify-center shadow-xs border border-stone-200/60 z-10 active:scale-95 cursor-pointer"
+              aria-label="Fullscreen view"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Touch Swipe Indicators (Dots / Pill) */}
+            {imagesList.length > 1 && (
+              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full z-10">
+                {imagesList.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === activeImageIndex ? 'w-4 bg-[#2E7D32]' : 'w-1.5 bg-white/70'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Compact Action Row */}
+          <div className="flex items-center justify-between gap-2 pt-0.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2E7D32] bg-[#E8F5E9] px-2.5 py-1 rounded-lg truncate">
+                {product.category}
+              </span>
+              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32] animate-pulse"></span>
+                Export Ready
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleWishlistToggle}
+                className={`p-2 rounded-xl border transition-all active:scale-95 cursor-pointer ${
+                  isWishlisted
+                    ? 'bg-red-50 border-red-200 text-red-500'
+                    : 'bg-white border-stone-200/80 text-stone-600 hover:text-red-500'
+                }`}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+              </button>
+              <button
+                type="button"
+                onClick={handleShareProduct}
+                className="p-2 rounded-xl bg-white border border-stone-200/80 text-stone-600 hover:text-[#2E7D32] transition-all active:scale-95 cursor-pointer"
+                aria-label="Share"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. PRODUCT INFORMATION */}
+        <div className="bg-white border border-stone-200/80 rounded-2xl p-4 space-y-3.5 shadow-2xs">
+          {/* Product Name */}
+          <div>
+            <h1 className="font-poppins font-black text-xl text-stone-900 leading-tight">
+              {product.name}
+            </h1>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5 fill-[#EAB308] text-[#EAB308]" />
+                ))}
+              </div>
+              <span className="text-xs font-bold text-stone-800">4.8</span>
+              <span className="text-stone-300">•</span>
+              <span className="text-[11px] font-semibold text-stone-500">18 Verified Technical Audits</span>
+            </div>
+          </div>
+
+          {/* Wholesale Pricing Card */}
+          <div className="bg-[#F7F9F7] border border-[#2E7D32]/25 rounded-xl p-3.5 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold text-[#2E7D32] uppercase tracking-wider">
+                Wholesale FOB Price
+              </span>
+              <span className="text-[10px] font-bold text-stone-500 bg-white px-2 py-0.5 rounded border border-stone-200/60">
+                MOQ: 1 Full FCL
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="font-poppins font-black text-2xl text-stone-900">
+                {convertCurrency(product.price, user?.currency || 'INR')?.formatted}
+              </span>
+              <span className="text-xs text-stone-500 font-semibold">
+                / {product.unit || 'Pallet'}
+              </span>
+            </div>
+            <p className="text-[11px] text-stone-600 font-medium">
+              Volume discounts calculated automatically per container configuration.
+            </p>
+          </div>
+
+          {/* Overview Description */}
+          <div className="space-y-1.5 pt-1">
+            <h3 className="font-poppins font-black text-xs uppercase tracking-wider text-stone-800">
+              Product Details
+            </h3>
+            <p className="text-xs text-stone-600 leading-relaxed font-normal">
+              {product.description || 'Premium quality horticultural coir substrate carefully washed and buffered for optimal root aeration and moisture retention.'}
+            </p>
+          </div>
+
+          {/* Feature badges */}
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-stone-100 text-xs font-bold text-stone-700">
+            <div className="flex items-center gap-2 bg-stone-50 p-2.5 rounded-xl border border-stone-100">
+              <div className="w-6 h-6 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center shrink-0">
+                <Droplet className="w-3.5 h-3.5" />
+              </div>
+              <span className="truncate">Freshwater Washed</span>
+            </div>
+            <div className="flex items-center gap-2 bg-stone-50 p-2.5 rounded-xl border border-stone-100">
+              <div className="w-6 h-6 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center shrink-0">
+                <Wind className="w-3.5 h-3.5" />
+              </div>
+              <span className="truncate">High Porosity</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. VERIFIED SPECIFICATION REPORT */}
+        <div className="bg-white border border-stone-200/80 rounded-2xl p-4 space-y-3 shadow-2xs">
+          {/* Heading & Summary */}
+          <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32] shrink-0">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-poppins font-black text-xs uppercase tracking-wider text-stone-900 leading-tight">
+                  Verified Specification Report
+                </h3>
+                <p className="text-[10px] text-stone-500 font-medium">
+                  Laboratory Batch Tested
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-black text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded-md shrink-0">
+              7 Specs Verified
+            </span>
+          </div>
+
+          {/* Stacked Cards */}
+          <div className="space-y-2">
+            {[
+              { label: 'EC Runoff', value: product.specifications?.ec || '< 0.5 mS/cm' },
+              { label: 'pH Level', value: product.specifications?.ph || '5.5 - 6.5' },
+              { label: 'Moisture Content', value: product.specifications?.moisture || '< 20%' },
+              { label: 'Expansion Volume', value: product.specifications?.expansionVolume || '15 Liters/kg' },
+              { label: 'Compression Ratio', value: product.specifications?.compressionRatio || '5:1' },
+              { label: 'Fiber Length', value: product.specifications?.fiberLength || 'Under 2cm' },
+              { label: 'Sand Content', value: product.specifications?.sandContent || '< 2%' },
+            ].map((spec, index) => (
+              <div
+                key={index}
+                className="bg-stone-50/70 border border-stone-200/80 rounded-xl p-3 transition-colors hover:border-stone-300"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-stone-700">
+                    {spec.label}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#15803d] bg-[#dcfce7] border border-[#86efac]/80 px-2 py-0.5 rounded-full shrink-0 shadow-2xs">
+                    <Check className="w-2.5 h-2.5 stroke-[3] text-[#15803d]" />
+                    <span>Verified</span>
+                  </span>
+                </div>
+                <div className="mt-1">
+                  <span className="font-poppins font-black text-xs sm:text-sm text-stone-900">
+                    {spec.value}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 5. CONTAINER CONFIGURATION & IN-PAGE ACTIONS */}
+        {user ? (
+          <div id="mobile-container-configurator" ref={mobileContainerBuilderRef} className="bg-white border border-stone-200/80 rounded-2xl p-4 space-y-4 shadow-2xs">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32] shrink-0">
+                  <Package className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-poppins font-black text-xs uppercase tracking-wider text-stone-900 leading-tight">
+                    Container Configuration
+                  </h3>
+                  <p className="text-[10px] text-stone-500 font-medium">
+                    FCL Wholesale Load Builder
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {(quantity > 0 || extraItems.length > 0) && (
+                  <button
+                    type="button"
+                    onClick={handleClearActiveContainer}
+                    className="text-[10px] font-bold text-stone-500 hover:text-red-600 bg-stone-100 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset</span>
+                  </button>
+                )}
+                <span className="bg-[#2E7D32]/10 text-[#2E7D32] px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">
+                  #{activeContainerIndex}
+                </span>
+              </div>
+            </div>
+
+            {/* Completed Containers Summary (if any) */}
+            {completedContainers.length > 0 && (
+              <div className="space-y-2 bg-stone-50 p-3 rounded-xl border border-stone-200/70">
+                <span className="text-[10px] font-black uppercase tracking-wider text-stone-600 block">
+                  Saved Containers ({completedContainers.length})
+                </span>
+                <div className="space-y-1.5">
+                  {completedContainers.map((c) => (
+                    <div key={c.containerNumber} className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-stone-200 text-xs">
+                      <div>
+                        <span className="font-bold text-stone-800">Container #{c.containerNumber}</span>
+                        <span className="text-[10px] text-stone-500 ml-2">({c.containerType} • 1.00 FCL)</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleEditCompletedContainer(c.containerNumber)}
+                          className="p-1 rounded text-stone-500 hover:text-[#2E7D32]"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCompletedContainer(c.containerNumber)}
+                          className="p-1 rounded text-stone-500 hover:text-red-600"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Container Size Selection Cards */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider">
+                  Container Size
+                </span>
+                <span className="text-[10px] font-semibold text-stone-500">
+                  {containerType === '20FT' ? '10 Pallets (~24 MT)' : '22 Pallets (~27 MT)'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* 20FT Standard */}
+                <button
+                  type="button"
+                  onClick={() => setContainerType('20FT')}
+                  className={`p-3 rounded-xl text-left transition-all border-2 flex flex-col justify-between active:scale-[0.98] cursor-pointer ${
+                    containerType === '20FT'
+                      ? 'border-[#2E7D32] bg-[#f0fdf4] shadow-2xs'
+                      : 'border-stone-200 bg-white hover:border-stone-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <span className={`text-xs font-black uppercase tracking-wide font-poppins ${containerType === '20FT' ? 'text-[#2E7D32]' : 'text-stone-800'}`}>
+                      20FT FCL
+                    </span>
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      containerType === '20FT' ? 'bg-[#2E7D32] text-white' : 'border border-stone-300'
+                    }`}>
+                      {containerType === '20FT' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </div>
+                  </div>
+                  <div className="mt-2 space-y-0.5">
+                    <span className="text-[11px] font-bold text-stone-900 block leading-tight">Standard</span>
+                    <span className="text-[10px] text-stone-500 block">10 Pallets • ~24 MT</span>
+                  </div>
+                </button>
+
+                {/* 40FT High Volume */}
+                <button
+                  type="button"
+                  onClick={() => setContainerType('40FT')}
+                  className={`p-3 rounded-xl text-left transition-all border-2 flex flex-col justify-between active:scale-[0.98] cursor-pointer ${
+                    containerType === '40FT'
+                      ? 'border-[#2E7D32] bg-[#f0fdf4] shadow-2xs'
+                      : 'border-stone-200 bg-white hover:border-stone-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <span className={`text-xs font-black uppercase tracking-wide font-poppins ${containerType === '40FT' ? 'text-[#2E7D32]' : 'text-stone-800'}`}>
+                      40FT FCL
+                    </span>
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      containerType === '40FT' ? 'bg-[#2E7D32] text-white' : 'border border-stone-300'
+                    }`}>
+                      {containerType === '40FT' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </div>
+                  </div>
+                  <div className="mt-2 space-y-0.5">
+                    <span className="text-[11px] font-bold text-stone-900 block leading-tight">High Volume</span>
+                    <span className="text-[10px] text-stone-500 block">22 Pallets • ~27 MT</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Main Product Stepper */}
+            <div className="space-y-1.5 bg-[#F7F9F7] p-3 rounded-xl border border-stone-200/70">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-stone-600 uppercase tracking-wider truncate">
+                  {product.name}
+                </span>
+                <span className="text-[10px] font-extrabold text-[#2E7D32]">
+                  {Math.round(quantity * (containerType === '20FT' ? 10 : 22))} Pallets
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => updateQuantityAndPersist(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))))}
+                  disabled={quantity <= 0}
+                  className="w-11 h-11 rounded-xl bg-white border border-stone-300 text-stone-800 flex items-center justify-center font-bold text-lg hover:border-[#2E7D32] hover:text-[#2E7D32] disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all shadow-2xs cursor-pointer"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="w-4 h-4 stroke-[2.5]" />
+                </button>
+
+                <div className="flex flex-col items-center">
+                  <span className="font-poppins font-black text-lg text-stone-900 leading-none">
+                    {quantity.toFixed(2)}
+                  </span>
+                  <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider mt-0.5">
+                    Containers
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => updateQuantityAndPersist(q => parseFloat((q + 0.25).toFixed(2)))}
+                  className="w-11 h-11 rounded-xl bg-[#2E7D32] text-white flex items-center justify-center font-bold text-lg hover:bg-[#1B5E20] active:scale-95 transition-all shadow-2xs cursor-pointer"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
+                </button>
+              </div>
+            </div>
+
+            {/* Utilization Progress Bar */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-stone-600">Container Utilization</span>
+                <span className={`font-poppins font-black ${isWholeContainer ? 'text-[#15803d]' : 'text-amber-800'}`}>
+                  {capacityPercentage}%
+                </span>
+              </div>
+
+              <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden border border-stone-200/80">
+                <div
+                  className={`h-full transition-all duration-300 rounded-full ${
+                    isWholeContainer ? 'bg-[#2E7D32]' : 'bg-gradient-to-r from-amber-400 to-[#2E7D32]'
+                  }`}
+                  style={{ width: `${Math.min(100, capacityPercentage)}%` }}
+                />
+              </div>
+
+              {/* Status banner */}
+              {isWholeContainer ? (
+                <div className="mt-2 bg-emerald-50 border border-emerald-300 rounded-xl p-2.5 text-center">
+                  <p className="text-[11px] font-black text-[#15803d]">
+                    ✓ Container 100% Balanced & Utilized
+                  </p>
+                  <p className="text-[10px] text-emerald-800 font-medium mt-0.5">
+                    Ready for immediate quotation or adding to cart.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-2 bg-amber-50 border border-amber-300/80 rounded-xl p-2.5 text-center">
+                  <p className="text-[11px] font-black text-amber-900">
+                    Add {remainingForNextFull.toFixed(2)} more to reach full container load
+                  </p>
+                  <p className="text-[10px] text-amber-800 font-medium mt-0.5">
+                    Wholesale export shipping requires full container increments.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* In-Page Primary Purchase & Quote Actions */}
+            <div className="space-y-2 pt-2 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={actionLoading || (quantity === 0 && completedContainers.length === 0 && extraItems.length === 0)}
+                className="w-full font-poppins text-xs font-black py-3.5 px-4 rounded-xl border-2 border-[#2E7D32] bg-emerald-50 hover:bg-[#2E7D32] text-[#2E7D32] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xs flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4 shrink-0" />
+                <span>{editingCartItemId ? 'UPDATE CART' : 'ADD CONTAINER TO CART'}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isQuoteButtonDisabled || hasActiveRfq}
+                onClick={handleRequestQuoteClick}
+                className={`w-full font-poppins text-xs font-black py-3.5 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer ${
+                  hasActiveRfq
+                    ? 'bg-stone-100 border border-stone-200 text-stone-600 cursor-not-allowed shadow-none'
+                    : 'bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white'
+                }`}
+              >
+                {actionLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : hasActiveRfq ? (
+                  <>
+                    <Check className="w-4 h-4 text-[#2E7D32] stroke-[3]" />
+                    <span>Quote Requested</span>
+                  </>
+                ) : (
+                  <>
+                    <span>REQUEST WHOLESALE QUOTE</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* 3D Container Preview (Mobile) */}
+            <div className="pt-2">
+              <div className="relative w-full border border-stone-200/70 rounded-2xl overflow-hidden shadow-xs h-60 bg-[#F7F9F7]">
+                <ContainerViewer3D containerType={containerType} totalQuantity={viewerQuantity} autoRotate={true} palletItems={viewerPallets} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* GUEST B2B CATALOGUE CARD */
+          <div className="bg-gradient-to-br from-stone-900 via-[#1A261C] to-stone-900 text-white rounded-2xl p-5 border border-stone-800 shadow-lg space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#2E7D32] animate-pulse"></span>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#4ADE80]">
+                B2B Wholesale Portal
+              </span>
+            </div>
+            <div>
+              <h3 className="font-poppins font-black text-base text-white">
+                Sign In to Configure & Order
+              </h3>
+              <p className="text-xs text-stone-300 mt-1 leading-relaxed">
+                Access FOB bulk pricing, customized 20FT/40FT container packing, and formal export quotations.
+              </p>
+            </div>
+            <Link
+              to={`/login?redirect=/product/${product.slug || product._id}`}
+              className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-poppins font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
+            >
+              <span>Sign In to Access Pricing</span>
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
+
+        {/* 6. PRODUCT SELECTION (Add Extra Products into Container - Authenticated) */}
+        {user && categories.length > 0 && (
+          <div className="bg-white border border-stone-200/80 rounded-2xl p-4 space-y-3 shadow-2xs">
+            <div>
+              <h3 className="font-poppins font-black text-xs uppercase tracking-wider text-stone-900">
+                Mix Other Products in Container
+              </h3>
+              <p className="text-[10px] text-stone-500 font-medium mt-0.5">
+                Select items to combine into your {containerType} FCL shipment
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {categories.map((cat) => {
+                const catProducts = groupedProducts[cat.name] || [];
+                if (catProducts.length === 0) return null;
+                const isExpanded = expandedCategory === cat.name;
+
+                return (
+                  <div key={cat._id || cat.name} className="border border-stone-200 rounded-xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedCategory(isExpanded ? null : cat.name)}
+                      className="w-full p-3 bg-stone-50/80 flex items-center justify-between text-left hover:bg-stone-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-poppins font-bold text-xs text-stone-800 truncate">
+                          {cat.name}
+                        </span>
+                        <span className="text-[10px] text-stone-500 bg-white border border-stone-200/80 px-1.5 py-0.5 rounded-md shrink-0">
+                          {catProducts.length}
+                        </span>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-180 text-[#2E7D32]' : ''}`} />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="p-2.5 bg-white space-y-2.5 border-t border-stone-100">
+                        {catProducts.map((p) => {
+                          const isMainProduct = p._id === product._id;
+                          const itemQty = isMainProduct ? quantity : (extraItems.find(i => i.product._id === p._id)?.quantity || 0);
+
+                          return (
+                            <div key={p._id} className="bg-white border border-stone-200/80 rounded-xl p-2.5 space-y-2">
+                              <div className="flex gap-2.5 items-center">
+                                <div className="w-14 h-14 rounded-lg bg-[#F7F9F7] border border-stone-100 p-1 shrink-0 flex items-center justify-center overflow-hidden">
+                                  <ImageWithFallback src={p.images?.[0]} alt={p.name} className="w-full h-full object-contain" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="font-poppins font-bold text-xs text-stone-900 leading-snug line-clamp-1">
+                                    {p.name}
+                                  </h4>
+                                  <p className="text-[10px] text-stone-500 font-medium">
+                                    {convertCurrency(p.price, user?.currency || 'INR')?.formatted} / {p.unit || 'Pallet'}
+                                  </p>
+                                  {p.dimensions && (
+                                    <p className="text-[9px] text-stone-400 truncate">
+                                      {p.dimensions}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between pt-1 border-t border-stone-100">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigate(`/products/${p.slug || p._id}`);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="text-[10px] font-bold text-[#2E7D32] hover:underline flex items-center gap-0.5"
+                                >
+                                  <span>View Details</span>
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                </button>
+
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (isMainProduct) {
+                                        updateQuantityAndPersist(q => Math.max(0.00, parseFloat((q - 0.25).toFixed(2))));
+                                      } else {
+                                        setExtraItems(prev => {
+                                          const existing = prev.find(item => item.product._id === p._id);
+                                          if (existing) {
+                                            if (existing.quantity > 0.25) {
+                                              return prev.map(item => item.product._id === p._id ? { ...item, quantity: parseFloat((item.quantity - 0.25).toFixed(2)) } : item);
+                                            } else {
+                                              return prev.filter(item => item.product._id !== p._id);
+                                            }
+                                          }
+                                          return prev;
+                                        });
+                                      }
+                                    }}
+                                    disabled={itemQty <= 0}
+                                    className="w-7 h-7 rounded-lg bg-stone-100 text-stone-700 flex items-center justify-center font-bold hover:bg-stone-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </button>
+
+                                  <span className="text-xs font-black font-poppins min-w-[32px] text-center">
+                                    {itemQty.toFixed(2)}
+                                  </span>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (isMainProduct) {
+                                        updateQuantityAndPersist(q => parseFloat((q + 0.25).toFixed(2)));
+                                      } else {
+                                        setExtraItems(prev => {
+                                          const existing = prev.find(item => item.product._id === p._id);
+                                          if (existing) {
+                                            return prev.map(item => item.product._id === p._id ? { ...item, quantity: parseFloat((item.quantity + 0.25).toFixed(2)) } : item);
+                                          } else {
+                                            return [...prev, { product: p, quantity: 0.25 }];
+                                          }
+                                        });
+                                      }
+                                    }}
+                                    className="w-7 h-7 rounded-lg bg-[#2E7D32] text-white flex items-center justify-center font-bold hover:bg-[#1B5E20] active:scale-95 transition-all"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 7. BENEFITS & APPLICATIONS */}
+        {product.applications?.length > 0 && (
+          <div className="bg-white border border-stone-200/80 rounded-2xl p-4 space-y-2.5 shadow-2xs">
+            <h3 className="font-poppins font-black text-xs uppercase tracking-wider text-stone-900">
+              Recommended Applications
+            </h3>
+            <ul className="space-y-2">
+              {product.applications.map((app, idx) => (
+                <li key={idx} className="flex items-start gap-2.5 text-xs text-stone-600 font-semibold">
+                  <div className="w-5 h-5 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center shrink-0 mt-0.5">
+                    <ShieldCheck className="w-3 h-3" />
+                  </div>
+                  <span>{app}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* 8. RELATED PRODUCTS (2-column mobile grid) */}
+        {relatedProducts.length > 0 && (
+          <div className="space-y-3 pt-2">
+            <h2 className="font-poppins font-black text-base text-stone-900">
+              Related Substrates
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {relatedProducts.slice(0, 4).map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => {
+                    navigate(`/products/${item.slug || item._id}`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="bg-white border border-stone-200/80 rounded-2xl p-3 flex flex-col justify-between group active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
+                >
+                  <div>
+                    <div className="w-full aspect-square rounded-xl bg-[#F7F9F7] mb-2 border border-stone-100 overflow-hidden flex items-center justify-center p-2">
+                      <ImageWithFallback
+                        src={item.images?.[0]}
+                        alt={item.name}
+                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <span className="text-[9px] font-extrabold text-[#2E7D32] uppercase tracking-wider block">
+                      {item.category}
+                    </span>
+                    <h3 className="font-poppins font-bold text-xs text-stone-900 line-clamp-2 mt-0.5 leading-snug">
+                      {item.name}
+                    </h3>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#2E7D32]">
+                      {convertCurrency(item.price, user?.currency || 'INR')?.formatted}
+                    </span>
+                    <span className="text-[10px] font-semibold text-stone-400 group-hover:text-[#2E7D32]">
+                      View →
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Mobile Sticky Action Bar (Authenticated Users on Public Routes Only) */}
+      {user && !location.pathname.startsWith('/dashboard') && (
+        <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white/95 border-t border-stone-200/80 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-40 lg:hidden flex gap-2.5 items-center backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={actionLoading || (quantity === 0 && completedContainers.length === 0 && extraItems.length === 0)}
+            className="flex-1 font-poppins text-xs font-black py-3 px-3 rounded-xl border-2 border-[#2E7D32] bg-emerald-50/80 hover:bg-[#2E7D32] text-[#2E7D32] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xs flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
+          >
+            <ShoppingBag className="w-4 h-4 shrink-0" />
+            <span className="truncate">{editingCartItemId ? 'UPDATE CART' : 'ADD TO CART'}</span>
+          </button>
+
           <button
             type="button"
             disabled={isQuoteButtonDisabled || hasActiveRfq}
             onClick={handleRequestQuoteClick}
-            className="flex-1 bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white font-poppins text-xs font-black py-3 rounded-xl flex items-center justify-center shadow-md gap-1 active:scale-[0.98]"
+            className={`flex-[1.2] font-poppins text-xs font-black py-3 px-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer ${
+              hasActiveRfq
+                ? 'bg-stone-100 border border-stone-200 text-stone-600 cursor-not-allowed shadow-none'
+                : 'bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#113F15] disabled:from-stone-300 disabled:to-stone-400 disabled:cursor-not-allowed text-white'
+            }`}
           >
-            {hasActiveRfq ? (
+            {actionLoading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : hasActiveRfq ? (
               <>
-                <Check className="w-4 h-4 text-white" />
-                Quote Requested
+                <Check className="w-4 h-4 text-[#2E7D32] stroke-[3]" />
+                <span>Quote Requested</span>
               </>
             ) : (
               <>
-                REQUEST QUOTE
+                <span>REQUEST QUOTE</span>
                 <ChevronRight className="w-4 h-4" />
               </>
             )}

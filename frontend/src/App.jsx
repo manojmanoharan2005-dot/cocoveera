@@ -9,7 +9,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import MobileBottomNav from './components/MobileBottomNav';
 import axios from 'axios';
 import { API_URL } from './utils/config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -342,7 +341,6 @@ const PublicLayout = () => {
         </div>
         {!hideFooter && <Footer />}
       </div>
-      {!isAuthPage && <MobileBottomNav />}
     </div>
   );
 };
